@@ -46,7 +46,7 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureViews(): void
     {
         Fortify::loginView(fn () => view('site.auth.login'));
-        Fortify::twoFactorChallengeView(fn () => view('pages::auth.two-factor-challenge'));
+        Fortify::twoFactorChallengeView(fn () => view('site.auth.two-factor-challenge'));
         Fortify::confirmPasswordView(fn () => view('site.auth.confirm-password'));
         Fortify::registerView(fn () => view('site.auth.register'));
         Fortify::resetPasswordView(fn () => view('site.auth.reset-password'));

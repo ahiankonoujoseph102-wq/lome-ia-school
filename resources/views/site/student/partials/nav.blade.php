@@ -3,7 +3,7 @@
         ['route' => 'dashboard', 'active' => 'dashboard', 'label' => 'Accueil', 'icon' => 'home'],
         ['route' => 'student.formations.index', 'active' => 'student.formations.*', 'label' => 'Mes formations', 'icon' => 'academic-cap'],
         ['route' => 'formations.index', 'active' => 'formations.*', 'label' => 'Catalogue', 'icon' => 'squares-2x2'],
-        ['route' => 'student.profile', 'active' => 'student.profile', 'label' => 'Profil', 'icon' => 'user-circle'],
+        ['route' => 'student.profile', 'active' => ['student.profile', 'security.edit'], 'label' => 'Profil', 'icon' => 'user-circle'],
     ];
 @endphp
 
@@ -16,10 +16,10 @@
                 href="{{ route($item['route']) }}"
                 @class([
                     'inline-flex items-center gap-2 border-b-2 px-4 py-3.5 text-sm font-medium transition',
-                    'border-gold-400 text-white' => request()->routeIs($item['active']),
-                    'border-transparent text-slate-400 hover:text-white' => ! request()->routeIs($item['active']),
+                    'border-gold-400 text-white' => request()->routeIs(...(array) $item['active']),
+                    'border-transparent text-slate-400 hover:text-white' => ! request()->routeIs(...(array) $item['active']),
                 ])
-                @if (request()->routeIs($item['active'])) aria-current="page" @endif
+                @if (request()->routeIs(...(array) $item['active'])) aria-current="page" @endif
             >
                 <flux:icon :icon="$item['icon']" class="size-4" /> {{ $item['label'] }}
             </a>
@@ -31,7 +31,7 @@
 <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-night-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" aria-label="Mon espace">
     <ul class="mx-auto grid max-w-md grid-cols-4">
         @foreach ($items as $item)
-            @php $active = request()->routeIs($item['active']); @endphp
+            @php $active = request()->routeIs(...(array) $item['active']); @endphp
             <li>
                 <a
                     href="{{ route($item['route']) }}"

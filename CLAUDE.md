@@ -68,7 +68,7 @@ Plateforme de vente et de suivi de formations en intelligence artificielle, bas�
 - **Rôles** : `App\Enums\UserRole` (élève, admin), colonne `users.role` non modifiable par formulaire. Créer ou promouvoir un admin : `php artisan app:make-admin email@exemple.com` (le mot de passe est demandé au clavier, jamais écrit dans le code). Zone admin protégée par le middleware `admin` et la permission `access-admin` (pages à l'étape 10, préfixe `/admin`).
 - **Inscriptions aux formations** : table `enrollments` (élève, formation, `source` = `purchase` ou `admin`, `granted_at`). Règle d'accès au contenu : `App\Policies\FormationPolicy::access` (élève inscrit ou admin), à utiliser avec `can:access,formation` aux étapes 5 et 6. Donner ou retirer un accès : `php artisan app:grant-access email slug [--revoke]`.
 - **Retour après connexion** : un visiteur qui passe par `/commande/{slug}` y revient automatiquement après inscription ou connexion (URL « intended » de la session).
-- **Espace élève** « Mon espace » (`/mon-espace`) : vues `resources/views/site/student/`, variante `student` du layout du site (barre de navigation en bas sur téléphone). Profil et photo : `/mon-espace/profil` (photo recadrée en 320 × 320 par `App\Services\AvatarProcessor`, disque `public` : nécessite `php artisan storage:link` sur le serveur). Les pages Flux du kit ne servent plus que pour la sécurité (`/settings/security`) et l'apparence.
+- **Espace élève** « Mon espace » (`/mon-espace`) : vues `resources/views/site/student/`, variante `student` du layout du site (barre de navigation en bas sur téléphone). Profil et photo : `/mon-espace/profil` (photo recadrée en 320 × 320 par `App\Services\AvatarProcessor`, disque `public` : nécessite `php artisan storage:link` sur le serveur). Sécurité du compte (mot de passe, double authentification, passkeys) : `/mon-espace/securite` (`App\Http\Controllers\Student\SecurityController`), via les routes de Fortify et de Laravel Passkeys.
 - **E-mails** : `App\Mail\WelcomeMail` (file d'attente) envoyé à l'inscription par `App\Listeners\SendWelcomeEmail`. En local, `MAIL_MAILER=log` : les e-mails sont écrits dans `storage/logs/laravel.log` quand la file est traitée (`php artisan queue:work --stop-when-empty`).
 
 ## Commandes utiles
@@ -102,4 +102,4 @@ php artisan migrate
 8. **Affiliation** : liens, suivi des ventes, commissions de 10 %, demandes de retrait Mobile Money.
 9. **Consultation gratuite** : réservation de créneaux.
 10. **Tableau de bord admin** : formations, élèves, ventes, retraits, chat, statistiques.
-11. **Mise en production** : Hostinger, MySQL, cron, e-mails, sauvegardes, nom de domaine.
+11. **Mise en production** : Hostinger, MySQL, cron, e-mails, sauvegardes, nom de domaine. Créer le compte admin avec `php artisan app:make-admin academyjoseph71@gmail.com` (mot de passe choisi au moment de la commande).
