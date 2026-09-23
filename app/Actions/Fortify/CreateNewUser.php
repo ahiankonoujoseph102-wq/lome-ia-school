@@ -6,6 +6,7 @@ use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
@@ -19,15 +20,22 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
-        Validator::make($input, [
+        $input = $this->withNormalizedPhone($input);
+
+        $validated = Validator::make($input, [
             ...$this->profileRules(),
-            'password' => $this->passwordRules(),
+            // Pas de confirmation du mot de passe : le champ propose « Afficher » pour vérifier la saisie.
+            'password' => ['required', 'string', Password::default()],
+        ], [
+            'phone.unique' => 'Ce numéro WhatsApp est déjà utilisé par un autre compte.',
+            'email.unique' => 'Un compte existe déjà avec cette adresse e-mail. Connectez-vous.',
         ])->validate();
 
         return User::create([
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'password' => $input['password'],
+            'name' => trim((string) $validated['name']),
+            'email' => strtolower((string) $validated['email']),
+            'phone' => $validated['phone'],
+            'password' => $validated['password'],
         ]);
     }
 }

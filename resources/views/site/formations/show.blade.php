@@ -3,8 +3,8 @@
     use App\Support\WhatsApp;
     use Illuminate\Support\Str;
 
-    // Pour l'instant, l'achat passe par la création de compte (le paiement FedaPay arrive à l'étape 4).
-    $buyUrl = route('register', ['formation' => $formation->slug]);
+    // Le bouton d'achat mène au récapitulatif de commande (paiement FedaPay à l'étape 4).
+    $buyUrl = route('checkout.show', $formation);
     $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur la formation « '.$formation->title.' ».';
     $trainer = config('site.trainer');
 

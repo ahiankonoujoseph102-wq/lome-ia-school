@@ -3,9 +3,10 @@
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', 'settings/profile');
+    Route::redirect('settings', '/mon-espace/profil');
 
-    Route::livewire('settings/profile', 'pages::settings.profile')->name('profile.edit');
+    // Le profil se modifie désormais dans « Mon espace ».
+    Route::redirect('settings/profile', '/mon-espace/profil')->name('profile.edit');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

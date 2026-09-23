@@ -38,7 +38,33 @@
 
             <div class="flex items-center gap-2">
                 @auth
-                    <a href="{{ route('dashboard') }}" class="hidden rounded-full px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/10 sm:inline-flex">Mon espace</a>
+                    {{-- Élève connecté : photo ou initiales, avec accès rapide à « Mon espace » --}}
+                    <a href="{{ route('dashboard') }}" class="rounded-full lg:hidden" aria-label="Mon espace">
+                        <x-site.avatar :user="auth()->user()" class="size-10 text-sm" />
+                    </a>
+                    <div class="relative hidden lg:block" x-data="{ userMenu: false }" @click.outside="userMenu = false" @keydown.escape.window="userMenu = false">
+                        <button type="button" @click="userMenu = !userMenu" :aria-expanded="userMenu.toString()" class="flex items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/10">
+                            <x-site.avatar :user="auth()->user()" class="size-8 text-xs" />
+                            {{ auth()->user()->first_name }}
+                            <flux:icon.chevron-down class="size-4 text-slate-400" />
+                        </button>
+                        <div x-show="userMenu" x-cloak x-transition.origin.top.right class="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-white/10 bg-night-900/95 p-2 shadow-2xl shadow-black/50 backdrop-blur-xl">
+                            <div class="px-3 py-2">
+                                <p class="truncate font-semibold text-white">{{ auth()->user()->name }}</p>
+                                <p class="truncate text-xs text-slate-400">{{ auth()->user()->email }}</p>
+                            </div>
+                            <a href="{{ route('dashboard') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.home class="size-4" /> Mon espace</a>
+                            <a href="{{ route('student.formations.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.academic-cap class="size-4" /> Mes formations</a>
+                            <a href="{{ route('student.profile') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.user-circle class="size-4" /> Mon profil</a>
+                            @can('access-admin')
+                                <a href="{{ route('admin.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.shield-check class="size-4" /> Administration</a>
+                            @endcan
+                            <form method="POST" action="{{ route('logout') }}" class="border-t border-white/10 pt-1">
+                                @csrf
+                                <button type="submit" class="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-slate-300 hover:bg-white/5"><flux:icon.arrow-right-start-on-rectangle class="size-4" /> Se déconnecter</button>
+                            </form>
+                        </div>
+                    </div>
                 @else
                     <a href="{{ route('login') }}" class="hidden rounded-full px-4 py-2 text-sm font-semibold text-slate-200 transition hover:text-white sm:inline-flex">Connexion</a>
                 @endauth
@@ -99,9 +125,21 @@
             <div class="mt-8 grid gap-3">
                 <a href="{{ route('formations.index') }}" class="btn-gold w-full">Voir les formations</a>
                 @auth
+                    <div class="card flex items-center gap-3 p-4">
+                        <x-site.avatar :user="auth()->user()" class="size-12" />
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate font-semibold text-white">{{ auth()->user()->name }}</p>
+                            <p class="truncate text-sm text-slate-400">{{ auth()->user()->email }}</p>
+                        </div>
+                    </div>
                     <a href="{{ route('dashboard') }}" class="btn-ghost w-full">Mon espace</a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full rounded-full py-3 text-sm font-semibold text-slate-400 hover:text-white">Se déconnecter</button>
+                    </form>
                 @else
                     <a href="{{ route('login') }}" class="btn-ghost w-full">Connexion</a>
+                    <a href="{{ route('register') }}" class="w-full py-2 text-center text-sm font-semibold text-electric-300">Créer un compte</a>
                 @endauth
             </div>
 
