@@ -52,7 +52,7 @@ class FormationPagesTest extends TestCase
             ->assertSee('Accompagnement en groupe privé')
             ->assertSee('Joseph Ahiankonou')
             ->assertSee('Acheter maintenant')
-            ->assertSee(route('register', ['formation' => 'creation-agents-ia']), false);
+            ->assertSee(route('checkout.show', 'creation-agents-ia'), false);
     }
 
     public function test_formation_page_has_open_graph_preview_and_course_schema(): void

@@ -1,21 +1,21 @@
 <?php
 
+use App\Http\Controllers\Student\SecurityController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', 'settings/profile');
-
-    Route::livewire('settings/profile', 'pages::settings.profile')->name('profile.edit');
-});
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::livewire('settings/appearance', 'pages::settings.appearance')->name('appearance.edit');
-
-    Route::livewire('settings/security', 'pages::settings.security')
-        ->middleware([
-            'password.confirm',
-        ])
+    // Sécurité du compte : mot de passe, double authentification et passkeys
+    Route::get('mon-espace/securite', [SecurityController::class, 'edit'])
+        ->middleware('password.confirm')
         ->name('security.edit');
+    Route::put('mon-espace/securite/mot-de-passe', [SecurityController::class, 'updatePassword'])
+        ->name('security.password.update');
+
+    // Anciennes adresses des paramètres du kit
+    Route::redirect('settings', '/mon-espace/profil');
+    Route::redirect('settings/profile', '/mon-espace/profil')->name('profile.edit');
+    Route::redirect('settings/security', '/mon-espace/securite');
+    Route::redirect('settings/appearance', '/mon-espace/profil');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

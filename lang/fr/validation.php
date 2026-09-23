@@ -190,7 +190,9 @@ return [
         'current_password' => 'mot de passe actuel',
         'code' => 'code',
         'recovery_code' => 'code de récupération',
-        'phone' => 'téléphone',
+        'phone' => 'numéro WhatsApp',
+        'phone_country' => 'indicatif',
+        'avatar' => 'photo de profil',
     ],
 
 ];

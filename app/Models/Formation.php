@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
 /**
@@ -35,6 +36,7 @@ use Illuminate\Support\Collection;
  * @property list<string>|null $bonuses
  * @property-read string $formatted_price
  * @property-read string|null $image_url
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Enrollment> $enrollments
  */
 class Formation extends Model
 {
@@ -88,6 +90,14 @@ class Formation extends Model
             'audience' => 'array',
             'bonuses' => 'array',
         ];
+    }
+
+    /**
+     * @return HasMany<Enrollment, $this>
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
     }
 
     public function getRouteKeyName(): string

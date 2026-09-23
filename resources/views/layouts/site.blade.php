@@ -6,6 +6,8 @@
     'jsonLd' => [],
     'stickyCta' => false,
     'whatsappMessage' => null,
+    'noindex' => false,
+    'variant' => 'marketing',
 ])
 
 @php
@@ -27,6 +29,9 @@
         <meta name="description" content="{{ $description }}">
         <link rel="canonical" href="{{ $canonical }}">
         <meta name="theme-color" content="#0b1030">
+        @if ($noindex || $variant === 'student')
+            <meta name="robots" content="noindex, nofollow">
+        @endif
 
         {{-- Aperçus de partage (WhatsApp, Facebook, LinkedIn) --}}
         <meta property="og:site_name" content="{{ $siteName }}">
@@ -50,23 +55,32 @@
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         @vite(['resources/css/site.css', 'resources/js/site.js'])
+        {{ $head ?? '' }}
 
         @foreach ($jsonLd as $schema)
             <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
         @endforeach
     </head>
-    <body @class(['min-h-screen overflow-x-clip font-sans', 'pb-24 lg:pb-0' => $stickyCta])>
+    <body @class(['min-h-screen overflow-x-clip font-sans', 'pb-24 lg:pb-0' => $stickyCta || $variant === 'student'])>
         <a href="#contenu" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-night-950">Aller au contenu</a>
 
         @include('site.partials.header')
+
+        @if ($variant === 'student')
+            @include('site.student.partials.nav')
+        @endif
 
         <main id="contenu">
             {{ $slot }}
         </main>
 
-        @include('site.partials.footer')
+        @if ($variant === 'student')
+            @include('site.student.partials.footer')
+        @else
+            @include('site.partials.footer')
+        @endif
 
-        @include('site.partials.whatsapp-button', ['raised' => $stickyCta, 'whatsappMessage' => $whatsappMessage])
+        @include('site.partials.whatsapp-button', ['raised' => $stickyCta || $variant === 'student', 'whatsappMessage' => $whatsappMessage])
 
         {{ $after ?? '' }}
     </body>
