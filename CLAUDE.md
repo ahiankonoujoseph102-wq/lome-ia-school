@@ -51,6 +51,17 @@ Plateforme de vente et de suivi de formations en intelligence artificielle, bas�
 - **Tâches longues** (e-mails, traitements de médias) : en file d'attente (driver `database`), jamais pendant la requête.
 - **Tests** : un test de fonctionnalité (PHPUnit) pour chaque parcours important (achat, accès, affiliation, retrait).
 
+## Site vitrine : où se trouve quoi
+
+- **Textes modifiables** (coordonnées, chiffres, témoignages, FAQ, formateur, mentions légales) : `config/site.php`. Les emplacements à remplir sont écrits entre crochets `[...]` et surlignés en doré sur le site.
+- **Formations** : table `formations` (modèle `App\Models\Formation`), remplie par `database/seeders/FormationSeeder.php` (relançable sans doublon : `php artisan db:seed --class=FormationSeeder`). Catégories et formats : enums `App\Enums\FormationCategory` et `App\Enums\FormationFormat`.
+- **Images** : logo dans `public/images/logo.svg` (ou `.png`), photo du formateur dans `public/images/formateur.jpg`, images des formations dans `public/images/formations/` (nom du fichier à renseigner dans la colonne `image`), photos des témoignages dans `public/images/temoignages/`. Sans image, un visuel en dégradé est dessiné automatiquement.
+- **Vues** : `resources/views/site/` (pages), `resources/views/components/site/` (composants), mise en page `resources/views/layouts/site.blade.php`.
+- **CSS/JS du site vitrine**, séparés de l'espace membre pour rester légers : `resources/css/site.css` (Tailwind 4, couleurs `night`, `electric`, `gold`) et `resources/js/site.js` (Alpine.js : menu, filtres du catalogue, animations au défilement).
+- **Images de partage** (Open Graph, 1200 × 630) générées en PHP (GD) par `App\Services\OgImageGenerator`, mises en cache dans `storage/framework/cache/og`. Routes `/og/site.png` et `/og/formations/{slug}.png`.
+- **SEO** : titre, description, Open Graph et données structurées par page ; `/sitemap.xml` et `/robots.txt` (indexation bloquée hors production).
+- Le bouton « Acheter maintenant » mène pour l'instant à `/register?formation={slug}` ; il sera branché sur FedaPay à l'étape 4. La réservation de consultation passe par WhatsApp en attendant l'étape 9.
+
 ## Commandes utiles
 
 ```bash
@@ -73,7 +84,7 @@ php artisan migrate
 ## Feuille de route
 
 1. **Mise en place** : projet Laravel, starter kit Livewire, français, fuseau de Lomé, SQLite. ✅
-2. **Site vitrine** : accueil, catalogue des formations, pages de formation orientées conversion.
+2. **Site vitrine** : accueil, catalogue des formations, pages de formation orientées conversion. ✅
 3. **Comptes et espace élève** : inscription, connexion, tableau de bord élève, « mes formations ».
 4. **Paiement FedaPay et accès automatique** : commande, paiement, webhook, accès immédiat.
 5. **Lecteur de cours** : modules, leçons, vidéos (fournisseur interchangeable), progression.
