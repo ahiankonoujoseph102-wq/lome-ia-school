@@ -21,7 +21,7 @@ class ProfileTest extends TestCase
             ->assertOk()
             ->assertSee('Mon profil')
             ->assertSee('Ama Koffi')
-            ->assertSee('value="90123456"', false)
+            ->assertSee('value="90 12 34 56"', false)
             ->assertSee('Sécurité du compte');
     }
 
