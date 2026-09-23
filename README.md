@@ -14,7 +14,7 @@ Chaque formation dispose d'un groupe de discussion réservé à ses acheteurs (t
 
 | Élément | Choix |
 | --- | --- |
-| Framework | Laravel 13 (PHP 8.3+) |
+| Framework | Laravel 13 (PHP 8.4+) |
 | Interface | Livewire 4, Flux, Alpine.js, Tailwind CSS 4 |
 | Authentification | Laravel Fortify (starter kit Livewire) : inscription, double authentification, passkeys |
 | Base de données | SQLite en développement, MySQL en production |
