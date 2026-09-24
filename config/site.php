@@ -278,6 +278,17 @@ return [
 
     /*
     |----------------------------------------------------------------------
+    | Programme des formations (modules et leçons)
+    |----------------------------------------------------------------------
+    | Masqué partout (page formation, récapitulatif de commande, espace
+    | élève) tant que cette valeur est « false ». À l'étape 5, le programme
+    | sera généré à partir des vraies leçons enregistrées dans la plateforme.
+    */
+
+    'show_curriculum' => false,
+
+    /*
+    |----------------------------------------------------------------------
     | Inclus avec chaque formation
     |----------------------------------------------------------------------
     | Toujours affiché sur la page de chaque formation.

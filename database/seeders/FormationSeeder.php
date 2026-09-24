@@ -41,8 +41,8 @@ class FormationSeeder extends Seeder
             [
                 'title' => 'Formation ChatGPT & Claude',
                 'slug' => 'chatgpt-claude-initiation-ia',
-                'subtitle' => 'Initiation à l\'intelligence artificielle : partez de zéro et utilisez l\'IA dès aujourd\'hui.',
-                'description' => 'Vous entendez parler de l\'IA partout mais vous ne savez pas par où commencer ? Cette formation vous apprend, pas à pas et en français simple, à utiliser ChatGPT et Claude pour gagner du temps au quotidien : écrire, résumer, traduire, chercher des idées, préparer un document ou résoudre un problème. C\'est la meilleure porte d\'entrée avant toutes les autres formations.',
+                'subtitle' => 'Initiation à l\'intelligence artificielle : partez de zéro et apprenez à utiliser l\'IA au quotidien.',
+                'description' => 'Vous entendez parler de l\'IA partout mais vous ne savez pas par où commencer ? Cette formation vous apprend, pas à pas et en français simple, à utiliser ChatGPT et Claude dans votre quotidien : écrire, résumer, traduire, chercher des idées, préparer un document ou résoudre un problème. C\'est le point de départ recommandé avant nos autres formations.',
                 'price' => 5500,
                 'category' => FormationCategory::AiBasics,
                 'is_featured' => true,
@@ -68,8 +68,8 @@ class FormationSeeder extends Seeder
             [
                 'title' => 'Création d\'affiches pro avec l\'IA',
                 'slug' => 'creation-affiches-pro-ia',
-                'subtitle' => 'Des visuels dignes d\'une agence pour vos clients, vos événements et votre business.',
-                'description' => 'Affiches d\'événements, flyers, visuels pour les réseaux sociaux, publicités : apprenez à créer des designs professionnels avec l\'IA, même sans être graphiste. Vous maîtriserez les outils de génération d\'images et de mise en page pour produire vite, avec un rendu soigné, et vendre ce service à des clients.',
+                'subtitle' => 'Apprenez à créer des visuels professionnels pour vos clients, vos événements et votre activité.',
+                'description' => 'Affiches d\'événements, flyers, visuels pour les réseaux sociaux, publicités : apprenez à créer des designs professionnels avec l\'IA, même sans être graphiste. Vous apprendrez à utiliser les outils de génération d\'images et de mise en page pour obtenir un rendu soigné, et à proposer ce service à des clients.',
                 'price' => 36000,
                 'category' => FormationCategory::Creative,
                 'is_featured' => true,
@@ -95,8 +95,8 @@ class FormationSeeder extends Seeder
             [
                 'title' => 'Création de vidéos publicitaires avec l\'IA',
                 'slug' => 'videos-publicitaires-ia',
-                'subtitle' => 'Des publicités vidéo qui attirent l\'attention et font vendre, sans caméra ni studio.',
-                'description' => 'Une bonne vidéo publicitaire peut transformer les ventes d\'un produit. Apprenez à écrire un script accrocheur, générer les images et les séquences avec l\'IA, ajouter une voix off et une musique, puis monter une publicité prête à être diffusée sur Facebook, TikTok, Instagram ou WhatsApp.',
+                'subtitle' => 'Apprenez à créer des publicités vidéo accrocheuses, sans caméra ni studio.',
+                'description' => 'Une vidéo publicitaire bien construite met un produit en valeur. Apprenez à écrire un script accrocheur, générer les images et les séquences avec l\'IA, ajouter une voix off et une musique, puis monter une publicité prête à être diffusée sur Facebook, TikTok, Instagram ou WhatsApp.',
                 'price' => 5500,
                 'category' => FormationCategory::Creative,
                 'is_featured' => true,
@@ -123,7 +123,7 @@ class FormationSeeder extends Seeder
                 'title' => 'Création de vidéos d\'histoire avec l\'IA',
                 'slug' => 'videos-histoire-ia',
                 'subtitle' => 'Racontez des histoires captivantes en vidéo : contes, récits historiques, histoires inspirantes.',
-                'description' => 'Les vidéos qui racontent des histoires font partie des contenus les plus regardés sur YouTube, TikTok et Facebook. Apprenez à écrire une histoire prenante avec l\'IA, à générer des illustrations cohérentes, une narration expressive et à assembler le tout en une vidéo qui retient l\'attention jusqu\'à la fin.',
+                'description' => 'Apprenez à écrire une histoire prenante avec l\'IA, à générer des illustrations cohérentes, une narration expressive et à assembler le tout en une vidéo prête à publier sur YouTube, TikTok ou Facebook.',
                 'price' => 5500,
                 'category' => FormationCategory::Creative,
                 'outcomes' => [
@@ -175,7 +175,7 @@ class FormationSeeder extends Seeder
                 'title' => 'Création de chansons personnalisées avec l\'IA',
                 'slug' => 'chansons-personnalisees-ia',
                 'subtitle' => 'Créez des chansons uniques pour les anniversaires, mariages, entreprises et événements.',
-                'description' => 'Une chanson personnalisée est un cadeau inoubliable et un service très demandé. Apprenez à écrire des paroles sur mesure avec l\'IA, à générer la musique et la voix dans le style voulu, puis à livrer une chanson prête à partager. Vous pourrez ensuite proposer ce service autour de vous.',
+                'description' => 'Une chanson personnalisée est un cadeau original, pour un anniversaire, un mariage ou une entreprise. Apprenez à écrire des paroles sur mesure avec l\'IA, à générer la musique et la voix dans le style voulu, puis à livrer une chanson prête à partager. Vous pourrez ensuite proposer ce service autour de vous.',
                 'price' => 5100,
                 'category' => FormationCategory::Creative,
                 'outcomes' => [
@@ -201,7 +201,7 @@ class FormationSeeder extends Seeder
                 'title' => 'Rédaction d\'ebooks et livres professionnels avec l\'IA',
                 'slug' => 'ebooks-livres-professionnels-ia',
                 'subtitle' => 'Mise en page pro, couverture, édition et publication en librairie : de l\'idée au livre publié.',
-                'description' => 'Publier un livre est une façon puissante de partager votre savoir, de bâtir votre crédibilité et de générer des revenus. Cette formation complète vous accompagne de l\'idée jusqu\'à la publication : plan, rédaction assistée par l\'IA, correction, mise en page professionnelle, couverture, édition et diffusion en librairie et en ligne.',
+                'description' => 'Publier un livre, c\'est partager votre savoir et affirmer votre expertise. Cette formation complète vous accompagne de l\'idée jusqu\'à la publication : plan, rédaction assistée par l\'IA, correction, mise en page professionnelle, couverture, édition et diffusion en librairie et en ligne.',
                 'price' => 300000,
                 'category' => FormationCategory::Writing,
                 'outcomes' => [
@@ -305,8 +305,8 @@ class FormationSeeder extends Seeder
             [
                 'title' => 'Création de SaaS avec l\'IA',
                 'slug' => 'creation-saas-ia',
-                'subtitle' => 'Créez un logiciel en ligne vendu par abonnement et construisez des revenus récurrents.',
-                'description' => 'Un SaaS est un logiciel accessible en ligne que vos clients paient chaque mois. C\'est l\'un des modèles les plus intéressants pour générer des revenus récurrents. Apprenez à trouver une idée rentable, à construire votre produit avec l\'IA, à gérer les abonnements et à trouver vos premiers clients.',
+                'subtitle' => 'Apprenez à créer un logiciel en ligne proposé par abonnement.',
+                'description' => 'Un SaaS est un logiciel accessible en ligne que vos clients paient chaque mois. Apprenez à trouver et tester une idée, à construire votre produit avec l\'IA, à gérer les abonnements et à présenter votre SaaS à vos premiers utilisateurs.',
                 'price' => 20500,
                 'category' => FormationCategory::Web,
                 'is_featured' => true,
@@ -359,8 +359,8 @@ class FormationSeeder extends Seeder
             [
                 'title' => 'Automatisation avec l\'IA',
                 'slug' => 'automatisation-ia',
-                'subtitle' => 'Laissez l\'IA faire les tâches répétitives et gagnez des heures chaque semaine.',
-                'description' => 'Relances clients, traitement des e-mails, publication sur les réseaux, rapports, saisie de données : une grande partie du travail quotidien peut être automatisée. Apprenez à créer des automatisations qui combinent vos outils et l\'IA pour gagner du temps, réduire les erreurs et proposer ce savoir-faire aux entreprises.',
+                'subtitle' => 'Apprenez à automatiser vos tâches répétitives avec l\'IA.',
+                'description' => 'Relances clients, traitement des e-mails, publication sur les réseaux, rapports, saisie de données : de nombreuses tâches du quotidien peuvent être automatisées. Apprenez à créer des automatisations qui combinent vos outils et l\'IA pour alléger votre quotidien et proposer ce savoir-faire aux entreprises.',
                 'price' => 25500,
                 'category' => FormationCategory::Automation,
                 'is_featured' => true,
@@ -386,8 +386,8 @@ class FormationSeeder extends Seeder
             [
                 'title' => 'Créer des formations et apprendre n\'importe quelle compétence avec l\'IA',
                 'slug' => 'creer-formations-apprendre-competences-ia',
-                'subtitle' => 'Apprenez plus vite grâce à l\'IA et transformez votre savoir en formation qui se vend.',
-                'description' => 'L\'IA peut devenir votre professeur particulier et votre assistant de création. Apprenez d\'abord à utiliser l\'IA pour maîtriser rapidement une nouvelle compétence, puis à concevoir, produire et vendre votre propre formation en ligne à partir de ce que vous savez.',
+                'subtitle' => 'Apprenez avec l\'IA et transformez votre savoir en formation à proposer en ligne.',
+                'description' => 'L\'IA peut devenir votre professeur particulier et votre assistant de création. Découvrez d\'abord comment utiliser l\'IA pour acquérir une nouvelle compétence, puis à concevoir, produire et vendre votre propre formation en ligne à partir de ce que vous savez.',
                 'price' => 12500,
                 'category' => FormationCategory::Business,
                 'outcomes' => [
@@ -412,8 +412,8 @@ class FormationSeeder extends Seeder
             [
                 'title' => 'Décrocher des missions sur Upwork avec les compétences IA',
                 'slug' => 'missions-upwork-competences-ia',
-                'subtitle' => 'Trouvez des clients internationaux et faites-vous payer pour vos compétences IA.',
-                'description' => 'Upwork met en relation des freelances avec des clients du monde entier. Apprenez à créer un profil qui inspire confiance, à choisir les bonnes missions, à rédiger des propositions qui convainquent et à livrer un travail de qualité pour obtenir de bonnes évaluations et des clients réguliers.',
+                'subtitle' => 'Apprenez à proposer vos services et à décrocher des missions auprès de clients internationaux.',
+                'description' => 'Upwork met en relation des freelances avec des clients du monde entier. Apprenez à créer un profil qui inspire confiance, à choisir les bonnes missions, à rédiger des propositions qui convainquent et à soigner chaque mission pour construire votre réputation.',
                 'price' => 35000,
                 'category' => FormationCategory::Business,
                 'outcomes' => [
@@ -438,8 +438,8 @@ class FormationSeeder extends Seeder
             [
                 'title' => 'Création de contenu TikTok, Facebook et YouTube avec les vidéos IA',
                 'slug' => 'contenu-tiktok-facebook-youtube-videos-ia',
-                'subtitle' => 'Publiez régulièrement des vidéos qui attirent l\'audience et développez vos revenus.',
-                'description' => 'La régularité est la clé du succès sur les réseaux sociaux. Apprenez à trouver des idées, produire rapidement des vidéos avec l\'IA et publier un contenu régulier sur TikTok, Facebook et YouTube, pour faire grandir votre audience et découvrir les façons de la monétiser.',
+                'subtitle' => 'Apprenez à publier régulièrement des vidéos créées avec l\'IA sur vos réseaux.',
+                'description' => 'Sur les réseaux sociaux, la régularité compte. Apprenez à trouver des idées, à produire des vidéos avec l\'IA et à publier régulièrement sur TikTok, Facebook et YouTube. Vous découvrirez aussi les différentes façons de monétiser une audience.',
                 'price' => 15500,
                 'category' => FormationCategory::Business,
                 'outcomes' => [
@@ -465,7 +465,7 @@ class FormationSeeder extends Seeder
                 'title' => 'E-commerce de produits digitaux avec l\'IA',
                 'slug' => 'e-commerce-produits-digitaux-ia',
                 'subtitle' => 'Créez et vendez des produits numériques : ebooks, modèles, guides, formations.',
-                'description' => 'Les produits digitaux se créent une fois et peuvent se vendre de nombreuses fois, sans stock ni livraison. Apprenez à trouver des idées de produits qui se vendent, à les créer avec l\'IA, à mettre en place votre boutique et vos paiements, puis à attirer des acheteurs.',
+                'description' => 'Un produit digital se crée une fois et se livre en ligne, sans stock ni transport. Apprenez à trouver des idées de produits qui répondent à une demande, à les créer avec l\'IA, à mettre en place votre boutique et vos paiements, puis à les faire connaître.',
                 'price' => 20500,
                 'category' => FormationCategory::Business,
                 'outcomes' => [

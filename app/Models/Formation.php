@@ -145,6 +145,17 @@ class Formation extends Model
         )));
     }
 
+    /**
+     * Programme à afficher : vide tant que config('site.show_curriculum') est désactivé.
+     * À l'étape 5, il sera généré à partir des vraies leçons enregistrées dans la plateforme.
+     *
+     * @return list<array{title: string, lessons: list<string>}>
+     */
+    public function publicCurriculum(): array
+    {
+        return config('site.show_curriculum') ? ($this->curriculum ?? []) : [];
+    }
+
     public function hasFormat(FormationFormat $format): bool
     {
         return $this->formats->contains($format);

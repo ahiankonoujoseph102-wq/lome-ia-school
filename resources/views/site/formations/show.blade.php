@@ -147,12 +147,13 @@
             @endif
 
             {{-- Programme --}}
-            @if ($formation->curriculum)
+            {{-- Programme masqué tant que config('site.show_curriculum') est désactivé (voir Formation::publicCurriculum). --}}
+            @if ($formation->publicCurriculum())
                 <section>
                     <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Programme de la formation</h2>
-                    <p class="mt-2 text-slate-400" data-reveal>{{ count($formation->curriculum) }} modules pour progresser pas à pas.</p>
+                    <p class="mt-2 text-slate-400" data-reveal>{{ count($formation->publicCurriculum()) }} modules pour progresser pas à pas.</p>
                     <div class="mt-6 space-y-3">
-                        @foreach ($formation->curriculum as $module)
+                        @foreach ($formation->publicCurriculum() as $module)
                             <details class="card group overflow-hidden" data-reveal @if ($loop->first) open @endif>
                                 <summary class="flex cursor-pointer list-none items-center gap-4 p-4 sm:p-5">
                                     <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-sm font-bold text-electric-300 ring-1 ring-electric-400/25">
