@@ -45,6 +45,26 @@
     }
 }
 
+/*
+ * Design toujours sombre, quel que soit le réglage du téléphone.
+ * Ces règles sont volontairement hors des couches Tailwind (@layer) : elles gardent la priorité
+ * sur toute feuille de style extérieure (aperçus, navigateurs intégrés), et « color-scheme: dark »
+ * indique à Chrome Android que le site est déjà sombre, pour qu'il ne le recolore pas.
+ */
+:root {
+    color-scheme: dark;
+    background-color: var(--color-night-950);
+}
+
+body {
+    margin: 0;
+    background-color: var(--color-night-950);
+    color: var(--color-slate-200);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
 @layer base {
     html {
         scroll-behavior: smooth;
@@ -144,29 +164,20 @@
     mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
 }
 
-/* Apparition douce au défilement (désactivée si l'utilisateur préfère moins d'animations) */
+/*
+ * Apparition douce au défilement : un simple effet, jamais nécessaire pour voir le contenu.
+ * Au repos, tout est visible. Le script ajoute « reveal-play » uniquement aux éléments encore
+ * sous l'écran, juste avant qu'ils n'arrivent ; sans script ou avec moins d'animations, rien ne bouge.
+ */
 @media (prefers-reduced-motion: no-preference) {
-    .js [data-reveal] {
-        opacity: 0;
-        transform: translateY(18px);
-        transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-        transition-delay: var(--reveal-delay, 0ms);
+    [data-reveal].reveal-play {
+        animation: reveal-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms) backwards;
     }
 
-    .js [data-reveal].is-visible {
-        opacity: 1;
-        transform: none;
-    }
-
-    /* Filet de sécurité : si le script ne se charge pas, le contenu s'affiche quand même. */
-    .js [data-reveal]:not(.is-visible) {
-        animation: reveal-fallback 0s 2.5s forwards;
-    }
-
-    @keyframes reveal-fallback {
-        to {
-            opacity: 1;
-            transform: none;
+    @keyframes reveal-in {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
         }
     }
 }

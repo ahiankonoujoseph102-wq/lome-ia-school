@@ -20,11 +20,11 @@
             <x-site.coming-soon-card icon="chat-bubble-left-right" title="Groupe de discussion" text="Le groupe privé de cette formation sera accessible ici." />
         </div>
 
-        @if ($formation->curriculum)
+        @if ($formation->publicCurriculum())
             <section class="mt-10">
                 <h2 class="text-xl font-bold text-white">Programme</h2>
                 <ol class="mt-4 space-y-3">
-                    @foreach ($formation->curriculum as $module)
+                    @foreach ($formation->publicCurriculum() as $module)
                         <li class="card p-4 sm:p-5">
                             <p class="text-xs font-semibold text-gold-300">Module {{ $loop->iteration }}</p>
                             <p class="mt-1 font-semibold text-white">{{ $module['title'] }}</p>

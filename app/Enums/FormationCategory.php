@@ -18,7 +18,7 @@ enum FormationCategory: string
             self::Creative => 'Création visuelle, vidéo et musique',
             self::Web => 'Web, applications et SaaS',
             self::Automation => 'Automatisation et agents IA',
-            self::Business => 'Business et revenus en ligne',
+            self::Business => 'Business en ligne',
             self::Writing => 'Écriture et édition',
         };
     }

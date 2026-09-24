@@ -20,7 +20,7 @@ class HomePageTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertOk()
-            ->assertSee('Maîtrisez l&#039;IA et transformez vos compétences en revenus', false)
+            ->assertSee('Maîtrisez l&#039;IA et transformez vos compétences en opportunités', false)
             ->assertSee('Voir les formations')
             ->assertSee('Réserver une consultation gratuite')
             ->assertSee($featured->title)

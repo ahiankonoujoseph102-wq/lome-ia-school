@@ -22,7 +22,7 @@ class StudentDashboardTest extends TestCase
             ->assertSee('Votre première formation vous attend')
             ->assertSee('Découvrir le catalogue')
             ->assertSee('Ma progression')
-            ->assertSee('Prochaines sessions en direct')
+            ->assertSee('Sessions en direct ou à Lomé')
             ->assertSee('Mes groupes de discussion')
             ->assertSee('Mes gains d&#039;affiliation', false)
             ->assertSee('Bientôt disponible');

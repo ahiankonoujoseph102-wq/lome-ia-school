@@ -35,8 +35,8 @@ class FormationPagesTest extends TestCase
             'outcomes' => ['Concevoir un agent adapté à un besoin précis'],
             'curriculum' => [['title' => 'Comprendre les agents IA', 'lessons' => ['Les outils pour créer des agents']]],
             'audience' => ['Les freelances'],
-            'bonuses' => ['Des modèles d\'instructions'],
         ]);
+        config(['site.bonuses.creation-agents-ia' => ['Des modèles d\'instructions']]);
 
         $this->get(route('formations.show', $formation))
             ->assertOk()
@@ -44,15 +44,35 @@ class FormationPagesTest extends TestCase
             ->assertSee("30\u{00A0}000\u{00A0}FCFA")
             ->assertSee('Ce que vous allez apprendre')
             ->assertSee('Concevoir un agent adapté à un besoin précis')
-            ->assertSee('Comprendre les agents IA')
-            ->assertSee('Les outils pour créer des agents')
+            ->assertDontSee('Programme de la formation')
+            ->assertDontSee('Comprendre les agents IA')
+            ->assertDontSee('modules pour progresser')
             ->assertSee('Pour qui est cette formation ?')
             ->assertSee('Des modèles d&#039;instructions', false)
             ->assertSee('Accès immédiat')
-            ->assertSee('Accompagnement en groupe privé')
+            ->assertSee('Accès à vie')
+            ->assertSee('Accompagnement à vie')
             ->assertSee('Joseph Ahiankonou')
             ->assertSee('Acheter maintenant')
             ->assertSee(route('checkout.show', 'creation-agents-ia'), false);
+    }
+
+    public function test_curriculum_is_shown_only_when_enabled_in_the_config(): void
+    {
+        $formation = Formation::factory()->create([
+            'curriculum' => [['title' => 'Comprendre les agents IA', 'lessons' => ['Les outils pour créer des agents']]],
+        ]);
+
+        $this->get(route('checkout.show', $formation))->assertOk()->assertDontSee('Programme complet');
+
+        config(['site.show_curriculum' => true]);
+
+        $this->get(route('formations.show', $formation))
+            ->assertOk()
+            ->assertSee('Programme de la formation')
+            ->assertSee('Comprendre les agents IA')
+            ->assertSee('Les outils pour créer des agents');
+        $this->get(route('checkout.show', $formation))->assertOk()->assertSee('Programme complet en 1 module');
     }
 
     public function test_formation_page_has_open_graph_preview_and_course_schema(): void

@@ -23,7 +23,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-        <script>document.documentElement.classList.add('js')</script>
+        {{-- Site toujours sombre : empêche le navigateur d'appliquer son propre mode sombre ou clair. --}}
+        <meta name="color-scheme" content="dark">
 
         <title>{{ $fullTitle }}</title>
         <meta name="description" content="{{ $description }}">
@@ -80,7 +81,7 @@
             @include('site.partials.footer')
         @endif
 
-        @include('site.partials.whatsapp-button', ['raised' => $stickyCta || $variant === 'student', 'whatsappMessage' => $whatsappMessage])
+        @include('site.partials.whatsapp-button', ['whatsappMessage' => $whatsappMessage])
 
         {{ $after ?? '' }}
     </body>

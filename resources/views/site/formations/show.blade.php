@@ -1,5 +1,6 @@
 @php
     use App\Support\Placeholder;
+    use App\Support\Testimonials;
     use App\Support\WhatsApp;
     use Illuminate\Support\Str;
 
@@ -7,6 +8,7 @@
     $buyUrl = route('checkout.show', $formation);
     $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur la formation « '.$formation->title.' ».';
     $trainer = config('site.trainer');
+    $testimonials = Testimonials::all();
 
     $course = [
         '@context' => 'https://schema.org',
@@ -73,7 +75,15 @@
                         @endforeach
                     </div>
 
-                    <div class="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center" data-reveal style="--reveal-delay: 200ms">
+                    <ul class="mt-6 flex flex-wrap gap-2" data-reveal style="--reveal-delay: 180ms">
+                        @foreach (config('site.lifetime.items') as $item)
+                            <li class="inline-flex items-center gap-1.5 rounded-full bg-gold-400/15 px-3 py-1.5 text-sm font-semibold text-gold-200 ring-1 ring-gold-400/40">
+                                <flux:icon :icon="$item['icon']" class="size-4" /> {{ $item['title'] }}
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center" data-reveal style="--reveal-delay: 200ms">
                         <div>
                             <p class="text-sm text-slate-400">Prix de la formation</p>
                             <p class="text-4xl font-bold text-gold-300">{{ $formation->formatted_price }}</p>
@@ -96,7 +106,7 @@
 
     {{-- Garanties --}}
     <section class="border-y border-white/10 bg-white/[0.02]">
-        <ul class="mx-auto grid max-w-6xl gap-4 px-4 py-6 sm:grid-cols-3 sm:px-6">
+        <ul class="mx-auto grid max-w-6xl gap-4 px-4 py-6 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
             @foreach (config('site.guarantees') as $guarantee)
                 <li class="flex items-start gap-3" data-reveal style="--reveal-delay: {{ $loop->index * 80 }}ms">
                     <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-gold-400/15 text-gold-300">
@@ -137,12 +147,13 @@
             @endif
 
             {{-- Programme --}}
-            @if ($formation->curriculum)
+            {{-- Programme masqué tant que config('site.show_curriculum') est désactivé (voir Formation::publicCurriculum). --}}
+            @if ($formation->publicCurriculum())
                 <section>
                     <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Programme de la formation</h2>
-                    <p class="mt-2 text-slate-400" data-reveal>{{ count($formation->curriculum) }} modules pour progresser pas à pas.</p>
+                    <p class="mt-2 text-slate-400" data-reveal>{{ count($formation->publicCurriculum()) }} modules pour progresser pas à pas.</p>
                     <div class="mt-6 space-y-3">
-                        @foreach ($formation->curriculum as $module)
+                        @foreach ($formation->publicCurriculum() as $module)
                             <details class="card group overflow-hidden" data-reveal @if ($loop->first) open @endif>
                                 <summary class="flex cursor-pointer list-none items-center gap-4 p-4 sm:p-5">
                                     <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-sm font-bold text-electric-300 ring-1 ring-electric-400/25">
@@ -181,16 +192,27 @@
                 </section>
             @endif
 
-            {{-- Bonus --}}
+            {{-- Inclus avec la formation --}}
+            <section class="card p-6 sm:p-8" data-reveal>
+                <h2 class="flex items-center gap-3 text-2xl font-bold text-white">
+                    <flux:icon.check-badge class="size-7 text-gold-300" /> Inclus avec la formation
+                </h2>
+                <ul class="mt-5 space-y-3">
+                    @foreach (config('site.included') as $item)
+                        <li class="flex items-start gap-3 text-slate-200">
+                            <flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-300" /> {{ $item }}
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+
+            {{-- Bonus (config/site.php, masqués tant que la liste de la formation est vide) --}}
             @if ($formation->bonuses)
                 <section class="relative overflow-hidden rounded-3xl border border-gold-400/25 bg-linear-to-br from-gold-400/10 to-transparent p-6 sm:p-8" data-reveal>
                     <h2 class="flex items-center gap-3 text-2xl font-bold text-white">
                         <flux:icon.gift class="size-7 text-gold-300" /> Bonus inclus
                     </h2>
                     <ul class="mt-5 space-y-3">
-                        <li class="flex items-start gap-3 text-slate-200">
-                            <flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-300" /> L'accès au groupe privé de discussion de la formation
-                        </li>
                         @foreach ($formation->bonuses as $bonus)
                             <li class="flex items-start gap-3 text-slate-200">
                                 <flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-300" /> {{ $bonus }}
@@ -216,11 +238,13 @@
                 </div>
             </section>
 
-            {{-- Témoignages --}}
-            <section>
-                <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Ce qu'en disent les élèves</h2>
-                <x-site.testimonials class="mt-6 md:!grid-cols-1 xl:!grid-cols-3" />
-            </section>
+            {{-- Témoignages (masqués tant qu'il n'y en a aucun) --}}
+            @if ($testimonials)
+                <section>
+                    <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Ce qu'en disent les élèves</h2>
+                    <x-site.testimonials :items="$testimonials" class="mt-6 lg:!columns-2" />
+                </section>
+            @endif
 
             {{-- FAQ --}}
             <section>

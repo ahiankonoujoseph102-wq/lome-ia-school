@@ -23,7 +23,8 @@ class CheckoutTest extends TestCase
 
     public function test_guest_sees_the_summary_with_account_forms(): void
     {
-        $formation = Formation::factory()->create(['title' => 'Automatisation avec l\'IA', 'price' => 25500, 'bonuses' => ['Des modèles prêts à adapter']]);
+        $formation = Formation::factory()->create(['title' => 'Automatisation avec l\'IA', 'price' => 25500]);
+        config(['site.bonuses.'.$formation->slug => ['Des modèles prêts à adapter']]);
 
         $this->get(route('checkout.show', $formation))
             ->assertOk()

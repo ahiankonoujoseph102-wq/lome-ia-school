@@ -29,6 +29,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $phone Numéro WhatsApp au format international (+228…).
  * @property UserRole $role
  * @property string|null $avatar_path Fichier sur le disque « public ».
+ * @property bool $wants_newsletter Accepte d'être informé des nouvelles formations.
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -43,7 +44,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Enrollment> $enrollments
  * @property-read Collection<int, Formation> $formations
  */
-#[Fillable(['name', 'email', 'phone', 'password'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'wants_newsletter'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -70,6 +71,7 @@ class User extends Authenticatable implements PasskeyUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'wants_newsletter' => 'boolean',
         ];
     }
 

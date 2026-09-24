@@ -33,7 +33,7 @@ use Illuminate\Support\Collection;
  * @property list<string>|null $outcomes Ce que l'élève va apprendre.
  * @property list<array{title: string, lessons: list<string>}>|null $curriculum Programme par modules.
  * @property list<string>|null $audience Pour qui est la formation.
- * @property list<string>|null $bonuses
+ * @property-read list<string> $bonuses Bonus facultatifs, définis dans config/site.php (clé « bonuses »).
  * @property-read string $formatted_price
  * @property-read string|null $image_url
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Enrollment> $enrollments
@@ -58,7 +58,6 @@ class Formation extends Model
         'outcomes',
         'curriculum',
         'audience',
-        'bonuses',
     ];
 
     /**
@@ -88,7 +87,6 @@ class Formation extends Model
             'outcomes' => 'array',
             'curriculum' => 'array',
             'audience' => 'array',
-            'bonuses' => 'array',
         ];
     }
 
@@ -132,6 +130,30 @@ class Formation extends Model
     protected function imageUrl(): Attribute
     {
         return Attribute::get(fn (): ?string => $this->image ? asset('images/formations/'.$this->image) : null);
+    }
+
+    /**
+     * Bonus de la formation, définis dans config/site.php (clé « bonuses », par slug). Liste vide : aucun bonus affiché.
+     *
+     * @return Attribute<list<non-empty-string>, never>
+     */
+    protected function bonuses(): Attribute
+    {
+        return Attribute::get(fn (): array => array_values(array_filter(
+            array_map(fn ($bonus): string => trim((string) $bonus), (array) config('site.bonuses.'.$this->slug, [])),
+            fn (string $bonus): bool => $bonus !== '',
+        )));
+    }
+
+    /**
+     * Programme à afficher : vide tant que config('site.show_curriculum') est désactivé.
+     * À l'étape 5, il sera généré à partir des vraies leçons enregistrées dans la plateforme.
+     *
+     * @return list<array{title: string, lessons: list<string>}>
+     */
+    public function publicCurriculum(): array
+    {
+        return config('site.show_curriculum') ? ($this->curriculum ?? []) : [];
     }
 
     public function hasFormat(FormationFormat $format): bool

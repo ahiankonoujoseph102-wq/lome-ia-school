@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Site;
 
 use App\Enums\FormationCategory;
-use App\Enums\FormationFormat;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use Illuminate\Contracts\View\View;
@@ -15,7 +14,6 @@ class FormationController extends Controller
         return view('site.formations.index', [
             'formations' => Formation::published()->get(),
             'categories' => FormationCategory::cases(),
-            'formats' => FormationFormat::cases(),
         ]);
     }
 

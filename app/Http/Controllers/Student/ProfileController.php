@@ -44,6 +44,7 @@ class ProfileController extends Controller
         $validated = Validator::make($input, [
             ...$this->profileRules($user->id),
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'wants_newsletter' => ['nullable', 'boolean'],
         ], [
             'phone.unique' => 'Ce numéro WhatsApp est déjà utilisé par un autre compte.',
             'avatar.max' => 'La photo ne doit pas dépasser 4 Mo.',
@@ -53,6 +54,7 @@ class ProfileController extends Controller
             'name' => trim((string) $validated['name']),
             'email' => strtolower((string) $validated['email']),
             'phone' => $validated['phone'],
+            'wants_newsletter' => $request->boolean('wants_newsletter'),
         ]);
 
         if ($user->isDirty('email')) {

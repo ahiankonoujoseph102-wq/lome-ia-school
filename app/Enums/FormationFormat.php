@@ -2,6 +2,10 @@
 
 namespace App\Enums;
 
+/**
+ * Toutes les formations sont enregistrées (accès immédiat après paiement).
+ * Le direct et le présentiel sont des sessions ponctuelles, annoncées au cas par cas (étape 7).
+ */
 enum FormationFormat: string
 {
     case Recorded = 'recorded';
@@ -14,9 +18,9 @@ enum FormationFormat: string
     public function label(): string
     {
         return match ($this) {
-            self::Recorded => 'Enregistrée (en ligne)',
-            self::Live => 'En direct (Google Meet)',
-            self::Onsite => 'Présentiel à Lomé',
+            self::Recorded => 'Enregistrée · accès immédiat après paiement',
+            self::Live => 'Session ponctuelle en direct (Google Meet)',
+            self::Onsite => 'Session ponctuelle en présentiel à Lomé',
         };
     }
 
@@ -26,18 +30,18 @@ enum FormationFormat: string
     public function shortLabel(): string
     {
         return match ($this) {
-            self::Recorded => 'En ligne',
-            self::Live => 'En direct',
-            self::Onsite => 'Présentiel',
+            self::Recorded => 'Enregistrée',
+            self::Live => 'Session en direct',
+            self::Onsite => 'Session à Lomé',
         };
     }
 
     public function description(): string
     {
         return match ($this) {
-            self::Recorded => 'Des vidéos claires à suivre à votre rythme, depuis votre téléphone ou votre ordinateur, autant de fois que nécessaire.',
-            self::Live => 'Des sessions en direct sur Google Meet pour apprendre avec le formateur, poser vos questions et pratiquer en temps réel.',
-            self::Onsite => 'Des séances en salle à Adidogomé, Lomé, pour apprendre en groupe avec un accompagnement direct du formateur.',
+            self::Recorded => 'Des vidéos claires, accessibles dès le paiement confirmé, à suivre à votre rythme depuis votre téléphone ou votre ordinateur, autant de fois que nécessaire.',
+            self::Live => 'De temps en temps, une formation est reprise en direct sur Google Meet. Chaque session est annoncée sur le site.',
+            self::Onsite => 'De temps en temps, une formation est organisée en présentiel à Lomé. Chaque session est annoncée sur le site.',
         };
     }
 

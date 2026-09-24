@@ -12,7 +12,7 @@
     @include('site.partials.page-header', [
         'eyebrow' => 'À propos',
         'title' => 'Rendre l\'intelligence artificielle accessible à tous',
-        'subtitle' => 'Lomé IA School forme, depuis Lomé, celles et ceux qui veulent maîtriser l\'IA et en faire une source de revenus.',
+        'subtitle' => 'Lomé IA School forme, depuis Lomé, celles et ceux qui veulent maîtriser l\'IA et l\'appliquer concrètement dans leur travail et leurs projets.',
     ])
 
     {{-- Formateur --}}
@@ -20,7 +20,7 @@
         <div class="grid items-start gap-10 lg:grid-cols-[320px_1fr]">
             <div class="card p-6 text-center lg:sticky lg:top-24" data-reveal>
                 <div class="flex justify-center">
-                    @include('site.partials.trainer-photo', ['size' => 'size-40'])
+                    @include('site.partials.trainer-photo', ['size' => 'size-48', 'loading' => 'eager'])
                 </div>
                 <p class="mt-5 text-xl font-bold text-white">{{ $trainer['name'] }}</p>
                 <p class="mt-1 text-sm text-electric-300">{{ $trainer['role'] }}</p>
@@ -61,22 +61,16 @@
                     <p class="mt-4 text-sm text-slate-400">Création de l'école : {{ Placeholder::highlight($about['founded']) }}</p>
                 </div>
                 <dl class="grid grid-cols-2 gap-4" data-reveal>
-                    <div class="card p-5">
-                        <dt class="text-sm text-slate-400">Formations</dt>
-                        <dd class="mt-1 text-3xl font-bold text-white">{{ $formationCount }}</dd>
+                    <div class="card flex flex-col-reverse p-5">
+                        <dt class="mt-1 text-sm text-slate-400">formations pratiques</dt>
+                        <dd class="text-3xl font-bold text-white">{{ $formationCount }}</dd>
                     </div>
-                    <div class="card p-5">
-                        <dt class="text-sm text-slate-400">Formats</dt>
-                        <dd class="mt-1 text-lg font-semibold text-white">En ligne, en direct, présentiel</dd>
-                    </div>
-                    <div class="card p-5">
-                        <dt class="text-sm text-slate-400">Paiement</dt>
-                        <dd class="mt-1 text-lg font-semibold text-white">T-Money et Flooz</dd>
-                    </div>
-                    <div class="card p-5">
-                        <dt class="text-sm text-slate-400">Basée à</dt>
-                        <dd class="mt-1 text-lg font-semibold text-white">Adidogomé, Lomé</dd>
-                    </div>
+                    @foreach (config('site.stats') as $stat)
+                        <div class="card flex flex-col-reverse p-5">
+                            <dt class="mt-1 text-sm text-slate-400">{{ $stat['label'] }}</dt>
+                            <dd class="text-3xl font-bold text-white">{{ Placeholder::highlight($stat['value']) }}</dd>
+                        </div>
+                    @endforeach
                 </dl>
             </div>
 

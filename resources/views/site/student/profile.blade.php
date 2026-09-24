@@ -51,6 +51,7 @@
             <x-site.field name="name" label="Nom complet" :value="old('name', $user->name)" required autocomplete="name" autocapitalize="words" />
             <x-site.phone-field :dial-code="$dialCode" :number="$localNumber" />
             <x-site.field name="email" label="Adresse e-mail" type="email" :value="old('email', $user->email)" required autocomplete="email" inputmode="email" />
+            <x-site.newsletter-checkbox id="profil-newsletter" :checked="old('_token') ? old('wants_newsletter') : $user->wants_newsletter" />
 
             <button type="submit" class="btn-gold w-full sm:w-auto">Enregistrer les modifications</button>
         </form>

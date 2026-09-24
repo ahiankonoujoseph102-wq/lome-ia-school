@@ -5,7 +5,7 @@
     $activeTab = old('form') === 'login' ? 'login' : 'register';
     $whatsappMessage = 'Bonjour Lomé IA School, je souhaite acheter la formation « '.$formation->title.' » ('.str_replace("\u{00A0}", ' ', $formation->formatted_price).').'
         .($user ? ' Mon compte : '.$user->email.'.' : '');
-    $moduleCount = count($formation->curriculum ?? []);
+    $moduleCount = count($formation->publicCurriculum());
 @endphp
 
 <x-layouts::site title="Récapitulatif de commande" :whatsapp-message="$whatsappMessage" noindex>
@@ -143,10 +143,10 @@
                                 <ul class="mt-3 space-y-2.5 text-sm text-slate-300">
                                     <li class="flex gap-2"><flux:icon.bolt class="size-4 shrink-0 text-gold-400" /> Accès immédiat après le paiement</li>
                                     @if ($moduleCount > 0)
-                                        <li class="flex gap-2"><flux:icon.play-circle class="size-4 shrink-0 text-gold-400" /> Programme complet en {{ $moduleCount }} modules</li>
+                                        <li class="flex gap-2"><flux:icon.play-circle class="size-4 shrink-0 text-gold-400" /> Programme complet en {{ $moduleCount }} {{ $moduleCount > 1 ? 'modules' : 'module' }}</li>
                                     @endif
                                     <li class="flex gap-2"><flux:icon.chat-bubble-left-right class="size-4 shrink-0 text-gold-400" /> Groupe privé d'accompagnement</li>
-                                    @foreach ($formation->bonuses ?? [] as $bonus)
+                                    @foreach ($formation->bonuses as $bonus)
                                         <li class="flex gap-2"><flux:icon.gift class="size-4 shrink-0 text-gold-400" /> {{ $bonus }}</li>
                                     @endforeach
                                 </ul>

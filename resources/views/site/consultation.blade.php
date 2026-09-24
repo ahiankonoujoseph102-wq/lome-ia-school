@@ -27,7 +27,7 @@
                 <a href="{{ $bookingUrl }}" target="_blank" rel="noopener" class="btn-gold w-full sm:w-auto">
                     <flux:icon.calendar-days class="size-5" /> Réserver ma consultation gratuite
                 </a>
-                <p class="text-sm text-slate-400">Durée : {{ Placeholder::highlight($consultation['duration']) }} · Par téléphone, WhatsApp ou sur place</p>
+                <p class="text-sm text-slate-400">Durée : {{ Placeholder::highlight($consultation['duration']) }} · {{ $consultation['mode'] }}</p>
             </div>
         </div>
     </section>
@@ -49,16 +49,12 @@
             <div data-reveal style="--reveal-delay: 100ms">
                 <h2 class="text-2xl font-bold text-white sm:text-3xl">Comment ça se passe ?</h2>
                 <ol class="mt-6 space-y-4">
-                    @foreach ([
-                        ['Vous réservez', 'Cliquez sur le bouton de réservation et envoyez-nous votre demande.'],
-                        ['Nous fixons un créneau', 'Nous convenons ensemble d\'un moment qui vous arrange.'],
-                        ['Nous échangeons', 'Nous parlons de vos objectifs et vous repartez avec une recommandation claire.'],
-                    ] as [$stepTitle, $stepText])
+                    @foreach ($consultation['steps'] as $step)
                         <li class="flex gap-4">
                             <span class="grid size-10 shrink-0 place-items-center rounded-full bg-night-800 font-bold text-gold-300 ring-2 ring-gold-400/50">{{ $loop->iteration }}</span>
                             <span>
-                                <span class="block font-semibold text-white">{{ $stepTitle }}</span>
-                                <span class="block text-sm text-slate-400">{{ $stepText }}</span>
+                                <span class="block font-semibold text-white">{{ $step['title'] }}</span>
+                                <span class="block text-sm text-slate-400">{{ $step['text'] }}</span>
                             </span>
                         </li>
                     @endforeach

@@ -5,7 +5,6 @@
     $items = $formations->mapWithKeys(fn ($formation) => [
         $formation->id => [
             'category' => $formation->category->value,
-            'formats' => $formation->formats->map->value->values(),
             'text' => Str::lower(Str::ascii($formation->title.' '.$formation->subtitle.' '.$formation->category->label())),
         ],
     ]);
@@ -21,7 +20,7 @@
             <span class="eyebrow" data-reveal>Catalogue</span>
             <h1 class="mt-4 text-3xl font-bold tracking-tight text-balance text-white sm:text-5xl" data-reveal>Nos formations en intelligence artificielle</h1>
             <p class="mx-auto mt-4 max-w-2xl text-slate-400 sm:text-lg" data-reveal>
-                {{ $formations->count() }} formations pratiques pour apprendre, créer et gagner de l'argent avec l'IA. Paiement Mobile Money, accès immédiat.
+                {{ $formations->count() }} formations pratiques pour apprendre, créer et développer vos projets avec l'IA. Paiement Mobile Money, accès immédiat.
             </p>
         </div>
     </section>
@@ -59,20 +58,9 @@
             </div>
 
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0" role="group" aria-label="Filtrer par format">
-                    <button type="button" @click="format = ''" :aria-pressed="(format === '').toString()"
-                        :class="format === '' ? 'bg-gold-400 text-night-950 ring-gold-300' : 'bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10'"
-                        class="shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition">
-                        Tous les formats
-                    </button>
-                    @foreach ($formats as $format)
-                        <button type="button" @click="format = @js($format->value)" :aria-pressed="(format === @js($format->value)).toString()"
-                            :class="format === @js($format->value) ? 'bg-gold-400 text-night-950 ring-gold-300' : 'bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10'"
-                            class="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition">
-                            <flux:icon :icon="$format->icon()" class="size-3.5" /> {{ $format->shortLabel() }}
-                        </button>
-                    @endforeach
-                </div>
+                <p class="inline-flex items-center gap-2 text-sm text-slate-300">
+                    <flux:icon.play-circle class="size-4 shrink-0 text-gold-400" /> {{ config('site.formats.recorded.catalogue') }}
+                </p>
 
                 <p class="text-sm text-slate-400" aria-live="polite">
                     <span x-text="count">{{ $formations->count() }}</span>

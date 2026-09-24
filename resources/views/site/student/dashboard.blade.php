@@ -45,7 +45,7 @@
             <h2 class="text-xl font-bold text-white sm:text-2xl">Bientôt dans votre espace</h2>
             <div class="mt-5 grid gap-4 sm:grid-cols-2">
                 <x-site.coming-soon-card icon="chart-bar" title="Ma progression" text="Suivez les leçons terminées et votre avancement dans chaque formation." />
-                <x-site.coming-soon-card icon="calendar-days" title="Prochaines sessions en direct" text="Retrouvez vos sessions Google Meet et vos séances à Lomé, avec rappels." />
+                <x-site.coming-soon-card icon="calendar-days" title="Sessions en direct ou à Lomé" text="Quand une session ponctuelle est annoncée pour l'une de vos formations, vous la retrouverez ici." />
                 <x-site.coming-soon-card icon="chat-bubble-left-right" title="Mes groupes de discussion" text="Échangez avec le formateur et les autres élèves de chaque formation." />
                 <x-site.coming-soon-card icon="banknotes" title="Mes gains d'affiliation" text="Votre lien personnel, vos ventes et vos gains de 10 %, retirables par Mobile Money." />
             </div>

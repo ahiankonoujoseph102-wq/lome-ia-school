@@ -44,6 +44,8 @@
         hint="8 caractères minimum, avec des lettres et des chiffres."
     />
 
+    <x-site.newsletter-checkbox :id="$prefix.'-newsletter'" :checked="$showErrors && old('wants_newsletter')" />
+
     <button type="submit" class="btn-gold w-full" data-test="register-user-button">Créer mon compte</button>
 
     <p class="text-center text-xs leading-relaxed text-slate-500">
