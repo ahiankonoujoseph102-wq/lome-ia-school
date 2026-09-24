@@ -10,7 +10,7 @@
             <ul class="mt-8 grid gap-2 text-sm text-slate-400">
                 <li class="flex items-center gap-2"><flux:icon.check-circle class="size-4 text-gold-400" /> Inscription gratuite, sans engagement</li>
                 <li class="flex items-center gap-2"><flux:icon.check-circle class="size-4 text-gold-400" /> Paiement par Mobile Money au moment de l'achat</li>
-                <li class="flex items-center gap-2"><flux:icon.check-circle class="size-4 text-gold-400" /> Votre lien de parrainage pour gagner 10 %</li>
+                <li class="flex items-center gap-2"><flux:icon.check-circle class="size-4 text-gold-400" /> Votre lien d'affiliation : {{ config('affiliate.rate') }} % sur chaque achat validé</li>
             </ul>
         </x-slot:footer>
     </x-site.auth-card>

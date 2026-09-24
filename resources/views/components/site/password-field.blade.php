@@ -28,7 +28,7 @@
         <button
             type="button"
             @click="visible = !visible"
-            class="absolute inset-y-1.5 right-1.5 inline-flex items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white"
+            class="absolute inset-y-1.5 right-1.5 inline-flex items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-slate-300 hover:bg-veil/10 hover:text-white"
             :aria-pressed="visible.toString()"
         >
             <flux:icon.eye class="size-4" x-show="!visible" />

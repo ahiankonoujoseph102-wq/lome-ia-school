@@ -68,7 +68,7 @@
                     <div class="card animate-float space-y-3 p-5 shadow-2xl shadow-electric-900/50">
                         <p class="px-1 text-sm font-semibold text-slate-400">Nos formations phares</p>
                         @foreach ($featured->take(3) as $formation)
-                            <a href="{{ route('formations.show', $formation) }}" class="flex items-center gap-4 rounded-2xl bg-white/[0.04] p-3 ring-1 ring-white/10 transition hover:bg-white/[0.08]">
+                            <a href="{{ route('formations.show', $formation) }}" class="flex items-center gap-4 rounded-2xl bg-veil/[0.04] p-3 ring-1 ring-veil/10 transition hover:bg-veil/[0.08]">
                                 <x-site.formation-cover :formation="$formation" class="size-16 shrink-0 rounded-xl" compact eager />
                                 <span class="min-w-0 flex-1">
                                     <span class="block truncate font-semibold text-white">{{ $formation->title }}</span>
@@ -87,7 +87,7 @@
     </section>
 
     {{-- Chiffres clés --}}
-    <section class="border-y border-white/10 bg-white/[0.02]">
+    <section class="border-y border-veil/10 bg-veil/[0.02]">
         <dl class="mx-auto grid max-w-6xl grid-cols-2 gap-px px-4 sm:px-6 lg:grid-cols-4">
             <div class="flex flex-col-reverse px-2 py-8 text-center" data-reveal>
                 <dt class="mt-1 text-sm text-slate-400">formations pratiques</dt>
@@ -117,7 +117,7 @@
                 <div>
                     <ul class="grid gap-4 sm:grid-cols-2">
                         @foreach ($lifetime['items'] as $item)
-                            <li class="rounded-2xl bg-white/[0.05] p-5 ring-1 ring-gold-400/25">
+                            <li class="rounded-2xl bg-veil/[0.05] p-5 ring-1 ring-gold-400/25">
                                 <span class="grid size-12 place-items-center rounded-2xl bg-gold-400 text-night-950 shadow-lg shadow-gold-500/20">
                                     <flux:icon :icon="$item['icon']" class="size-6" />
                                 </span>
@@ -180,7 +180,7 @@
                     <p class="text-center text-sm font-semibold text-slate-400">Explorer par thème</p>
                     <div class="mt-4 flex flex-wrap justify-center gap-2">
                         @foreach (FormationCategory::cases() as $category)
-                            <a href="{{ route('formations.index', ['categorie' => $category->value]) }}" class="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 text-sm text-slate-200 ring-1 ring-white/10 transition hover:bg-white/10 hover:text-white">
+                            <a href="{{ route('formations.index', ['categorie' => $category->value]) }}" class="inline-flex items-center gap-2 rounded-full bg-veil/5 px-4 py-2 text-sm text-slate-200 ring-1 ring-veil/10 transition hover:bg-veil/10 hover:text-white">
                                 <flux:icon :icon="$category->icon()" class="size-4 text-electric-300" /> {{ $category->label() }}
                             </a>
                         @endforeach
@@ -226,8 +226,8 @@
 
             <div class="card p-6 sm:p-8" data-reveal style="--reveal-delay: 90ms">
                 <div class="flex gap-2">
-                    <span class="grid size-11 place-items-center rounded-2xl bg-white/5 text-electric-300 ring-1 ring-white/10"><flux:icon.video-camera class="size-5" /></span>
-                    <span class="grid size-11 place-items-center rounded-2xl bg-white/5 text-electric-300 ring-1 ring-white/10"><flux:icon.map-pin class="size-5" /></span>
+                    <span class="grid size-11 place-items-center rounded-2xl bg-veil/5 text-electric-300 ring-1 ring-veil/10"><flux:icon.video-camera class="size-5" /></span>
+                    <span class="grid size-11 place-items-center rounded-2xl bg-veil/5 text-electric-300 ring-1 ring-veil/10"><flux:icon.map-pin class="size-5" /></span>
                 </div>
                 <h3 class="mt-6 text-xl font-semibold text-white">{{ $formats['sessions']['title'] }}</h3>
                 <p class="mt-3 text-sm leading-relaxed text-slate-400">{{ $formats['sessions']['text'] }}</p>
@@ -251,7 +251,7 @@
     @endif
 
     {{-- Comment ça marche --}}
-    <section class="border-y border-white/10 bg-white/[0.02]">
+    <section class="border-y border-veil/10 bg-veil/[0.02]">
         <div class="section">
             <x-site.section-heading
                 eyebrow="Comment ça marche"
@@ -292,7 +292,7 @@
                     <p class="mt-4 text-slate-300 sm:text-lg">{{ Placeholder::highlight($trainer['short_bio']) }}</p>
                     <ul class="mt-6 grid gap-3 text-left sm:grid-cols-3">
                         @foreach ($trainer['highlights'] as $highlight)
-                            <li class="flex items-start gap-2 rounded-2xl bg-white/[0.04] p-3 text-sm text-slate-200 ring-1 ring-white/10">
+                            <li class="flex items-start gap-2 rounded-2xl bg-veil/[0.04] p-3 text-sm text-slate-200 ring-1 ring-veil/10">
                                 <flux:icon.check-circle class="mt-0.5 size-4 shrink-0 text-gold-400" /> <span>{{ Placeholder::highlight($highlight) }}</span>
                             </li>
                         @endforeach
@@ -325,11 +325,11 @@
                     <span class="eyebrow !border-gold-400/30 !bg-gold-400/10 !text-gold-200">Programme d'affiliation</span>
                     <h2 class="mt-4 text-3xl font-bold tracking-tight text-balance text-white sm:text-4xl">{{ config('site.affiliate.title') }}</h2>
                     <p class="mt-4 text-slate-300">{{ config('site.affiliate.text') }}</p>
-                    <a href="{{ route('register') }}" class="btn-gold mt-8">Créer mon compte et obtenir mon lien</a>
+                    <a href="{{ route('affiliate.program') }}" class="btn-gold mt-8">Découvrir le programme d'affiliation</a>
                 </div>
                 <ul class="grid gap-3">
                     @foreach (config('site.affiliate.points') as $point)
-                        <li class="flex items-center gap-4 rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10">
+                        <li class="flex items-center gap-4 rounded-2xl bg-veil/[0.04] p-4 ring-1 ring-veil/10">
                             <span class="grid size-10 shrink-0 place-items-center rounded-full bg-gold-400/15 text-gold-300">
                                 <flux:icon.check class="size-5" />
                             </span>
@@ -337,8 +337,8 @@
                         </li>
                     @endforeach
                     <li class="flex items-center justify-between rounded-2xl bg-gold-400/10 p-4 ring-1 ring-gold-400/25">
-                        <span class="text-sm text-gold-100">Exemple : une formation à 36&nbsp;000&nbsp;FCFA vendue grâce à votre lien</span>
-                        <span class="text-lg font-bold whitespace-nowrap text-gold-300">+ 3&nbsp;600&nbsp;FCFA</span>
+                        <span class="text-sm text-gold-100">Exemple de calcul : une formation à 36&nbsp;000&nbsp;FCFA achetée grâce à votre lien</span>
+                        <span class="text-lg font-bold whitespace-nowrap text-gold-300">{{ \App\Support\Money::fcfa(intdiv(36000 * (int) config('affiliate.rate'), 100)) }}</span>
                     </li>
                 </ul>
             </div>

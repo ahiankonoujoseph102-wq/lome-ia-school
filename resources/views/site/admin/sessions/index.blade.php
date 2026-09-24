@@ -27,7 +27,7 @@
             @forelse ($upcoming as $session)
                 <a href="{{ route('admin.sessions.show', $session) }}" class="card card-hover block p-5">
                     <x-site.session-summary :session="$session" show-formation :show-seats="false" />
-                    <p class="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-white/10 pt-3 text-sm text-slate-400">
+                    <p class="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-veil/10 pt-3 text-sm text-slate-400">
                         @if ($session->isOnsite())
                             <span><span class="font-semibold text-white">{{ $session->seats_count }}</span> / {{ $session->capacity }} inscrits</span>
                             @if ($session->waitlist_count > 0)
@@ -47,10 +47,10 @@
         </div>
 
         <h2 class="mt-10 text-lg font-bold text-white">Historique</h2>
-        <ul class="card mt-3 divide-y divide-white/[0.06]" data-test="past-sessions">
+        <ul class="card mt-3 divide-y divide-veil/[0.06]" data-test="past-sessions">
             @forelse ($past as $session)
                 <li>
-                    <a href="{{ route('admin.sessions.show', $session) }}" class="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.03]">
+                    <a href="{{ route('admin.sessions.show', $session) }}" class="flex items-center gap-3 px-4 py-3.5 hover:bg-veil/[0.03]">
                         <span @class(['grid size-10 shrink-0 place-items-center rounded-xl', 'bg-electric-500/15 text-electric-300' => $session->isOnline(), 'bg-gold-400/15 text-gold-300' => $session->isOnsite()])>
                             <flux:icon :icon="$session->format->icon()" class="size-5" />
                         </span>

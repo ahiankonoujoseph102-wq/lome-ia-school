@@ -4,7 +4,7 @@
 ])
 
 <section class="section">
-    <div class="relative overflow-hidden rounded-[2rem] border border-white/10 bg-linear-to-br from-electric-700 via-night-700 to-night-900 px-6 py-12 text-center sm:px-12 sm:py-16" data-reveal>
+    <div class="relative overflow-hidden rounded-[2rem] border border-veil/10 bg-linear-to-br from-electric-700 via-night-700 to-night-900 px-6 py-12 text-center sm:px-12 sm:py-16" data-reveal>
         <div class="glow pointer-events-none absolute inset-0"></div>
         <div class="grid-pattern pointer-events-none absolute inset-0"></div>
         <div class="relative mx-auto max-w-2xl">

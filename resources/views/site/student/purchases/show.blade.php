@@ -7,7 +7,7 @@
         PurchaseStatus::Pending => ['clock', 'Paiement reçu, en attente de validation', 'text-gold-300 bg-gold-400/15'],
         PurchaseStatus::Validated => ['check-badge', 'Paiement validé', 'text-emerald-300 bg-emerald-400/15'],
         PurchaseStatus::Rejected => ['x-circle', 'Paiement refusé', 'text-rose-300 bg-rose-400/15'],
-        PurchaseStatus::Refunded => ['arrow-uturn-left', 'Achat remboursé', 'text-slate-300 bg-white/10'],
+        PurchaseStatus::Refunded => ['arrow-uturn-left', 'Achat remboursé', 'text-slate-300 bg-veil/10'],
     };
 @endphp
 
@@ -45,7 +45,7 @@
 
         <section class="card mt-6 p-5 sm:p-6">
             <h2 class="font-semibold text-white">Détails du paiement</h2>
-            <dl class="mt-4 divide-y divide-white/10 text-sm">
+            <dl class="mt-4 divide-y divide-veil/10 text-sm">
                 @foreach ([
                     $purchase->itemHeading() => $purchase->item_label,
                     'Montant' => $purchase->formatted_amount,

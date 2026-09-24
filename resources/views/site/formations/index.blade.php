@@ -27,7 +27,7 @@
 
     <section class="mx-auto max-w-6xl px-4 pb-20 sm:px-6" x-data="catalogue(@js($items))">
         {{-- Filtres --}}
-        <div class="sticky top-16 z-30 -mx-4 space-y-3 border-b border-white/10 bg-night-950/90 px-4 py-4 backdrop-blur-xl sm:-mx-6 sm:px-6">
+        <div class="sticky top-16 z-30 -mx-4 space-y-3 border-b border-veil/10 bg-night-950/90 px-4 py-4 backdrop-blur-xl sm:-mx-6 sm:px-6">
             <label class="relative block">
                 <span class="sr-only">Rechercher une formation</span>
                 <flux:icon.magnifying-glass class="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-slate-500" />
@@ -35,20 +35,20 @@
                     type="search"
                     x-model.debounce.200ms="search"
                     placeholder="Rechercher : vidéo, site web, agents…"
-                    class="w-full rounded-full border border-white/10 bg-white/5 py-3 pr-4 pl-12 text-base text-white placeholder-slate-500 outline-none focus:border-electric-400/60 focus:ring-2 focus:ring-electric-500/30"
+                    class="w-full rounded-full border border-veil/10 bg-veil/5 py-3 pr-4 pl-12 text-base text-white placeholder-slate-500 outline-none focus:border-electric-400/60 focus:ring-2 focus:ring-electric-500/30"
                     autocomplete="off"
                 >
             </label>
 
             <div class="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Filtrer par catégorie">
                 <button type="button" @click="category = ''" :aria-pressed="(category === '').toString()"
-                    :class="category === '' ? 'bg-electric-600 text-white ring-electric-500' : 'bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10'"
+                    :class="category === '' ? 'bg-electric-600 text-white ring-electric-500' : 'bg-veil/5 text-slate-300 ring-veil/10 hover:bg-veil/10'"
                     class="shrink-0 rounded-full px-4 py-2 text-sm font-medium ring-1 transition">
                     Toutes
                 </button>
                 @foreach ($categories as $category)
                     <button type="button" @click="category = @js($category->value)" :aria-pressed="(category === @js($category->value)).toString()"
-                        :class="category === @js($category->value) ? 'bg-electric-600 text-white ring-electric-500' : 'bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10'"
+                        :class="category === @js($category->value) ? 'bg-electric-600 text-white ring-electric-500' : 'bg-veil/5 text-slate-300 ring-veil/10 hover:bg-veil/10'"
                         class="inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium ring-1 transition">
                         <flux:icon :icon="$category->icon()" class="size-4" />
                         <span class="sm:hidden">{{ $category->shortLabel() }}</span>

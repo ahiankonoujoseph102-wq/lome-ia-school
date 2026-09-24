@@ -8,6 +8,7 @@ use App\Events\AccountBlocked;
 use App\Events\AccountUnblocked;
 use App\Events\FormationAccessGranted;
 use App\Events\FormationAccessRevoked;
+use App\Events\PaymentRefunded;
 use App\Events\PaymentRejected;
 use App\Events\PaymentValidated;
 use App\LiveSessions\SessionRegistrar;
@@ -111,7 +112,7 @@ class PurchaseManager
      */
     public function refund(Purchase $purchase, User $admin): Purchase
     {
-        return DB::transaction(function () use ($purchase, $admin): Purchase {
+        $purchase = DB::transaction(function () use ($purchase, $admin): Purchase {
             $purchase = Purchase::query()->lockForUpdate()->findOrFail($purchase->id);
 
             if (! $purchase->status->grantsAccess()) {
@@ -128,6 +129,10 @@ class PurchaseManager
 
             return $purchase;
         });
+
+        PaymentRefunded::dispatch($purchase);
+
+        return $purchase;
     }
 
     /**

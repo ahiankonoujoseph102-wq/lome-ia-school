@@ -37,7 +37,7 @@
                 @if ($session->canJoinNow())
                     <a href="{{ route('student.sessions.join', $session) }}" target="_blank" rel="noopener" class="btn-gold mt-5 w-full" data-test="join-button"><flux:icon.video-camera class="size-5" /> Rejoindre la session</a>
                 @elseif (! $session->isFinished())
-                    <span class="btn mt-5 w-full cursor-not-allowed border border-white/10 bg-white/[0.04] text-slate-500" aria-disabled="true" data-test="join-button-disabled">
+                    <span class="btn mt-5 w-full cursor-not-allowed border border-veil/10 bg-veil/[0.04] text-slate-500" aria-disabled="true" data-test="join-button-disabled">
                         <flux:icon.video-camera class="size-5" /> Rejoindre la session
                     </span>
                     <p class="mt-2 text-center text-xs text-slate-500">Le bouton s'active {{ config('live_sessions.join_window_minutes') }} minutes avant le début, à {{ \App\LiveSessions\SessionTime::hour($session->joinOpensAt()) }} (heure de Lomé).</p>

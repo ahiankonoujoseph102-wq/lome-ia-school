@@ -10,7 +10,8 @@ Plateforme de vente et de suivi de formations en intelligence artificielle, bas�
 - **Sessions ponctuelles en direct et en présentiel** : de temps en temps, l'admin ou un modérateur annonce une session pour une formation, en direct sur Google Meet ou en présentiel à Lomé. L'annonce est épinglée dans le groupe de la formation et affichée sur le site (le lien Meet reste réservé aux élèves). Le présentiel se fait sur inscription, avec places limitées, liste d'attente, supplément éventuel payé par Mobile Money, rappels et feuille de présence.
 - **Groupe de discussion par formation**, réservé aux acheteurs : texte, images, notes vocales, vidéos courtes, fichiers, modération, notifications sur téléphone.
 - **Consultation gratuite** de 30 minutes par appel vidéo (réservation par WhatsApp en attendant la page de réservation).
-- **À venir** : affiliation (10 % par vente, retrait par Mobile Money), réservation de la consultation, tableau de bord admin complet, mise en production.
+- **Affiliation** : tout inscrit peut activer son espace affilié et partager ses liens. Il reçoit 10 % de chaque achat validé passé par son lien (formations et suppléments de sessions), disponible 7 jours après la validation, retirable par Mobile Money à partir de 2 000 FCFA (retraits payés manuellement par l'admin, frais d'envoi déduits). Alertes anti-fraude pour l'admin.
+- **À venir** : réservation de la consultation, tableau de bord admin complet, mise en production.
 
 ## Stack
 
@@ -43,7 +44,7 @@ npm run build    # compilation CSS/JS
 
 ## Tâches planifiées
 
-Sur le serveur, une seule ligne de cron suffit : `* * * * * php artisan schedule:run`. Elle traite la file d'attente (e-mails, notifications), les rappels des sessions, l'e-mail récapitulatif des groupes et la suppression des fichiers lourds expirés.
+Sur le serveur, une seule ligne de cron suffit : `* * * * * php artisan schedule:run`. Elle traite la file d'attente (e-mails, notifications), les rappels des sessions, l'e-mail récapitulatif des groupes, la suppression des fichiers lourds expirés et la disponibilité des commissions d'affiliation.
 
 ## Documentation interne
 

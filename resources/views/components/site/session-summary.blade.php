@@ -22,7 +22,7 @@
         @if ($session->isCancelled())
             <span class="rounded-full bg-rose-500/15 px-2.5 py-1 text-xs font-semibold text-rose-200 ring-1 ring-rose-400/30">Annulée</span>
         @elseif ($session->isOnsite())
-            <span class="rounded-full bg-white/[0.06] px-2.5 py-1 text-xs font-semibold text-slate-200 ring-1 ring-white/10">{{ $session->priceLabel() }}</span>
+            <span class="rounded-full bg-veil/[0.06] px-2.5 py-1 text-xs font-semibold text-slate-200 ring-1 ring-veil/10">{{ $session->priceLabel() }}</span>
         @endif
     </div>
 

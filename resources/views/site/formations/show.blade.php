@@ -69,7 +69,7 @@
 
                     <div class="mt-5 flex flex-wrap gap-2" data-reveal style="--reveal-delay: 160ms">
                         @foreach ($formation->formats as $format)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-sm text-slate-200 ring-1 ring-white/10">
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-veil/5 px-3 py-1.5 text-sm text-slate-200 ring-1 ring-veil/10">
                                 <flux:icon :icon="$format->icon()" class="size-4 text-electric-300" /> {{ $format->label() }}
                             </span>
                         @endforeach
@@ -98,14 +98,14 @@
                 </div>
 
                 <div class="order-1 lg:order-2" data-reveal>
-                    <x-site.formation-cover :formation="$formation" class="aspect-[16/10] rounded-3xl shadow-2xl shadow-electric-900/50 ring-1 ring-white/10" eager />
+                    <x-site.formation-cover :formation="$formation" class="aspect-[16/10] rounded-3xl shadow-2xl shadow-electric-900/50 ring-1 ring-veil/10" eager />
                 </div>
             </div>
         </div>
     </section>
 
     {{-- Garanties --}}
-    <section class="border-y border-white/10 bg-white/[0.02]">
+    <section class="border-y border-veil/10 bg-veil/[0.02]">
         <ul class="mx-auto grid max-w-6xl gap-4 px-4 py-6 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
             @foreach ($formation->guarantees() as $guarantee)
                 <li class="flex items-start gap-3" data-reveal style="--reveal-delay: {{ $loop->index * 80 }}ms">
@@ -135,7 +135,7 @@
                     <h2 class="text-2xl font-bold text-white sm:text-3xl">Prochaine session</h2>
                     <div class="card mt-5 p-5 sm:p-6">
                         <x-site.session-summary :session="$nextSession" />
-                        <div class="mt-5 border-t border-white/10 pt-5">
+                        <div class="mt-5 border-t border-veil/10 pt-5">
                             @if ($hasAccess)
                                 <a href="{{ route('student.sessions.show', $nextSession) }}" class="btn-gold w-full sm:w-auto">Voir la session dans mon espace</a>
                             @else
@@ -189,11 +189,11 @@
                                     </span>
                                     <flux:icon.chevron-down class="size-5 shrink-0 text-slate-400 transition duration-300 group-open:rotate-180" />
                                 </summary>
-                                <ul class="space-y-1 border-t border-white/10 px-2 py-3 sm:px-3">
+                                <ul class="space-y-1 border-t border-veil/10 px-2 py-3 sm:px-3">
                                     @foreach ($module->lessons as $lesson)
                                         <li>
                                             @if ($lesson->is_preview)
-                                                <a href="{{ route('lessons.show', [$formation, $lesson]) }}" class="flex items-center gap-3 rounded-2xl px-2 py-2 text-slate-200 hover:bg-white/5">
+                                                <a href="{{ route('lessons.show', [$formation, $lesson]) }}" class="flex items-center gap-3 rounded-2xl px-2 py-2 text-slate-200 hover:bg-veil/5">
                                                     <flux:icon.play-circle class="size-5 shrink-0 text-gold-300" />
                                                     <span class="min-w-0 flex-1">{{ $lesson->title }}</span>
                                                     <span class="shrink-0 rounded-full bg-gold-400/15 px-2 py-0.5 text-xs font-semibold text-gold-200 ring-1 ring-gold-400/30">Aperçu gratuit</span>
@@ -302,7 +302,7 @@
                         <li class="flex items-center gap-2"><flux:icon :icon="$guarantee['icon']" class="size-4 text-gold-400" /> {{ $guarantee['title'] }}</li>
                     @endforeach
                 </ul>
-                <div class="border-t border-white/10 pt-5">
+                <div class="border-t border-veil/10 pt-5">
                     <p class="text-sm text-slate-400">Une question avant d'acheter ?</p>
                     <a href="{{ WhatsApp::url($whatsappMessage) }}" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[#25D366]">
                         <x-site.whatsapp-icon class="size-5" /> Écrire sur WhatsApp
@@ -337,7 +337,7 @@
 
     {{-- Barre d'achat fixée en bas de l'écran (mobile et tablette) --}}
     <x-slot:after>
-        <div class="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-night-950/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
+        <div class="fixed inset-x-0 bottom-0 z-40 border-t border-veil/10 bg-night-950/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
             <div class="mx-auto flex max-w-xl items-center gap-3">
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-xs text-slate-400">{{ $formation->title }}</p>

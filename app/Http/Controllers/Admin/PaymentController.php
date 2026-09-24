@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Affiliates\AffiliateAlerts;
 use App\Courses\CourseProgress;
 use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
@@ -20,11 +21,11 @@ class PaymentController extends Controller
 {
     public function __construct(private PurchaseManager $purchases) {}
 
-    public function index(PaymentAlerts $alerts, CourseProgress $progress): View
+    public function index(PaymentAlerts $alerts, CourseProgress $progress, AffiliateAlerts $affiliateAlerts): View
     {
         $pending = Purchase::query()
             ->awaitingVerification()
-            ->with(['user', 'formation'])
+            ->with(['user', 'formation', 'affiliate.user'])
             ->latest()
             ->get();
 
@@ -43,6 +44,7 @@ class PaymentController extends Controller
         return view('site.admin.payments.index', [
             'purchases' => $pending,
             'alerts' => $pending->mapWithKeys(fn (Purchase $purchase): array => [$purchase->id => $alerts->for($purchase)]),
+            'affiliateAlerts' => $pending->mapWithKeys(fn (Purchase $purchase): array => [$purchase->id => $affiliateAlerts->forPurchase($purchase)]),
             'recent' => $recent,
             'startedAt' => $startedAt,
         ]);

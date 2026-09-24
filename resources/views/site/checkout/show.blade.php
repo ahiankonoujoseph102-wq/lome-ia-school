@@ -26,7 +26,7 @@
                             'grid size-7 place-items-center rounded-full ring-1',
                             'bg-emerald-400/15 text-emerald-300 ring-emerald-400/40' => $done,
                             'bg-gold-400 text-night-950 ring-gold-300' => $current,
-                            'bg-white/5 text-slate-400 ring-white/15' => ! $done && ! $current,
+                            'bg-veil/5 text-slate-400 ring-veil/15' => ! $done && ! $current,
                         ])>
                             @if ($done)
                                 <flux:icon.check class="size-4" />
@@ -36,7 +36,7 @@
                         </span>
                         <span @class(['text-white' => $current, 'text-slate-400' => ! $current])>{{ $step }}</span>
                         @unless ($loop->last)
-                            <span class="h-px w-4 bg-white/15 sm:w-10" aria-hidden="true"></span>
+                            <span class="h-px w-4 bg-veil/15 sm:w-10" aria-hidden="true"></span>
                         @endunless
                     </li>
                 @endforeach
@@ -59,7 +59,7 @@
                                 <h2 class="text-lg font-semibold text-white">Votre compte</h2>
                                 <p class="mt-1 text-sm text-slate-400">Il vous permet de retrouver votre formation à tout moment. Vous revenez ici juste après.</p>
                             </div>
-                            <div class="mx-6 mt-5 grid grid-cols-2 gap-1 rounded-full bg-white/5 p-1 ring-1 ring-white/10" role="tablist">
+                            <div class="mx-6 mt-5 grid grid-cols-2 gap-1 rounded-full bg-veil/5 p-1 ring-1 ring-veil/10" role="tablist">
                                 <button type="button" role="tab" @click="tab = 'register'" :aria-selected="(tab === 'register').toString()"
                                     :class="tab === 'register' ? 'bg-electric-600 text-white shadow' : 'text-slate-300 hover:text-white'"
                                     class="rounded-full px-3 py-2.5 text-sm font-semibold transition">Créer un compte</button>
@@ -89,7 +89,7 @@
                                 <h2 class="mt-1 text-lg leading-snug font-semibold text-white">{{ $formation->title }}</h2>
                                 <div class="mt-2 flex flex-wrap gap-1.5">
                                     @foreach ($formation->formats as $format)
-                                        <span class="inline-flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs text-slate-300 ring-1 ring-white/10">
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-veil/5 px-2.5 py-1 text-xs text-slate-300 ring-1 ring-veil/10">
                                             <flux:icon :icon="$format->icon()" class="size-3.5" /> {{ $format->shortLabel() }}
                                         </span>
                                     @endforeach
@@ -114,7 +114,7 @@
                                 </ul>
                             </div>
 
-                            <div class="flex items-center justify-between border-t border-white/10 pt-4">
+                            <div class="flex items-center justify-between border-t border-veil/10 pt-4">
                                 <span class="text-slate-300">Total à payer</span>
                                 <span class="text-2xl font-bold text-gold-300">{{ $formation->formatted_price }}</span>
                             </div>

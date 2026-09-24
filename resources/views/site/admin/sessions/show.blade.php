@@ -51,7 +51,7 @@
         @if ($session->isOnsite())
             <section class="card mt-6 p-5 sm:p-6" data-test="registrations">
                 <h2 class="text-lg font-bold text-white">Inscrits <span class="text-slate-400">({{ $confirmed->count() + $reserved->count() }} / {{ $session->capacity }})</span></h2>
-                <ul class="mt-3 divide-y divide-white/[0.06]">
+                <ul class="mt-3 divide-y divide-veil/[0.06]">
                     @forelse ($confirmed->concat($reserved) as $registration)
                         <li class="flex items-center gap-3 py-2.5">
                             <x-site.avatar :user="$registration->user" class="size-9 text-xs" />
@@ -70,7 +70,7 @@
 
                 @if ($waitlist->isNotEmpty())
                     <h3 class="mt-6 font-semibold text-white">Liste d'attente ({{ $waitlist->count() }})</h3>
-                    <ol class="mt-2 divide-y divide-white/[0.06]">
+                    <ol class="mt-2 divide-y divide-veil/[0.06]">
                         @foreach ($waitlist as $index => $registration)
                             <li class="flex items-center gap-3 py-2.5">
                                 <span class="grid size-7 shrink-0 place-items-center rounded-full bg-electric-500/15 text-xs font-bold text-electric-200">{{ $index + 1 }}</span>
@@ -87,7 +87,7 @@
             <section class="card mt-6 p-5 sm:p-6">
                 <h2 class="text-lg font-bold text-white">Suppléments à rembourser</h2>
                 <p class="mt-1 text-sm text-slate-400">Session annulée par l'école ou inscription annulée par l'élève dans le délai : remboursez chaque élève par Mobile Money, puis marquez le supplément comme remboursé. Un élève absent sans avoir annulé n'est pas remboursé.</p>
-                <ul class="mt-3 divide-y divide-white/[0.06]">
+                <ul class="mt-3 divide-y divide-veil/[0.06]">
                     @foreach ($refunds as $purchase)
                         <li class="flex flex-wrap items-center gap-3 py-3">
                             <span class="min-w-0 flex-1">

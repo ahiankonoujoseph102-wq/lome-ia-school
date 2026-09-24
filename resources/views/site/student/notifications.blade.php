@@ -31,7 +31,7 @@
             </div>
 
             @if (! $pushAvailable)
-                <p class="mt-4 rounded-2xl bg-white/[0.04] px-4 py-3 text-sm text-slate-400 ring-1 ring-white/10">Les notifications sur téléphone seront bientôt disponibles. En attendant, vous recevez un e-mail récapitulatif.</p>
+                <p class="mt-4 rounded-2xl bg-veil/[0.04] px-4 py-3 text-sm text-slate-400 ring-1 ring-veil/10">Les notifications sur téléphone seront bientôt disponibles. En attendant, vous recevez un e-mail récapitulatif.</p>
             @else
                 {{-- iPhone : le site doit d'abord être ajouté à l'écran d'accueil --}}
                 <div x-show="ios && !standalone" x-cloak class="mt-4 rounded-2xl bg-gold-400/10 p-4 text-sm text-gold-100 ring-1 ring-gold-400/30" data-test="ios-help">
@@ -96,12 +96,12 @@
             </label>
 
             @if ($memberships->isNotEmpty())
-                <fieldset class="border-t border-white/10 pt-5">
+                <fieldset class="border-t border-veil/10 pt-5">
                     <legend class="font-semibold text-white">Couper un groupe</legend>
                     <p class="mt-1 text-sm text-slate-400">Aucune notification (téléphone ni e-mail) pour les groupes cochés.</p>
                     <div class="mt-3 space-y-2">
                         @foreach ($memberships as $member)
-                            <label class="flex items-center gap-3 rounded-2xl px-3 py-2.5 ring-1 ring-white/10 has-[:checked]:bg-white/[0.04]">
+                            <label class="flex items-center gap-3 rounded-2xl px-3 py-2.5 ring-1 ring-veil/10 has-[:checked]:bg-veil/[0.04]">
                                 <input type="checkbox" name="muted_groups[]" value="{{ $member->chat_group_id }}" @checked($member->notifications_muted) class="size-5 shrink-0 rounded accent-electric-500">
                                 <span class="min-w-0 flex-1 truncate text-sm text-slate-200">{{ $member->group->formation->title }}</span>
                                 <flux:icon.bell-slash class="size-4 shrink-0 text-slate-500" />

@@ -155,10 +155,10 @@ class SiteContentTest extends TestCase
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('<meta name="color-scheme" content="dark">', false);
+            ->assertSee('<meta name="color-scheme" content="only dark">', false);
 
         $css = (string) file_get_contents(resource_path('css/site.css'));
-        $this->assertStringContainsString('color-scheme: dark;', $css);
+        $this->assertStringContainsString('color-scheme: only dark;', $css);
         $this->assertStringNotContainsString('.js [data-reveal]', $css, 'Le contenu ne doit jamais être masqué en attendant une animation.');
     }
 

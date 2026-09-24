@@ -25,7 +25,7 @@
                     <span class="text-slate-500">Leçons bientôt disponibles</span>
                 @endif
             </div>
-            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
+            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-veil/10" aria-hidden="true">
                 <div class="h-full rounded-full bg-linear-to-r from-electric-500 to-gold-400" style="width: {{ $cardProgress?->percent() ?? 0 }}%"></div>
             </div>
         </div>

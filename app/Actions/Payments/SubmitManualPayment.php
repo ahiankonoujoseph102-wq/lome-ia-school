@@ -2,6 +2,7 @@
 
 namespace App\Actions\Payments;
 
+use App\Affiliates\ReferralTracker;
 use App\Enums\PaymentGateway;
 use App\Enums\PurchaseStatus;
 use App\Enums\RegistrationStatus;
@@ -38,6 +39,7 @@ class SubmitManualPayment
         private ProofImageProcessor $proofs,
         private PurchaseManager $purchases,
         private SessionRegistrar $sessions,
+        private ReferralTracker $referrals,
     ) {}
 
     /**
@@ -64,10 +66,13 @@ class SubmitManualPayment
         $this->ensureCanPay($user, $formation, $session);
         $this->ensureProofIsNew($transactionId, $proofHash);
 
+        // Dernier lien d'affiliation cliqué (jamais le propre lien de l'acheteur).
+        $affiliateCode = $this->referrals->codeFor($user, request());
+
         $path = $this->proofs->store($proof, $user->id);
 
         try {
-            $purchase = DB::transaction(function () use ($user, $formation, $session, $amount, $method, $transactionId, $payerPhone, $input, $path, $proofHash): Purchase {
+            $purchase = DB::transaction(function () use ($user, $formation, $session, $amount, $method, $transactionId, $payerPhone, $input, $path, $proofHash, $affiliateCode): Purchase {
                 // Verrou sur l'élève : deux envois simultanés ne peuvent pas passer tous les deux.
                 User::query()->whereKey($user->id)->lockForUpdate()->first();
                 $this->ensureCanPay($user, $formation, $session);
@@ -94,6 +99,7 @@ class SubmitManualPayment
                     'proof_path' => $path,
                     'proof_hash' => $proofHash,
                     'status' => $status,
+                    'affiliate_code' => $affiliateCode,
                 ]);
 
                 if ($session !== null) {

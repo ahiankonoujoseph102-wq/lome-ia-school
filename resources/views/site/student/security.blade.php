@@ -50,7 +50,7 @@
                     <label for="nouveau-mot-de-passe" class="field-label">Nouveau mot de passe</label>
                     <div class="relative">
                         <input id="nouveau-mot-de-passe" name="password" :type="visible ? 'text' : 'password'" type="password" required minlength="8" autocomplete="new-password" @class(['field-input pr-24', 'field-input-error' => $passwordErrors->has('password')])>
-                        <button type="button" @click="visible = !visible" class="absolute inset-y-1.5 right-1.5 rounded-xl px-3 text-sm font-medium text-slate-300 hover:bg-white/10" x-text="visible ? 'Masquer' : 'Afficher'">Afficher</button>
+                        <button type="button" @click="visible = !visible" class="absolute inset-y-1.5 right-1.5 rounded-xl px-3 text-sm font-medium text-slate-300 hover:bg-veil/10" x-text="visible ? 'Masquer' : 'Afficher'">Afficher</button>
                     </div>
                     @if ($passwordErrors->has('password'))
                         <p class="text-sm text-rose-300">{{ $passwordErrors->first('password') }}</p>
@@ -70,14 +70,14 @@
                     @if ($twoFactorEnabled)
                         <span class="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">Activée</span>
                     @else
-                        <span class="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-300">Facultative</span>
+                        <span class="rounded-full border border-veil/15 bg-veil/5 px-2.5 py-1 text-xs font-semibold text-slate-300">Facultative</span>
                     @endif
                 </div>
 
                 @if ($twoFactorEnabled)
                     <p class="mt-2 text-sm text-slate-400">À chaque connexion, un code à 6 chiffres vous est demandé. Vous le trouvez dans votre application d'authentification.</p>
 
-                    <div class="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4" x-data="{ open: @js($showCodes) }">
+                    <div class="mt-5 rounded-2xl border border-veil/10 bg-veil/[0.03] p-4" x-data="{ open: @js($showCodes) }">
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <div>
                                 <p class="font-semibold text-white">Codes de récupération</p>
@@ -86,7 +86,7 @@
                             <button type="button" @click="open = !open" class="btn-ghost !px-4 !py-2 !text-sm" x-text="open ? 'Masquer les codes' : 'Voir les codes'">Voir les codes</button>
                         </div>
                         <div x-show="open" x-cloak class="mt-4 space-y-4">
-                            <ul class="grid grid-cols-2 gap-2 rounded-xl bg-night-950/80 p-4 font-mono text-sm text-gold-200 ring-1 ring-white/10" aria-label="Codes de récupération">
+                            <ul class="grid grid-cols-2 gap-2 rounded-xl bg-night-950/80 p-4 font-mono text-sm text-gold-200 ring-1 ring-veil/10" aria-label="Codes de récupération">
                                 @foreach ($recoveryCodes as $code)
                                     <li>{{ $code }}</li>
                                 @endforeach
@@ -117,10 +117,10 @@
                             <span class="grid size-7 shrink-0 place-items-center rounded-full bg-gold-400 text-sm font-bold text-night-950">2</span>
                             <div class="min-w-0 flex-1">
                                 <p class="font-semibold text-white">Scannez ce QR code avec l'application</p>
-                                <div class="mt-3 inline-block rounded-2xl bg-white p-3 [&_svg]:size-44">{!! $qrCodeSvg !!}</div>
+                                <div class="qr-code mt-3 inline-block rounded-2xl bg-white p-3 [&_svg]:size-44">{!! $qrCodeSvg !!}</div>
                                 <p class="mt-3 text-sm text-slate-400">Ou saisissez cette clé dans l'application :</p>
                                 <div class="mt-2 flex items-center gap-2" x-data="{ copied: false }">
-                                    <code class="min-w-0 flex-1 rounded-xl bg-night-950/80 px-3 py-2.5 font-mono text-sm break-all text-gold-200 ring-1 ring-white/10">{{ $setupKey }}</code>
+                                    <code class="min-w-0 flex-1 rounded-xl bg-night-950/80 px-3 py-2.5 font-mono text-sm break-all text-gold-200 ring-1 ring-veil/10">{{ $setupKey }}</code>
                                     <button type="button" class="btn-ghost shrink-0 !px-3 !py-2.5 !text-sm"
                                         @click="navigator.clipboard?.writeText(@js($setupKey)).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
                                         x-text="copied ? 'Copiée' : 'Copier'">Copier</button>
@@ -168,10 +168,10 @@
                 </h2>
                 <p class="mt-1 text-sm text-slate-400">Connectez-vous sans mot de passe, avec l'empreinte, Face ID ou le code de votre téléphone.</p>
 
-                <ul class="mt-5 divide-y divide-white/10 overflow-hidden rounded-2xl border border-white/10">
+                <ul class="mt-5 divide-y divide-veil/10 overflow-hidden rounded-2xl border border-veil/10">
                     @forelse ($passkeys as $passkey)
                         <li class="flex items-center gap-3 p-4" x-data="{ confirming: false }">
-                            <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-white/5 text-electric-300"><flux:icon.key class="size-5" /></span>
+                            <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-veil/5 text-electric-300"><flux:icon.key class="size-5" /></span>
                             <div class="min-w-0 flex-1">
                                 <p class="truncate font-medium text-white">{{ $passkey->name }}</p>
                                 <p class="text-xs text-slate-500">
@@ -193,7 +193,7 @@
                         </li>
                     @empty
                         <li class="p-6 text-center">
-                            <span class="mx-auto grid size-12 place-items-center rounded-2xl bg-white/5 text-slate-400"><flux:icon.key class="size-6" /></span>
+                            <span class="mx-auto grid size-12 place-items-center rounded-2xl bg-veil/5 text-slate-400"><flux:icon.key class="size-6" /></span>
                             <p class="mt-3 font-medium text-white">Aucune passkey pour le moment</p>
                             <p class="mt-1 text-sm text-slate-400">Ajoutez-en une pour vous connecter en un geste.</p>
                         </li>

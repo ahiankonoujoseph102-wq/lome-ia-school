@@ -21,7 +21,7 @@
             @forelse ($formation->modules as $module)
                 @php $moduleErrors = $errors->getBag('module'.$module->id); @endphp
                 <section id="module-{{ $module->id }}" class="card scroll-mt-24 overflow-hidden">
-                    <div class="flex items-start gap-3 border-b border-white/10 p-4" x-data="{ renaming: @js($moduleErrors->any()) }">
+                    <div class="flex items-start gap-3 border-b border-veil/10 p-4" x-data="{ renaming: @js($moduleErrors->any()) }">
                         <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-sm font-bold text-electric-300">{{ $loop->iteration }}</span>
                         <div class="min-w-0 flex-1">
                             <h2 x-show="!renaming" class="font-semibold text-white">{{ $module->title }}</h2>
@@ -39,13 +39,13 @@
                         </div>
                         <div class="flex shrink-0 items-center gap-1">
                             @include('site.admin.content.partials.move', ['route' => 'admin.modules.move', 'model' => $module, 'first' => $loop->first, 'last' => $loop->last, 'label' => 'le module'])
-                            <button type="button" @click="renaming = !renaming" class="grid size-10 place-items-center rounded-full text-slate-300 ring-1 ring-white/15 hover:bg-white/10" aria-label="Renommer le module">
+                            <button type="button" @click="renaming = !renaming" class="grid size-10 place-items-center rounded-full text-slate-300 ring-1 ring-veil/15 hover:bg-veil/10" aria-label="Renommer le module">
                                 <flux:icon.pencil class="size-4" />
                             </button>
                         </div>
                     </div>
 
-                    <ol class="divide-y divide-white/10">
+                    <ol class="divide-y divide-veil/10">
                         @foreach ($module->lessons as $lesson)
                             <li id="lecon-{{ $lesson->id }}" class="scroll-mt-24 p-4">
                                 <div class="flex items-start gap-3">
@@ -56,35 +56,35 @@
                                             @if ($lesson->is_published)
                                                 <span class="rounded-full bg-emerald-400/15 px-2 py-0.5 font-semibold text-emerald-200 ring-1 ring-emerald-400/30">Publiée</span>
                                             @else
-                                                <span class="rounded-full bg-white/10 px-2 py-0.5 font-semibold text-slate-300 ring-1 ring-white/15">Brouillon</span>
+                                                <span class="rounded-full bg-veil/10 px-2 py-0.5 font-semibold text-slate-300 ring-1 ring-veil/15">Brouillon</span>
                                             @endif
                                             @if ($lesson->is_preview)
                                                 <span class="rounded-full bg-gold-400/15 px-2 py-0.5 font-semibold text-gold-200 ring-1 ring-gold-400/30">Aperçu gratuit</span>
                                             @endif
                                             @if ($lesson->video_id)
-                                                <span class="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-slate-300 ring-1 ring-white/10"><flux:icon.play class="size-3" /> {{ implode(' + secours ', $lesson->videoSourceNames()) }}</span>
+                                                <span class="inline-flex items-center gap-1 rounded-full bg-veil/5 px-2 py-0.5 text-slate-300 ring-1 ring-veil/10"><flux:icon.play class="size-3" /> {{ implode(' + secours ', $lesson->videoSourceNames()) }}</span>
                                             @else
                                                 <span class="rounded-full bg-rose-400/10 px-2 py-0.5 text-rose-200 ring-1 ring-rose-400/30">Sans vidéo</span>
                                             @endif
                                             @if ($lesson->formatted_duration)
-                                                <span class="rounded-full bg-white/5 px-2 py-0.5 text-slate-300 ring-1 ring-white/10">{{ $lesson->formatted_duration }}</span>
+                                                <span class="rounded-full bg-veil/5 px-2 py-0.5 text-slate-300 ring-1 ring-veil/10">{{ $lesson->formatted_duration }}</span>
                                             @endif
                                             @if ($lesson->resources->isNotEmpty())
-                                                <span class="rounded-full bg-white/5 px-2 py-0.5 text-slate-300 ring-1 ring-white/10">{{ $lesson->resources->count() }} {{ $lesson->resources->count() > 1 ? 'fichiers' : 'fichier' }}</span>
+                                                <span class="rounded-full bg-veil/5 px-2 py-0.5 text-slate-300 ring-1 ring-veil/10">{{ $lesson->resources->count() }} {{ $lesson->resources->count() > 1 ? 'fichiers' : 'fichier' }}</span>
                                             @endif
                                         </div>
                                     </div>
                                 </div>
                                 <div class="mt-3 flex flex-wrap items-center gap-2 pl-9">
                                     @include('site.admin.content.partials.move', ['route' => 'admin.lessons.move', 'model' => $lesson, 'first' => $loop->first, 'last' => $loop->last, 'label' => 'la leçon'])
-                                    <a href="{{ route('admin.lessons.edit', $lesson) }}" class="inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white ring-1 ring-white/15 hover:bg-white/10">
+                                    <a href="{{ route('admin.lessons.edit', $lesson) }}" class="inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white ring-1 ring-veil/15 hover:bg-veil/10">
                                         <flux:icon.pencil-square class="size-4" /> Modifier
                                     </a>
                                     <form method="POST" action="{{ route('admin.lessons.publish', $lesson) }}">
                                         @csrf
                                         <button type="submit" @class([
                                             'inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-semibold ring-1',
-                                            'text-slate-300 ring-white/15 hover:bg-white/10' => $lesson->is_published,
+                                            'text-slate-300 ring-veil/15 hover:bg-veil/10' => $lesson->is_published,
                                             'bg-emerald-500 text-night-950 ring-emerald-400 hover:bg-emerald-400' => ! $lesson->is_published,
                                         ])>{{ $lesson->is_published ? 'Dépublier' : 'Publier' }}</button>
                                     </form>
@@ -93,7 +93,7 @@
                         @endforeach
                     </ol>
 
-                    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 bg-white/[0.02] p-4" x-data="{ confirmDelete: false }">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-veil/10 bg-veil/[0.02] p-4" x-data="{ confirmDelete: false }">
                         <a href="{{ route('admin.lessons.create', $module) }}" class="btn-gold !px-5 !py-2.5 !text-sm">
                             <flux:icon.plus class="size-4" /> Ajouter une leçon
                         </a>
@@ -103,7 +103,7 @@
                             @method('DELETE')
                             <p class="w-full text-sm text-rose-100">Supprimer « {{ $module->title }} » et ses {{ $module->lessons->count() }} leçon(s), avec leurs fichiers ? Cette action est définitive.</p>
                             <button type="submit" class="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white">Oui, supprimer</button>
-                            <button type="button" @click="confirmDelete = false" class="rounded-full px-4 py-2 text-sm text-slate-300 ring-1 ring-white/15">Annuler</button>
+                            <button type="button" @click="confirmDelete = false" class="rounded-full px-4 py-2 text-sm text-slate-300 ring-1 ring-veil/15">Annuler</button>
                         </form>
                     </div>
                 </section>

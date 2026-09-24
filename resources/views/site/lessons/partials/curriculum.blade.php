@@ -13,7 +13,7 @@
                     <a href="{{ route('lessons.show', [$formation, $item]) }}" @class([
                         'flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition',
                         'bg-electric-600/20 text-white ring-1 ring-electric-400/40' => $isCurrent,
-                        'text-slate-200 hover:bg-white/5' => ! $isCurrent,
+                        'text-slate-200 hover:bg-veil/5' => ! $isCurrent,
                     ]) @if ($isCurrent) aria-current="page" @endif>
                         @if ($done)
                             <flux:icon.check-circle class="size-5 shrink-0 text-emerald-300" variant="solid" />

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AffiliateController as AdminAffiliateController;
 use App\Http\Controllers\Admin\ChatGroupController as AdminChatGroupController;
 use App\Http\Controllers\Admin\CourseContentController;
 use App\Http\Controllers\Admin\LessonController as AdminLessonController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Site\OgImageController;
 use App\Http\Controllers\Site\PageController;
 use App\Http\Controllers\Site\PwaController;
 use App\Http\Controllers\Site\SitemapController;
+use App\Http\Controllers\Student\AffiliateController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\FormationController as StudentFormationController;
 use App\Http\Controllers\Student\LiveSessionController as StudentLiveSessionController;
@@ -39,6 +41,7 @@ Route::post('formations/{formation}/lecons/{lesson}/terminee', [LessonController
 Route::get('consultation-gratuite', [PageController::class, 'consultation'])->name('consultation');
 Route::get('a-propos', [PageController::class, 'about'])->name('about');
 Route::get('contact', [PageController::class, 'contact'])->name('contact');
+Route::get('devenir-affilie', [PageController::class, 'affiliate'])->name('affiliate.program');
 Route::get('mentions-legales', [PageController::class, 'legalNotice'])->name('legal.notice');
 Route::get('conditions-generales-de-vente', [PageController::class, 'terms'])->name('legal.terms');
 Route::get('politique-de-confidentialite', [PageController::class, 'privacy'])->name('legal.privacy');
@@ -80,6 +83,14 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
     Route::put('notifications', [NotificationController::class, 'update'])->name('student.notifications.update');
     Route::post('notifications/appareils', [NotificationController::class, 'subscribe'])->middleware('throttle:20,1')->name('student.notifications.subscribe');
     Route::delete('notifications/appareils', [NotificationController::class, 'unsubscribe'])->name('student.notifications.unsubscribe');
+
+    // Affiliation : tout inscrit peut devenir affilié, même sans avoir acheté
+    Route::get('affiliation', [AffiliateController::class, 'index'])->name('student.affiliate.index');
+    Route::post('affiliation/activer', [AffiliateController::class, 'activate'])->middleware('throttle:10,1')->name('student.affiliate.activate');
+    Route::get('affiliation/commissions', [AffiliateController::class, 'commissions'])->name('student.affiliate.commissions');
+    Route::get('affiliation/retraits', [AffiliateController::class, 'withdrawals'])->name('student.affiliate.withdrawals');
+    Route::put('affiliation/coordonnees', [AffiliateController::class, 'updatePayout'])->middleware('throttle:10,1')->name('student.affiliate.payout');
+    Route::post('affiliation/retraits', [AffiliateController::class, 'requestWithdrawal'])->middleware('throttle:10,1')->name('student.affiliate.withdraw');
 
     // Sessions ponctuelles en direct et en présentiel (élèves ayant accès à la formation)
     Route::get('sessions', [StudentLiveSessionController::class, 'index'])->name('student.sessions.index');
@@ -171,6 +182,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('equipe', [ModeratorController::class, 'index'])->name('moderators.index');
     Route::post('equipe', [ModeratorController::class, 'store'])->name('moderators.store');
     Route::delete('equipe/{user}', [ModeratorController::class, 'destroy'])->name('moderators.destroy');
+
+    // Affiliation : retraits à payer et affiliés (admin uniquement, jamais les modérateurs : il s'agit d'argent)
+    Route::get('affiliation/retraits', [AdminAffiliateController::class, 'withdrawals'])->name('affiliates.withdrawals');
+    Route::post('affiliation/retraits/{withdrawal}/payer', [AdminAffiliateController::class, 'pay'])->name('affiliates.withdrawals.pay');
+    Route::post('affiliation/retraits/{withdrawal}/refuser', [AdminAffiliateController::class, 'reject'])->name('affiliates.withdrawals.reject');
+    Route::get('affiliation/affilies', [AdminAffiliateController::class, 'index'])->name('affiliates.index');
+    Route::post('affiliation/affilies/{affiliate}/suspendre', [AdminAffiliateController::class, 'suspend'])->name('affiliates.suspend');
+    Route::post('affiliation/affilies/{affiliate}/reactiver', [AdminAffiliateController::class, 'unsuspend'])->name('affiliates.unsuspend');
 });
 
 require __DIR__.'/settings.php';

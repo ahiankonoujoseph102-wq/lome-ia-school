@@ -24,7 +24,28 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         {{-- Site toujours sombre : empêche le navigateur d'appliquer son propre mode sombre ou clair. --}}
-        <meta name="color-scheme" content="dark">
+        <meta name="color-scheme" content="only dark">
+        {{--
+            Mode sombre forcé de Chrome (réglage fréquent sur Tecno, Infinix, Xiaomi, Samsung) : quand le téléphone
+            est en mode clair, Chrome recolore quand même les textes foncés et les fonds clairs, malgré « only dark ».
+            On le détecte (méthode documentée par Google : la couleur système « canvas » n'est plus blanche) et la
+            classe « force-dark » active une compensation exacte dans site.css. Test : SiteColorSchemeTest.
+        --}}
+        <script>
+            (() => {
+                const root = document.documentElement;
+                const probe = document.createElement('div');
+                probe.style.cssText = 'display:none;background-color:canvas;color-scheme:light';
+                root.appendChild(probe);
+                const autoDark = getComputedStyle(probe).backgroundColor === 'rgb(18, 18, 18)';
+                probe.remove();
+                if (!autoDark || !window.matchMedia) return;
+                const phoneDark = window.matchMedia('(prefers-color-scheme: dark)');
+                const apply = () => root.classList.toggle('force-dark', !phoneDark.matches);
+                apply();
+                phoneDark.addEventListener?.('change', apply);
+            })();
+        </script>
 
         <title>{{ $fullTitle }}</title>
         <meta name="description" content="{{ $description }}">
@@ -80,7 +101,7 @@
             {{ $slot }}
             {{ $after ?? '' }}
         @else
-            <a href="#contenu" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-night-950">Aller au contenu</a>
+            <a href="#contenu" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-full focus:bg-veil focus:px-4 focus:py-2 focus:text-night-950">Aller au contenu</a>
 
             @include('site.partials.header')
 
