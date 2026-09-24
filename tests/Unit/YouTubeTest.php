@@ -14,6 +14,11 @@ class YouTubeTest extends TestCase
         $this->assertSame('dQw4w9WgXcQ', YouTube::id('https://www.youtube.com/watch?feature=share&v=dQw4w9WgXcQ'));
         $this->assertSame('dQw4w9WgXcQ', YouTube::id('https://youtu.be/dQw4w9WgXcQ?si=abc'));
         $this->assertSame('dQw4w9WgXcQ', YouTube::id('https://youtube.com/shorts/dQw4w9WgXcQ'));
+        $this->assertSame('dQw4w9WgXcQ', YouTube::id('https://m.youtube.com/watch?v=dQw4w9WgXcQ&t=42s'));
+        $this->assertSame('dQw4w9WgXcQ', YouTube::id('https://www.youtube.com/live/dQw4w9WgXcQ?si=abc'));
+        $this->assertSame('dQw4w9WgXcQ', YouTube::id('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ'));
+        $this->assertSame('dQw4w9WgXcQ', YouTube::id('https://www.youtube.com/v/dQw4w9WgXcQ'));
+        $this->assertSame('dQw4w9WgXcQ', YouTube::id('  https://youtu.be/dQw4w9WgXcQ  '));
     }
 
     public function test_it_rejects_invalid_values(): void
@@ -21,5 +26,7 @@ class YouTubeTest extends TestCase
         $this->assertNull(YouTube::id(''));
         $this->assertNull(YouTube::id(null));
         $this->assertNull(YouTube::id('https://example.com/video'));
+        $this->assertNull(YouTube::id('https://youtu.be/dQw4w9WgXcQextra'));
+        $this->assertNull(YouTube::id('https://vimeo.com/123456'));
     }
 }

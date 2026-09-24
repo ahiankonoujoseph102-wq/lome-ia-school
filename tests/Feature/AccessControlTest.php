@@ -64,7 +64,7 @@ class AccessControlTest extends TestCase
         $this->actingAs($student)->get(route('student.formations.show', $formation))
             ->assertOk()
             ->assertSee('Création d&#039;agents IA', false)
-            ->assertSee('Lecteur de cours');
+            ->assertSee('Les leçons arrivent bientôt');
     }
 
     public function test_enrolling_twice_does_not_create_duplicates(): void

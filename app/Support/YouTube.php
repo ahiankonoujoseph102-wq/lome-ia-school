@@ -5,7 +5,7 @@ namespace App\Support;
 class YouTube
 {
     /**
-     * Identifiant d'une vidéo à partir d'un lien YouTube (watch, youtu.be, shorts, embed) ou de l'identifiant seul.
+     * Identifiant d'une vidéo à partir d'un lien YouTube (normal, court, mobile, shorts, live, intégré) ou de l'identifiant seul.
      */
     public static function id(?string $value): ?string
     {
@@ -15,7 +15,8 @@ class YouTube
             return $value;
         }
 
-        if (preg_match('~(?:youtube(?:-nocookie)?\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/)|youtu\.be/)([\w-]{11})~', $value, $matches)) {
+        // youtube.com (www., m., music.) : watch?v=, embed/, shorts/, live/, v/ ; youtu.be/ ; youtube-nocookie.com/embed/.
+        if (preg_match('~(?:youtube(?:-nocookie)?\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/|v/)|youtu\.be/)([\w-]{11})(?![\w-])~', $value, $matches)) {
             return $matches[1];
         }
 

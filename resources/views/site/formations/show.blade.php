@@ -146,29 +146,49 @@
                 </section>
             @endif
 
-            {{-- Programme --}}
-            {{-- Programme masqué tant que config('site.show_curriculum') est désactivé (voir Formation::publicCurriculum). --}}
-            @if ($formation->publicCurriculum())
-                <section>
+            {{-- Programme : uniquement les vraies leçons publiées (masqué s'il n'y en a aucune) --}}
+            @php
+                $curriculum = $formation->publicCurriculum();
+                $lessonCount = $formation->orderedPublishedLessons()->count();
+                $totalDuration = $formation->totalDurationSeconds();
+            @endphp
+            @if ($curriculum->isNotEmpty())
+                <section id="programme" class="scroll-mt-24">
                     <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Programme de la formation</h2>
-                    <p class="mt-2 text-slate-400" data-reveal>{{ count($formation->publicCurriculum()) }} modules pour progresser pas à pas.</p>
+                    <p class="mt-2 text-slate-400" data-reveal>
+                        {{ $curriculum->count() }} {{ $curriculum->count() > 1 ? 'modules' : 'module' }} · {{ $lessonCount }} {{ $lessonCount > 1 ? 'leçons' : 'leçon' }}@if ($totalDuration) · {{ \App\Models\Lesson::formatDuration($totalDuration) }} de vidéo @endif
+                    </p>
                     <div class="mt-6 space-y-3">
-                        @foreach ($formation->publicCurriculum() as $module)
+                        @foreach ($curriculum as $module)
                             <details class="card group overflow-hidden" data-reveal @if ($loop->first) open @endif>
                                 <summary class="flex cursor-pointer list-none items-center gap-4 p-4 sm:p-5">
                                     <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-sm font-bold text-electric-300 ring-1 ring-electric-400/25">
                                         {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}
                                     </span>
                                     <span class="flex-1">
-                                        <span class="block font-semibold text-white">{{ $module['title'] }}</span>
-                                        <span class="block text-sm text-slate-400">{{ count($module['lessons']) }} leçons</span>
+                                        <span class="block font-semibold text-white">{{ $module->title }}</span>
+                                        <span class="block text-sm text-slate-400">{{ $module->lessons->count() }} {{ $module->lessons->count() > 1 ? 'leçons' : 'leçon' }}</span>
                                     </span>
                                     <flux:icon.chevron-down class="size-5 shrink-0 text-slate-400 transition duration-300 group-open:rotate-180" />
                                 </summary>
-                                <ul class="space-y-2.5 border-t border-white/10 px-4 py-4 sm:px-5">
-                                    @foreach ($module['lessons'] as $lesson)
-                                        <li class="flex items-start gap-3 text-slate-300">
-                                            <flux:icon.play-circle class="mt-0.5 size-5 shrink-0 text-electric-400" /> {{ $lesson }}
+                                <ul class="space-y-1 border-t border-white/10 px-2 py-3 sm:px-3">
+                                    @foreach ($module->lessons as $lesson)
+                                        <li>
+                                            @if ($lesson->is_preview)
+                                                <a href="{{ route('lessons.show', [$formation, $lesson]) }}" class="flex items-center gap-3 rounded-2xl px-2 py-2 text-slate-200 hover:bg-white/5">
+                                                    <flux:icon.play-circle class="size-5 shrink-0 text-gold-300" />
+                                                    <span class="min-w-0 flex-1">{{ $lesson->title }}</span>
+                                                    <span class="shrink-0 rounded-full bg-gold-400/15 px-2 py-0.5 text-xs font-semibold text-gold-200 ring-1 ring-gold-400/30">Aperçu gratuit</span>
+                                                </a>
+                                            @else
+                                                <span class="flex items-center gap-3 px-2 py-2 text-slate-300">
+                                                    <flux:icon.lock-closed class="size-5 shrink-0 text-slate-500" />
+                                                    <span class="min-w-0 flex-1">{{ $lesson->title }}</span>
+                                                    @if ($lesson->formatted_duration)
+                                                        <span class="shrink-0 text-xs text-slate-500">{{ $lesson->formatted_duration }}</span>
+                                                    @endif
+                                                </span>
+                                            @endif
                                         </li>
                                     @endforeach
                                 </ul>

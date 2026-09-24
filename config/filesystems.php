@@ -48,6 +48,16 @@ return [
             'report' => false,
         ],
 
+        // Ressources téléchargeables des leçons : jamais servies publiquement, lues uniquement par
+        // App\Http\Controllers\LessonResourceController (élève ayant accès, ou leçon d'aperçu gratuite).
+        'lesson_resources' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/lesson-resources'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\CourseContentController;
+use App\Http\Controllers\Admin\LessonController as AdminLessonController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\LessonController;
 use App\Http\Controllers\PurchaseProofController;
 use App\Http\Controllers\Site\CheckoutController;
 use App\Http\Controllers\Site\FormationController;
@@ -17,6 +20,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('formations', [FormationController::class, 'index'])->name('formations.index');
 Route::get('formations/{formation}', [FormationController::class, 'show'])->name('formations.show');
+
+// Lecteur de cours : leçons (élèves ayant accès, ou aperçus gratuits pour tous), ressources, progression
+Route::get('formations/{formation}/lecons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
+Route::get('formations/{formation}/lecons/{lesson}/fichiers/{resource}', [LessonController::class, 'download'])->name('lessons.resources.download');
+Route::post('formations/{formation}/lecons/{lesson}/terminee', [LessonController::class, 'complete'])->middleware('auth')->name('lessons.complete');
 Route::get('consultation-gratuite', [PageController::class, 'consultation'])->name('consultation');
 Route::get('a-propos', [PageController::class, 'about'])->name('about');
 Route::get('contact', [PageController::class, 'contact'])->name('contact');
@@ -63,6 +71,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('paiements/{purchase}/refuser', [AdminPaymentController::class, 'reject'])->name('payments.reject');
     Route::post('eleves/{user}/bloquer', [AdminPaymentController::class, 'block'])->name('users.block');
     Route::post('eleves/{user}/debloquer', [AdminPaymentController::class, 'unblock'])->name('users.unblock');
+
+    // Contenu des formations : modules et leçons
+    Route::get('contenu', [CourseContentController::class, 'index'])->name('content.index');
+    Route::get('contenu/{formation}', [CourseContentController::class, 'show'])->name('content.show');
+    Route::post('contenu/{formation}/modules', [CourseContentController::class, 'storeModule'])->name('modules.store');
+    Route::put('modules/{module}', [CourseContentController::class, 'updateModule'])->name('modules.update');
+    Route::post('modules/{module}/deplacer/{direction}', [CourseContentController::class, 'moveModule'])->whereIn('direction', ['up', 'down'])->name('modules.move');
+    Route::delete('modules/{module}', [CourseContentController::class, 'destroyModule'])->name('modules.destroy');
+    Route::get('modules/{module}/lecons/nouvelle', [AdminLessonController::class, 'create'])->name('lessons.create');
+    Route::post('modules/{module}/lecons', [AdminLessonController::class, 'store'])->name('lessons.store');
+    Route::get('lecons/{lesson}', [AdminLessonController::class, 'edit'])->name('lessons.edit');
+    Route::put('lecons/{lesson}', [AdminLessonController::class, 'update'])->name('lessons.update');
+    Route::post('lecons/{lesson}/deplacer/{direction}', [AdminLessonController::class, 'move'])->whereIn('direction', ['up', 'down'])->name('lessons.move');
+    Route::post('lecons/{lesson}/publication', [AdminLessonController::class, 'togglePublish'])->name('lessons.publish');
+    Route::delete('lecons/{lesson}', [AdminLessonController::class, 'destroy'])->name('lessons.destroy');
+    Route::delete('ressources/{resource}', [AdminLessonController::class, 'destroyResource'])->name('resources.destroy');
 });
 
 require __DIR__.'/settings.php';

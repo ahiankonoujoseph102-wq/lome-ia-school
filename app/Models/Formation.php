@@ -10,9 +10,11 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Collection;
 
 /**
@@ -31,12 +33,12 @@ use Illuminate\Support\Collection;
  * @property bool $is_featured
  * @property bool $is_active
  * @property list<string>|null $outcomes Ce que l'élève va apprendre.
- * @property list<array{title: string, lessons: list<string>}>|null $curriculum Programme par modules.
  * @property list<string>|null $audience Pour qui est la formation.
  * @property-read list<string> $bonuses Bonus facultatifs, définis dans config/site.php (clé « bonuses »).
  * @property-read string $formatted_price
  * @property-read string|null $image_url
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Enrollment> $enrollments
+ * @property-read EloquentCollection<int, Enrollment> $enrollments
+ * @property-read EloquentCollection<int, CourseModule> $modules
  */
 class Formation extends Model
 {
@@ -56,7 +58,6 @@ class Formation extends Model
         'is_featured',
         'is_active',
         'outcomes',
-        'curriculum',
         'audience',
     ];
 
@@ -85,7 +86,6 @@ class Formation extends Model
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
             'outcomes' => 'array',
-            'curriculum' => 'array',
             'audience' => 'array',
         ];
     }
@@ -146,14 +146,58 @@ class Formation extends Model
     }
 
     /**
-     * Programme à afficher : vide tant que config('site.show_curriculum') est désactivé.
-     * À l'étape 5, il sera généré à partir des vraies leçons enregistrées dans la plateforme.
-     *
-     * @return list<array{title: string, lessons: list<string>}>
+     * @return HasMany<CourseModule, $this>
      */
-    public function publicCurriculum(): array
+    public function modules(): HasMany
     {
-        return config('site.show_curriculum') ? ($this->curriculum ?? []) : [];
+        return $this->hasMany(CourseModule::class)->orderBy('position')->orderBy('id');
+    }
+
+    /**
+     * @return HasManyThrough<Lesson, CourseModule, $this>
+     */
+    public function lessons(): HasManyThrough
+    {
+        return $this->hasManyThrough(Lesson::class, CourseModule::class);
+    }
+
+    /**
+     * Programme réel : modules ayant au moins une leçon publiée, avec ces seules leçons, dans l'ordre.
+     * Vide si la formation n'a encore aucune leçon publiée (la section est alors masquée).
+     *
+     * @return EloquentCollection<int, CourseModule>
+     */
+    public function publicCurriculum(): EloquentCollection
+    {
+        return once(fn (): EloquentCollection => $this->modules()
+            ->with(['lessons' => fn ($query) => $query->where('is_published', true)])
+            ->get()
+            ->filter(fn (CourseModule $module): bool => $module->lessons->isNotEmpty())
+            ->values());
+    }
+
+    /**
+     * Leçons publiées dans l'ordre du programme (modules puis leçons).
+     *
+     * @return EloquentCollection<int, Lesson>
+     */
+    public function orderedPublishedLessons(): EloquentCollection
+    {
+        return new EloquentCollection($this->publicCurriculum()->flatMap(fn (CourseModule $module) => $module->lessons)->all());
+    }
+
+    /**
+     * Durée totale du programme, seulement si toutes les leçons publiées ont une durée renseignée.
+     */
+    public function totalDurationSeconds(): ?int
+    {
+        $lessons = $this->orderedPublishedLessons();
+
+        if ($lessons->isEmpty() || $lessons->contains(fn (Lesson $lesson): bool => ! $lesson->duration_seconds)) {
+            return null;
+        }
+
+        return (int) $lessons->sum('duration_seconds');
     }
 
     /**

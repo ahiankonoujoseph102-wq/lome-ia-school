@@ -166,6 +166,34 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod }) => ({
     },
 }));
 
+/**
+ * Admin « Contenu des formations » : aperçu de la vidéo YouTube pendant la saisie du lien.
+ * Même reconnaissance des liens que App\Support\YouTube::id() côté serveur.
+ */
+const youtubeId = (value) => {
+    const input = (value || '').trim();
+
+    if (/^[\w-]{11}$/.test(input)) {
+        return input;
+    }
+
+    const match = input.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([\w-]{11})(?![\w-])/);
+
+    return match ? match[1] : null;
+};
+
+Alpine.data('lessonVideoPreview', (initialUrl) => ({
+    url: initialUrl || '',
+
+    get videoId() {
+        return youtubeId(this.url);
+    },
+
+    get embedUrl() {
+        return this.videoId ? `https://www.youtube-nocookie.com/embed/${this.videoId}?rel=0&modestbranding=1&playsinline=1` : '';
+    },
+}));
+
 window.Alpine = Alpine;
 Alpine.start();
 

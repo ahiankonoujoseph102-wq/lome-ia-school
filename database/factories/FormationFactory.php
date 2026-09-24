@@ -34,9 +34,6 @@ class FormationFactory extends Factory
             'is_featured' => false,
             'is_active' => true,
             'outcomes' => ['Premier objectif', 'Deuxième objectif'],
-            'curriculum' => [
-                ['title' => 'Module 1', 'lessons' => ['Leçon 1', 'Leçon 2']],
-            ],
             'audience' => ['Débutants'],
         ];
     }
