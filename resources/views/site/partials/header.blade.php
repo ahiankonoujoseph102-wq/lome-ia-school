@@ -37,6 +37,16 @@
             </div>
 
             <div class="flex items-center gap-2">
+                {{-- WhatsApp dans l'en-tête sur téléphone et tablette (le bouton flottant n'apparaît que sur grand écran). --}}
+                <a
+                    href="{{ \App\Support\WhatsApp::url($whatsappMessage ?? null) }}"
+                    target="_blank"
+                    rel="noopener"
+                    class="grid size-10 place-items-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/30 transition active:scale-95 lg:hidden"
+                    aria-label="Nous écrire sur WhatsApp"
+                >
+                    <x-site.whatsapp-icon class="size-5" />
+                </a>
                 @auth
                     {{-- Élève connecté : photo ou initiales, avec accès rapide à « Mon espace » --}}
                     <a href="{{ route('dashboard') }}" class="rounded-full lg:hidden" aria-label="Mon espace">

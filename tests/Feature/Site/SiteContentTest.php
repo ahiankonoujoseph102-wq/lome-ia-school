@@ -162,6 +162,14 @@ class SiteContentTest extends TestCase
         $this->assertStringNotContainsString('.js [data-reveal]', $css, 'Le contenu ne doit jamais être masqué en attendant une animation.');
     }
 
+    public function test_whatsapp_is_in_the_header_on_phones_and_floating_only_on_large_screens(): void
+    {
+        $content = (string) $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertSame(2, substr_count($content, 'aria-label="Nous écrire sur WhatsApp"'));
+        $this->assertMatchesRegularExpression('/class="[^"]*\bfixed\b[^"]*\bhidden\b[^"]*\blg:flex\b[^"]*"\s+aria-label="Nous écrire sur WhatsApp"/', $content);
+    }
+
     public function test_consultation_takes_place_online_by_video_call(): void
     {
         $this->get(route('consultation'))

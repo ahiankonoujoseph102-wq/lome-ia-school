@@ -81,7 +81,7 @@
             @include('site.partials.footer')
         @endif
 
-        @include('site.partials.whatsapp-button', ['raised' => $stickyCta || $variant === 'student', 'whatsappMessage' => $whatsappMessage])
+        @include('site.partials.whatsapp-button', ['whatsappMessage' => $whatsappMessage])
 
         {{ $after ?? '' }}
     </body>

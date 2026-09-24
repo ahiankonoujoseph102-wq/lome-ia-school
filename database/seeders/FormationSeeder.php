@@ -314,7 +314,7 @@ class FormationSeeder extends Seeder
                     'Trouver et valider une idée de SaaS qui répond à un vrai besoin',
                     'Construire un produit minimum viable avec l\'IA',
                     'Mettre en place les comptes clients et les abonnements',
-                    'Lancer votre SaaS et obtenir vos premiers clients',
+                    'Lancer votre SaaS et le présenter à vos premiers utilisateurs',
                     'Faire évoluer votre produit à partir des retours',
                 ],
                 'curriculum' => [
@@ -352,7 +352,7 @@ class FormationSeeder extends Seeder
                 ],
                 'audience' => [
                     'Les entrepreneurs qui veulent automatiser leur relation client',
-                    'Les freelances qui veulent proposer un service très demandé',
+                    'Les freelances qui veulent proposer un nouveau service aux entreprises',
                     'Les personnes à l\'aise avec l\'IA qui veulent passer au niveau supérieur',
                 ],
             ],
@@ -421,7 +421,7 @@ class FormationSeeder extends Seeder
                     'Choisir les services IA les plus demandés à proposer',
                     'Rédiger des propositions qui se démarquent',
                     'Communiquer avec des clients internationaux avec l\'aide de l\'IA',
-                    'Obtenir de bonnes évaluations et fidéliser vos clients',
+                    'Soigner chaque mission et construire une relation durable avec vos clients',
                 ],
                 'curriculum' => [
                     ['title' => 'Bien démarrer', 'lessons' => ['Comprendre le fonctionnement d\'Upwork', 'Choisir ses services IA', 'Créer son compte']],
@@ -444,7 +444,7 @@ class FormationSeeder extends Seeder
                 'category' => FormationCategory::Business,
                 'outcomes' => [
                     'Choisir une thématique et un positionnement porteurs',
-                    'Trouver des idées de vidéos à l\'infini avec l\'IA',
+                    'Trouver régulièrement des idées de vidéos avec l\'IA',
                     'Produire des vidéos rapidement : script, visuels, voix, montage',
                     'Adapter votre contenu à TikTok, Facebook et YouTube',
                     'Comprendre les différentes façons de monétiser une audience',
@@ -472,7 +472,7 @@ class FormationSeeder extends Seeder
                     'Trouver des idées de produits digitaux qui répondent à une demande',
                     'Créer vos produits avec l\'IA : guides, modèles, ebooks',
                     'Mettre en place une boutique en ligne et les paiements',
-                    'Rédiger des pages de vente qui convertissent',
+                    'Rédiger des pages de vente claires et persuasives',
                     'Attirer des acheteurs grâce aux réseaux sociaux',
                 ],
                 'curriculum' => [

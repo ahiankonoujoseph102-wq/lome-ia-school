@@ -20,7 +20,7 @@
             <span class="eyebrow" data-reveal>Catalogue</span>
             <h1 class="mt-4 text-3xl font-bold tracking-tight text-balance text-white sm:text-5xl" data-reveal>Nos formations en intelligence artificielle</h1>
             <p class="mx-auto mt-4 max-w-2xl text-slate-400 sm:text-lg" data-reveal>
-                {{ $formations->count() }} formations pratiques pour apprendre, créer et gagner de l'argent avec l'IA. Paiement Mobile Money, accès immédiat.
+                {{ $formations->count() }} formations pratiques pour apprendre, créer et développer vos projets avec l'IA. Paiement Mobile Money, accès immédiat.
             </p>
         </div>
     </section>

@@ -64,7 +64,7 @@ return [
 
     'hero' => [
         'badge' => 'Formations en intelligence artificielle à Lomé et en ligne',
-        'title' => 'Maîtrisez l\'IA et transformez vos compétences en revenus',
+        'title' => 'Maîtrisez l\'IA et transformez vos compétences en opportunités',
         'subtitle' => 'Des formations pratiques en français pour apprendre à utiliser l\'intelligence artificielle, créer, vendre vos services et développer votre activité. Paiement par Mobile Money, accès immédiat.',
         // Petits arguments affichés sous les boutons de l'accueil.
         'points' => [
@@ -111,7 +111,7 @@ return [
         ['icon' => 'academic-cap', 'title' => '100 % pratique, en français', 'text' => 'Des formations concrètes, orientées résultats, expliquées simplement et pensées pour notre réalité.'],
         ['icon' => 'chat-bubble-left-right', 'title' => 'Accompagnement à vie', 'text' => 'Chaque formation a son groupe de discussion réservé aux élèves : posez vos questions et avancez ensemble, sans limite de durée.'],
         ['icon' => 'map-pin', 'title' => 'Une école basée à Lomé', 'text' => 'Un formateur joignable et une équipe proche de vous, à Adidogomé.'],
-        ['icon' => 'banknotes', 'title' => 'Des compétences qui rapportent', 'text' => 'Nous vous apprenons aussi à vendre vos nouvelles compétences à des clients.'],
+        ['icon' => 'briefcase', 'title' => 'Des compétences concrètes, directement applicables', 'text' => 'Nous vous apprenons aussi à proposer vos nouvelles compétences à des clients.'],
     ],
 
     /*
@@ -232,7 +232,7 @@ return [
     */
 
     'about' => [
-        'mission' => 'Lomé IA School a pour mission de rendre l\'intelligence artificielle accessible à tous, en français, avec des formations pratiques et abordables. Nous voulons que chaque élève reparte avec des compétences concrètes, capables de lui faire gagner du temps, de créer de nouveaux services et de générer des revenus.',
+        'mission' => 'Lomé IA School a pour mission de rendre l\'intelligence artificielle accessible à tous, en français, avec des formations pratiques et abordables. Nous voulons que chaque élève reparte avec des compétences concrètes, directement applicables à son travail, à ses projets et aux services qu\'il souhaite proposer.',
         'values' => [
             ['title' => 'Accessibilité', 'text' => 'Des prix abordables, un paiement par Mobile Money et des formations qui se suivent depuis un téléphone.'],
             ['title' => 'Pratique avant tout', 'text' => 'Chaque formation est tournée vers des réalisations concrètes et des résultats mesurables.'],

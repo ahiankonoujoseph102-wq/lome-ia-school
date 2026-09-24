@@ -12,7 +12,7 @@
     @include('site.partials.page-header', [
         'eyebrow' => 'À propos',
         'title' => 'Rendre l\'intelligence artificielle accessible à tous',
-        'subtitle' => 'Lomé IA School forme, depuis Lomé, celles et ceux qui veulent maîtriser l\'IA et en faire une source de revenus.',
+        'subtitle' => 'Lomé IA School forme, depuis Lomé, celles et ceux qui veulent maîtriser l\'IA et l\'appliquer concrètement dans leur travail et leurs projets.',
     ])
 
     {{-- Formateur --}}
