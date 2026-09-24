@@ -25,13 +25,13 @@
         .receipt-page .head { background: linear-gradient(135deg, #0b1030, #3b1c8c); color: #fff; padding: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
         .receipt-page .brand { margin: 0; font-weight: 800; font-size: 18px; }
         .receipt-page .brand span { display: inline-block; width: 8px; height: 18px; background: #fbbf24; border-radius: 2px; vertical-align: -3px; margin-right: 8px; }
-        .receipt-page .head h1 { margin: 10px 0 0; font-size: 24px; color: #fff; }
+        .receipt-page .head h1 { margin: 10px 0 0; font-size: 24px; font-weight: 800; color: #fff; }
         .receipt-page .meta { text-align: right; font-size: 14px; color: #ddd6fe; }
         .receipt-page .meta strong { display: block; color: #fff; font-size: 16px; }
         .receipt-page .paid { display: inline-block; margin-top: 8px; background: #d1fae5; color: #065f46; border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 700; }
         .receipt-page .body { padding: 24px; }
         .receipt-page .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-        .receipt-page h2 { margin: 0 0 6px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #6b7094; }
+        .receipt-page h2 { margin: 0 0 6px; font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #6b7094; }
         .receipt-page p { margin: 0; }
         .receipt-page table { width: 100%; border-collapse: collapse; margin-top: 24px; }
         .receipt-page th, .receipt-page td { padding: 12px 0; border-bottom: 1px solid #eceef6; text-align: left; vertical-align: top; }
