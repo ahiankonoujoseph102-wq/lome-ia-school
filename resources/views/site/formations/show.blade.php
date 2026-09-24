@@ -191,16 +191,27 @@
                 </section>
             @endif
 
-            {{-- Bonus --}}
+            {{-- Inclus avec la formation --}}
+            <section class="card p-6 sm:p-8" data-reveal>
+                <h2 class="flex items-center gap-3 text-2xl font-bold text-white">
+                    <flux:icon.check-badge class="size-7 text-gold-300" /> Inclus avec la formation
+                </h2>
+                <ul class="mt-5 space-y-3">
+                    @foreach (config('site.included') as $item)
+                        <li class="flex items-start gap-3 text-slate-200">
+                            <flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-300" /> {{ $item }}
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+
+            {{-- Bonus (config/site.php, masqués tant que la liste de la formation est vide) --}}
             @if ($formation->bonuses)
                 <section class="relative overflow-hidden rounded-3xl border border-gold-400/25 bg-linear-to-br from-gold-400/10 to-transparent p-6 sm:p-8" data-reveal>
                     <h2 class="flex items-center gap-3 text-2xl font-bold text-white">
                         <flux:icon.gift class="size-7 text-gold-300" /> Bonus inclus
                     </h2>
                     <ul class="mt-5 space-y-3">
-                        <li class="flex items-start gap-3 text-slate-200">
-                            <flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-300" /> L'accès au groupe privé de discussion de la formation
-                        </li>
                         @foreach ($formation->bonuses as $bonus)
                             <li class="flex items-start gap-3 text-slate-200">
                                 <flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-300" /> {{ $bonus }}

@@ -38,7 +38,6 @@ class FormationFactory extends Factory
                 ['title' => 'Module 1', 'lessons' => ['Leçon 1', 'Leçon 2']],
             ],
             'audience' => ['Débutants'],
-            'bonuses' => ['Accès au groupe privé'],
         ];
     }
 

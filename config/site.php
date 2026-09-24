@@ -278,6 +278,87 @@ return [
 
     /*
     |----------------------------------------------------------------------
+    | Inclus avec chaque formation
+    |----------------------------------------------------------------------
+    | Toujours affiché sur la page de chaque formation.
+    */
+
+    'included' => [
+        'Les vidéos de la formation, accessibles dès le paiement confirmé',
+        'L\'accès au groupe privé de discussion de la formation',
+        'L\'accès à vie et l\'accompagnement à vie',
+    ],
+
+    /*
+    |----------------------------------------------------------------------
+    | Bonus des formations
+    |----------------------------------------------------------------------
+    | Une liste par formation (repérée par son slug, l'adresse de sa page).
+    | Liste vide [] : la section « Bonus » est complètement masquée.
+    | N'ajoutez que des bonus réellement fournis aux élèves.
+    |
+    | Exemple pour ajouter deux bonus à la formation ChatGPT & Claude :
+    | 'chatgpt-claude-initiation-ia' => [
+    |     'Texte du premier bonus',
+    |     'Texte du deuxième bonus',
+    | ],
+    */
+
+    'bonuses' => [
+        // Formation ChatGPT & Claude
+        'chatgpt-claude-initiation-ia' => [],
+
+        // Création d'affiches pro avec l'IA
+        'creation-affiches-pro-ia' => [],
+
+        // Création de vidéos publicitaires avec l'IA
+        'videos-publicitaires-ia' => [],
+
+        // Création de vidéos d'histoire avec l'IA
+        'videos-histoire-ia' => [],
+
+        // Création de vidéos films avec l'IA
+        'videos-films-ia' => [],
+
+        // Création de chansons personnalisées avec l'IA
+        'chansons-personnalisees-ia' => [],
+
+        // Rédaction d'ebooks et livres professionnels avec l'IA
+        'ebooks-livres-professionnels-ia' => [],
+
+        // Création de site vitrine web avec l'IA
+        'site-vitrine-web-ia' => [],
+
+        // Création de sites web avec base de données et projets web avancés
+        'sites-web-base-de-donnees-projets-avances' => [],
+
+        // Création d'applications et logiciels avec l'IA
+        'applications-logiciels-ia' => [],
+
+        // Création de SaaS avec l'IA
+        'creation-saas-ia' => [],
+
+        // Création d'agents IA
+        'creation-agents-ia' => [],
+
+        // Automatisation avec l'IA
+        'automatisation-ia' => [],
+
+        // Créer des formations et apprendre n'importe quelle compétence avec l'IA
+        'creer-formations-apprendre-competences-ia' => [],
+
+        // Décrocher des missions sur Upwork avec les compétences IA
+        'missions-upwork-competences-ia' => [],
+
+        // Création de contenu TikTok, Facebook et YouTube avec les vidéos IA
+        'contenu-tiktok-facebook-youtube-videos-ia' => [],
+
+        // E-commerce de produits digitaux avec l'IA
+        'e-commerce-produits-digitaux-ia' => [],
+    ],
+
+    /*
+    |----------------------------------------------------------------------
     | FAQ
     |----------------------------------------------------------------------
     | « home » : questions de la page d'accueil.

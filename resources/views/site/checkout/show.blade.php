@@ -146,7 +146,7 @@
                                         <li class="flex gap-2"><flux:icon.play-circle class="size-4 shrink-0 text-gold-400" /> Programme complet en {{ $moduleCount }} modules</li>
                                     @endif
                                     <li class="flex gap-2"><flux:icon.chat-bubble-left-right class="size-4 shrink-0 text-gold-400" /> Groupe privé d'accompagnement</li>
-                                    @foreach ($formation->bonuses ?? [] as $bonus)
+                                    @foreach ($formation->bonuses as $bonus)
                                         <li class="flex gap-2"><flux:icon.gift class="size-4 shrink-0 text-gold-400" /> {{ $bonus }}</li>
                                     @endforeach
                                 </ul>

@@ -64,10 +64,6 @@ class FormationSeeder extends Seeder
                     'Les étudiants, salariés et entrepreneurs qui veulent gagner du temps',
                     'Toute personne qui prévoit de suivre une formation IA plus avancée',
                 ],
-                'bonuses' => [
-                    'Une liste de prompts prêts à l\'emploi pour le quotidien',
-                    'Un aide-mémoire des bonnes pratiques à garder sur votre téléphone',
-                ],
             ],
             [
                 'title' => 'Création d\'affiches pro avec l\'IA',
@@ -94,10 +90,6 @@ class FormationSeeder extends Seeder
                     'Les entrepreneurs qui veulent créer eux-mêmes leurs visuels',
                     'Les graphistes qui veulent produire plus vite grâce à l\'IA',
                     'Toute personne qui veut vendre un service de création d\'affiches',
-                ],
-                'bonuses' => [
-                    'Une bibliothèque de prompts visuels classés par type d\'affiche',
-                    'Des modèles de mise en page à réutiliser',
                 ],
             ],
             [
@@ -126,10 +118,6 @@ class FormationSeeder extends Seeder
                     'Les créateurs de contenu et community managers',
                     'Toute personne qui veut proposer un service de publicité vidéo',
                 ],
-                'bonuses' => [
-                    'Des modèles de scripts publicitaires à adapter',
-                    'Une liste d\'outils IA vidéo avec leurs usages',
-                ],
             ],
             [
                 'title' => 'Création de vidéos d\'histoire avec l\'IA',
@@ -155,10 +143,6 @@ class FormationSeeder extends Seeder
                     'Les créateurs qui veulent lancer une chaîne d\'histoires',
                     'Les passionnés de contes, d\'histoire et de récits',
                     'Les enseignants et parents qui veulent créer des contenus éducatifs',
-                ],
-                'bonuses' => [
-                    'Une liste d\'idées d\'histoires pour démarrer',
-                    'Des prompts pour garder des personnages cohérents',
                 ],
             ],
             [
@@ -186,10 +170,6 @@ class FormationSeeder extends Seeder
                     'Les créateurs de contenu qui veulent se démarquer',
                     'Les vidéastes qui veulent intégrer l\'IA à leur travail',
                 ],
-                'bonuses' => [
-                    'Un modèle de scénario et de découpage',
-                    'Des prompts de plans cinématographiques',
-                ],
             ],
             [
                 'title' => 'Création de chansons personnalisées avec l\'IA',
@@ -215,10 +195,6 @@ class FormationSeeder extends Seeder
                     'Toute personne qui veut offrir une chanson unique à un proche',
                     'Les entrepreneurs qui veulent vendre un service original',
                     'Les passionnés de musique, même sans formation musicale',
-                ],
-                'bonuses' => [
-                    'Un questionnaire client pour préparer chaque chanson',
-                    'Des modèles de paroles par occasion',
                 ],
             ],
             [
@@ -247,10 +223,6 @@ class FormationSeeder extends Seeder
                     'Les auteurs qui veulent écrire et publier plus efficacement',
                     'Toute personne qui rêve de publier un livre professionnel',
                 ],
-                'bonuses' => [
-                    'Des modèles de plan pour différents types de livres',
-                    'Une liste de contrôle avant publication',
-                ],
             ],
             [
                 'title' => 'Création de site vitrine web avec l\'IA',
@@ -276,10 +248,6 @@ class FormationSeeder extends Seeder
                     'Les entrepreneurs et commerçants qui veulent leur propre site',
                     'Les débutants qui veulent se lancer dans la création web',
                     'Les freelances qui veulent proposer un nouveau service',
-                ],
-                'bonuses' => [
-                    'Une structure type de site vitrine à réutiliser',
-                    'Une liste de contrôle avant la mise en ligne',
                 ],
             ],
             [
@@ -307,10 +275,6 @@ class FormationSeeder extends Seeder
                     'Les freelances qui veulent proposer des projets plus ambitieux',
                     'Les entrepreneurs qui ont un projet web précis',
                 ],
-                'bonuses' => [
-                    'Un modèle de cahier des charges',
-                    'Des prompts de développement testés',
-                ],
             ],
             [
                 'title' => 'Création d\'applications et logiciels avec l\'IA',
@@ -336,10 +300,6 @@ class FormationSeeder extends Seeder
                     'Les entrepreneurs qui ont une idée d\'application',
                     'Les débutants motivés qui veulent apprendre à créer des logiciels',
                     'Les freelances qui veulent développer plus vite',
-                ],
-                'bonuses' => [
-                    'Un modèle de cahier des charges d\'application',
-                    'Des prompts pour déboguer efficacement',
                 ],
             ],
             [
@@ -368,10 +328,6 @@ class FormationSeeder extends Seeder
                     'Les développeurs et créateurs web qui veulent lancer leur propre logiciel',
                     'Les personnes qui ont suivi une formation web et veulent aller plus loin',
                 ],
-                'bonuses' => [
-                    'Une grille pour évaluer une idée de SaaS',
-                    'Un plan de lancement étape par étape',
-                ],
             ],
             [
                 'title' => 'Création d\'agents IA',
@@ -398,10 +354,6 @@ class FormationSeeder extends Seeder
                     'Les entrepreneurs qui veulent automatiser leur relation client',
                     'Les freelances qui veulent proposer un service très demandé',
                     'Les personnes à l\'aise avec l\'IA qui veulent passer au niveau supérieur',
-                ],
-                'bonuses' => [
-                    'Des modèles d\'instructions pour différents types d\'agents',
-                    'Une liste de contrôle pour tester un agent avant livraison',
                 ],
             ],
             [
@@ -430,10 +382,6 @@ class FormationSeeder extends Seeder
                     'Les freelances qui veulent proposer un service à forte valeur',
                     'Toute personne organisée qui aime optimiser son travail',
                 ],
-                'bonuses' => [
-                    'Des modèles d\'automatisations prêts à adapter',
-                    'Une grille pour estimer le temps gagné par un client',
-                ],
             ],
             [
                 'title' => 'Créer des formations et apprendre n\'importe quelle compétence avec l\'IA',
@@ -459,10 +407,6 @@ class FormationSeeder extends Seeder
                     'Les personnes qui veulent apprendre de nouvelles compétences rapidement',
                     'Les experts qui veulent partager et monétiser leur savoir',
                     'Les enseignants et coachs qui veulent passer au numérique',
-                ],
-                'bonuses' => [
-                    'Un modèle de programme de formation',
-                    'Des prompts pour apprendre n\'importe quel sujet',
                 ],
             ],
             [
@@ -490,10 +434,6 @@ class FormationSeeder extends Seeder
                     'Les freelances qui veulent travailler avec l\'international',
                     'Les étudiants et jeunes diplômés qui veulent un revenu en ligne',
                 ],
-                'bonuses' => [
-                    'Des modèles de propositions à adapter',
-                    'Une liste de contrôle pour optimiser son profil',
-                ],
             ],
             [
                 'title' => 'Création de contenu TikTok, Facebook et YouTube avec les vidéos IA',
@@ -520,10 +460,6 @@ class FormationSeeder extends Seeder
                     'Les entrepreneurs qui veulent développer leur visibilité',
                     'Toute personne qui veut lancer une page ou une chaîne',
                 ],
-                'bonuses' => [
-                    'Un calendrier de publication à remplir',
-                    'Des modèles de scripts de vidéos courtes',
-                ],
             ],
             [
                 'title' => 'E-commerce de produits digitaux avec l\'IA',
@@ -549,10 +485,6 @@ class FormationSeeder extends Seeder
                     'Les personnes qui veulent créer un revenu en ligne',
                     'Les experts et créateurs qui veulent vendre leur savoir-faire',
                     'Les entrepreneurs qui veulent diversifier leurs revenus',
-                ],
-                'bonuses' => [
-                    'Une liste d\'idées de produits digitaux',
-                    'Un modèle de page de vente',
                 ],
             ],
         ];

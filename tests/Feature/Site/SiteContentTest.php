@@ -123,6 +123,34 @@ class SiteContentTest extends TestCase
             ->assertSee('Enregistrée · accès immédiat après paiement');
     }
 
+    public function test_bonus_section_is_hidden_when_the_formation_has_no_bonus(): void
+    {
+        $formation = Formation::factory()->create();
+        config(['site.bonuses.'.$formation->slug => []]);
+
+        $this->get(route('formations.show', $formation))
+            ->assertOk()
+            ->assertDontSee('Bonus inclus')
+            ->assertSee('Inclus avec la formation')
+            ->assertSee('L&#039;accès au groupe privé de discussion de la formation', false);
+    }
+
+    public function test_bonuses_from_the_config_are_displayed(): void
+    {
+        $formation = Formation::factory()->create();
+        config(['site.bonuses.'.$formation->slug => ['Un vrai bonus fourni aux élèves', '  ']]);
+
+        $this->get(route('formations.show', $formation))
+            ->assertOk()
+            ->assertSee('Bonus inclus')
+            ->assertSee('Un vrai bonus fourni aux élèves');
+    }
+
+    public function test_no_formation_has_a_bonus_by_default(): void
+    {
+        $this->assertSame([], array_filter(config('site.bonuses')));
+    }
+
     public function test_consultation_takes_place_online_by_video_call(): void
     {
         $this->get(route('consultation'))

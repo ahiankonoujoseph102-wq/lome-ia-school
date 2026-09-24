@@ -35,8 +35,8 @@ class FormationPagesTest extends TestCase
             'outcomes' => ['Concevoir un agent adapté à un besoin précis'],
             'curriculum' => [['title' => 'Comprendre les agents IA', 'lessons' => ['Les outils pour créer des agents']]],
             'audience' => ['Les freelances'],
-            'bonuses' => ['Des modèles d\'instructions'],
         ]);
+        config(['site.bonuses.creation-agents-ia' => ['Des modèles d\'instructions']]);
 
         $this->get(route('formations.show', $formation))
             ->assertOk()
