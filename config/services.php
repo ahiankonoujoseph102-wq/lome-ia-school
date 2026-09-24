@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    // Notifications sur téléphone (Web Push) : clés VAPID créées avec « php artisan app:webpush-keys ».
+    'webpush' => [
+        'public_key' => env('WEBPUSH_PUBLIC_KEY'),
+        'private_key' => env('WEBPUSH_PRIVATE_KEY'),
+        'subject' => env('WEBPUSH_SUBJECT', 'mailto:academyjoseph71@gmail.com'),
+    ],
+
 ];

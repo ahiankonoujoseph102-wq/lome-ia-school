@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
 /**
@@ -39,6 +40,7 @@ use Illuminate\Support\Collection;
  * @property-read string|null $image_url
  * @property-read EloquentCollection<int, Enrollment> $enrollments
  * @property-read EloquentCollection<int, CourseModule> $modules
+ * @property-read ChatGroup|null $chatGroup
  */
 class Formation extends Model
 {
@@ -96,6 +98,21 @@ class Formation extends Model
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
+    }
+
+    /**
+     * Groupe de discussion de la formation (créé automatiquement avec la formation).
+     *
+     * @return HasOne<ChatGroup, $this>
+     */
+    public function chatGroup(): HasOne
+    {
+        return $this->hasOne(ChatGroup::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::created(fn (self $formation) => ChatGroup::forFormation($formation));
     }
 
     public function getRouteKeyName(): string

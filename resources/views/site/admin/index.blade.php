@@ -6,6 +6,18 @@
                 <flux:icon.play-circle class="size-4" /> Contenu des formations
                 <flux:icon.chevron-right class="ml-auto size-4 text-slate-500" />
             </a>
+            <a href="{{ route('admin.chat.index') }}" class="card flex items-center gap-2 px-4 py-4 font-semibold text-slate-200 hover:bg-white/5">
+                <flux:icon.chat-bubble-left-right class="size-4" /> Groupes de discussion
+                <flux:icon.chevron-right class="ml-auto size-4 text-slate-500" />
+            </a>
+            <a href="{{ route('moderation.reports.index') }}" class="card flex items-center gap-2 px-4 py-4 font-semibold text-slate-200 hover:bg-white/5">
+                <flux:icon.flag class="size-4" /> Messages signalés
+                <flux:icon.chevron-right class="ml-auto size-4 text-slate-500" />
+            </a>
+            <a href="{{ route('admin.moderators.index') }}" class="card flex items-center gap-2 px-4 py-4 font-semibold text-slate-200 hover:bg-white/5">
+                <flux:icon.user-group class="size-4" /> Équipe de modération
+                <flux:icon.chevron-right class="ml-auto size-4 text-slate-500" />
+            </a>
         </div>
         <a href="{{ route('dashboard') }}" class="btn-ghost mt-5 w-full">Retour à mon espace</a>
     </x-site.auth-card>

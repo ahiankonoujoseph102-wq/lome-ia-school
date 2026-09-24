@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Enums\EnrollmentSource;
 use App\Enums\PurchaseStatus;
+use App\Events\AccountBlocked;
+use App\Events\AccountUnblocked;
 use App\Events\FormationAccessGranted;
 use App\Events\FormationAccessRevoked;
 use App\Events\PaymentRejected;
@@ -119,7 +121,7 @@ class PurchaseManager
     }
 
     /**
-     * Bloque le compte : connexion impossible et sessions en cours fermées.
+     * Bloque le compte : connexion impossible, sessions en cours fermées et retrait de tous les groupes de discussion.
      */
     public function block(User $user): void
     {
@@ -128,11 +130,15 @@ class PurchaseManager
         if (config('session.driver') === 'database') {
             DB::table((string) config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
         }
+
+        AccountBlocked::dispatch($user);
     }
 
     public function unblock(User $user): void
     {
         $user->forceFill(['blocked_at' => null])->save();
+
+        AccountUnblocked::dispatch($user);
     }
 
     /**

@@ -2,11 +2,17 @@
 
 namespace App\Providers;
 
+use App\Contracts\PushSender;
 use App\Models\User;
+use App\Push\NullPushSender;
+use App\Push\WebPushSender;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -17,7 +23,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Notifications sur téléphone : envoi réel seulement si les clés VAPID sont dans .env.
+        $this->app->singleton(PushSender::class, function (): PushSender {
+            /** @var array{public_key: string|null, private_key: string|null, subject: string|null} $config */
+            $config = (array) config('services.webpush');
+            $sender = new WebPushSender($config);
+
+            return $sender->isConfigured() ? $sender : new NullPushSender;
+        });
     }
 
     /**
@@ -46,5 +59,9 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Gate::define('access-admin', fn (User $user): bool => $user->isAdmin());
+        Gate::define('moderate-chat', fn (User $user): bool => $user->isStaff());
+
+        // Messages des groupes : largement assez pour discuter, trop peu pour inonder un groupe.
+        RateLimiter::for('chat-messages', fn (Request $request): Limit => Limit::perMinute(30)->by((string) ($request->user()?->id ?: $request->ip())));
     }
 }

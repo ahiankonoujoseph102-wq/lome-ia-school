@@ -31,6 +31,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $avatar_path Fichier sur le disque « public ».
  * @property bool $wants_newsletter Accepte d'être informé des nouvelles formations.
  * @property Carbon|null $blocked_at Compte bloqué par l'admin : connexion impossible.
+ * @property bool $chat_push_enabled Notifications sur téléphone des groupes de discussion.
+ * @property bool $chat_digest_enabled E-mail récapitulatif des messages non lus (au plus un par jour).
+ * @property Carbon|null $chat_digest_sent_at
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -45,8 +48,10 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Enrollment> $enrollments
  * @property-read Collection<int, Formation> $formations
  * @property-read Collection<int, Purchase> $purchases
+ * @property-read Collection<int, ChatGroupMember> $chatMemberships
+ * @property-read Collection<int, PushSubscription> $pushSubscriptions
  */
-#[Fillable(['name', 'email', 'phone', 'password', 'wants_newsletter'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'wants_newsletter', 'chat_push_enabled', 'chat_digest_enabled'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -75,6 +80,9 @@ class User extends Authenticatable implements PasskeyUser
             'role' => UserRole::class,
             'wants_newsletter' => 'boolean',
             'blocked_at' => 'datetime',
+            'chat_push_enabled' => 'boolean',
+            'chat_digest_enabled' => 'boolean',
+            'chat_digest_sent_at' => 'datetime',
         ];
     }
 
@@ -106,6 +114,22 @@ class User extends Authenticatable implements PasskeyUser
         return $this->hasMany(Purchase::class);
     }
 
+    /**
+     * @return HasMany<ChatGroupMember, $this>
+     */
+    public function chatMemberships(): HasMany
+    {
+        return $this->hasMany(ChatGroupMember::class);
+    }
+
+    /**
+     * @return HasMany<PushSubscription, $this>
+     */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
     public function isBlocked(): bool
     {
         return $this->blocked_at !== null;
@@ -114,6 +138,24 @@ class User extends Authenticatable implements PasskeyUser
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
+    }
+
+    public function isModerator(): bool
+    {
+        return $this->role === UserRole::Moderator;
+    }
+
+    /**
+     * Admin ou modérateur : membre de tous les groupes, avec les outils de modération.
+     */
+    public function isStaff(): bool
+    {
+        return $this->role->isStaff();
+    }
+
+    public function chatBadge(): ?string
+    {
+        return $this->role->chatBadge();
     }
 
     public function isEnrolledIn(Formation $formation): bool
@@ -137,7 +179,8 @@ class User extends Authenticatable implements PasskeyUser
      */
     public function initials(): string
     {
-        $initials = Str::initials($this->name, true);
+        // Lettres uniquement (un nom comme « Afi (Exemple) » donne « AE », pas « A( »).
+        $initials = Str::initials(trim((string) preg_replace('/[^\p{L}\s-]+/u', ' ', $this->name)) ?: $this->name, true);
 
         return Str::length($initials) > 1
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)

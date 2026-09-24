@@ -36,7 +36,17 @@
             <p>L'accès à une formation est strictement personnel. Le partage des identifiants, l'enregistrement, la copie ou la revente des contenus sont interdits et peuvent entraîner la suspension de l'accès sans remboursement.</p>
 
             <h2>6. Groupes de discussion</h2>
-            <p>Chaque formation dispose d'un groupe privé réservé à ses élèves. Les échanges doivent rester respectueux et en lien avec la formation. {{ $legal['company_name'] }} peut retirer tout message ou membre ne respectant pas ces règles.</p>
+            <p>Chaque formation dispose d'un groupe de discussion privé, réservé aux élèves qui y ont accès et à l'équipe de {{ $legal['company_name'] }} (formateur et modérateurs). L'élève y est ajouté automatiquement dès l'ouverture de son accès et en est retiré si l'accès est retiré (paiement refusé, remboursement) ou si son compte est bloqué.</p>
+            <p>En participant à un groupe, l'élève s'engage à :</p>
+            <ul>
+                <li>rester respectueux et bienveillant envers tous les membres (aucune insulte, moquerie ni harcèlement) ;</li>
+                <li>publier des messages en lien avec la formation ;</li>
+                <li>ne pas faire de publicité, de vente, de promotion de liens d'affiliation ni envoyer de messages répétés ;</li>
+                <li>ne publier aucun contenu illégal, choquant, trompeur ou portant atteinte aux droits d'autrui ;</li>
+                <li>ne pas partager le contenu de la formation ou les fichiers du groupe en dehors de celui-ci ;</li>
+                <li>ne pas demander ni publier de numéros de téléphone ou d'autres données personnelles.</li>
+            </ul>
+            <p>Les règles de chaque groupe sont affichées à l'entrée du groupe. Tout membre peut signaler un message à l'équipe. En cas de non-respect de ces règles, l'équipe peut, sans préavis, supprimer un message, mettre un membre en sourdine (lecture seule pendant une durée déterminée) ou l'exclure du groupe. L'exclusion d'un groupe ne donne droit à aucun remboursement ; elle ne retire pas l'accès aux leçons de la formation, sauf en cas de manquement prévu à l'article 5.</p>
 
             <h2>7. Remboursement</h2>
             <p>{{ Placeholder::highlight($legal['refund_policy']) }}</p>

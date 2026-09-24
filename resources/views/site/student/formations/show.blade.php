@@ -52,8 +52,19 @@
             </section>
         @endif
 
-        <div class="mt-6">
-            <x-site.coming-soon-card icon="chat-bubble-left-right" title="Groupe de discussion" text="Le groupe privé de cette formation sera accessible ici." />
-        </div>
+        {{-- Groupe de discussion de la formation --}}
+        <a href="{{ route('chat.show', $formation) }}" class="card card-hover mt-6 flex items-center gap-4 p-5" data-test="group-link">
+            <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-emerald-400/15 text-emerald-300">
+                <flux:icon.chat-bubble-left-right class="size-6" />
+            </span>
+            <span class="min-w-0 flex-1">
+                <span class="block font-semibold text-white">Groupe de discussion</span>
+                <span class="block text-sm text-slate-400">Posez vos questions, échangez avec l'équipe et les autres élèves.</span>
+            </span>
+            @if ($groupUnread > 0)
+                <span class="min-w-6 rounded-full bg-gold-400 px-2 py-0.5 text-center text-xs font-bold text-night-950">{{ $groupUnread }}</span>
+            @endif
+            <flux:icon.arrow-right class="size-5 text-slate-500" />
+        </a>
     </div>
 </x-layouts::site>

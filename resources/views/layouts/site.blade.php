@@ -30,7 +30,7 @@
         <meta name="description" content="{{ $description }}">
         <link rel="canonical" href="{{ $canonical }}">
         <meta name="theme-color" content="#0b1030">
-        @if ($noindex || $variant === 'student')
+        @if ($noindex || in_array($variant, ['student', 'chat'], true))
             <meta name="robots" content="noindex, nofollow">
         @endif
 
@@ -54,6 +54,13 @@
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        {{-- Site installable sur l'écran d'accueil (nécessaire aux notifications sur iPhone) --}}
+        <link rel="manifest" href="{{ route('pwa.manifest') }}">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="Lomé IA">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
         @vite(['resources/css/site.css', 'resources/js/site.js'])
         {{ $head ?? '' }}
@@ -62,27 +69,38 @@
             <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
         @endforeach
     </head>
-    <body @class(['min-h-screen overflow-x-clip font-sans', 'pb-24 lg:pb-0' => $stickyCta || $variant === 'student'])>
-        <a href="#contenu" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-night-950">Aller au contenu</a>
-
-        @include('site.partials.header')
-
-        @if ($variant === 'student')
-            @include('site.student.partials.nav')
-        @endif
-
-        <main id="contenu">
+    <body @class([
+        'font-sans',
+        'min-h-screen overflow-x-clip' => $variant !== 'chat',
+        'h-dvh overflow-hidden' => $variant === 'chat',
+        'pb-24 lg:pb-0' => $stickyCta || $variant === 'student',
+    ])>
+        @if ($variant === 'chat')
+            {{-- Conversation d'un groupe : plein écran, sans en-tête ni pied de page du site. --}}
             {{ $slot }}
-        </main>
-
-        @if ($variant === 'student')
-            @include('site.student.partials.footer')
+            {{ $after ?? '' }}
         @else
-            @include('site.partials.footer')
+            <a href="#contenu" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-night-950">Aller au contenu</a>
+
+            @include('site.partials.header')
+
+            @if ($variant === 'student')
+                @include('site.student.partials.nav')
+            @endif
+
+            <main id="contenu">
+                {{ $slot }}
+            </main>
+
+            @if ($variant === 'student')
+                @include('site.student.partials.footer')
+            @else
+                @include('site.partials.footer')
+            @endif
+
+            @include('site.partials.whatsapp-button', ['whatsappMessage' => $whatsappMessage])
+
+            {{ $after ?? '' }}
         @endif
-
-        @include('site.partials.whatsapp-button', ['whatsappMessage' => $whatsappMessage])
-
-        {{ $after ?? '' }}
     </body>
 </html>
