@@ -21,7 +21,7 @@ class OgImageGenerator
     /**
      * À incrémenter pour régénérer toutes les images après un changement de design.
      */
-    private const int VERSION = 2;
+    private const int VERSION = 3;
 
     private const int PADDING = 72;
 
@@ -37,7 +37,7 @@ class OgImageGenerator
             eyebrow: $formation->category->label(),
             title: $formation->title,
             badge: str_replace("\u{00A0}", ' ', $formation->formatted_price),
-            footer: 'Accès immédiat · Paiement Mobile Money',
+            footer: 'Accès immédiat après paiement · Mobile Money',
         ));
     }
 
@@ -48,8 +48,8 @@ class OgImageGenerator
         return $this->cached('site-'.md5(self::VERSION.'|'.$title), fn (): GdImage => $this->render(
             eyebrow: 'Formations en intelligence artificielle',
             title: $title,
-            badge: 'En ligne · En direct · À Lomé',
-            footer: 'Paiement Mobile Money',
+            badge: 'Formations enregistrées',
+            footer: 'Accès immédiat après paiement · Mobile Money',
         ));
     }
 

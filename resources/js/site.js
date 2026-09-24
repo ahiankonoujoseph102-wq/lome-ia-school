@@ -39,23 +39,20 @@ const normalize = (value) =>
         .trim();
 
 /**
- * Catalogue : filtres par catégorie et format, et recherche, sans rechargement de page.
+ * Catalogue : filtre par catégorie et recherche, sans rechargement de page.
  * Les filtres sont gardés dans l'adresse (ex. /formations?categorie=web) pour pouvoir être partagés.
  */
 Alpine.data('catalogue', (items) => ({
     items,
     category: '',
-    format: '',
     search: '',
 
     init() {
         const params = new URLSearchParams(window.location.search);
         this.category = params.get('categorie') || '';
-        this.format = params.get('format') || '';
         this.search = params.get('q') || '';
 
         this.$watch('category', () => this.syncUrl());
-        this.$watch('format', () => this.syncUrl());
         this.$watch('search', () => this.syncUrl());
     },
 
@@ -70,10 +67,6 @@ Alpine.data('catalogue', (items) => ({
             return false;
         }
 
-        if (this.format && !item.formats.includes(this.format)) {
-            return false;
-        }
-
         const terms = normalize(this.search).split(/\s+/).filter(Boolean);
 
         return terms.every((term) => item.text.includes(term));
@@ -84,12 +77,11 @@ Alpine.data('catalogue', (items) => ({
     },
 
     get hasFilters() {
-        return this.category !== '' || this.format !== '' || this.search !== '';
+        return this.category !== '' || this.search !== '';
     },
 
     reset() {
         this.category = '';
-        this.format = '';
         this.search = '';
     },
 
@@ -97,7 +89,6 @@ Alpine.data('catalogue', (items) => ({
         const params = new URLSearchParams();
 
         if (this.category) params.set('categorie', this.category);
-        if (this.format) params.set('format', this.format);
         if (this.search) params.set('q', this.search);
 
         const query = params.toString();

@@ -26,6 +26,7 @@ class CreateNewUser implements CreatesNewUsers
             ...$this->profileRules(),
             // Pas de confirmation du mot de passe : le champ propose « Afficher » pour vérifier la saisie.
             'password' => ['required', 'string', Password::default()],
+            'wants_newsletter' => ['nullable', 'boolean'],
         ], [
             'phone.unique' => 'Ce numéro WhatsApp est déjà utilisé par un autre compte.',
             'email.unique' => 'Un compte existe déjà avec cette adresse e-mail. Connectez-vous.',
@@ -36,6 +37,7 @@ class CreateNewUser implements CreatesNewUsers
             'email' => strtolower((string) $validated['email']),
             'phone' => $validated['phone'],
             'password' => $validated['password'],
+            'wants_newsletter' => (bool) ($validated['wants_newsletter'] ?? false),
         ]);
     }
 }

@@ -14,6 +14,7 @@
             <h2>Données collectées</h2>
             <ul>
                 <li>Les informations de votre compte : nom, numéro WhatsApp, adresse e-mail et, si vous en ajoutez une, votre photo de profil.</li>
+                <li>Votre choix concernant l'information sur les nouvelles formations (oui ou non).</li>
                 <li>Les informations liées à vos achats : formations achetées, montants, dates.</li>
                 <li>Les messages que vous publiez dans les groupes de discussion des formations.</li>
                 <li>Pour l'affiliation : les ventes réalisées grâce à votre lien et le numéro Mobile Money indiqué pour vos retraits.</li>
@@ -25,9 +26,9 @@
                 <li>Créer et gérer votre compte et vos accès aux formations ;</li>
                 <li>Traiter vos paiements et vos commissions d'affiliation ;</li>
                 <li>Vous accompagner et répondre à vos questions ;</li>
-                <li>Vous informer des nouvelles formations, si vous l'acceptez.</li>
+                <li>Vous informer des nouvelles formations, uniquement si vous avez coché la case « Je souhaite être informé(e) des nouvelles formations » à l'inscription ou dans votre profil.</li>
             </ul>
-            <p>Vos données ne sont jamais vendues à des tiers.</p>
+            <p>Cette case n'est jamais cochée par défaut. Vous pouvez retirer votre accord à tout moment en la décochant dans votre profil. Vos données ne sont jamais vendues à des tiers.</p>
 
             <h2>Cookies</h2>
             <p>Le site utilise uniquement les cookies nécessaires à son fonctionnement (session de connexion et sécurité).</p>

@@ -67,7 +67,7 @@ Plateforme de vente et de suivi de formations en intelligence artificielle, bas�
 
 ## Comptes, rôles et accès
 
-- **Inscription** : nom, numéro WhatsApp (obligatoire, unique, stocké au format international `+228…` via `App\Support\PhoneNumber`, règle `App\Rules\WhatsAppNumber`), e-mail, mot de passe (pas de confirmation, bouton « Afficher »). Pages d'authentification au design du site : `resources/views/site/auth/`.
+- **Inscription** : nom, numéro WhatsApp (obligatoire, unique, stocké au format international `+228…` via `App\Support\PhoneNumber`, règle `App\Rules\WhatsAppNumber`), e-mail, mot de passe (pas de confirmation, bouton « Afficher »), case facultative **non cochée par défaut** « Je souhaite être informé(e) des nouvelles formations » (colonne `users.wants_newsletter`, modifiable dans le profil, composant `x-site.newsletter-checkbox`). N'envoyer d'annonces qu'aux élèves dont `wants_newsletter` est vrai. Pages d'authentification au design du site : `resources/views/site/auth/`.
 - **Rôles** : `App\Enums\UserRole` (élève, admin), colonne `users.role` non modifiable par formulaire. Créer ou promouvoir un admin : `php artisan app:make-admin email@exemple.com` (le mot de passe est demandé au clavier, jamais écrit dans le code). Zone admin protégée par le middleware `admin` et la permission `access-admin` (pages à l'étape 10, préfixe `/admin`).
 - **Inscriptions aux formations** : table `enrollments` (élève, formation, `source` = `purchase` ou `admin`, `granted_at`). Règle d'accès au contenu : `App\Policies\FormationPolicy::access` (élève inscrit ou admin), à utiliser avec `can:access,formation` aux étapes 5 et 6. Donner ou retirer un accès : `php artisan app:grant-access email slug [--revoke]`.
 - **Retour après connexion** : un visiteur qui passe par `/commande/{slug}` y revient automatiquement après inscription ou connexion (URL « intended » de la session).
@@ -97,9 +97,9 @@ php artisan migrate
 
 **Terminé et fusionné dans `main`** : étapes 1 (mise en place), 2 (site vitrine) et 3 (comptes et espace élève), y compris les écrans « Sécurité du compte » au design du site (PR #1, #2, #3).
 
-**Terminé sur la branche `claude/update-showcase-site-content-qub9o0`, en attente de validation de l'aperçu (pas encore de pull request)** : mise à jour des contenus du site vitrine. Chiffres réels, horaires, durée de la consultation, biographie et points forts du formateur, photo `formateur.jpg` (l'original a été retiré du dépôt), « Accès à vie » et « Accompagnement à vie » mis en avant (accueil, pages formation, FAQ, CGV), bloc formateur sur l'accueil, témoignages vides et masqués (3 types prévus), pages légales complétées (responsable du site, remboursement sous 48 h si aucune leçon consultée, conservation des données 3 ans après le dernier achat ; ni RCCM ni NIF). 111 tests verts.
+**Terminé sur la branche `claude/update-showcase-site-content-qub9o0`, en attente de validation de l'aperçu (pas encore de pull request)** : mise à jour des contenus du site vitrine. Chiffres réels, horaires, durée de la consultation, biographie et points forts du formateur, photo `formateur.jpg` (l'original a été retiré du dépôt), « Accès à vie » et « Accompagnement à vie » mis en avant (accueil, pages formation, FAQ, CGV), bloc formateur sur l'accueil, témoignages vides et masqués (3 types prévus), pages légales complétées (responsable du site, remboursement sous 48 h si aucune leçon consultée, conservation des données 3 ans après le dernier achat ; ni RCCM ni NIF). Puis, après retour de la porteuse du projet : formats clarifiés (l'enregistré est la règle, le direct et le présentiel sont des sessions ponctuelles ; filtre par format retiré du catalogue ; image de partage mise à jour), consultation en direct en ligne par appel vidéo (jamais sur place), case « nouvelles formations » à l'inscription et dans le profil, politique de confidentialité adaptée. 119 tests verts.
 
-**Reste à fournir par la porteuse du projet** : logo, images des formations, vrais témoignages, liens des réseaux sociaux, validation des programmes et bonus de `FormationSeeder`, et réponses sur les affirmations signalées (formats en direct / présentiel annoncés alors que toutes les formations sont « Enregistrée », « une équipe proche de vous », consultation « par téléphone, WhatsApp ou sur place », envoi d'informations sur les nouvelles formations « si vous l'acceptez » sans case à cocher).
+**Reste à fournir par la porteuse du projet** : logo, images des formations, vrais témoignages, liens des réseaux sociaux, validation des programmes et des bonus de `FormationSeeder` (liste complète envoyée, en attente de retour).
 
 **Prochaine étape** : après validation de l'aperçu et fusion, étape 4 : paiement FedaPay et accès automatique (commencer en mode test/sandbox ; les clés vont dans `.env`, jamais dans le code ni dans la conversation pour les clés de production). Le remboursement sous 48 h « si aucune leçon consultée » suppose de suivre les leçons ouvertes (étape 5).
 
@@ -109,7 +109,9 @@ php artisan migrate
 - Double authentification facultative ; une activation commencée reste « en attente » (reprise ou annulation possible) et n'est exigée à la connexion qu'une fois confirmée par un code.
 - Compte admin : academyjoseph71@gmail.com, à créer à l'étape 11 avec `php artisan app:make-admin` (mot de passe saisi au clavier).
 - Vidéos des formations : YouTube en vidéos **non répertoriées** (étape 5), derrière l'interface de fournisseur vidéo interchangeable.
-- Toutes les formations sont au format « Enregistrée » pour l'instant (à ajuster quand les formats en direct / présentiel seront confirmés).
+- **Formats** : toutes les formations sont **enregistrées**, accès immédiat après paiement, aux prix en place. Le direct (Google Meet) et le présentiel (Lomé) sont des **sessions ponctuelles** organisées de temps en temps et annoncées sur le site, jamais présentées comme des options permanentes. Aucun bouton WhatsApp, aucune date ni calendrier pour ces sessions en attendant l'étape 7. Textes : bloc `formats` de `config/site.php` ; libellés : `App\Enums\FormationFormat`.
+- **Consultation gratuite** : réservée sur le site, elle se déroule **en direct en ligne, par appel vidéo** (jamais sur place), 30 minutes. Textes : bloc `consultation` de `config/site.php`.
+- L'équipe existe : la phrase « une équipe proche de vous » est exacte.
 
 **Contournement des blocages réseau (environnement Claude Code web)** :
 - Composer : `composer config -g use-github-api false`, puis `COMPOSER_ALLOW_SUPERUSER=1 composer install --prefer-source`.
@@ -125,7 +127,7 @@ php artisan migrate
 4. **Paiement FedaPay et accès automatique** : commande, paiement, webhook, accès immédiat.
 5. **Lecteur de cours** : modules, leçons, vidéos (fournisseur interchangeable), progression.
 6. **Groupes de discussion** : chat par formation (texte, images, vocaux, vidéos courtes, fichiers), Pusher.
-7. **Sessions en direct et présentiel** : planning, liens Google Meet, sessions à Lomé, rappels.
+7. **Sessions ponctuelles en direct et en présentiel** : l'admin pourra annoncer une session en direct ou en présentiel pour une formation ; l'annonce apparaît alors sur la page de la formation. Pour le direct, le lien Google Meet est partagé dans le groupe de discussion de la formation, auquel chaque acheteur est ajouté automatiquement après paiement (étape 6). Rappels éventuels.
 8. **Affiliation** : liens, suivi des ventes, commissions de 10 %, demandes de retrait Mobile Money.
 9. **Consultation gratuite** : réservation de créneaux.
 10. **Tableau de bord admin** : formations, élèves, ventes, retraits, chat, statistiques.

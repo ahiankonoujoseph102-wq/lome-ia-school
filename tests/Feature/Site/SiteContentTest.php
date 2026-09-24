@@ -103,6 +103,34 @@ class SiteContentTest extends TestCase
             ->assertDontSee('>youtube<', false);
     }
 
+    public function test_recorded_format_is_the_rule_and_live_sessions_are_occasional(): void
+    {
+        $formation = Formation::factory()->create();
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('Accès immédiat après paiement')
+            ->assertSee('Sessions ponctuelles en direct ou à Lomé')
+            ->assertDontSee('En ligne, en direct ou en présentiel');
+
+        $this->get(route('formations.index'))
+            ->assertOk()
+            ->assertSee(config('site.formats.recorded.catalogue'))
+            ->assertDontSee('Filtrer par format');
+
+        $this->get(route('formations.show', $formation))
+            ->assertOk()
+            ->assertSee('Enregistrée · accès immédiat après paiement');
+    }
+
+    public function test_consultation_takes_place_online_by_video_call(): void
+    {
+        $this->get(route('consultation'))
+            ->assertOk()
+            ->assertSee('En direct en ligne, par appel vidéo')
+            ->assertDontSee('sur place');
+    }
+
     public function test_legal_pages_show_the_site_owner_refund_and_retention_rules(): void
     {
         $this->get(route('legal.notice'))

@@ -11,7 +11,7 @@
     <section class="mx-auto max-w-3xl px-4 pb-20 sm:px-6">
         <div class="prose-site card p-6 sm:p-10">
             <h2>1. Objet</h2>
-            <p>Les présentes conditions régissent la vente des formations proposées par {{ $legal['company_name'] }} sur ce site : formations enregistrées (vidéos en ligne), formations en direct (Google Meet) et formations en présentiel à Lomé. Tout achat implique l'acceptation de ces conditions.</p>
+            <p>Les présentes conditions régissent la vente des formations proposées par {{ $legal['company_name'] }} sur ce site. Toutes les formations sont enregistrées (vidéos en ligne), avec un accès immédiat après paiement. Des sessions ponctuelles en direct (Google Meet) ou en présentiel à Lomé peuvent être organisées de temps en temps ; elles sont annoncées sur le site. Tout achat implique l'acceptation de ces conditions.</p>
 
             <h2>2. Prix</h2>
             <p>Les prix sont indiqués en francs CFA (FCFA / XOF) sur la page de chaque formation. Le prix applicable est celui affiché au moment de la commande.</p>
@@ -22,7 +22,7 @@
             <h2>4. Accès à la formation</h2>
             <p>L'accès à la formation et à son groupe privé de discussion est ouvert dès la confirmation du paiement, depuis l'espace élève.</p>
             <p><strong class="text-white">Accès à vie et accompagnement à vie.</strong> {{ Placeholder::highlight($legal['access_duration']) }}</p>
-            <p>Pour les formations en direct, les liens des sessions sont communiqués aux inscrits. Pour les formations en présentiel, les dates et le lieu sont communiqués aux inscrits.</p>
+            <p>Lorsqu'une session ponctuelle en direct ou en présentiel est organisée pour une formation, elle est annoncée sur la page de la formation. Le lien d'une session en direct est partagé dans le groupe de discussion de la formation.</p>
 
             <h2>5. Usage personnel</h2>
             <p>L'accès à une formation est strictement personnel. Le partage des identifiants, l'enregistrement, la copie ou la revente des contenus sont interdits et peuvent entraîner la suspension de l'accès sans remboursement.</p>

@@ -1,12 +1,12 @@
 @php
     use App\Enums\FormationCategory;
-    use App\Enums\FormationFormat;
     use App\Support\Placeholder;
     use App\Support\Testimonials;
 
     $testimonials = Testimonials::all();
     $trainer = config('site.trainer');
     $lifetime = config('site.lifetime');
+    $formats = config('site.formats');
 
     $organization = [
         '@context' => 'https://schema.org',
@@ -190,28 +190,48 @@
         </section>
     @endif
 
-    {{-- Les 3 formats --}}
+    {{-- Déroulement : l'enregistré est la règle, le direct et le présentiel sont ponctuels --}}
     <section class="section">
         <x-site.section-heading
-            eyebrow="3 façons d'apprendre"
-            title="En ligne, en direct ou en présentiel à Lomé"
-            subtitle="Choisissez le format qui correspond à votre emploi du temps et à votre façon d'apprendre."
+            :eyebrow="$formats['eyebrow']"
+            :title="$formats['title']"
         />
 
-        <div class="mt-12 grid gap-4 md:grid-cols-3">
-            @foreach (FormationFormat::cases() as $format)
-                <div class="card card-hover relative overflow-hidden p-6 sm:p-8" data-reveal style="--reveal-delay: {{ $loop->index * 90 }}ms">
-                    <div class="absolute -top-10 -right-10 size-32 rounded-full bg-electric-500/10 blur-2xl"></div>
-                    <span class="grid size-14 place-items-center rounded-2xl bg-linear-to-br from-electric-500 to-electric-700 text-white shadow-lg shadow-electric-700/40">
-                        <flux:icon :icon="$format->icon()" class="size-7" />
-                    </span>
-                    <h3 class="mt-6 text-xl font-semibold text-white">{{ $format->label() }}</h3>
-                    <p class="mt-3 text-sm leading-relaxed text-slate-400">{{ $format->description() }}</p>
-                    <a href="{{ route('formations.index', ['format' => $format->value]) }}" class="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-electric-300 hover:text-white">
+        <div class="mt-12 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+            <div class="card relative overflow-hidden p-6 sm:p-8" data-reveal>
+                <div class="absolute -top-12 -right-12 size-40 rounded-full bg-electric-500/15 blur-2xl"></div>
+                <div class="relative">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="grid size-14 place-items-center rounded-2xl bg-linear-to-br from-electric-500 to-electric-700 text-white shadow-lg shadow-electric-700/40">
+                            <flux:icon.play-circle class="size-7" />
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-gold-400/15 px-3 py-1.5 text-sm font-semibold text-gold-200 ring-1 ring-gold-400/40">
+                            <flux:icon.bolt class="size-4" /> {{ $formats['recorded']['badge'] }}
+                        </span>
+                    </div>
+                    <h3 class="mt-6 text-2xl font-bold text-white">{{ $formats['recorded']['title'] }}</h3>
+                    <p class="mt-3 leading-relaxed text-slate-300">{{ $formats['recorded']['text'] }}</p>
+                    <ul class="mt-5 grid gap-2 sm:grid-cols-3">
+                        @foreach ($formats['recorded']['points'] as $point)
+                            <li class="flex items-start gap-2 text-sm text-slate-200">
+                                <flux:icon.check-circle class="mt-0.5 size-4 shrink-0 text-gold-400" /> {{ $point }}
+                            </li>
+                        @endforeach
+                    </ul>
+                    <a href="{{ route('formations.index') }}" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-electric-300 hover:text-white">
                         Voir les formations <flux:icon.arrow-right class="size-4" />
                     </a>
                 </div>
-            @endforeach
+            </div>
+
+            <div class="card p-6 sm:p-8" data-reveal style="--reveal-delay: 90ms">
+                <div class="flex gap-2">
+                    <span class="grid size-11 place-items-center rounded-2xl bg-white/5 text-electric-300 ring-1 ring-white/10"><flux:icon.video-camera class="size-5" /></span>
+                    <span class="grid size-11 place-items-center rounded-2xl bg-white/5 text-electric-300 ring-1 ring-white/10"><flux:icon.map-pin class="size-5" /></span>
+                </div>
+                <h3 class="mt-6 text-xl font-semibold text-white">{{ $formats['sessions']['title'] }}</h3>
+                <p class="mt-3 text-sm leading-relaxed text-slate-400">{{ $formats['sessions']['text'] }}</p>
+            </div>
         </div>
     </section>
 

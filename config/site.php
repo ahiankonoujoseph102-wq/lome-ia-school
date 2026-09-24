@@ -116,6 +116,36 @@ return [
 
     /*
     |----------------------------------------------------------------------
+    | Déroulement des formations
+    |----------------------------------------------------------------------
+    | Règle : toutes les formations sont enregistrées, accès immédiat après
+    | paiement. Le direct et le présentiel sont des sessions ponctuelles,
+    | annoncées sur le site au moment où elles sont organisées.
+    */
+
+    'formats' => [
+        'eyebrow' => 'Comment se déroulent les formations',
+        'title' => 'Des formations enregistrées, disponibles tout de suite',
+        'recorded' => [
+            'title' => 'Formations enregistrées',
+            'badge' => 'Accès immédiat après paiement',
+            'text' => 'Toutes nos formations sont en vidéo. Dès que votre paiement est confirmé, vous les suivez à votre rythme, depuis votre téléphone ou votre ordinateur, autant de fois que vous voulez.',
+            'points' => [
+                'Accès immédiat après paiement',
+                'À votre rythme, sur téléphone ou ordinateur',
+                'Accès à vie et accompagnement à vie',
+            ],
+            // Phrase affichée en haut du catalogue.
+            'catalogue' => 'Toutes les formations sont enregistrées : accès immédiat après paiement.',
+        ],
+        'sessions' => [
+            'title' => 'Sessions ponctuelles en direct ou à Lomé',
+            'text' => 'De temps en temps, une formation est aussi proposée en direct sur Google Meet ou en présentiel à Lomé. Ces sessions sont annoncées sur le site au moment où elles sont organisées.',
+        ],
+    ],
+
+    /*
+    |----------------------------------------------------------------------
     | Comment ça marche
     |----------------------------------------------------------------------
     */
@@ -219,6 +249,12 @@ return [
 
     'consultation' => [
         'duration' => '30 minutes',
+        'mode' => 'En direct en ligne, par appel vidéo',
+        'steps' => [
+            ['title' => 'Vous réservez', 'text' => 'Cliquez sur le bouton de réservation et envoyez-nous votre demande.'],
+            ['title' => 'Nous fixons un créneau', 'text' => 'Nous convenons ensemble d\'un moment qui vous arrange, du lundi au samedi, entre 8 h et 20 h.'],
+            ['title' => 'Nous échangeons en appel vidéo', 'text' => 'En direct en ligne, nous parlons de vos objectifs et vous repartez avec une recommandation claire.'],
+        ],
         'benefits' => [
             'Faire le point sur votre niveau et vos objectifs',
             'Identifier la formation la plus adaptée à votre projet',
@@ -255,10 +291,10 @@ return [
             ['question' => 'Je suis débutant, puis-je suivre les formations ?', 'answer' => 'Oui. Les formations sont expliquées pas à pas, en français simple. Si vous partez de zéro, nous vous conseillons de commencer par la formation ChatGPT & Claude.'],
             ['question' => 'Puis-je suivre les formations sur mon téléphone ?', 'answer' => 'Oui, le site et les vidéos sont pensés pour le téléphone. Pour certaines formations pratiques (sites web, applications), un ordinateur rend l\'exercice plus confortable.'],
             ['question' => 'Combien de temps ai-je accès à une formation ?', 'answer' => 'À vie. Une fois achetée, la formation reste dans votre espace élève : vous la revoyez autant que vous voulez. Vous bénéficiez aussi d\'un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],
-            ['question' => 'Comment fonctionnent les formations en direct et en présentiel ?', 'answer' => 'Les formations en direct ont lieu sur Google Meet : le lien de chaque session est communiqué aux inscrits. Les formations en présentiel ont lieu à Adidogomé, Lycée moderne 2, à Lomé. Les dates des sessions sont communiquées aux inscrits.'],
+            ['question' => 'Y a-t-il des formations en direct ou en présentiel ?', 'answer' => 'Toutes nos formations sont enregistrées, avec un accès immédiat après paiement. De temps en temps, une formation est aussi proposée en direct sur Google Meet ou en présentiel à Lomé : ces sessions ponctuelles sont annoncées sur le site au moment où elles sont organisées.'],
             ['question' => 'Comment fonctionne le programme d\'affiliation ?', 'answer' => 'Chaque élève dispose d\'un lien personnel. Pour chaque formation achetée grâce à votre lien, vous gagnez 10 % du prix. Vous pouvez demander le retrait de vos gains par Mobile Money ; chaque retrait est vérifié puis validé par notre équipe.'],
             ['question' => 'Puis-je être remboursé ?', 'answer' => 'Oui, dans les 48 heures qui suivent l\'achat, à condition de ne pas avoir commencé la formation (aucune leçon consultée). Il suffit de nous écrire par e-mail ou sur WhatsApp.'],
-            ['question' => 'Comment réserver la consultation gratuite ?', 'answer' => 'Depuis la page « Consultation gratuite », en nous écrivant sur WhatsApp. La consultation dure 30 minutes et nous répondons du lundi au samedi, de 8 h à 20 h.'],
+            ['question' => 'Comment se passe la consultation gratuite ?', 'answer' => 'Elle se réserve depuis la page « Consultation gratuite » du site et se déroule en direct en ligne, par appel vidéo. Elle dure 30 minutes, du lundi au samedi, entre 8 h et 20 h.'],
         ],
         'formation' => [
             ['question' => 'Quand est-ce que j\'accède à la formation ?', 'answer' => 'Immédiatement après la confirmation de votre paiement, depuis votre espace élève.'],
@@ -266,6 +302,7 @@ return [
             ['question' => 'Et si j\'ai une question pendant la formation ?', 'answer' => 'Vous la posez dans le groupe privé de la formation, réservé aux élèves inscrits. Vous pouvez aussi nous écrire sur WhatsApp.'],
             ['question' => 'Combien de temps ai-je accès ?', 'answer' => 'À vie, avec un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],
             ['question' => 'Puis-je être remboursé ?', 'answer' => 'Oui, dans les 48 heures qui suivent l\'achat, si vous n\'avez encore consulté aucune leçon de la formation.'],
+            ['question' => 'La formation est-elle en direct ?', 'answer' => 'Non : elle est enregistrée, avec un accès immédiat après paiement. Si une session ponctuelle en direct ou en présentiel à Lomé est organisée, elle est annoncée sur le site.'],
             ['question' => 'Ai-je besoin de connaissances particulières ?', 'answer' => 'Non, sauf indication contraire sur la page. Il suffit de savoir utiliser un téléphone ou un ordinateur et d\'avoir une connexion Internet.'],
         ],
     ],
