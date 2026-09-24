@@ -13,7 +13,7 @@
             @class([
                 'shrink-0 rounded-full px-4 py-2 text-sm font-semibold ring-1 transition',
                 'bg-gold-400 text-night-950 ring-gold-400' => request()->routeIs($tab['route']),
-                'text-slate-300 ring-white/15 hover:bg-white/5 hover:text-white' => ! request()->routeIs($tab['route']),
+                'text-slate-300 ring-veil/15 hover:bg-veil/5 hover:text-white' => ! request()->routeIs($tab['route']),
             ])
             @if (request()->routeIs($tab['route'])) aria-current="page" @endif
         >{{ $tab['label'] }}</a>

@@ -65,7 +65,7 @@
     <fieldset class="mt-4 space-y-1.5">
         <legend class="sr-only">Raison</legend>
         @foreach (\App\Enums\ReportReason::cases() as $reason)
-            <label class="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-200 ring-1 ring-white/10 has-[:checked]:bg-electric-500/15 has-[:checked]:ring-electric-400/60">
+            <label class="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-200 ring-1 ring-veil/10 has-[:checked]:bg-electric-500/15 has-[:checked]:ring-electric-400/60">
                 <input type="radio" name="report_reason" value="{{ $reason->value }}" x-model="report.reason" class="size-4 accent-electric-500">
                 {{ $reason->label() }}
             </label>
@@ -85,7 +85,7 @@
     <p class="mt-1 text-sm text-slate-400"><span x-text="menu ? menu.author : ''"></span> pourra lire le groupe, mais pas écrire pendant :</p>
     <div class="mt-4 grid grid-cols-2 gap-2">
         @foreach ((array) config('chat.mute_durations') as $hours => $label)
-            <button type="button" class="rounded-xl px-3 py-3 text-sm font-semibold text-slate-100 ring-1 ring-white/15 hover:bg-white/10" :disabled="busy" @click="mute({{ $hours }})">{{ $label }}</button>
+            <button type="button" class="rounded-xl px-3 py-3 text-sm font-semibold text-slate-100 ring-1 ring-veil/15 hover:bg-veil/10" :disabled="busy" @click="mute({{ $hours }})">{{ $label }}</button>
         @endforeach
     </div>
     <button type="button" class="btn-ghost mt-4 w-full !py-3" @click="closeAll()">Annuler</button>
@@ -121,8 +121,8 @@
 {{-- Image en grand --}}
 <div x-show="lightbox" x-cloak x-transition.opacity class="fixed inset-0 z-50 flex flex-col bg-black/95" role="dialog" aria-modal="true" aria-label="Image en grand" @keydown.escape.window="lightbox = null">
     <div class="flex justify-end gap-1 p-2 pt-[max(env(safe-area-inset-top),0.5rem)]">
-        <a :href="lightbox ? lightbox + '?telecharger=1' : '#'" class="grid size-11 place-items-center rounded-full text-white hover:bg-white/10" aria-label="Télécharger l'image"><flux:icon.arrow-down-tray class="size-6" /></a>
-        <button type="button" class="grid size-11 place-items-center rounded-full text-white hover:bg-white/10" @click="lightbox = null" aria-label="Fermer"><flux:icon.x-mark class="size-7" /></button>
+        <a :href="lightbox ? lightbox + '?telecharger=1' : '#'" class="grid size-11 place-items-center rounded-full text-white hover:bg-veil/10" aria-label="Télécharger l'image"><flux:icon.arrow-down-tray class="size-6" /></a>
+        <button type="button" class="grid size-11 place-items-center rounded-full text-white hover:bg-veil/10" @click="lightbox = null" aria-label="Fermer"><flux:icon.x-mark class="size-7" /></button>
     </div>
     <div class="flex min-h-0 flex-1 items-center justify-center p-2" @click.self="lightbox = null">
         <img :src="lightbox" alt="Image en grand" class="max-h-full max-w-full object-contain">
@@ -141,5 +141,5 @@
 
 {{-- Petit message de confirmation --}}
 <div x-show="toast" x-cloak x-transition.opacity class="pointer-events-none fixed inset-x-0 top-20 z-[60] flex justify-center px-4" role="status" aria-live="polite">
-    <p class="max-w-md rounded-2xl bg-night-800/95 px-4 py-3 text-center text-sm text-white shadow-2xl shadow-black/50 ring-1 ring-white/15" x-text="toast"></p>
+    <p class="max-w-md rounded-2xl bg-night-800/95 px-4 py-3 text-center text-sm text-white shadow-2xl shadow-black/50 ring-1 ring-veil/15" x-text="toast"></p>
 </div>

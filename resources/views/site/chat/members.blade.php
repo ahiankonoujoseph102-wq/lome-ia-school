@@ -17,7 +17,7 @@
             <x-site.alert type="error" class="mt-5">{{ $errors->first() }}</x-site.alert>
         @endif
 
-        <ul class="card mt-6 divide-y divide-white/[0.06]" data-test="member-list">
+        <ul class="card mt-6 divide-y divide-veil/[0.06]" data-test="member-list">
             @foreach ($active as $member)
                 @php $user = $member->user; @endphp
                 <li class="px-4 py-3" x-data="{ open: false }">
@@ -37,14 +37,14 @@
                             @endif
                         </div>
                         @if ($viewer->canModerate() && ! $user->isStaff())
-                            <button type="button" @click="open = !open" class="grid size-10 place-items-center rounded-full text-slate-400 hover:bg-white/10 hover:text-white" :aria-expanded="open.toString()" aria-label="Modérer {{ $user->name }}">
+                            <button type="button" @click="open = !open" class="grid size-10 place-items-center rounded-full text-slate-400 hover:bg-veil/10 hover:text-white" :aria-expanded="open.toString()" aria-label="Modérer {{ $user->name }}">
                                 <flux:icon.ellipsis-vertical class="size-5" />
                             </button>
                         @endif
                     </div>
 
                     @if ($viewer->canModerate() && ! $user->isStaff())
-                        <div x-show="open" x-cloak class="mt-3 space-y-2 rounded-2xl bg-white/[0.04] p-3 ring-1 ring-white/10">
+                        <div x-show="open" x-cloak class="mt-3 space-y-2 rounded-2xl bg-veil/[0.04] p-3 ring-1 ring-veil/10">
                             @if ($member->isMuted())
                                 <form method="POST" action="{{ route('chat.members.unmute', [$formation, $user]) }}">
                                     @csrf
@@ -75,7 +75,7 @@
 
         @if ($excluded->isNotEmpty())
             <h2 class="mt-8 text-lg font-bold text-white">Membres exclus</h2>
-            <ul class="card mt-3 divide-y divide-white/[0.06]">
+            <ul class="card mt-3 divide-y divide-veil/[0.06]">
                 @foreach ($excluded as $member)
                     <li class="flex items-center gap-3 px-4 py-3">
                         <x-site.avatar :user="$member->user" class="size-10 text-xs opacity-60" />

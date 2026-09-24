@@ -94,7 +94,7 @@
             @if ($commissions->isEmpty())
                 <p class="mt-3 text-sm text-slate-400">Aucune commission pour l'instant. Elles apparaissent ici dès que notre équipe valide un paiement passé par l'un de vos liens.</p>
             @else
-                <ul class="mt-2 divide-y divide-white/10">
+                <ul class="mt-2 divide-y divide-veil/10">
                     @foreach ($commissions as $commission)
                         @include('site.student.affiliate.partials.commission-row')
                     @endforeach

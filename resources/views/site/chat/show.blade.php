@@ -43,13 +43,13 @@
     <div
         data-chat
         x-data="chatRoom(@js($config))"
-        class="relative mx-auto flex h-dvh max-w-4xl flex-col bg-night-950 lg:border-x lg:border-white/10"
+        class="relative mx-auto flex h-dvh max-w-4xl flex-col bg-night-950 lg:border-x lg:border-veil/10"
         @chat-jump.window="jumpTo($event.detail)"
     >
         {{-- En-tête du groupe --}}
-        <header class="z-20 shrink-0 border-b border-white/10 bg-night-900/95 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+        <header class="z-20 shrink-0 border-b border-veil/10 bg-night-900/95 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
             <div class="flex h-16 items-center gap-1 px-1.5 sm:px-3">
-                <a href="{{ route('chat.index') }}" class="grid size-11 shrink-0 place-items-center rounded-full text-slate-200 hover:bg-white/10" aria-label="Retour à mes groupes">
+                <a href="{{ route('chat.index') }}" class="grid size-11 shrink-0 place-items-center rounded-full text-slate-200 hover:bg-veil/10" aria-label="Retour à mes groupes">
                     <flux:icon.arrow-left class="size-6" />
                 </a>
                 <a href="{{ route('chat.members', $formation) }}" class="flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-1.5 pr-2">
@@ -61,7 +61,7 @@
                         </span>
                     </span>
                 </a>
-                <button type="button" class="grid size-11 shrink-0 place-items-center rounded-full text-slate-200 hover:bg-white/10" @click="groupMenu = true" aria-label="Options du groupe">
+                <button type="button" class="grid size-11 shrink-0 place-items-center rounded-full text-slate-200 hover:bg-veil/10" @click="groupMenu = true" aria-label="Options du groupe">
                     <flux:icon.ellipsis-vertical class="size-6" />
                 </button>
             </div>
@@ -77,11 +77,11 @@
         <main id="chat-scroll" x-ref="scroll" @scroll.passive="onScroll()" class="chat-wallpaper relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <div class="mx-auto max-w-3xl px-2.5 pb-4 sm:px-6">
                 <div x-ref="top" class="py-4 text-center">
-                    <button type="button" x-show="hasOlder" @unless ($hasOlder) style="display: none" @endunless @click="loadOlder()" class="rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-white/15" :disabled="loadingOlder">
+                    <button type="button" x-show="hasOlder" @unless ($hasOlder) style="display: none" @endunless @click="loadOlder()" class="rounded-full bg-veil/10 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-veil/15" :disabled="loadingOlder">
                         <span x-show="!loadingOlder">Charger les messages précédents</span>
                         <span x-show="loadingOlder" x-cloak>Chargement…</span>
                     </button>
-                    <p x-show="!hasOlder" @if ($hasOlder) style="display: none" @endif class="mx-auto max-w-sm rounded-2xl bg-white/[0.04] px-4 py-3 text-xs text-slate-400 ring-1 ring-white/10">
+                    <p x-show="!hasOlder" @if ($hasOlder) style="display: none" @endif class="mx-auto max-w-sm rounded-2xl bg-veil/[0.04] px-4 py-3 text-xs text-slate-400 ring-1 ring-veil/10">
                         <flux:icon.lock-closed class="mr-1 inline size-3.5 align-[-2px]" />
                         Groupe privé réservé aux élèves de la formation et à l'équipe. Les numéros de téléphone et e-mails des membres ne sont jamais affichés.
                     </p>
@@ -108,7 +108,7 @@
             x-cloak
             x-transition.opacity
             @click="scrollToBottom(true)"
-            class="absolute right-4 bottom-28 z-10 grid size-11 place-items-center rounded-full bg-night-800 text-white shadow-xl shadow-black/40 ring-1 ring-white/15"
+            class="absolute right-4 bottom-28 z-10 grid size-11 place-items-center rounded-full bg-night-800 text-white shadow-xl shadow-black/40 ring-1 ring-veil/15"
             aria-label="Aller aux derniers messages"
         >
             <flux:icon.chevron-down class="size-6" />
@@ -116,9 +116,9 @@
         </button>
 
         {{-- Zone d'écriture --}}
-        <footer class="z-20 shrink-0 border-t border-white/10 bg-night-900/95 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur-xl">
+        <footer class="z-20 shrink-0 border-t border-veil/10 bg-night-900/95 pb-[max(env(safe-area-inset-bottom),0.5rem)] backdrop-blur-xl">
             <div class="mx-auto max-w-3xl px-2 pt-2 sm:px-4">
-                <p x-show="!canPost" @if ($viewer->canPost()) style="display: none" @endif class="flex items-start gap-2 rounded-2xl bg-white/[0.05] px-4 py-3 text-sm text-slate-300 ring-1 ring-white/10" data-test="post-blocked">
+                <p x-show="!canPost" @if ($viewer->canPost()) style="display: none" @endif class="flex items-start gap-2 rounded-2xl bg-veil/[0.05] px-4 py-3 text-sm text-slate-300 ring-1 ring-veil/10" data-test="post-blocked">
                     <flux:icon.information-circle class="mt-0.5 size-5 shrink-0 text-electric-300" />
                     <span x-text="blockedReason">{{ $viewer->postBlockedReason() }}</span>
                 </p>

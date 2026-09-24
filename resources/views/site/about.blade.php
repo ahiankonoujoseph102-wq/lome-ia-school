@@ -51,7 +51,7 @@
     </section>
 
     {{-- L'école --}}
-    <section class="border-y border-white/10 bg-white/[0.02]">
+    <section class="border-y border-veil/10 bg-veil/[0.02]">
         <div class="section">
             <div class="grid gap-10 lg:grid-cols-2 lg:items-center">
                 <div data-reveal>

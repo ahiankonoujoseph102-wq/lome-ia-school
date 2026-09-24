@@ -10,7 +10,7 @@
         </a>
 
         {{-- Vidéo : pleine largeur sur téléphone, plein écran autorisé --}}
-        <div class="-mx-4 mt-3 overflow-hidden bg-black sm:mx-0 sm:rounded-3xl sm:ring-1 sm:ring-white/10">
+        <div class="-mx-4 mt-3 overflow-hidden bg-black sm:mx-0 sm:rounded-3xl sm:ring-1 sm:ring-veil/10">
             @if ($playerUrl)
                 <div class="aspect-video">
                     <iframe
@@ -36,7 +36,7 @@
                     Lecteur {{ $useBackup ? 'de secours' : 'principal' }} : {{ ($useBackup ? $lesson->backupVideoProvider() : $lesson->videoProvider())?->name() }}
                 </span>
                 @if ($useBackup)
-                    <a href="{{ route('lessons.show', [$formation, $lesson]) }}" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold text-electric-200 ring-1 ring-white/15 hover:bg-white/10">
+                    <a href="{{ route('lessons.show', [$formation, $lesson]) }}" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold text-electric-200 ring-1 ring-veil/15 hover:bg-veil/10">
                         <flux:icon.arrow-path class="size-4" /> Revenir au lecteur principal
                     </a>
                 @else
@@ -53,7 +53,7 @@
             </p>
             <h1 class="mt-1 text-2xl leading-tight font-bold text-balance text-white sm:text-3xl">{{ $lesson->title }}</h1>
             @if (! $lesson->is_published)
-                <p class="mt-2 inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-slate-300">Brouillon : visible par l'admin uniquement</p>
+                <p class="mt-2 inline-flex rounded-full bg-veil/10 px-3 py-1 text-xs font-semibold text-slate-300">Brouillon : visible par l'admin uniquement</p>
             @endif
         </div>
 
@@ -78,7 +78,7 @@
                     @endif
                 </form>
                 <div class="flex min-w-40 flex-1 items-center gap-3">
-                    <div class="h-2 flex-1 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow="{{ $summary->percent() }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progression dans la formation">
+                    <div class="h-2 flex-1 overflow-hidden rounded-full bg-veil/10" role="progressbar" aria-valuenow="{{ $summary->percent() }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progression dans la formation">
                         <div class="h-full rounded-full bg-linear-to-r from-electric-500 to-gold-400" style="width: {{ $summary->percent() }}%"></div>
                     </div>
                     <span class="text-sm font-semibold text-white tabular-nums">{{ $summary->percent() }} %</span>
@@ -119,7 +119,7 @@
                 <ul class="mt-3 space-y-2">
                     @foreach ($resources as $resource)
                         <li>
-                            <a href="{{ route('lessons.resources.download', [$formation, $lesson, $resource]) }}" @if ($resource->isLink()) target="_blank" rel="noopener noreferrer" @endif class="flex items-center gap-3 rounded-2xl bg-white/[0.04] px-3 py-3 ring-1 ring-white/10 hover:bg-white/[0.08]">
+                            <a href="{{ route('lessons.resources.download', [$formation, $lesson, $resource]) }}" @if ($resource->isLink()) target="_blank" rel="noopener noreferrer" @endif class="flex items-center gap-3 rounded-2xl bg-veil/[0.04] px-3 py-3 ring-1 ring-veil/10 hover:bg-veil/[0.08]">
                                 <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-[10px] font-bold text-electric-200">{{ $resource->extension() }}</span>
                                 <span class="min-w-0 flex-1">
                                     <span class="block truncate text-sm font-medium text-white">{{ $resource->name }}</span>
@@ -153,7 +153,7 @@
                     <span class="font-semibold text-white">Sommaire de la formation</span>
                     <flux:icon.chevron-down class="size-5 text-slate-400 transition group-open:rotate-180" />
                 </summary>
-                <div class="border-t border-white/10 px-2 pb-3">
+                <div class="border-t border-veil/10 px-2 pb-3">
                     @include('site.lessons.partials.curriculum', ['current' => $lesson])
                 </div>
             </details>

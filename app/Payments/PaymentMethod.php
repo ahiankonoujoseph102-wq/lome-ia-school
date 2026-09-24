@@ -64,6 +64,20 @@ final readonly class PaymentMethod
     }
 
     /**
+     * Couleur inverse de la pastille (compensation du mode sombre forcé de Chrome, voir site.css).
+     */
+    public function inverseColor(): string
+    {
+        $hex = ltrim($this->color, '#');
+
+        if (! preg_match('/^[0-9a-fA-F]{6}$/', $hex)) {
+            return '#000000';
+        }
+
+        return sprintf('#%06x', 0xFFFFFF - (int) hexdec($hex));
+    }
+
+    /**
      * @return array<string, string|null>
      */
     public function toArray(): array
@@ -76,6 +90,7 @@ final readonly class PaymentMethod
             'raw_number' => $this->rawNumber(),
             'beneficiary' => $this->beneficiary,
             'color' => $this->color,
+            'inverse_color' => $this->inverseColor(),
             'initials' => $this->initials(),
             'note' => $this->representativeNote(),
         ];

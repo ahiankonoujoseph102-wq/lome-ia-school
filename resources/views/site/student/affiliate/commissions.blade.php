@@ -9,7 +9,7 @@
             @if ($commissions->isEmpty())
                 <p class="py-4 text-sm text-slate-400">Aucune commission pour l'instant.</p>
             @else
-                <ul class="divide-y divide-white/10">
+                <ul class="divide-y divide-veil/10">
                     @foreach ($commissions as $commission)
                         @include('site.student.affiliate.partials.commission-row')
                     @endforeach

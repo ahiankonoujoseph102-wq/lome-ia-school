@@ -30,6 +30,12 @@
     --color-electric-800: #5b21b6;
     --color-electric-900: #4c1d95;
 
+    /*
+     * Voile blanc des fonds, bordures et séparateurs translucides (bg-veil/5, border-veil/10…).
+     * Blanc en temps normal ; gris clair juste sous le seuil de Chrome en mode sombre forcé (voir plus bas).
+     */
+    --color-veil: #ffffff;
+
     /* Doré (boutons d'achat) */
     --color-gold-100: #fef3c7;
     --color-gold-200: #fde68a;
@@ -53,8 +59,135 @@
  * indique à Chrome Android que le site est déjà sombre, pour qu'il ne le recolore pas.
  */
 :root {
-    color-scheme: dark;
+    color-scheme: only dark;
     background-color: var(--color-night-950);
+}
+
+/*
+ * Mode sombre forcé de Chrome avec un téléphone en mode clair (classe « force-dark » posée par le
+ * script du layout). Chrome éclaircit alors tout texte ou icône foncé et assombrit les fonds clairs,
+ * même avec « only dark ». Les seuls éléments concernés du site sont ceux à texte foncé sur fond
+ * doré, vert ou blanc : on les inverse (filter: invert) et on leur donne à l'avance le fond inverse,
+ * pour que le résultat affiché soit exactement celui du design. Les fonds foncés et les textes clairs
+ * du reste du site ne sont pas modifiés par Chrome.
+ * Couleurs inverses : doré 300 #032cb2, doré 400 #0440db, doré 500 #0a58f4, émeraude 400 #ff2b6d,
+ * émeraude 500 #ff4382, ambre 400 #0046ff, orange 500 #0096ff, blanc #000000.
+ */
+html.force-dark {
+    /* Chrome assombrit toute couleur de fond plus claire que ce gris : le voile reste ainsi intact. */
+    --color-veil: rgb(198 198 198);
+}
+
+/* Visuel de remplacement d'une formation (composant x-site.formation-cover), dessiné en CSS. */
+:root {
+    --cover-glow: rgb(255 255 255 / 0.35);
+    --cover-line: rgb(255 255 255 / 0.16);
+    --cover-dot-color: rgb(255 255 255 / 0.5);
+}
+
+html.force-dark {
+    /* Même rendu avec un gris sous le seuil de Chrome : opacité augmentée d'autant (255 / 198). */
+    --cover-glow: rgb(198 198 198 / 0.45);
+    --cover-line: rgb(198 198 198 / 0.21);
+    --cover-dot-color: rgb(198 198 198 / 0.64);
+}
+
+.cover-art {
+    overflow: hidden;
+    background-image: linear-gradient(to bottom right, var(--cover-from), var(--cover-to));
+}
+
+.cover-art > span {
+    position: absolute;
+    display: block;
+}
+
+.cover-glow {
+    inset: 0;
+    background-image: radial-gradient(60% 60% at 85% 15%, var(--cover-glow), transparent);
+}
+
+.cover-ring {
+    left: 82.5%;
+    top: 80%;
+    width: var(--cover-ring);
+    aspect-ratio: 1;
+    border: 1px solid var(--cover-line);
+    border-radius: 9999px;
+    translate: -50% -50%;
+}
+
+.cover-dot {
+    width: var(--cover-dot);
+    height: var(--cover-dot);
+    border-radius: 9999px;
+    background-color: var(--cover-dot-color);
+    translate: -50% -50%;
+}
+
+.cover-mountain {
+    inset: 0;
+    background-color: rgb(11 16 48 / 0.25);
+    clip-path: polygon(0% 100%, 35% 60%, 55% 80%, 100% 36%, 100% 100%);
+}
+
+/* Titre en dégradé (texte découpé dans un fond) : fond inverse, puis inversion. */
+.force-dark .text-gradient {
+    filter: invert(1);
+    background-image: linear-gradient(to right, #000000, #3b4a02, #032cb2);
+}
+
+/* QR code de la double authentification : fond blanc et carrés noirs, indispensables à la lecture. */
+.force-dark .qr-code {
+    filter: invert(1);
+    background-color: #000;
+}
+
+.force-dark .btn-gold {
+    filter: invert(1);
+    background-image: linear-gradient(to right, #032cb2, #0440db, #0a58f4);
+    --tw-shadow-color: rgb(10 88 244 / 0.25);
+}
+
+.force-dark .btn-gold:hover {
+    filter: invert(1) brightness(1.05);
+    --tw-shadow-color: rgb(4 64 219 / 0.4);
+}
+
+.force-dark .btn-gold:disabled {
+    filter: invert(1) brightness(0.75);
+}
+
+.force-dark .bg-gold-400.text-night-950,
+.force-dark .chat-badge-trainer {
+    filter: invert(1);
+    background-color: #0440db;
+    --tw-ring-color: #032cb2;
+    --tw-shadow-color: rgb(10 88 244 / 0.2);
+}
+
+.force-dark .bg-emerald-500.text-night-950 {
+    filter: invert(1);
+    background-color: #ff4382;
+}
+
+.force-dark .bg-emerald-500.text-night-950:hover {
+    background-color: #ff2b6d;
+}
+
+.force-dark .chat-file-icon {
+    filter: invert(1);
+    background-image: linear-gradient(to bottom right, #0046ff, #0096ff);
+}
+
+.force-dark .method-dot {
+    filter: invert(1);
+    background: var(--dot-inverse) !important;
+}
+
+.force-dark .focus\:bg-veil:focus {
+    filter: invert(1);
+    background-color: #000;
 }
 
 body {
@@ -103,16 +236,16 @@ body {
 }
 
 @utility btn-ghost {
-    @apply btn border border-white/15 bg-white/5 text-white backdrop-blur hover:border-white/30 hover:bg-white/10 focus-visible:outline-white;
+    @apply btn border border-veil/15 bg-veil/5 text-white backdrop-blur hover:border-veil/30 hover:bg-veil/10 focus-visible:outline-veil;
 }
 
 /* Cartes */
 @utility card {
-    @apply rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-sm;
+    @apply rounded-3xl border border-veil/10 bg-veil/[0.04] backdrop-blur-sm;
 }
 
 @utility card-hover {
-    @apply transition duration-300 hover:-translate-y-1 hover:border-electric-400/40 hover:bg-white/[0.07] hover:shadow-2xl hover:shadow-electric-900/40;
+    @apply transition duration-300 hover:-translate-y-1 hover:border-electric-400/40 hover:bg-veil/[0.07] hover:shadow-2xl hover:shadow-electric-900/40;
 }
 
 /* Textes */
@@ -121,7 +254,7 @@ body {
 }
 
 @utility text-gradient {
-    @apply bg-linear-to-r from-white via-electric-300 to-gold-300 bg-clip-text text-transparent;
+    @apply bg-linear-to-r from-veil via-electric-300 to-gold-300 bg-clip-text text-transparent;
 }
 
 @utility section {
@@ -194,7 +327,7 @@ body {
 
 /* Champs de formulaire (16 px minimum pour éviter le zoom automatique sur iPhone) */
 @utility field-input {
-    @apply w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3.5 text-base text-white placeholder-slate-500 transition outline-none focus:border-electric-400/70 focus:bg-white/[0.08] focus:ring-2 focus:ring-electric-500/30;
+    @apply w-full rounded-2xl border border-veil/10 bg-veil/[0.06] px-4 py-3.5 text-base text-white placeholder-slate-500 transition outline-none focus:border-electric-400/70 focus:bg-veil/[0.08] focus:ring-2 focus:ring-electric-500/30;
 }
 
 @utility field-input-error {
@@ -220,7 +353,7 @@ body {
     @apply sticky top-2 z-[5] my-3 flex justify-center;
 
     & > span {
-        @apply rounded-full bg-night-800/90 px-3 py-1 text-xs font-medium text-slate-300 shadow-md shadow-black/30 ring-1 ring-white/10 backdrop-blur;
+        @apply rounded-full bg-night-800/90 px-3 py-1 text-xs font-medium text-slate-300 shadow-md shadow-black/30 ring-1 ring-veil/10 backdrop-blur;
     }
 }
 
@@ -241,7 +374,7 @@ body {
 }
 
 @utility chat-bubble-other {
-    @apply bg-night-800 text-slate-100 ring-1 ring-white/[0.06];
+    @apply bg-night-800 text-slate-100 ring-1 ring-veil/[0.06];
 }
 
 @utility chat-bubble-staff {
@@ -249,7 +382,7 @@ body {
 }
 
 @utility chat-bubble-deleted {
-    @apply bg-white/[0.04] ring-1 ring-white/10;
+    @apply bg-veil/[0.04] ring-1 ring-veil/10;
 }
 
 .chat-row.justify-end .chat-bubble-tail {
@@ -315,7 +448,7 @@ body {
 }
 
 @utility chat-voice-button {
-    @apply grid size-10 shrink-0 place-items-center rounded-full bg-white/15 text-white transition hover:bg-white/25 active:scale-95;
+    @apply grid size-10 shrink-0 place-items-center rounded-full bg-veil/15 text-white transition hover:bg-veil/25 active:scale-95;
 }
 
 .chat-range {
@@ -369,33 +502,33 @@ body {
 }
 
 @utility chat-more {
-    @apply grid size-8 shrink-0 place-items-center self-center rounded-full text-slate-500 opacity-70 transition hover:bg-white/10 hover:text-white hover:opacity-100 focus-visible:opacity-100 sm:opacity-0 sm:group-hover/message:opacity-100;
+    @apply grid size-8 shrink-0 place-items-center self-center rounded-full text-slate-500 opacity-70 transition hover:bg-veil/10 hover:text-white hover:opacity-100 focus-visible:opacity-100 sm:opacity-0 sm:group-hover/message:opacity-100;
 }
 
 @utility chat-input {
-    @apply max-h-36 min-h-11 flex-1 resize-none rounded-3xl border border-white/10 bg-white/[0.07] px-4 py-2.5 text-base leading-6 text-white placeholder-slate-500 outline-none focus:border-electric-400/60 focus:ring-2 focus:ring-electric-500/25;
+    @apply max-h-36 min-h-11 flex-1 resize-none rounded-3xl border border-veil/10 bg-veil/[0.07] px-4 py-2.5 text-base leading-6 text-white placeholder-slate-500 outline-none focus:border-electric-400/60 focus:ring-2 focus:ring-electric-500/25;
 }
 
 @utility chat-pinned {
-    @apply mx-auto max-w-3xl cursor-pointer border-t border-white/[0.06] px-3 py-2 sm:px-5;
+    @apply mx-auto max-w-3xl cursor-pointer border-t border-veil/[0.06] px-3 py-2 sm:px-5;
 }
 
 @utility chat-sheet {
-    @apply fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85dvh] max-w-lg overflow-y-auto rounded-t-3xl border border-white/10 bg-night-900 px-2 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] shadow-2xl shadow-black/60;
+    @apply fixed inset-x-0 bottom-0 z-50 mx-auto max-h-[85dvh] max-w-lg overflow-y-auto rounded-t-3xl border border-veil/10 bg-night-900 px-2 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] shadow-2xl shadow-black/60;
 }
 
 @utility chat-sheet-handle {
-    @apply mx-auto mb-3 h-1.5 w-10 rounded-full bg-white/20;
+    @apply mx-auto mb-3 h-1.5 w-10 rounded-full bg-veil/20;
 }
 
 @utility chat-sheet-item {
-    @apply flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left text-[15px] text-slate-100 transition hover:bg-white/5 active:bg-white/10;
+    @apply flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left text-[15px] text-slate-100 transition hover:bg-veil/5 active:bg-veil/10;
 }
 
 @utility chat-sheet-cancel {
-    @apply mt-2 w-full rounded-2xl bg-white/[0.06] px-4 py-3.5 text-center text-[15px] font-semibold text-slate-200 hover:bg-white/10;
+    @apply mt-2 w-full rounded-2xl bg-veil/[0.06] px-4 py-3.5 text-center text-[15px] font-semibold text-slate-200 hover:bg-veil/10;
 }
 
 @utility chat-dialog {
-    @apply fixed inset-x-4 top-1/2 z-[55] mx-auto max-w-md -translate-y-1/2 rounded-3xl border border-white/10 bg-night-900 p-6 shadow-2xl shadow-black/60;
+    @apply fixed inset-x-4 top-1/2 z-[55] mx-auto max-w-md -translate-y-1/2 rounded-3xl border border-veil/10 bg-night-900 p-6 shadow-2xl shadow-black/60;
 }

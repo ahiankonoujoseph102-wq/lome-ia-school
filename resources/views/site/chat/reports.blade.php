@@ -9,7 +9,7 @@
                 <h1 class="text-2xl font-bold text-white sm:text-3xl">Messages signalés</h1>
                 <p class="mt-1 text-slate-400">Signalés par les membres des groupes. Supprimez le message ou classez le signalement.</p>
             </div>
-            <span @class(['rounded-full px-4 py-1.5 text-sm font-bold', 'bg-gold-400 text-night-950' => $open->isNotEmpty(), 'bg-white/10 text-slate-300' => $open->isEmpty()])>{{ $open->count() }} à traiter</span>
+            <span @class(['rounded-full px-4 py-1.5 text-sm font-bold', 'bg-gold-400 text-night-950' => $open->isNotEmpty(), 'bg-veil/10 text-slate-300' => $open->isEmpty()])>{{ $open->count() }} à traiter</span>
         </div>
 
         @if (session('status'))
@@ -24,7 +24,7 @@
                     $formation = $message->group->formation;
                 @endphp
                 <article class="card overflow-hidden">
-                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-5 py-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-veil/10 px-5 py-3">
                         <p class="text-sm font-semibold text-white">{{ $formation->title }}</p>
                         <span class="rounded-full bg-rose-500/15 px-2.5 py-1 text-xs font-semibold text-rose-200 ring-1 ring-rose-400/30">{{ $reports->count() }} {{ $reports->count() > 1 ? 'signalements' : 'signalement' }}</span>
                     </div>
@@ -33,7 +33,7 @@
                             <x-site.avatar :user="$message->author" class="size-10 text-xs" />
                             <div class="min-w-0 flex-1">
                                 <p class="text-sm"><span class="font-semibold text-white">{{ $message->author->name }}</span> <span class="text-slate-500">· {{ $message->created_at->translatedFormat('j F à H\hi') }}</span></p>
-                                <div class="mt-1 rounded-2xl bg-night-800 px-3 py-2 text-[15px] text-slate-100 ring-1 ring-white/[0.06]">
+                                <div class="mt-1 rounded-2xl bg-night-800 px-3 py-2 text-[15px] text-slate-100 ring-1 ring-veil/[0.06]">
                                     @if ($message->isDeleted())
                                         <span class="text-slate-400 italic">Ce message a déjà été supprimé</span>
                                     @else
@@ -83,7 +83,7 @@
 
         @if ($handled->isNotEmpty())
             <h2 class="mt-10 text-lg font-bold text-white">Derniers signalements traités</h2>
-            <ul class="card mt-3 divide-y divide-white/[0.06] text-sm">
+            <ul class="card mt-3 divide-y divide-veil/[0.06] text-sm">
                 @foreach ($handled as $item)
                     <li class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
                         <span class="font-semibold text-white">{{ $item->message->group->formation->title }}</span>

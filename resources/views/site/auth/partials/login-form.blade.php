@@ -28,7 +28,7 @@
     </x-site.password-field>
 
     <label class="flex items-center gap-3 text-sm text-slate-300">
-        <input type="checkbox" name="remember" value="1" @checked(old('remember', true)) class="size-5 rounded-md border-white/20 bg-white/5 accent-electric-500">
+        <input type="checkbox" name="remember" value="1" @checked(old('remember', true)) class="size-5 rounded-md border-veil/20 bg-veil/5 accent-electric-500">
         Rester connecté sur cet appareil
     </label>
 

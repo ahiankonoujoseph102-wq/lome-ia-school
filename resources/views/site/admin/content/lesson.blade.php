@@ -50,7 +50,7 @@
                 <p class="-mt-2 text-xs text-slate-500">Renseignez une source, ou les deux : la seconde sert de « lecteur de secours » si la première ne fonctionne pas.</p>
 
                 @foreach ($providers as $key => $videoProvider)
-                    <div class="space-y-2 rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/10" x-data="lessonVideoPreview(@js($key), @js($videoLinks[$key]))">
+                    <div class="space-y-2 rounded-2xl bg-veil/[0.03] p-4 ring-1 ring-veil/10" x-data="lessonVideoPreview(@js($key), @js($videoLinks[$key]))">
                         <div class="flex items-center justify-between gap-3">
                             <label for="video-{{ $key }}" class="text-sm font-semibold text-white">Lien {{ $videoProvider->name() }}</label>
                             @if (count($providers) > 1)
@@ -82,7 +82,7 @@
                         @enderror
 
                         <template x-if="videoId">
-                            <div class="overflow-hidden rounded-2xl bg-black ring-1 ring-white/10">
+                            <div class="overflow-hidden rounded-2xl bg-black ring-1 ring-veil/10">
                                 <div class="aspect-video">
                                     <iframe :src="embedUrl" title="Aperçu de la vidéo {{ $videoProvider->name() }}" class="size-full" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
                                 </div>
@@ -107,11 +107,11 @@
             </div>
 
             <div class="grid gap-3 sm:grid-cols-2">
-                <label class="flex cursor-pointer items-start gap-3 rounded-2xl bg-white/[0.03] p-4 text-sm ring-1 ring-white/10">
+                <label class="flex cursor-pointer items-start gap-3 rounded-2xl bg-veil/[0.03] p-4 text-sm ring-1 ring-veil/10">
                     <input type="checkbox" name="is_published" value="1" @checked(old('is_published', $lesson->is_published)) class="mt-0.5 size-5 shrink-0 accent-emerald-500">
                     <span><span class="block font-semibold text-white">Publiée</span><span class="text-xs text-slate-400">Visible par les élèves de la formation.</span></span>
                 </label>
-                <label class="flex cursor-pointer items-start gap-3 rounded-2xl bg-white/[0.03] p-4 text-sm ring-1 ring-white/10">
+                <label class="flex cursor-pointer items-start gap-3 rounded-2xl bg-veil/[0.03] p-4 text-sm ring-1 ring-veil/10">
                     <input type="checkbox" name="is_preview" value="1" @checked(old('is_preview', $lesson->is_preview)) class="mt-0.5 size-5 shrink-0 accent-gold-400">
                     <span><span class="block font-semibold text-white">Aperçu gratuit</span><span class="text-xs text-slate-400">Visible par tous les visiteurs depuis la page de la formation.</span></span>
                 </label>
@@ -123,7 +123,7 @@
                 @if ($lesson->exists && $lesson->resources->isNotEmpty())
                     <ul class="space-y-2">
                         @foreach ($lesson->resources as $resource)
-                            <li class="flex items-center gap-3 rounded-2xl bg-white/[0.03] px-3 py-2.5 ring-1 ring-white/10">
+                            <li class="flex items-center gap-3 rounded-2xl bg-veil/[0.03] px-3 py-2.5 ring-1 ring-veil/10">
                                 @if ($resource->isLink())
                                     <flux:icon.link class="size-5 shrink-0 text-gold-300" />
                                 @else
@@ -133,7 +133,7 @@
                                     <span class="block truncate text-sm text-white">{{ $resource->name }}</span>
                                     <span class="text-xs text-slate-500">{{ $resource->details() }}</span>
                                 </span>
-                                <button type="submit" form="supprimer-ressource-{{ $resource->id }}" class="grid size-9 shrink-0 place-items-center rounded-full text-slate-400 ring-1 ring-white/15 hover:text-rose-300" aria-label="Supprimer {{ $resource->name }}">
+                                <button type="submit" form="supprimer-ressource-{{ $resource->id }}" class="grid size-9 shrink-0 place-items-center rounded-full text-slate-400 ring-1 ring-veil/15 hover:text-rose-300" aria-label="Supprimer {{ $resource->name }}">
                                     <flux:icon.trash class="size-4" />
                                 </button>
                             </li>
@@ -141,7 +141,7 @@
                     </ul>
                 @endif
                 <div x-data="{ names: [] }">
-                    <label for="resources" class="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-white/20 px-4 py-4 transition hover:bg-white/5">
+                    <label for="resources" class="flex cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-veil/20 px-4 py-4 transition hover:bg-veil/5">
                         <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-electric-300"><flux:icon.paper-clip class="size-5" /></span>
                         <span class="min-w-0 flex-1 text-sm">
                             <span class="block font-semibold text-white" x-text="names.length ? names.length + (names.length > 1 ? ' fichiers choisis' : ' fichier choisi') : 'Ajouter des fichiers'">Ajouter des fichiers</span>
@@ -151,7 +151,7 @@
                     <input id="resources" type="file" name="resources[]" multiple accept=".{{ implode(',.', LessonRequest::RESOURCE_MIMES) }}" class="sr-only" @change="names = Array.from($event.target.files).map((file) => file.name)">
                 </div>
                 <p class="text-xs text-slate-500">PDF, images, Word, Excel, PowerPoint, ZIP… {{ intdiv(LessonRequest::RESOURCE_MAX_KB, 1024) }} Mo maximum par fichier. Ils restent privés : seuls les élèves de la formation peuvent les télécharger.</p>
-                <div class="space-y-2 rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/10">
+                <div class="space-y-2 rounded-2xl bg-veil/[0.03] p-4 ring-1 ring-veil/10">
                     <p class="text-sm font-semibold text-white">Ou ajouter un lien Google Drive</p>
                     <p class="flex items-start gap-2 rounded-xl bg-gold-400/10 px-3 py-2 text-xs font-medium text-gold-100 ring-1 ring-gold-400/30">
                         <flux:icon.exclamation-triangle class="mt-0.5 size-4 shrink-0" /> Le fichier Drive doit être partagé en « Tous les utilisateurs disposant du lien ».
@@ -196,7 +196,7 @@
                     <p class="text-sm text-rose-100">Supprimer définitivement « {{ $lesson->title }} » et ses fichiers ? La progression des élèves sur cette leçon sera aussi effacée.</p>
                     <div class="flex gap-2">
                         <button type="submit" class="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white">Oui, supprimer</button>
-                        <button type="button" @click="confirmDelete = false" class="rounded-full px-4 py-2 text-sm text-slate-300 ring-1 ring-white/15">Annuler</button>
+                        <button type="button" @click="confirmDelete = false" class="rounded-full px-4 py-2 text-sm text-slate-300 ring-1 ring-veil/15">Annuler</button>
                     </div>
                 </form>
             </div>

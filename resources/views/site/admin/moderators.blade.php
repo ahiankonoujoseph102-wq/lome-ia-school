@@ -19,7 +19,7 @@
         </form>
 
         <h2 class="mt-8 text-lg font-bold text-white">Modérateurs</h2>
-        <ul class="card mt-3 divide-y divide-white/[0.06]" data-test="moderators">
+        <ul class="card mt-3 divide-y divide-veil/[0.06]" data-test="moderators">
             @forelse ($moderators as $moderator)
                 <li class="flex items-center gap-3 px-4 py-3">
                     <x-site.avatar :user="$moderator" class="size-10 text-xs" />
@@ -39,7 +39,7 @@
         </ul>
 
         <h2 class="mt-8 text-lg font-bold text-white">Administrateurs</h2>
-        <ul class="card mt-3 divide-y divide-white/[0.06]">
+        <ul class="card mt-3 divide-y divide-veil/[0.06]">
             @foreach ($admins as $admin)
                 <li class="flex items-center gap-3 px-4 py-3">
                     <x-site.avatar :user="$admin" class="size-10 text-xs" />

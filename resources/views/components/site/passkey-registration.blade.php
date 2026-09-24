@@ -49,7 +49,7 @@
         </button>
     </div>
 
-    <div x-show="supported && showForm" x-cloak class="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <div x-show="supported && showForm" x-cloak class="space-y-4 rounded-2xl border border-veil/10 bg-veil/[0.03] p-4">
         <div class="space-y-1.5">
             <label for="nom-passkey" class="field-label">Nom de la passkey</label>
             <input id="nom-passkey" x-model="name" @keydown.enter.prevent="register()" class="field-input" placeholder="Ex. : iPhone, ordinateur du bureau">

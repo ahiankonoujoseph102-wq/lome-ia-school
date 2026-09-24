@@ -49,7 +49,7 @@
                 <p class="field-label">Type de session</p>
                 <div class="mt-3 grid grid-cols-2 gap-3">
                     @foreach (SessionFormat::cases() as $case)
-                        <label class="flex cursor-pointer flex-col items-center gap-2 rounded-2xl p-4 text-center ring-1 ring-white/15 transition has-[:checked]:bg-electric-500/15 has-[:checked]:ring-2 has-[:checked]:ring-electric-400">
+                        <label class="flex cursor-pointer flex-col items-center gap-2 rounded-2xl p-4 text-center ring-1 ring-veil/15 transition has-[:checked]:bg-electric-500/15 has-[:checked]:ring-2 has-[:checked]:ring-electric-400">
                             <input type="radio" name="format" value="{{ $case->value }}" x-model="format" @checked($format === $case->value) class="sr-only">
                             <flux:icon :icon="$case->icon()" class="size-7 text-electric-300" />
                             <span class="font-semibold text-white">{{ $case->label() }}</span>
@@ -118,7 +118,7 @@
                     <legend class="field-label">Tarif</legend>
                     <div class="mt-2 grid gap-2 sm:grid-cols-2">
                         @foreach (SessionPriceType::cases() as $case)
-                            <label class="flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-100 ring-1 ring-white/15 has-[:checked]:bg-electric-500/15 has-[:checked]:ring-electric-400">
+                            <label class="flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-sm text-slate-100 ring-1 ring-veil/15 has-[:checked]:bg-electric-500/15 has-[:checked]:ring-electric-400">
                                 <input type="radio" name="price_type" value="{{ $case->value }}" x-model="priceType" @checked($priceType === $case->value) class="size-4 accent-electric-500">
                                 {{ $case->label() }}
                             </label>

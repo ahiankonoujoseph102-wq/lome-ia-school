@@ -1,7 +1,7 @@
 <x-layouts::site title="Mon espace" variant="student">
     <div class="mx-auto max-w-6xl space-y-10 px-4 pt-6 pb-12 sm:px-6 sm:pt-10">
         {{-- Bienvenue --}}
-        <section class="relative overflow-hidden rounded-[2rem] border border-white/10 bg-linear-to-br from-electric-700/60 via-night-800 to-night-900 p-6 sm:p-8">
+        <section class="relative overflow-hidden rounded-[2rem] border border-veil/10 bg-linear-to-br from-electric-700/60 via-night-800 to-night-900 p-6 sm:p-8">
             <div class="glow pointer-events-none absolute inset-0 opacity-70"></div>
             <div class="relative flex items-center gap-4">
                 <x-site.avatar :user="$user" class="size-14 text-lg sm:size-16" />

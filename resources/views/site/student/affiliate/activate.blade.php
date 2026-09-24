@@ -10,7 +10,7 @@
             @include('site.partials.affiliate-rules')
             <p class="text-sm text-slate-400">Conditions complètes : article « Programme d'affiliation » des <a href="{{ route('legal.terms') }}#affiliation" class="text-electric-300 underline underline-offset-2 hover:text-white">conditions générales de vente</a>.</p>
 
-            <label class="flex items-start gap-3 rounded-2xl bg-white/[0.03] p-4 text-sm text-slate-200 ring-1 ring-white/10">
+            <label class="flex items-start gap-3 rounded-2xl bg-veil/[0.03] p-4 text-sm text-slate-200 ring-1 ring-veil/10">
                 <input type="checkbox" name="terms" value="1" class="mt-0.5 size-5 shrink-0 accent-gold-400" @checked(old('terms')) required>
                 <span>J'ai lu et j'accepte les conditions du programme d'affiliation.</span>
             </label>

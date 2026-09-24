@@ -13,7 +13,7 @@
 @endphp
 
 {{-- Ordinateur : onglets sous l'en-tête --}}
-<nav class="hidden border-b border-white/10 bg-night-950/60 lg:block" aria-label="Mon espace">
+<nav class="hidden border-b border-veil/10 bg-night-950/60 lg:block" aria-label="Mon espace">
     <div class="mx-auto flex max-w-6xl items-center gap-1 px-6">
         <span class="mr-4 text-sm font-semibold text-slate-400">Mon espace</span>
         @foreach ($items as $item)
@@ -36,7 +36,7 @@
 </nav>
 
 {{-- Téléphone : barre de navigation fixée en bas de l'écran --}}
-<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-night-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" aria-label="Mon espace">
+<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-veil/10 bg-night-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" aria-label="Mon espace">
     <ul class="mx-auto grid max-w-lg grid-cols-6">
         @foreach (array_filter($items, fn ($item) => ! ($item['desktop'] ?? false)) as $item)
             @php $active = request()->routeIs(...(array) $item['active']); @endphp

@@ -35,7 +35,7 @@
 
                     <div class="mt-4 grid grid-cols-3 gap-2 text-center">
                         @foreach (['Clics' => $summary['clicks'], 'Inscriptions' => $summary['signups'], 'Ventes' => $summary['sales']] as $label => $value)
-                            <div class="rounded-2xl bg-white/[0.03] px-2 py-2.5 ring-1 ring-white/10">
+                            <div class="rounded-2xl bg-veil/[0.03] px-2 py-2.5 ring-1 ring-veil/10">
                                 <p class="text-sm font-bold text-white tabular-nums">{{ $value }}</p>
                                 <p class="text-[11px] text-slate-400">{{ $label }}</p>
                             </div>
@@ -43,7 +43,7 @@
                     </div>
                     <div class="mt-2 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
                         @foreach (['En attente' => $summary['pending'], 'Solde' => $summary['balance'], 'Retrait en cours' => $summary['requested'], 'Payé' => $summary['paid']] as $label => $value)
-                            <div class="rounded-2xl bg-white/[0.03] px-2 py-2.5 ring-1 ring-white/10">
+                            <div class="rounded-2xl bg-veil/[0.03] px-2 py-2.5 ring-1 ring-veil/10">
                                 <p @class(['text-sm font-bold tabular-nums', 'text-rose-300' => $value < 0, 'text-white' => $value >= 0])>{{ Money::fcfa($value) }}</p>
                                 <p class="text-[11px] text-slate-400">{{ $label }}</p>
                             </div>
@@ -54,7 +54,7 @@
                         <div class="mt-4">@include('site.partials.alert-list', ['alerts' => $alerts[$affiliate->id]])</div>
                     @endif
 
-                    <div class="mt-4 border-t border-white/10 pt-4">
+                    <div class="mt-4 border-t border-veil/10 pt-4">
                         @if ($affiliate->isSuspended())
                             <form method="POST" action="{{ route('admin.affiliates.unsuspend', $affiliate) }}">
                                 @csrf

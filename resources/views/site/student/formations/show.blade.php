@@ -31,7 +31,7 @@
                     <p class="font-semibold text-white">Votre progression</p>
                     <p class="text-2xl font-bold text-gold-300 tabular-nums">{{ $summary->percent() }} %</p>
                 </div>
-                <div class="mt-3 h-2.5 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow="{{ $summary->percent() }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progression">
+                <div class="mt-3 h-2.5 overflow-hidden rounded-full bg-veil/10" role="progressbar" aria-valuenow="{{ $summary->percent() }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progression">
                     <div class="h-full rounded-full bg-linear-to-r from-electric-500 to-gold-400" style="width: {{ $summary->percent() }}%"></div>
                 </div>
                 <p class="mt-2 text-sm text-slate-400">{{ $summary->completed }} {{ $summary->completed > 1 ? 'leçons terminées' : 'leçon terminée' }} sur {{ $summary->total }}</p>

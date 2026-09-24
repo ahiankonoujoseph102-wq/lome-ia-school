@@ -63,7 +63,7 @@
                         role="radio"
                         @click="chooseCountry(@js($code))"
                         :aria-checked="(country === @js($code)).toString()"
-                        :class="country === @js($code) ? 'bg-electric-600/25 text-white ring-electric-400' : 'bg-white/5 text-slate-300 ring-white/10 hover:bg-white/10'"
+                        :class="country === @js($code) ? 'bg-electric-600/25 text-white ring-electric-400' : 'bg-veil/5 text-slate-300 ring-veil/10 hover:bg-veil/10'"
                         class="flex flex-col items-center gap-1 rounded-2xl px-2 py-3 text-sm font-semibold ring-1 transition"
                     >
                         <span class="text-2xl leading-none" aria-hidden="true">{{ $country['flag'] }}</span>
@@ -82,10 +82,10 @@
                         role="radio"
                         @click="chooseMethod(item.key)"
                         :aria-checked="(method === item.key).toString()"
-                        :class="method === item.key ? 'bg-white/10 ring-gold-400 ring-2' : 'bg-white/5 ring-white/10 hover:bg-white/10'"
+                        :class="method === item.key ? 'bg-veil/10 ring-gold-400 ring-2' : 'bg-veil/5 ring-veil/10 hover:bg-veil/10'"
                         class="flex items-center gap-3 rounded-2xl p-3 text-left ring-1 transition"
                     >
-                        <span class="grid size-10 shrink-0 place-items-center rounded-full text-xs font-bold text-night-950" :style="`background:${item.color}`" x-text="item.initials" aria-hidden="true"></span>
+                        <span class="method-dot grid size-10 shrink-0 place-items-center rounded-full text-xs font-bold text-night-950" :style="`background:${item.color};--dot-inverse:${item.inverse_color}`" x-text="item.initials" aria-hidden="true"></span>
                         <span class="text-sm leading-tight font-semibold text-white" x-text="item.name"></span>
                     </button>
                 </template>
@@ -122,7 +122,7 @@
                                 <p class="text-lg font-semibold text-white" x-text="selected.beneficiary"></p>
                             </div>
 
-                            <p class="flex items-start gap-2 rounded-2xl bg-white/5 px-3 py-2.5 text-sm text-slate-200 ring-1 ring-white/10">
+                            <p class="flex items-start gap-2 rounded-2xl bg-veil/5 px-3 py-2.5 text-sm text-slate-200 ring-1 ring-veil/10">
                                 <flux:icon.information-circle class="mt-0.5 size-4 shrink-0 text-gold-300" />
                                 <span>{{ $payments['fees_notice'] }} Le montant reçu doit être exactement de <strong class="text-white">{{ $amount }}</strong>.</span>
                             </p>
@@ -130,7 +130,7 @@
                             <ol class="space-y-2.5 text-sm text-slate-300">
                                 @foreach ($payments['steps'] as $step)
                                     <li class="flex gap-3">
-                                        <span class="grid size-6 shrink-0 place-items-center rounded-full bg-white/10 text-xs font-bold text-white">{{ $loop->iteration }}</span>
+                                        <span class="grid size-6 shrink-0 place-items-center rounded-full bg-veil/10 text-xs font-bold text-white">{{ $loop->iteration }}</span>
                                         <span>{{ $step }}</span>
                                     </li>
                                 @endforeach
@@ -189,9 +189,9 @@
             <div class="space-y-1.5">
                 <label for="proof" class="field-label">Capture d'écran du paiement</label>
                 <label for="proof" @class([
-                    'flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed px-4 py-6 text-center transition hover:bg-white/5',
+                    'flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed px-4 py-6 text-center transition hover:bg-veil/5',
                     'border-rose-400/60' => $errors->has('proof'),
-                    'border-white/20' => ! $errors->has('proof'),
+                    'border-veil/20' => ! $errors->has('proof'),
                 ])>
                     <template x-if="preview">
                         <img :src="preview" alt="Aperçu de la capture choisie" class="max-h-64 rounded-xl object-contain">

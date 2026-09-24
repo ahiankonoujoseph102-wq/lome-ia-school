@@ -20,7 +20,7 @@
                         <span class="flex items-center gap-2 text-xs font-semibold text-gold-300">
                             Message épinglé
                             @if ($pinned->count() > 1)
-                                <span class="rounded-full bg-white/10 px-1.5 text-[10px] text-slate-300 tabular-nums">{{ $i + 1 }}/{{ $pinned->count() }}</span>
+                                <span class="rounded-full bg-veil/10 px-1.5 text-[10px] text-slate-300 tabular-nums">{{ $i + 1 }}/{{ $pinned->count() }}</span>
                             @endif
                         </span>
                         <span class="line-clamp-2 text-sm text-slate-200 [overflow-wrap:anywhere]">

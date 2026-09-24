@@ -5,16 +5,16 @@
                 <h1 class="text-2xl font-bold text-white sm:text-3xl">Mes groupes</h1>
                 <p class="mt-1 text-slate-400">Un groupe privé par formation, avec l'équipe et les autres élèves.</p>
             </div>
-            <a href="{{ route('student.notifications') }}" class="grid size-11 shrink-0 place-items-center rounded-full text-slate-300 ring-1 ring-white/15 hover:bg-white/10 hover:text-white" aria-label="Réglages des notifications">
+            <a href="{{ route('student.notifications') }}" class="grid size-11 shrink-0 place-items-center rounded-full text-slate-300 ring-1 ring-veil/15 hover:bg-veil/10 hover:text-white" aria-label="Réglages des notifications">
                 <flux:icon.bell class="size-5" />
             </a>
         </div>
 
         @can('moderate-chat')
-            <a href="{{ route('moderation.reports.index') }}" class="card mt-5 flex items-center gap-3 px-4 py-3.5 text-sm font-semibold text-slate-200 hover:bg-white/5">
+            <a href="{{ route('moderation.reports.index') }}" class="card mt-5 flex items-center gap-3 px-4 py-3.5 text-sm font-semibold text-slate-200 hover:bg-veil/5">
                 <flux:icon.flag class="size-5 text-gold-300" /> Messages signalés
                 @php $openReports = \App\Models\ChatMessageReport::query()->where('status', 'open')->distinct()->count('chat_message_id'); @endphp
-                <span @class(['ml-auto min-w-6 rounded-full px-2 py-0.5 text-center text-xs font-bold', 'bg-gold-400 text-night-950' => $openReports > 0, 'bg-white/10 text-slate-400' => $openReports === 0])>{{ $openReports }}</span>
+                <span @class(['ml-auto min-w-6 rounded-full px-2 py-0.5 text-center text-xs font-bold', 'bg-gold-400 text-night-950' => $openReports > 0, 'bg-veil/10 text-slate-400' => $openReports === 0])>{{ $openReports }}</span>
             </a>
         @endcan
 
@@ -26,7 +26,7 @@
                 <a href="{{ route('formations.index') }}" class="btn-gold mt-5">Voir les formations</a>
             </div>
         @else
-            <ul class="card mt-6 divide-y divide-white/[0.06] overflow-hidden" data-test="group-list">
+            <ul class="card mt-6 divide-y divide-veil/[0.06] overflow-hidden" data-test="group-list">
                 @foreach ($members as $member)
                     @php
                         $group = $member->group;
@@ -35,7 +35,7 @@
                         $count = (int) ($unread[$group->id] ?? 0);
                     @endphp
                     <li>
-                        <a href="{{ route('chat.show', $formation) }}" class="flex items-center gap-3 px-4 py-3.5 transition hover:bg-white/[0.04] active:bg-white/[0.07]">
+                        <a href="{{ route('chat.show', $formation) }}" class="flex items-center gap-3 px-4 py-3.5 transition hover:bg-veil/[0.04] active:bg-veil/[0.07]">
                             <x-site.formation-cover :formation="$formation" compact class="size-12 shrink-0 rounded-2xl" />
                             <span class="min-w-0 flex-1">
                                 <span class="flex items-baseline gap-2">

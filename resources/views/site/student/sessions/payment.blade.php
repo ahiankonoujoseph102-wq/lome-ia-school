@@ -12,7 +12,7 @@
 
         <div class="card mt-4 p-5">
             <x-site.session-summary :session="$session" show-formation :show-seats="false" />
-            <div class="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
+            <div class="mt-4 flex items-center justify-between border-t border-veil/10 pt-4">
                 <span class="text-sm text-slate-400">À payer</span>
                 <span class="text-2xl font-bold text-gold-300">{{ $session->formattedSupplement() }}</span>
             </div>

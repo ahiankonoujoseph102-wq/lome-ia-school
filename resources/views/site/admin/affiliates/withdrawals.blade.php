@@ -43,7 +43,7 @@
                 @endphp
 
                 <article class="card overflow-hidden" id="retrait-{{ $withdrawal->id }}" data-test="withdrawal">
-                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-veil/10 px-5 py-4">
                         <div>
                             <p class="text-xs text-slate-500">Demandé le {{ $withdrawal->created_at?->translatedFormat('j F Y à H\hi') }} ({{ $withdrawal->created_at?->diffForHumans() }})</p>
                             <p class="mt-0.5 font-semibold text-white">{{ $user->name }} <span class="font-mono text-xs text-slate-400">· {{ $affiliate->code }}</span></p>
@@ -63,7 +63,7 @@
                                 <p class="text-xs text-gold-100/70">{{ config('site.payments.countries.'.$withdrawal->payout_country.'.name') }}</p>
                             </div>
 
-                            <dl class="divide-y divide-white/10 text-sm">
+                            <dl class="divide-y divide-veil/10 text-sm">
                                 <div class="py-2.5">
                                     <dt class="text-slate-400">Affilié</dt>
                                     <dd class="mt-0.5 font-semibold text-white">{{ $user->name }}</dd>
@@ -87,7 +87,7 @@
                             </dl>
                         </div>
 
-                        <div class="grid gap-3 border-t border-white/10 pt-4" x-data="{ mode: @js($rejectErrors->any() ? 'reject' : ($payErrors->any() ? 'pay' : null)), reason: @js($rejectErrors->any() ? old('reason', '') : '') }">
+                        <div class="grid gap-3 border-t border-veil/10 pt-4" x-data="{ mode: @js($rejectErrors->any() ? 'reject' : ($payErrors->any() ? 'pay' : null)), reason: @js($rejectErrors->any() ? old('reason', '') : '') }">
                             <div class="grid gap-3 sm:grid-cols-2" x-show="mode === null">
                                 <button type="button" @click="mode = 'pay'" class="btn w-full bg-emerald-500 text-night-950 hover:bg-emerald-400"><flux:icon.check-circle class="size-5" /> Marquer comme payé</button>
                                 <button type="button" @click="mode = 'reject'" class="btn w-full border border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20"><flux:icon.x-circle class="size-5" /> Refuser</button>
@@ -120,7 +120,7 @@
                                 <p class="text-sm font-semibold text-white">Motif du refus (envoyé à l'affilié)</p>
                                 <div class="flex flex-wrap gap-2">
                                     @foreach ($quickReasons as $quickReason)
-                                        <button type="button" @click="reason = @js($quickReason)" class="rounded-full bg-white/5 px-3 py-1.5 text-xs text-slate-200 ring-1 ring-white/15 hover:bg-white/10">{{ $quickReason }}</button>
+                                        <button type="button" @click="reason = @js($quickReason)" class="rounded-full bg-veil/5 px-3 py-1.5 text-xs text-slate-200 ring-1 ring-veil/15 hover:bg-veil/10">{{ $quickReason }}</button>
                                     @endforeach
                                 </div>
                                 <label for="motif-{{ $withdrawal->id }}" class="sr-only">Motif du refus</label>
@@ -147,7 +147,7 @@
         @if ($recent->isNotEmpty())
             <section class="mt-12">
                 <h2 class="text-lg font-semibold text-white">Derniers retraits traités</h2>
-                <ul class="mt-4 divide-y divide-white/10 rounded-3xl border border-white/10">
+                <ul class="mt-4 divide-y divide-veil/10 rounded-3xl border border-veil/10">
                     @foreach ($recent as $done)
                         <li class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
                             <div class="min-w-0">
