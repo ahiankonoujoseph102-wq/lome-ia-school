@@ -90,6 +90,28 @@ php artisan migrate
 - PHP 8.4 minimum (les dépendances Symfony 8 l'exigent) : sélectionner PHP 8.4 dans le panneau Hostinger.
 - Hostinger mutualisé ne dispose pas forcément de Node.js : prévoir à l'étape 11 de compiler les fichiers CSS/JS ailleurs (GitHub Actions) avant le déploiement.
 
+## État d'avancement (passation)
+
+**Terminé et fusionné dans `main`** : étapes 1 (mise en place), 2 (site vitrine) et 3 (comptes et espace élève), y compris les écrans « Sécurité du compte » au design du site (PR #1, #2, #3). 102 tests verts.
+
+**Prochaine étape** :
+1. Mise à jour des contenus : remplir les emplacements `[...]` de `config/site.php` (témoignages, chiffres, biographie, horaires, mentions légales…), ajouter logo, photo du formateur et images des formations, et faire valider les programmes et bonus rédigés dans `FormationSeeder`.
+2. Étape 4 : paiement FedaPay et accès automatique (commencer en mode test/sandbox ; les clés vont dans `.env`, jamais dans le code ni dans la conversation pour les clés de production).
+
+**Décisions prises** :
+- Mot de passe : 8 caractères minimum avec lettres et chiffres en production (`AppServiceProvider`), sans confirmation à l'inscription.
+- Vérification de l'e-mail désactivée (accès immédiat après paiement privilégié).
+- Double authentification facultative ; une activation commencée reste « en attente » (reprise ou annulation possible) et n'est exigée à la connexion qu'une fois confirmée par un code.
+- Compte admin : academyjoseph71@gmail.com, à créer à l'étape 11 avec `php artisan app:make-admin` (mot de passe saisi au clavier).
+- Vidéos des formations : YouTube en vidéos **non répertoriées** (étape 5), derrière l'interface de fournisseur vidéo interchangeable.
+- Toutes les formations sont au format « Enregistrée » pour l'instant (à ajuster quand les formats en direct / présentiel seront confirmés).
+
+**Contournement des blocages réseau (environnement Claude Code web)** :
+- Composer : `composer config -g use-github-api false`, puis `COMPOSER_ALLOW_SUPERUSER=1 composer install --prefer-source`.
+- `phpstan/phpstan` (archive uniquement) : cloner `https://github.com/phpstan/phpstan` (`git clone --bare --filter=blob:none`), puis `git archive --format=zip --prefix=phpstan-phpstan-<court>/ <commit> -o ~/.cache/composer/files/phpstan/phpstan/<sha1 de l'URL api.github.com/repos/phpstan/phpstan/zipball/<commit>>.zip` avant de relancer l'installation.
+- Polices : `fonts.bunny.net` est bloqué, d'où `@fontsource-variable/instrument-sans` (npm) ; npm fonctionne normalement.
+- Aperçus pour la porteuse du projet : copies statiques publiées en artifact claude.ai (jamais dans le dépôt), générées à partir des pages rendues localement (`php artisan serve` + Playwright avec `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`).
+
 ## Feuille de route
 
 1. **Mise en place** : projet Laravel, starter kit Livewire, français, fuseau de Lomé, SQLite. ✅
