@@ -29,8 +29,8 @@ class ProfileController extends Controller
         return view('site.student.profile', [
             'user' => $user,
             'dialCode' => $dialCode !== '' ? $dialCode : PhoneNumber::DEFAULT_DIAL_CODE,
-            // Affiché par paires de chiffres, comme on l'écrit au Togo : 90 12 34 56.
-            'localNumber' => $dialCode !== '' ? implode(' ', str_split($localNumber, 2)) : (string) $user->phone,
+            // Affiché par groupes de chiffres, comme on l'écrit en Afrique de l'Ouest : 90 12 34 56, 01 94 55 59 14.
+            'localNumber' => $dialCode !== '' ? PhoneNumber::groupDigits($localNumber) : (string) $user->phone,
         ]);
     }
 

@@ -12,6 +12,7 @@ use App\Payments\PaymentMethod;
 use App\Payments\PaymentMethods;
 use App\Payments\ProofImageProcessor;
 use App\Services\PurchaseManager;
+use App\Support\PhoneNumber;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -116,22 +117,12 @@ class SubmitManualPayment
     }
 
     /**
-     * Numéro au format international. Un numéro local reçoit l'indicatif du pays du moyen de paiement
-     * (le 0 initial est conservé : il fait partie des numéros au Burkina Faso et au Bénin).
+     * Numéro au format international : un numéro local reçoit l'indicatif du pays du moyen de paiement
+     * (mêmes règles que le numéro WhatsApp, voir App\Support\PhoneNumber).
      */
     public static function normalizePhone(string $value, PaymentMethod $method): ?string
     {
-        $digits = (string) preg_replace('/[^\d+]/', '', trim($value));
-
-        if (str_starts_with($digits, '00')) {
-            $digits = '+'.substr($digits, 2);
-        }
-
-        if (! str_starts_with($digits, '+')) {
-            $digits = (string) config("site.payments.countries.{$method->country}.dial_code", '+228').$digits;
-        }
-
-        return preg_match('/^\+[1-9]\d{7,14}$/', $digits) ? $digits : null;
+        return PhoneNumber::normalize($value, (string) config("site.payments.countries.{$method->country}.dial_code", PhoneNumber::DEFAULT_DIAL_CODE));
     }
 
     private function ensureCanPay(User $user, Formation $formation): void
