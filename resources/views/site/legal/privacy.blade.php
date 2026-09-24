@@ -16,15 +16,17 @@
                 <li>Les informations de votre compte : nom, numéro WhatsApp, adresse e-mail et, si vous en ajoutez une, votre photo de profil.</li>
                 <li>Votre choix concernant l'information sur les nouvelles formations (oui ou non).</li>
                 <li>Les informations liées à vos achats : formations achetées, montants, dates.</li>
+                <li>Vos preuves de paiement : moyen de paiement utilisé, numéro qui a payé, nom de l'expéditeur, identifiant de la transaction et capture d'écran du paiement.</li>
                 <li>Les messages que vous publiez dans les groupes de discussion des formations.</li>
                 <li>Pour l'affiliation : les ventes réalisées grâce à votre lien et le numéro Mobile Money indiqué pour vos retraits.</li>
             </ul>
-            <p>Les paiements sont traités par FedaPay. Nous ne conservons jamais vos codes ni vos identifiants Mobile Money.</p>
+            <p>Les captures d'écran de paiement sont stockées dans un espace privé : elles ne sont jamais publiques et ne sont visibles que par vous et par l'équipe qui vérifie les paiements. Nous ne vous demandons jamais vos codes Mobile Money. Au Burkina Faso et au Bénin, les informations de votre paiement peuvent être communiquées à notre représentant local, uniquement pour vérifier sa réception.</p>
 
             <h2>Utilisation des données</h2>
             <ul>
                 <li>Créer et gérer votre compte et vos accès aux formations ;</li>
-                <li>Traiter vos paiements et vos commissions d'affiliation ;</li>
+                <li>Vérifier vos paiements, prévenir la fraude (par exemple une capture ou un identifiant de transaction déjà utilisé) et établir vos reçus ;</li>
+                <li>Traiter vos commissions d'affiliation ;</li>
                 <li>Vous accompagner et répondre à vos questions ;</li>
                 <li>Vous informer des nouvelles formations, uniquement si vous avez coché la case « Je souhaite être informé(e) des nouvelles formations » à l'inscription ou dans votre profil.</li>
             </ul>
@@ -37,7 +39,7 @@
             <p>{{ Placeholder::highlight($legal['data_retention']) }}</p>
 
             <h2>Vos droits</h2>
-            <p>Conformément à la loi togolaise n° 2019-014 du 29 octobre 2019 relative à la protection des données à caractère personnel, vous pouvez demander l'accès, la rectification ou la suppression de vos données en nous écrivant à <a href="mailto:{{ $legal['owner']['email'] }}">{{ $legal['owner']['email'] }}</a>. Vous pouvez aussi supprimer votre compte à tout moment depuis vos paramètres.</p>
+            <p>Conformément à la loi togolaise n° 2019-014 du 29 octobre 2019 relative à la protection des données à caractère personnel, vous pouvez demander l'accès, la rectification ou la suppression de vos données en nous écrivant à <a href="mailto:{{ $legal['owner']['email'] }}">{{ $legal['owner']['email'] }}</a>. Vous pouvez aussi supprimer votre compte à tout moment depuis vos paramètres. Les informations de vos achats et vos preuves de paiement sont toutefois conservées pendant la durée indiquée ci-dessus, pour la comptabilité et la prévention de la fraude.</p>
 
             <p class="pt-6 text-sm text-slate-500">Dernière mise à jour : {{ Placeholder::highlight($legal['updated_at']) }}</p>
         </div>

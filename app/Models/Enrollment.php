@@ -15,12 +15,14 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $user_id
  * @property int $formation_id
+ * @property int|null $purchase_id Achat qui a ouvert l'accès.
  * @property EnrollmentSource $source
  * @property Carbon $granted_at Date d'ouverture de l'accès.
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $user
  * @property-read Formation $formation
+ * @property-read Purchase|null $purchase
  */
 class Enrollment extends Model
 {
@@ -30,6 +32,7 @@ class Enrollment extends Model
     protected $fillable = [
         'user_id',
         'formation_id',
+        'purchase_id',
         'source',
         'granted_at',
     ];
@@ -59,5 +62,13 @@ class Enrollment extends Model
     public function formation(): BelongsTo
     {
         return $this->belongsTo(Formation::class);
+    }
+
+    /**
+     * @return BelongsTo<Purchase, $this>
+     */
+    public function purchase(): BelongsTo
+    {
+        return $this->belongsTo(Purchase::class);
     }
 }

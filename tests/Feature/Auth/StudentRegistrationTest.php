@@ -60,7 +60,15 @@ class StudentRegistrationTest extends TestCase
     public static function internationalNumbers(): array
     {
         return [
-            'bénin via le sélecteur' => ['+229', '97 00 11 22', '+22997001122'],
+            'bénin, nouveau numéro à 10 chiffres' => ['+229', '01 94 55 59 14', '+2290194555914'],
+            'bénin, numéro complet avec +' => ['+228', '+229 01 94 55 59 14', '+2290194555914'],
+            'bénin, ancien numéro à 8 chiffres' => ['+229', '97 00 11 22', '+2290197001122'],
+            'burkina faso, 0 initial conservé' => ['+226', '07 27 63 81', '+22607276381'],
+            'burkina faso, numéro complet avec 00' => ['+228', '00226 03 53 21 76', '+22603532176'],
+            'côte d\'ivoire, 10 chiffres' => ['+225', '07 07 12 34 56', '+2250707123456'],
+            'sénégal' => ['+221', '77 123 45 67', '+221771234567'],
+            'mali' => ['+223', '76 12 34 56', '+22376123456'],
+            'niger' => ['+227', '96 12 34 56', '+22796123456'],
             'numéro complet avec +' => ['+228', '+33 6 12 34 56 78', '+33612345678'],
             'numéro complet avec 00' => ['+228', '00233 24 123 4567', '+233241234567'],
         ];
@@ -99,6 +107,26 @@ class StudentRegistrationTest extends TestCase
 
         $this->post(route('register.store'), $this->payload(['phone' => '+228 90 12 34 56']))
             ->assertSessionHasErrors(['phone' => 'Ce numéro WhatsApp est déjà utilisé par un autre compte.']);
+    }
+
+    public function test_uniqueness_works_whatever_the_way_the_number_is_typed(): void
+    {
+        User::factory()->create(['phone' => '+2290194555914']);
+
+        $this->post(route('register.store'), $this->payload(['phone_country' => '+229', 'phone' => '01 94 55 59 14']))
+            ->assertSessionHasErrors(['phone' => 'Ce numéro WhatsApp est déjà utilisé par un autre compte.']);
+        $this->post(route('register.store'), $this->payload(['phone_country' => '+228', 'phone' => '+229 0194555914']))
+            ->assertSessionHasErrors('phone');
+
+        $this->assertGuest();
+    }
+
+    public function test_wrong_length_for_the_country_is_rejected(): void
+    {
+        $this->post(route('register.store'), $this->payload(['phone_country' => '+226', 'phone' => '07 27 63']))
+            ->assertSessionHasErrors('phone');
+
+        $this->assertGuest();
     }
 
     public function test_welcome_email_is_in_french(): void

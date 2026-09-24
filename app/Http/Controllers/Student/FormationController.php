@@ -16,7 +16,7 @@ class FormationController extends Controller
         $user = $request->user();
 
         return view('site.student.formations.index', [
-            'enrollments' => $user->enrollments()->with('formation')->latest('granted_at')->get(),
+            'enrollments' => $user->enrollments()->with(['formation', 'purchase'])->latest('granted_at')->get(),
         ]);
     }
 
@@ -30,7 +30,7 @@ class FormationController extends Controller
 
         return view('site.student.formations.show', [
             'formation' => $formation,
-            'enrollment' => $user->enrollments()->where('formation_id', $formation->id)->first(),
+            'enrollment' => $user->enrollments()->with('purchase')->where('formation_id', $formation->id)->first(),
         ]);
     }
 }

@@ -3,8 +3,8 @@ Bienvenue {{ $user->first_name }} !
 Votre compte Lomé IA School est prêt. Voici comment ça marche :
 
 1. Choisissez votre formation dans le catalogue : {{ route('formations.index') }}
-2. Payez par Mobile Money (T-Money ou Flooz).
-3. Accédez immédiatement à la formation et à son groupe privé.
+2. Payez par Mobile Money et envoyez votre preuve de paiement sur le site.
+3. Accédez à la formation et à son groupe privé depuis votre espace.
 
 Votre espace : {{ route('dashboard') }}
 

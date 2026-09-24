@@ -41,7 +41,7 @@ class ProfileTest extends TestCase
                 'name' => 'Kossi Mensah',
                 'email' => 'kossi@example.com',
                 'phone_country' => '+229',
-                'phone' => '97 00 11 22',
+                'phone' => '01 97 00 11 22',
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('student.profile'));
@@ -49,8 +49,51 @@ class ProfileTest extends TestCase
         $user->refresh();
         $this->assertSame('Kossi Mensah', $user->name);
         $this->assertSame('kossi@example.com', $user->email);
-        $this->assertSame('+22997001122', $user->phone);
+        $this->assertSame('+2290197001122', $user->phone);
         $this->assertNull($user->email_verified_at);
+    }
+
+    public function test_burkina_faso_number_keeps_its_leading_zero_and_is_shown_as_typed(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->put(route('student.profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone_country' => '+226',
+            'phone' => '07 27 63 81',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('+22607276381', $user->refresh()->phone);
+        $this->assertSame('+226 07 27 63 81', $user->formatted_phone);
+
+        $this->actingAs($user)->get(route('student.profile'))
+            ->assertOk()
+            ->assertSee('<option value="+226" selected', false)
+            ->assertSee('value="07 27 63 81"', false);
+    }
+
+    public function test_benin_number_is_shown_with_its_ten_digits(): void
+    {
+        $user = User::factory()->create(['phone' => '+2290194555914']);
+
+        $this->actingAs($user)->get(route('student.profile'))
+            ->assertOk()
+            ->assertSee('<option value="+229" selected', false)
+            ->assertSee('value="01 94 55 59 14"', false);
+    }
+
+    public function test_profile_phone_must_stay_unique(): void
+    {
+        User::factory()->create(['phone' => '+2290194555914']);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->put(route('student.profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone_country' => '+229',
+            'phone' => '0194555914',
+        ])->assertSessionHasErrors(['phone' => 'Ce numéro WhatsApp est déjà utilisé par un autre compte.']);
     }
 
     public function test_email_verification_status_is_unchanged_when_email_address_is_unchanged(): void

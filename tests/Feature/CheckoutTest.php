@@ -86,17 +86,23 @@ class CheckoutTest extends TestCase
             ->assertSessionHasErrors(['email', 'phone']);
     }
 
-    public function test_student_sees_the_mobile_money_payment_button_announcing_it_is_coming_soon(): void
+    public function test_student_sees_the_mobile_money_payment_page_with_numbers_and_proof_form(): void
     {
-        $formation = Formation::factory()->create();
+        $formation = Formation::factory()->create(['price' => 5500]);
 
         $this->actingAs(User::factory()->create())
             ->get(route('checkout.show', $formation))
             ->assertOk()
             ->assertSee('Payer par Mobile Money')
-            ->assertSee('Le paiement en ligne arrive très bientôt.')
-            ->assertSee('T-Money')
-            ->assertSee('Flooz');
+            ->assertSee('Togo')
+            ->assertSee('Burkina Faso')
+            ->assertSee('Bénin')
+            ->assertSee('+228 72 24 02 31')
+            ->assertSee('Ahiankonou Kokou Joseph')
+            ->assertSee('Les frais de transfert sont à la charge de l&#039;expéditeur.', false)
+            ->assertSee('Envoyer ma preuve de paiement')
+            ->assertSee(route('checkout.pay', $formation), false)
+            ->assertDontSee('FedaPay');
     }
 
     public function test_enrolled_student_is_told_they_already_have_access(): void

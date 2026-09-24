@@ -11,6 +11,9 @@
                 <h1 class="mt-1 text-2xl font-bold text-white sm:text-3xl">{{ $formation->title }}</h1>
                 @if ($enrollment)
                     <p class="mt-2 text-sm text-slate-400">Accès depuis le {{ $enrollment->granted_at->translatedFormat('j F Y') }}</p>
+                    @if ($enrollment->purchase?->status === \App\Enums\PurchaseStatus::Provisional)
+                        <x-site.alert type="info" class="mt-4">Accès provisoire : votre paiement sera vérifié sous peu. Vous serez prévenu par e-mail.</x-site.alert>
+                    @endif
                 @endif
             </div>
         </div>

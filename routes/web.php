@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\PurchaseProofController;
 use App\Http\Controllers\Site\CheckoutController;
 use App\Http\Controllers\Site\FormationController;
 use App\Http\Controllers\Site\OgImageController;
@@ -8,6 +10,7 @@ use App\Http\Controllers\Site\SitemapController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\FormationController as StudentFormationController;
 use App\Http\Controllers\Student\ProfileController;
+use App\Http\Controllers\Student\PurchaseController;
 use Illuminate\Support\Facades\Route;
 
 // Site vitrine
@@ -27,8 +30,11 @@ Route::get('og/formations/{formation}.png', [OgImageController::class, 'formatio
 Route::get('sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
 Route::get('robots.txt', [SitemapController::class, 'robots'])->name('robots');
 
-// Parcours d'achat : récapitulatif de commande (paiement FedaPay à l'étape 4)
+// Parcours d'achat : récapitulatif de commande et paiement Mobile Money avec preuve de paiement
 Route::get('commande/{formation}', [CheckoutController::class, 'show'])->name('checkout.show');
+Route::post('commande/{formation}/paiement', [CheckoutController::class, 'pay'])
+    ->middleware(['auth', 'throttle:10,1'])
+    ->name('checkout.pay');
 
 // Espace élève « Mon espace »
 Route::middleware('auth')->prefix('mon-espace')->group(function () {
@@ -37,6 +43,10 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
     Route::get('formations/{formation}', [StudentFormationController::class, 'show'])
         ->middleware('can:access,formation')
         ->name('student.formations.show');
+    Route::get('achats', [PurchaseController::class, 'index'])->name('student.purchases.index');
+    Route::get('achats/{purchase}', [PurchaseController::class, 'show'])->middleware('can:view,purchase')->name('student.purchases.show');
+    Route::get('achats/{purchase}/recu', [PurchaseController::class, 'receipt'])->middleware('can:viewReceipt,purchase')->name('student.purchases.receipt');
+    Route::get('achats/{purchase}/preuve', PurchaseProofController::class)->middleware('can:view,purchase')->name('student.purchases.proof');
     Route::get('profil', [ProfileController::class, 'edit'])->name('student.profile');
     Route::put('profil', [ProfileController::class, 'update'])->name('student.profile.update');
     Route::delete('profil/photo', [ProfileController::class, 'destroyAvatar'])->name('student.profile.avatar.destroy');
@@ -48,6 +58,11 @@ Route::redirect('dashboard', '/mon-espace');
 // Administration (pages construites à l'étape 10) : accès réservé aux comptes admin
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::view('/', 'site.admin.index')->name('index');
+    Route::get('paiements', [AdminPaymentController::class, 'index'])->name('payments.index');
+    Route::post('paiements/{purchase}/valider', [AdminPaymentController::class, 'approve'])->name('payments.approve');
+    Route::post('paiements/{purchase}/refuser', [AdminPaymentController::class, 'reject'])->name('payments.reject');
+    Route::post('eleves/{user}/bloquer', [AdminPaymentController::class, 'block'])->name('users.block');
+    Route::post('eleves/{user}/debloquer', [AdminPaymentController::class, 'unblock'])->name('users.unblock');
 });
 
 require __DIR__.'/settings.php';

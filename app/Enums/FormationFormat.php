@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Toutes les formations sont enregistrées (accès immédiat après paiement).
+ * Toutes les formations sont enregistrées et se suivent à son rythme.
  * Le direct et le présentiel sont des sessions ponctuelles, annoncées au cas par cas (étape 7).
  */
 enum FormationFormat: string
@@ -18,7 +18,7 @@ enum FormationFormat: string
     public function label(): string
     {
         return match ($this) {
-            self::Recorded => 'Enregistrée · accès immédiat après paiement',
+            self::Recorded => 'Enregistrée · à suivre à votre rythme',
             self::Live => 'Session ponctuelle en direct (Google Meet)',
             self::Onsite => 'Session ponctuelle en présentiel à Lomé',
         };

@@ -30,6 +30,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property UserRole $role
  * @property string|null $avatar_path Fichier sur le disque « public ».
  * @property bool $wants_newsletter Accepte d'être informé des nouvelles formations.
+ * @property Carbon|null $blocked_at Compte bloqué par l'admin : connexion impossible.
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -43,6 +44,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read string $formatted_phone
  * @property-read Collection<int, Enrollment> $enrollments
  * @property-read Collection<int, Formation> $formations
+ * @property-read Collection<int, Purchase> $purchases
  */
 #[Fillable(['name', 'email', 'phone', 'password', 'wants_newsletter'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -72,6 +74,7 @@ class User extends Authenticatable implements PasskeyUser
             'password' => 'hashed',
             'role' => UserRole::class,
             'wants_newsletter' => 'boolean',
+            'blocked_at' => 'datetime',
         ];
     }
 
@@ -95,6 +98,19 @@ class User extends Authenticatable implements PasskeyUser
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<Purchase, $this>
+     */
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->blocked_at !== null;
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
@@ -108,11 +124,11 @@ class User extends Authenticatable implements PasskeyUser
     /**
      * Donne l'accès à une formation (sans doublon si l'élève y a déjà accès).
      */
-    public function enroll(Formation $formation, EnrollmentSource $source): Enrollment
+    public function enroll(Formation $formation, EnrollmentSource $source, ?Purchase $purchase = null): Enrollment
     {
         return $this->enrollments()->firstOrCreate(
             ['formation_id' => $formation->id],
-            ['source' => $source, 'granted_at' => now()],
+            ['source' => $source, 'granted_at' => now(), 'purchase_id' => $purchase?->id],
         );
     }
 

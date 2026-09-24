@@ -1,10 +1,7 @@
 @php
-    use App\Support\WhatsApp;
-
     $user = auth()->user();
     $activeTab = old('form') === 'login' ? 'login' : 'register';
-    $whatsappMessage = 'Bonjour Lomé IA School, je souhaite acheter la formation « '.$formation->title.' » ('.str_replace("\u{00A0}", ' ', $formation->formatted_price).').'
-        .($user ? ' Mon compte : '.$user->email.'.' : '');
+    $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur le paiement de la formation « '.$formation->title.' ».';
     $moduleCount = count($formation->publicCurriculum());
 @endphp
 
@@ -21,7 +18,7 @@
 
             {{-- Étapes du parcours --}}
             <ol class="mt-6 flex items-center gap-2 text-xs font-semibold sm:text-sm" aria-label="Étapes de la commande">
-                @foreach (['Mon compte', 'Paiement', 'Accès immédiat'] as $step)
+                @foreach (['Mon compte', 'Paiement', 'Accès à la formation'] as $step)
                     @php $done = $loop->first && $user; $current = ($loop->first && ! $user) || ($loop->index === 1 && $user); @endphp
                     <li class="flex items-center gap-2">
                         <span @class([
@@ -53,47 +50,7 @@
                             <a href="{{ route('student.formations.show', $formation) }}" class="btn-gold mt-5 w-full sm:w-auto">Ouvrir la formation</a>
                         </div>
                     @elseif ($user)
-                        {{-- Paiement (branché sur FedaPay à l'étape 4) --}}
-                        <div class="card p-6" x-data="{ comingSoon: false }">
-                            <div class="flex items-center gap-3">
-                                <x-site.avatar :user="$user" class="size-11 text-sm" />
-                                <div class="min-w-0">
-                                    <p class="text-sm text-slate-400">Connecté en tant que</p>
-                                    <p class="truncate font-semibold text-white">{{ $user->name }}</p>
-                                </div>
-                            </div>
-
-                            <h2 class="mt-6 text-lg font-semibold text-white">Paiement</h2>
-                            <p class="mt-1 text-sm text-slate-400">Réglez en quelques secondes avec votre compte Mobile Money.</p>
-                            <div class="mt-4 grid grid-cols-2 gap-3">
-                                <div class="rounded-2xl bg-white/5 p-3 text-center ring-1 ring-white/10">
-                                    <p class="font-bold text-white">T-Money</p>
-                                    <p class="text-xs text-slate-400">Yas</p>
-                                </div>
-                                <div class="rounded-2xl bg-white/5 p-3 text-center ring-1 ring-white/10">
-                                    <p class="font-bold text-white">Flooz</p>
-                                    <p class="text-xs text-slate-400">Moov</p>
-                                </div>
-                            </div>
-
-                            <button type="button" @click="comingSoon = true" class="btn-gold mt-6 w-full" data-test="pay-button">
-                                <flux:icon.device-phone-mobile class="size-5" /> Payer par Mobile Money · {{ $formation->formatted_price }}
-                            </button>
-
-                            <div x-show="comingSoon" x-cloak x-transition class="mt-4 space-y-3">
-                                <x-site.alert type="info">
-                                    <strong class="font-semibold">Le paiement en ligne arrive très bientôt.</strong>
-                                    En attendant, écrivez-nous sur WhatsApp : nous vous indiquons comment régler et nous ouvrons votre accès aussitôt.
-                                </x-site.alert>
-                                <a href="{{ WhatsApp::url($whatsappMessage) }}" target="_blank" rel="noopener" class="btn-ghost w-full">
-                                    <x-site.whatsapp-icon class="size-5 text-[#25D366]" /> Finaliser sur WhatsApp
-                                </a>
-                            </div>
-
-                            <p class="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-500">
-                                <flux:icon.lock-closed class="size-3.5" /> Paiement sécurisé par FedaPay
-                            </p>
-                        </div>
+                        @include('site.checkout.partials.payment')
                     @else
                         {{-- Création de compte ou connexion sans quitter la page --}}
                         <div class="card overflow-hidden" x-data="{ tab: @js($activeTab) }">
@@ -141,7 +98,11 @@
                             <div>
                                 <p class="text-sm font-semibold text-white">Ce qui est inclus</p>
                                 <ul class="mt-3 space-y-2.5 text-sm text-slate-300">
-                                    <li class="flex gap-2"><flux:icon.bolt class="size-4 shrink-0 text-gold-400" /> Accès immédiat après le paiement</li>
+                                    @if ($needsVerification)
+                                        <li class="flex gap-2"><flux:icon.shield-check class="size-4 shrink-0 text-gold-400" /> Accès ouvert après vérification du paiement</li>
+                                    @else
+                                        <li class="flex gap-2"><flux:icon.bolt class="size-4 shrink-0 text-gold-400" /> Accès immédiat dès l'envoi de la preuve de paiement</li>
+                                    @endif
                                     @if ($moduleCount > 0)
                                         <li class="flex gap-2"><flux:icon.play-circle class="size-4 shrink-0 text-gold-400" /> Programme complet en {{ $moduleCount }} {{ $moduleCount > 1 ? 'modules' : 'module' }}</li>
                                     @endif

@@ -9,6 +9,11 @@
                 <a href="{{ route('student.formations.show', $formation) }}" class="after:absolute after:inset-0 focus:outline-none">{{ $formation->title }}</a>
             </h3>
             <p class="mt-1 text-sm text-slate-400">Accès depuis le {{ $enrollment->granted_at->translatedFormat('j F Y') }}</p>
+            @if ($enrollment->purchase?->status === \App\Enums\PurchaseStatus::Provisional)
+                <p class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-sky-400/15 px-2.5 py-1 text-xs font-semibold text-sky-200 ring-1 ring-sky-400/40">
+                    <flux:icon.clock class="size-3.5" /> Accès provisoire · paiement en cours de vérification
+                </p>
+            @endif
         </div>
         <div class="mt-auto">
             <div class="flex items-center justify-between text-xs text-slate-400">
