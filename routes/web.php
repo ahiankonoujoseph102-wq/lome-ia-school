@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ChatGroupController as AdminChatGroupController;
 use App\Http\Controllers\Admin\CourseContentController;
 use App\Http\Controllers\Admin\LessonController as AdminLessonController;
+use App\Http\Controllers\Admin\LiveSessionController as AdminLiveSessionController;
 use App\Http\Controllers\Admin\ModeratorController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Chat\AttachmentController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Site\PwaController;
 use App\Http\Controllers\Site\SitemapController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\FormationController as StudentFormationController;
+use App\Http\Controllers\Student\LiveSessionController as StudentLiveSessionController;
 use App\Http\Controllers\Student\NotificationController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\PurchaseController;
@@ -79,6 +81,16 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
     Route::post('notifications/appareils', [NotificationController::class, 'subscribe'])->middleware('throttle:20,1')->name('student.notifications.subscribe');
     Route::delete('notifications/appareils', [NotificationController::class, 'unsubscribe'])->name('student.notifications.unsubscribe');
 
+    // Sessions ponctuelles en direct et en présentiel (élèves ayant accès à la formation)
+    Route::get('sessions', [StudentLiveSessionController::class, 'index'])->name('student.sessions.index');
+    Route::get('sessions/{session}', [StudentLiveSessionController::class, 'show'])->name('student.sessions.show');
+    Route::post('sessions/{session}/inscription', [StudentLiveSessionController::class, 'register'])->middleware('throttle:20,1')->name('student.sessions.register');
+    Route::delete('sessions/{session}/inscription', [StudentLiveSessionController::class, 'cancel'])->name('student.sessions.cancel');
+    Route::get('sessions/{session}/paiement', [StudentLiveSessionController::class, 'payment'])->name('student.sessions.payment');
+    Route::post('sessions/{session}/paiement', [StudentLiveSessionController::class, 'pay'])->middleware('throttle:10,1')->name('student.sessions.pay');
+    Route::get('sessions/{session}/agenda.ics', [StudentLiveSessionController::class, 'calendar'])->name('student.sessions.calendar');
+    Route::get('sessions/{session}/rejoindre', [StudentLiveSessionController::class, 'join'])->name('student.sessions.join');
+
     // Groupes de discussion (un par formation) : réservés aux acheteurs, à l'admin et aux modérateurs
     Route::middleware('no-store')->group(function () {
         Route::get('groupes', [GroupController::class, 'index'])->name('chat.index');
@@ -101,6 +113,21 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
         Route::post('groupes/{formation}/membres/{user}/exclure', [ModerationController::class, 'exclude'])->name('chat.members.exclude');
         Route::post('groupes/{formation}/membres/{user}/reintegrer', [ModerationController::class, 'reinstate'])->name('chat.members.reinstate');
     });
+});
+
+// Sessions en direct et en présentiel : admin et modérateurs
+Route::middleware(['auth', 'can:manage-sessions'])->prefix('admin/sessions')->name('admin.sessions.')->group(function () {
+    Route::get('/', [AdminLiveSessionController::class, 'index'])->name('index');
+    Route::get('nouvelle', [AdminLiveSessionController::class, 'create'])->name('create');
+    Route::post('/', [AdminLiveSessionController::class, 'store'])->name('store');
+    Route::get('{session}', [AdminLiveSessionController::class, 'show'])->name('show');
+    Route::get('{session}/modifier', [AdminLiveSessionController::class, 'edit'])->name('edit');
+    Route::put('{session}', [AdminLiveSessionController::class, 'update'])->name('update');
+    Route::post('{session}/annuler', [AdminLiveSessionController::class, 'cancel'])->name('cancel');
+    Route::get('{session}/presence', [AdminLiveSessionController::class, 'attendance'])->name('attendance');
+    Route::post('{session}/presence/{registration}', [AdminLiveSessionController::class, 'toggleAttendance'])->name('attendance.toggle');
+    Route::get('{session}/enregistrement', [AdminLiveSessionController::class, 'recording'])->name('recording');
+    Route::post('{session}/remboursements/{purchase}', [AdminLiveSessionController::class, 'refund'])->name('refund');
 });
 
 // « Messages signalés » : admin et modérateurs

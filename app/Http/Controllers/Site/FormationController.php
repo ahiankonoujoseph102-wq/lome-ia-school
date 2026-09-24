@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Site;
 use App\Enums\FormationCategory;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
+use App\Models\LiveSession;
 use Illuminate\Contracts\View\View;
 
 class FormationController extends Controller
@@ -41,6 +42,8 @@ class FormationController extends Controller
         return view('site.formations.show', [
             'formation' => $formation,
             'related' => $related,
+            'nextSession' => LiveSession::query()->upcoming()->where('formation_id', $formation->id)->first(),
+            'hasAccess' => (bool) auth()->user()?->isEnrolledIn($formation),
         ]);
     }
 }

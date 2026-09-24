@@ -66,9 +66,11 @@
                             <a href="{{ route('dashboard') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.home class="size-4" /> Mon espace</a>
                             <a href="{{ route('student.formations.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.academic-cap class="size-4" /> Mes formations</a>
                             <a href="{{ route('chat.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.chat-bubble-left-right class="size-4" /> Mes groupes</a>
+                            <a href="{{ route('student.sessions.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.calendar-days class="size-4" /> Mes sessions</a>
                             <a href="{{ route('student.purchases.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.receipt-percent class="size-4" /> Mes achats</a>
                             <a href="{{ route('student.profile') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.user-circle class="size-4" /> Mon profil</a>
                             @can('moderate-chat')
+                                <a href="{{ route('admin.sessions.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.calendar-days class="size-4" /> Gérer les sessions</a>
                                 <a href="{{ route('moderation.reports.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.flag class="size-4" /> Messages signalés</a>
                             @endcan
                             @can('access-admin')
@@ -151,6 +153,7 @@
                     </div>
                     <a href="{{ route('dashboard') }}" class="btn-ghost w-full">Mon espace</a>
                     @can('moderate-chat')
+                        <a href="{{ route('admin.sessions.index') }}" class="card flex items-center gap-2 px-4 py-3.5 font-semibold text-slate-200 hover:bg-white/5"><flux:icon.calendar-days class="size-4" /> Gérer les sessions</a>
                         <a href="{{ route('moderation.reports.index') }}" class="card flex items-center gap-2 px-4 py-3.5 font-semibold text-slate-200 hover:bg-white/5"><flux:icon.flag class="size-4" /> Messages signalés</a>
                     @endcan
                     @can('access-admin')

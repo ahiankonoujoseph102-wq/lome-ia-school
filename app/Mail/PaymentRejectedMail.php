@@ -22,7 +22,7 @@ class PaymentRejectedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Paiement refusé : '.$this->purchase->formation->title,
+            subject: 'Paiement refusé : '.$this->purchase->item_label,
         );
     }
 

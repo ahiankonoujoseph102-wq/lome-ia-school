@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Chat\ChatRealtime;
+use App\Chat\MessagePins;
 use App\Chat\PostMessage;
 use App\Enums\ChatMessageType;
 use App\Enums\ReportReason;
@@ -86,20 +87,15 @@ class MessageController extends Controller
 
         abort_unless($viewer->canPin($message), 403);
 
+        $pins = app(MessagePins::class);
+
         if ($message->isPinned()) {
-            $message->forceFill(['pinned_at' => null, 'pinned_by' => null])->save();
+            $pins->unpin($message);
             $status = 'Message désépinglé.';
         } else {
-            // Au-delà du maximum, le plus ancien épinglé est retiré.
-            $max = (int) config('chat.max_pinned');
-            $viewer->group->pinnedMessages()->skip($max - 1)->take(PHP_INT_MAX)->get()
-                ->each(fn (ChatMessage $old) => $old->forceFill(['pinned_at' => null, 'pinned_by' => null])->save());
-
-            $message->forceFill(['pinned_at' => now(), 'pinned_by' => $viewer->user->id])->save();
+            $pins->pin($message, $viewer->user);
             $status = 'Message épinglé en haut du groupe.';
         }
-
-        $this->realtime->notify($viewer->group, ChatGroupChanged::MESSAGE_UPDATED, $message->id);
 
         return $this->done($request, $formation, $status);
     }

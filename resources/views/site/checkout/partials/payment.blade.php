@@ -1,7 +1,16 @@
-{{-- Paiement Mobile Money manuel : choix du pays et du moyen, instructions, puis formulaire de preuve de paiement. --}}
+{{--
+    Paiement Mobile Money manuel : choix du pays et du moyen, instructions, puis formulaire de preuve de paiement.
+    Sert aussi au supplément d'une session en présentiel ($liveSession).
+--}}
 @php
-    $amount = $formation->formatted_price;
+    $liveSession ??= null;
+    $user ??= auth()->user();
+    $amount = $liveSession ? $liveSession->formattedSupplement() : $formation->formatted_price;
+    $payAction = $liveSession ? route('student.sessions.pay', $liveSession) : route('checkout.pay', $formation);
     $payments = config('site.payments');
+    $samePayment = $unverifiedPurchase && ($liveSession
+        ? $unverifiedPurchase->live_session_id === $liveSession->id
+        : $unverifiedPurchase->formation_id === $formation->id && ! $unverifiedPurchase->isSessionSupplement());
 @endphp
 
 @if ($unverifiedPurchase)
@@ -10,14 +19,14 @@
         <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 {{ $unverifiedPurchase->status->badgeClasses() }}">
             <flux:icon.clock class="size-3.5" /> {{ $unverifiedPurchase->status->label() }}
         </span>
-        @if ($unverifiedPurchase->formation_id === $formation->id)
-            <h2 class="mt-4 text-lg font-semibold text-white">Votre paiement pour cette formation est en cours de vérification</h2>
+        @if ($samePayment)
+            <h2 class="mt-4 text-lg font-semibold text-white">Votre paiement {{ $liveSession ? 'pour cette session' : 'pour cette formation' }} est en cours de vérification</h2>
             <p class="mt-2 text-sm text-slate-300">Nous l'avons bien reçu. Vous serez prévenu par e-mail dès qu'il aura été vérifié ({{ $payments['verification_hours'] }}).</p>
         @else
             <h2 class="mt-4 text-lg font-semibold text-white">Un paiement est déjà en cours de vérification</h2>
             <p class="mt-2 text-sm text-slate-300">
-                Votre paiement pour « {{ $unverifiedPurchase->formation->title }} » est en cours de vérification.
-                Vous pourrez payer cette formation dès qu'il aura été vérifié ({{ $payments['verification_hours'] }}).
+                Votre paiement pour « {{ $unverifiedPurchase->item_label }} » est en cours de vérification.
+                Vous pourrez payer {{ $liveSession ? 'ce supplément' : 'cette formation' }} dès qu'il aura été vérifié ({{ $payments['verification_hours'] }}).
             </p>
         @endif
         <a href="{{ route('student.purchases.show', $unverifiedPurchase) }}" class="btn-gold mt-5 w-full sm:w-auto">Suivre mon paiement</a>
@@ -134,7 +143,7 @@
         </section>
 
         {{-- Étape 3 : preuve de paiement --}}
-        <form method="POST" action="{{ route('checkout.pay', $formation) }}" enctype="multipart/form-data" class="card space-y-5 p-5 sm:p-6" aria-labelledby="titre-preuve">
+        <form method="POST" action="{{ $payAction }}" enctype="multipart/form-data" class="card space-y-5 p-5 sm:p-6" aria-labelledby="titre-preuve">
             @csrf
 
             <div>
@@ -142,7 +151,11 @@
                     <span class="grid size-6 place-items-center rounded-full bg-gold-400 text-xs font-bold text-night-950">3</span> Envoyez votre preuve de paiement
                 </h2>
                 <p class="mt-2 text-sm text-slate-400">
-                    @if ($needsVerification)
+                    @if ($liveSession && $needsVerification)
+                        Votre place reste réservée pendant la vérification, {{ $payments['verification_hours'] }}, puis elle est confirmée.
+                    @elseif ($liveSession)
+                        Dès l'envoi, votre place est confirmée à titre provisoire. Votre paiement est ensuite vérifié par notre équipe.
+                    @elseif ($needsVerification)
                         Votre accès sera ouvert dès que votre paiement aura été vérifié, {{ $payments['verification_hours'] }}.
                     @else
                         Dès l'envoi, votre formation s'ouvre à titre provisoire. Votre paiement est ensuite vérifié par notre équipe.

@@ -10,6 +10,7 @@ use App\Events\FormationAccessGranted;
 use App\Events\FormationAccessRevoked;
 use App\Events\PaymentRejected;
 use App\Events\PaymentValidated;
+use App\LiveSessions\SessionRegistrar;
 use App\Models\Enrollment;
 use App\Models\Purchase;
 use App\Models\User;
@@ -22,12 +23,21 @@ use Illuminate\Validation\ValidationException;
  */
 class PurchaseManager
 {
+    public function __construct(private SessionRegistrar $sessions) {}
+
     /**
      * Ouvre l'accès à la formation achetée (sans doublon).
      */
     public function grantAccess(Purchase $purchase): ?Enrollment
     {
         $user = $purchase->user;
+
+        // Supplément d'une session : la place est confirmée, l'accès à la formation n'est pas concerné.
+        if ($purchase->isSessionSupplement()) {
+            $this->sessions->confirmPayment($purchase);
+
+            return null;
+        }
 
         if (! $user) {
             return null;
@@ -146,6 +156,13 @@ class PurchaseManager
      */
     private function revokeAccess(Purchase $purchase): void
     {
+        // Supplément d'une session : seule la place est libérée (pour la liste d'attente).
+        if ($purchase->isSessionSupplement()) {
+            $this->sessions->releasePayment($purchase);
+
+            return;
+        }
+
         $enrollment = $purchase->enrollment()->first();
 
         if (! $enrollment) {

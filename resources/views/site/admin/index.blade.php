@@ -6,6 +6,10 @@
                 <flux:icon.play-circle class="size-4" /> Contenu des formations
                 <flux:icon.chevron-right class="ml-auto size-4 text-slate-500" />
             </a>
+            <a href="{{ route('admin.sessions.index') }}" class="card flex items-center gap-2 px-4 py-4 font-semibold text-slate-200 hover:bg-white/5">
+                <flux:icon.calendar-days class="size-4" /> Sessions en direct et à Lomé
+                <flux:icon.chevron-right class="ml-auto size-4 text-slate-500" />
+            </a>
             <a href="{{ route('admin.chat.index') }}" class="card flex items-center gap-2 px-4 py-4 font-semibold text-slate-200 hover:bg-white/5">
                 <flux:icon.chat-bubble-left-right class="size-4" /> Groupes de discussion
                 <flux:icon.chevron-right class="ml-auto size-4 text-slate-500" />

@@ -75,7 +75,7 @@
                 <input type="checkbox" name="chat_push_enabled" value="1" @checked($user->chat_push_enabled) class="mt-1 size-5 shrink-0 rounded accent-electric-500">
                 <span>
                     <span class="block font-semibold text-white">Notifications sur le téléphone</span>
-                    <span class="block text-sm text-slate-400">Un message à chaque nouveau message dans vos groupes (sur les appareils activés).</span>
+                    <span class="block text-sm text-slate-400">Nouveaux messages de vos groupes et rappels des sessions (sur les appareils activés).</span>
                 </span>
             </label>
 
@@ -84,6 +84,14 @@
                 <span>
                     <span class="block font-semibold text-white">E-mail récapitulatif</span>
                     <span class="block text-sm text-slate-400">Au plus un e-mail par jour, seulement si des messages vous attendent, avec un lien direct vers le groupe.</span>
+                </span>
+            </label>
+
+            <label class="flex items-start gap-4">
+                <input type="checkbox" name="session_email_enabled" value="1" @checked($user->session_email_enabled) class="mt-1 size-5 shrink-0 rounded accent-electric-500">
+                <span>
+                    <span class="block font-semibold text-white">Rappels des sessions par e-mail</span>
+                    <span class="block text-sm text-slate-400">La veille et 1 h avant chaque session en direct ou à Lomé qui vous concerne. Les annulations et changements importants vous sont toujours envoyés.</span>
                 </span>
             </label>
 

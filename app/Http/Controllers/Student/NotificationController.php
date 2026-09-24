@@ -45,6 +45,7 @@ class NotificationController extends Controller
         $user->forceFill([
             'chat_push_enabled' => $request->boolean('chat_push_enabled'),
             'chat_digest_enabled' => $request->boolean('chat_digest_enabled'),
+            'session_email_enabled' => $request->boolean('session_email_enabled'),
         ])->save();
 
         $muted = collect((array) $request->input('muted_groups', []))->map(fn (mixed $id): int => (int) $id);

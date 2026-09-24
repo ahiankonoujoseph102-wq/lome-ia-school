@@ -60,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('access-admin', fn (User $user): bool => $user->isAdmin());
         Gate::define('moderate-chat', fn (User $user): bool => $user->isStaff());
+        Gate::define('manage-sessions', fn (User $user): bool => $user->isStaff());
 
         // Messages des groupes : largement assez pour discuter, trop peu pour inonder un groupe.
         RateLimiter::for('chat-messages', fn (Request $request): Limit => Limit::perMinute(30)->by((string) ($request->user()?->id ?: $request->ip())));

@@ -1,7 +1,7 @@
 {{-- Tableau récapitulatif d'un achat, inclus dans les e-mails de paiement. --}}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 0;border:1px solid #e4e6f0;border-radius:14px;font-size:14px;">
     @foreach (array_filter([
-        'Formation' => $purchase->formation->title,
+        $purchase->itemHeading() => $purchase->item_label,
         'Montant' => $purchase->formatted_amount,
         'Moyen de paiement' => $purchase->payment_method_name,
         'Identifiant de transaction' => $purchase->transaction_id,

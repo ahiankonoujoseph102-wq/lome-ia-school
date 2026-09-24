@@ -22,7 +22,7 @@ class PaymentValidatedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Paiement validé : '.$this->purchase->formation->title,
+            subject: 'Paiement validé : '.$this->purchase->item_label,
         );
     }
 

@@ -90,7 +90,7 @@
                 </div>
 
                 <table>
-                    <tr><th>Formation</th><td>{{ $purchase->formation->title }}</td></tr>
+                    <tr><th>{{ $purchase->itemHeading() }}</th><td>{{ $purchase->item_label }}</td></tr>
                     <tr><th>Date du paiement</th><td>{{ $purchase->created_at?->translatedFormat('j F Y') }}</td></tr>
                     <tr><th>Moyen de paiement</th><td>{{ $purchase->payment_method_name }}</td></tr>
                     <tr><th>Identifiant de transaction</th><td>{{ $purchase->transaction_id }}</td></tr>

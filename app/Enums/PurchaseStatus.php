@@ -56,6 +56,16 @@ enum PurchaseStatus: string
     }
 
     /**
+     * Statuts qui donnent accès (et donc, pour un supplément, un paiement encaissé).
+     *
+     * @return list<self>
+     */
+    public static function accessGranting(): array
+    {
+        return [self::Provisional, self::Validated];
+    }
+
+    /**
      * @return list<self>
      */
     public static function unverified(): array

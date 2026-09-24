@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int|null $user_id
  * @property int $formation_id
+ * @property int|null $live_session_id Supplément d'une session en présentiel (sinon : achat de la formation).
  * @property int $amount Montant en FCFA.
  * @property string $currency
  * @property PaymentGateway $gateway
@@ -41,6 +42,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $verified_at
  * @property string|null $rejection_reason
  * @property Carbon|null $refunded_at
+ * @property Carbon|null $refund_due_at Supplément à rembourser : inscription annulée par l'élève dans le délai.
  * @property string|null $affiliate_code Étape 8.
  * @property int|null $discount_amount
  * @property string|null $gateway_reference Référence de la passerelle (FedaPay, plus tard).
@@ -48,6 +50,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read User|null $user
  * @property-read Formation $formation
+ * @property-read LiveSession|null $liveSession
+ * @property-read string $item_label Ce qui a été payé : titre de la formation, ou session et formation.
  * @property-read User|null $verifier
  * @property-read Enrollment|null $enrollment
  * @property-read string $formatted_amount
@@ -61,6 +65,7 @@ class Purchase extends Model
     protected $fillable = [
         'user_id',
         'formation_id',
+        'live_session_id',
         'amount',
         'currency',
         'gateway',
@@ -89,6 +94,7 @@ class Purchase extends Model
             'status' => PurchaseStatus::class,
             'verified_at' => 'datetime',
             'refunded_at' => 'datetime',
+            'refund_due_at' => 'datetime',
         ];
     }
 
@@ -106,6 +112,46 @@ class Purchase extends Model
     public function formation(): BelongsTo
     {
         return $this->belongsTo(Formation::class);
+    }
+
+    /**
+     * Session en présentiel dont ce paiement règle le supplément.
+     *
+     * @return BelongsTo<LiveSession, $this>
+     */
+    public function liveSession(): BelongsTo
+    {
+        return $this->belongsTo(LiveSession::class);
+    }
+
+    /**
+     * Paiement du supplément d'une session en présentiel (et non achat d'une formation).
+     */
+    public function isSessionSupplement(): bool
+    {
+        return $this->live_session_id !== null;
+    }
+
+    /**
+     * Intitulé de la ligne « Formation » ou « Session » sur les écrans, e-mails et reçus.
+     */
+    public function itemHeading(): string
+    {
+        return $this->isSessionSupplement() ? 'Session' : 'Formation';
+    }
+
+    /**
+     * @return Attribute<string, never>
+     */
+    protected function itemLabel(): Attribute
+    {
+        return Attribute::get(function (): string {
+            $session = $this->liveSession;
+
+            return $session === null
+                ? $this->formation->title
+                : 'Supplément · '.$session->displayTitle().' du '.$session->starts_at->translatedFormat('j F Y').' · '.$this->formation->title;
+        });
     }
 
     /**
@@ -137,6 +183,34 @@ class Purchase extends Model
     protected function awaitingVerification(Builder $query): void
     {
         $query->whereIn('status', PurchaseStatus::unverified());
+    }
+
+    /**
+     * Suppléments de session à rembourser : session annulée par l'école, ou inscription annulée
+     * par l'élève dans le délai autorisé. Un élève absent sans avoir annulé n'est pas remboursé.
+     *
+     * @param  Builder<Purchase>  $query
+     */
+    #[Scope]
+    protected function refundDue(Builder $query): void
+    {
+        $query->whereNotNull('live_session_id')
+            ->whereIn('status', PurchaseStatus::accessGranting())
+            ->where(fn (Builder $query) => $query
+                ->whereNotNull('refund_due_at')
+                ->orWhereHas('liveSession', fn (Builder $query) => $query->whereNotNull('cancelled_at')));
+    }
+
+    /**
+     * Motif du remboursement d'un supplément, affiché dans la liste de l'admin.
+     */
+    public function refundReason(): string
+    {
+        if ($this->liveSession?->isCancelled()) {
+            return 'Session annulée par l\'école';
+        }
+
+        return 'Inscription annulée par l\'élève'.($this->refund_due_at ? ' le '.$this->refund_due_at->translatedFormat('j F à H\hi') : '');
     }
 
     /**

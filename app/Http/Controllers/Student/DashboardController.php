@@ -22,6 +22,8 @@ class DashboardController extends Controller
             'user' => $user,
             'enrollments' => $enrollments,
             'progress' => $progress->forEnrollments($user, $enrollments),
+            'sessions' => LiveSessionController::upcomingFor($user),
+            'sessionRegistrations' => $user->liveSessionRegistrations()->get()->keyBy('live_session_id'),
             'suggestions' => Formation::published()->where('is_featured', true)
                 ->whereNotIn('id', $user->enrollments()->select('formation_id'))
                 ->limit(3)

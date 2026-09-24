@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
+use App\Models\LiveSession;
 use Illuminate\Contracts\View\View;
 
 class PageController extends Controller
@@ -13,6 +14,7 @@ class PageController extends Controller
         return view('site.home', [
             'featured' => Formation::published()->where('is_featured', true)->get(),
             'formationCount' => Formation::published()->count(),
+            'upcomingSessions' => LiveSession::query()->upcoming()->whereHas('formation', fn ($query) => $query->where('is_active', true))->with('formation')->limit(6)->get(),
         ]);
     }
 

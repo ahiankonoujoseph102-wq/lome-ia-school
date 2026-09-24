@@ -7,6 +7,7 @@ use App\Courses\CourseProgress;
 use App\Http\Controllers\Controller;
 use App\Models\ChatGroup;
 use App\Models\Formation;
+use App\Models\LiveSession;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -41,6 +42,7 @@ class FormationController extends Controller
             'curriculum' => $formation->publicCurriculum(),
             'summary' => $progress->summary($user, $formation),
             'groupUnread' => (int) ($unread->forUser($user)[$group->id] ?? 0),
+            'sessions' => LiveSession::query()->upcoming()->where('formation_id', $formation->id)->get(),
         ]);
     }
 }

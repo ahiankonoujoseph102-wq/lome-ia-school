@@ -3,7 +3,7 @@
 
     $status = $purchase->status;
     [$icon, $title, $tone] = match ($status) {
-        PurchaseStatus::Provisional => ['lock-open', 'Paiement reçu, formation ouverte', 'text-sky-300 bg-sky-400/15'],
+        PurchaseStatus::Provisional => ['lock-open', $purchase->isSessionSupplement() ? 'Paiement reçu, place confirmée' : 'Paiement reçu, formation ouverte', 'text-sky-300 bg-sky-400/15'],
         PurchaseStatus::Pending => ['clock', 'Paiement reçu, en attente de validation', 'text-gold-300 bg-gold-400/15'],
         PurchaseStatus::Validated => ['check-badge', 'Paiement validé', 'text-emerald-300 bg-emerald-400/15'],
         PurchaseStatus::Rejected => ['x-circle', 'Paiement refusé', 'text-rose-300 bg-rose-400/15'],
@@ -30,7 +30,7 @@
 
             <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
                 @if ($status->grantsAccess())
-                    <a href="{{ route('student.formations.show', $purchase->formation) }}" class="btn-gold">Ouvrir la formation <flux:icon.arrow-right class="size-5" /></a>
+                    <a href="{{ $purchase->isSessionSupplement() && $purchase->liveSession ? route('student.sessions.show', $purchase->liveSession) : route('student.formations.show', $purchase->formation) }}" class="btn-gold">{{ $purchase->isSessionSupplement() ? 'Voir la session' : 'Ouvrir la formation' }} <flux:icon.arrow-right class="size-5" /></a>
                 @endif
                 @if ($status === PurchaseStatus::Validated)
                     <a href="{{ route('student.purchases.receipt', $purchase) }}" class="btn-ghost"><flux:icon.document-text class="size-5" /> Voir mon reçu</a>
@@ -47,7 +47,7 @@
             <h2 class="font-semibold text-white">Détails du paiement</h2>
             <dl class="mt-4 divide-y divide-white/10 text-sm">
                 @foreach ([
-                    'Formation' => $purchase->formation->title,
+                    $purchase->itemHeading() => $purchase->item_label,
                     'Montant' => $purchase->formatted_amount,
                     'Moyen de paiement' => $purchase->payment_method_name.' · '.$purchase->payment_number,
                     'Bénéficiaire' => $purchase->payment_beneficiary,

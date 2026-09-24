@@ -129,6 +129,24 @@
                 <p class="mt-4 text-base leading-relaxed text-pretty text-slate-300 sm:text-lg">{{ $formation->description }}</p>
             </section>
 
+            {{-- Prochaine session ponctuelle : sans lien Google Meet, réservée aux élèves de la formation --}}
+            @if ($nextSession)
+                <section id="prochaine-session" class="scroll-mt-24" data-test="next-session">
+                    <h2 class="text-2xl font-bold text-white sm:text-3xl">Prochaine session</h2>
+                    <div class="card mt-5 p-5 sm:p-6">
+                        <x-site.session-summary :session="$nextSession" />
+                        <div class="mt-5 border-t border-white/10 pt-5">
+                            @if ($hasAccess)
+                                <a href="{{ route('student.sessions.show', $nextSession) }}" class="btn-gold w-full sm:w-auto">Voir la session dans mon espace</a>
+                            @else
+                                <p class="text-sm text-slate-300">Session réservée aux élèves de la formation{{ $nextSession->isOnsite() ? ', sur inscription' : '' }}. Achetez la formation pour y participer.</p>
+                                <a href="{{ route('checkout.show', $formation) }}" class="btn-gold mt-4 w-full sm:w-auto">Acheter la formation pour participer</a>
+                            @endif
+                        </div>
+                    </div>
+                </section>
+            @endif
+
             {{-- Ce que vous allez apprendre --}}
             @if ($formation->outcomes)
                 <section>
