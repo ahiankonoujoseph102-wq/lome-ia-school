@@ -8,7 +8,7 @@
         <div class="space-y-4">
             <x-site.logo />
             <p class="text-sm leading-relaxed text-slate-400">
-                Formations pratiques en intelligence artificielle, en français, à Lomé et en ligne. Paiement Mobile Money et accès immédiat.
+                Formations pratiques en intelligence artificielle, en français, à Lomé et en ligne. Paiement par Mobile Money.
             </p>
             @if ($social)
                 <div class="flex gap-2">

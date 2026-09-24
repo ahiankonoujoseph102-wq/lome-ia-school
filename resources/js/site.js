@@ -100,6 +100,72 @@ Alpine.data('catalogue', (items) => ({
     },
 }));
 
+/**
+ * Page de paiement : choix du pays puis du moyen de paiement, copie du numéro, aperçu de la capture.
+ */
+Alpine.data('mobileMoneyPayment', ({ methods, initialMethod }) => ({
+    methods,
+    country: '',
+    method: '',
+    copied: false,
+    preview: null,
+
+    init() {
+        const initial = this.methods.find((item) => item.key === initialMethod);
+        this.country = initial ? initial.country : (this.methods[0]?.country ?? '');
+        this.method = initial ? initial.key : '';
+    },
+
+    get countryMethods() {
+        return this.methods.filter((item) => item.country === this.country);
+    },
+
+    get selected() {
+        return this.methods.find((item) => item.key === this.method) ?? null;
+    },
+
+    chooseCountry(code) {
+        this.country = code;
+        if (this.selected?.country !== code) {
+            this.method = this.countryMethods.length === 1 ? this.countryMethods[0].key : '';
+        }
+    },
+
+    chooseMethod(key) {
+        this.method = key;
+        this.$nextTick(() => this.$refs.details?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+    },
+
+    syncCountry() {
+        if (this.selected) {
+            this.country = this.selected.country;
+        }
+    },
+
+    async copyNumber() {
+        if (!this.selected) {
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(this.selected.raw_number);
+        } catch {
+            const range = document.createRange();
+            range.selectNodeContents(this.$refs.number);
+            window.getSelection()?.removeAllRanges();
+            window.getSelection()?.addRange(range);
+        }
+
+        this.copied = true;
+        setTimeout(() => (this.copied = false), 2000);
+    },
+
+    previewProof(event) {
+        const file = event.target.files[0];
+        this.preview = file && file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
+    },
+}));
+
 window.Alpine = Alpine;
 Alpine.start();
 

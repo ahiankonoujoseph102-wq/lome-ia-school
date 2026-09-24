@@ -13,7 +13,7 @@
 @php
     $siteName = config('app.name');
     $fullTitle = $title ? $title.' | '.$siteName : $siteName.' | Formations en intelligence artificielle à Lomé et en ligne';
-    $description ??= 'Formations pratiques en intelligence artificielle, en français : ChatGPT, création visuelle et vidéo, sites web, automatisation, agents IA. Paiement Mobile Money et accès immédiat.';
+    $description ??= 'Formations pratiques en intelligence artificielle, en français : ChatGPT, création visuelle et vidéo, sites web, automatisation, agents IA. Paiement par Mobile Money.';
     $image ??= route('og.site');
     $canonical = url()->current();
 @endphp

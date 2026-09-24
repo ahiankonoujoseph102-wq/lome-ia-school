@@ -156,6 +156,29 @@ class Formation extends Model
         return config('site.show_curriculum') ? ($this->curriculum ?? []) : [];
     }
 
+    /**
+     * Prix égal ou supérieur au seuil : l'accès n'est ouvert qu'après validation du paiement par l'équipe.
+     */
+    public function needsPaymentVerification(): bool
+    {
+        return $this->price >= (int) config('site.payments.verification_threshold', 50000);
+    }
+
+    /**
+     * Garanties affichées sur la page de la formation (l'accès immédiat devient « après vérification » au-delà du seuil).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function guarantees(): array
+    {
+        return array_values(array_map(
+            fn (array $guarantee): array => ($guarantee['instant'] ?? false) && $this->needsPaymentVerification()
+                ? (array) config('site.verification_guarantee')
+                : $guarantee,
+            (array) config('site.guarantees', []),
+        ));
+    }
+
     public function hasFormat(FormationFormat $format): bool
     {
         return $this->formats->contains($format);

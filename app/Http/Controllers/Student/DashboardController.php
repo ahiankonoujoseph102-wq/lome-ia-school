@@ -17,7 +17,7 @@ class DashboardController extends Controller
 
         return view('site.student.dashboard', [
             'user' => $user,
-            'enrollments' => $user->enrollments()->with('formation')->latest('granted_at')->get(),
+            'enrollments' => $user->enrollments()->with(['formation', 'purchase'])->latest('granted_at')->get(),
             'suggestions' => Formation::published()->where('is_featured', true)
                 ->whereNotIn('id', $user->enrollments()->select('formation_id'))
                 ->limit(3)

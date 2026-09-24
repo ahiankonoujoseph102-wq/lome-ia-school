@@ -4,7 +4,7 @@
     use App\Support\WhatsApp;
     use Illuminate\Support\Str;
 
-    // Le bouton d'achat mène au récapitulatif de commande (paiement FedaPay à l'étape 4).
+    // Le bouton d'achat mène au récapitulatif de commande, où se fait le paiement Mobile Money.
     $buyUrl = route('checkout.show', $formation);
     $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur la formation « '.$formation->title.' ».';
     $trainer = config('site.trainer');
@@ -107,7 +107,7 @@
     {{-- Garanties --}}
     <section class="border-y border-white/10 bg-white/[0.02]">
         <ul class="mx-auto grid max-w-6xl gap-4 px-4 py-6 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-            @foreach (config('site.guarantees') as $guarantee)
+            @foreach ($formation->guarantees() as $guarantee)
                 <li class="flex items-start gap-3" data-reveal style="--reveal-delay: {{ $loop->index * 80 }}ms">
                     <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-gold-400/15 text-gold-300">
                         <flux:icon :icon="$guarantee['icon']" class="size-5" />
@@ -260,7 +260,7 @@
                 <p class="-mt-3 text-4xl font-bold text-gold-300">{{ $formation->formatted_price }}</p>
                 <a href="{{ $buyUrl }}" class="btn-gold w-full">Acheter maintenant</a>
                 <ul class="space-y-3 text-sm text-slate-300">
-                    @foreach (config('site.guarantees') as $guarantee)
+                    @foreach ($formation->guarantees() as $guarantee)
                         <li class="flex items-center gap-2"><flux:icon :icon="$guarantee['icon']" class="size-4 text-gold-400" /> {{ $guarantee['title'] }}</li>
                     @endforeach
                 </ul>
@@ -277,7 +277,9 @@
     {{-- Appel à l'action final --}}
     <x-site.cta-banner
         :title="'Prêt à commencer « '.$formation->title.' » ?'"
-        text="Payez par Mobile Money et accédez immédiatement à la formation et à son groupe privé."
+        :text="$formation->needsPaymentVerification()
+            ? 'Payez par Mobile Money : la formation et son groupe privé s\'ouvrent dès que votre paiement a été vérifié.'
+            : 'Payez par Mobile Money et accédez aussitôt à la formation et à son groupe privé.'"
     >
         <a href="{{ $buyUrl }}" class="btn-gold">Acheter maintenant · {{ $formation->formatted_price }}</a>
         <a href="{{ route('consultation') }}" class="btn-ghost">Réserver une consultation gratuite</a>

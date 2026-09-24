@@ -28,7 +28,7 @@
                         <td style="padding:28px;">
                             <p style="margin:0 0 16px;font-size:15px;line-height:1.6;">Merci de rejoindre Lomé IA School. Voici comment ça marche :</p>
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px;line-height:1.5;">
-                                @foreach (['Choisissez votre formation dans le catalogue.', 'Payez par Mobile Money (T-Money ou Flooz).', 'Accédez immédiatement à la formation et à son groupe privé.'] as $step)
+                                @foreach (['Choisissez votre formation dans le catalogue.', 'Payez par Mobile Money et envoyez votre preuve de paiement sur le site.', 'Accédez à la formation et à son groupe privé depuis votre espace.'] as $step)
                                     <tr>
                                         <td width="34" valign="top" style="padding:6px 0;">
                                             <span style="display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;border-radius:12px;background:#ede9fe;color:#6d28d9;font-weight:bold;font-size:13px;">{{ $loop->iteration }}</span>

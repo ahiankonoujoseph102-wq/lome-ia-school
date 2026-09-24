@@ -120,7 +120,7 @@ class SiteContentTest extends TestCase
 
         $this->get(route('formations.show', $formation))
             ->assertOk()
-            ->assertSee('Enregistrée · accès immédiat après paiement');
+            ->assertSee('Enregistrée · à suivre à votre rythme');
     }
 
     public function test_bonus_section_is_hidden_when_the_formation_has_no_bonus(): void

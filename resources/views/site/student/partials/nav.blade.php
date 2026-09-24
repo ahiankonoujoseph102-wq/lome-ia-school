@@ -2,6 +2,7 @@
     $items = [
         ['route' => 'dashboard', 'active' => 'dashboard', 'label' => 'Accueil', 'icon' => 'home'],
         ['route' => 'student.formations.index', 'active' => 'student.formations.*', 'label' => 'Mes formations', 'icon' => 'academic-cap'],
+        ['route' => 'student.purchases.index', 'active' => 'student.purchases.*', 'label' => 'Achats', 'icon' => 'receipt-percent'],
         ['route' => 'formations.index', 'active' => 'formations.*', 'label' => 'Catalogue', 'icon' => 'squares-2x2'],
         ['route' => 'student.profile', 'active' => ['student.profile', 'security.edit'], 'label' => 'Profil', 'icon' => 'user-circle'],
     ];
@@ -29,7 +30,7 @@
 
 {{-- Téléphone : barre de navigation fixée en bas de l'écran --}}
 <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-night-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" aria-label="Mon espace">
-    <ul class="mx-auto grid max-w-md grid-cols-4">
+    <ul class="mx-auto grid max-w-md grid-cols-5">
         @foreach ($items as $item)
             @php $active = request()->routeIs(...(array) $item['active']); @endphp
             <li>

@@ -21,6 +21,10 @@
 |
 */
 
+// Prix à partir duquel l'accès n'est ouvert qu'après validation du paiement par l'équipe (en FCFA).
+$verificationThreshold = 50000;
+$verificationThresholdLabel = number_format($verificationThreshold, 0, ',', "\u{00A0}")."\u{00A0}FCFA";
+
 return [
 
     /*
@@ -65,12 +69,12 @@ return [
     'hero' => [
         'badge' => 'Formations en intelligence artificielle à Lomé et en ligne',
         'title' => 'Maîtrisez l\'IA et transformez vos compétences en opportunités',
-        'subtitle' => 'Des formations pratiques en français pour apprendre à utiliser l\'intelligence artificielle, créer, vendre vos services et développer votre activité. Paiement par Mobile Money, accès immédiat.',
+        'subtitle' => 'Des formations pratiques en français pour apprendre à utiliser l\'intelligence artificielle, créer, vendre vos services et développer votre activité. Paiement par Mobile Money.',
         // Petits arguments affichés sous les boutons de l'accueil.
         'points' => [
             'Accès à vie',
             'Accompagnement à vie',
-            'Paiement T-Money et Flooz',
+            'Paiement Mobile Money',
         ],
     ],
 
@@ -106,8 +110,8 @@ return [
     */
 
     'why_us' => [
-        ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Dès que votre paiement est confirmé, votre formation est disponible dans votre espace élève.'],
-        ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Payez simplement avec T-Money (Yas) ou Flooz (Moov), en toute sécurité via FedaPay.'],
+        ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Dès l\'envoi de votre preuve de paiement, votre formation s\'ouvre dans votre espace élève. À partir de '.$verificationThresholdLabel.', elle s\'ouvre après vérification du paiement.'],
+        ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Payez depuis le Togo, le Burkina Faso ou le Bénin avec votre compte Mobile Money, puis envoyez votre preuve de paiement sur le site.'],
         ['icon' => 'academic-cap', 'title' => '100 % pratique, en français', 'text' => 'Des formations concrètes, orientées résultats, expliquées simplement et pensées pour notre réalité.'],
         ['icon' => 'chat-bubble-left-right', 'title' => 'Accompagnement à vie', 'text' => 'Chaque formation a son groupe de discussion réservé aux élèves : posez vos questions et avancez ensemble, sans limite de durée.'],
         ['icon' => 'map-pin', 'title' => 'Une école basée à Lomé', 'text' => 'Un formateur joignable et une équipe proche de vous, à Adidogomé.'],
@@ -129,14 +133,14 @@ return [
         'recorded' => [
             'title' => 'Formations enregistrées',
             'badge' => 'Accès immédiat après paiement',
-            'text' => 'Toutes nos formations sont en vidéo. Dès que votre paiement est confirmé, vous les suivez à votre rythme, depuis votre téléphone ou votre ordinateur, autant de fois que vous voulez.',
+            'text' => 'Toutes nos formations sont en vidéo. Dès l\'envoi de votre preuve de paiement, vous les suivez à votre rythme, depuis votre téléphone ou votre ordinateur, autant de fois que vous voulez. À partir de '.$verificationThresholdLabel.', l\'accès s\'ouvre après vérification du paiement.',
             'points' => [
                 'Accès immédiat après paiement',
                 'À votre rythme, sur téléphone ou ordinateur',
                 'Accès à vie et accompagnement à vie',
             ],
             // Phrase affichée en haut du catalogue.
-            'catalogue' => 'Toutes les formations sont enregistrées : accès immédiat après paiement.',
+            'catalogue' => 'Toutes les formations sont enregistrées : vous les suivez à votre rythme.',
         ],
         'sessions' => [
             'title' => 'Sessions ponctuelles en direct ou à Lomé',
@@ -152,8 +156,8 @@ return [
 
     'steps' => [
         ['title' => 'Je choisis ma formation', 'text' => 'Parcourez le catalogue et choisissez la formation qui correspond à votre objectif.'],
-        ['title' => 'Je paie par Mobile Money', 'text' => 'Réglez en quelques secondes avec T-Money (Yas) ou Flooz (Moov), paiement sécurisé par FedaPay.'],
-        ['title' => 'J\'accède immédiatement', 'text' => 'Votre formation et votre groupe privé s\'ouvrent aussitôt dans votre espace élève.'],
+        ['title' => 'Je paie par Mobile Money', 'text' => 'J\'envoie le montant sur l\'un des numéros Mobile Money de l\'école (Togo, Burkina Faso ou Bénin), puis je dépose ma preuve de paiement.'],
+        ['title' => 'J\'accède à ma formation', 'text' => 'Ma formation et son groupe privé s\'ouvrent dans mon espace élève : aussitôt, ou après vérification du paiement à partir de '.$verificationThresholdLabel.'.'],
     ],
 
     /*
@@ -195,7 +199,7 @@ return [
         'points' => [
             'Un lien personnel disponible dans votre espace élève',
             '10 % sur chaque vente réalisée grâce à votre lien',
-            'Retrait de vos gains sur T-Money (Yas) ou Flooz (Moov)',
+            'Retrait de vos gains par Mobile Money',
         ],
     ],
 
@@ -272,9 +276,12 @@ return [
     'guarantees' => [
         ['icon' => 'lock-open', 'title' => 'Accès à vie', 'text' => 'Revoyez la formation quand vous voulez, sans date limite.'],
         ['icon' => 'lifebuoy', 'title' => 'Accompagnement à vie', 'text' => 'Vos questions ont toujours une réponse, dans le groupe privé ou sur WhatsApp.'],
-        ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Votre formation s\'ouvre dès la confirmation du paiement.'],
-        ['icon' => 'shield-check', 'title' => 'Paiement sécurisé', 'text' => 'Paiement Mobile Money traité par FedaPay.'],
+        // « instant » : remplacé par « verification_guarantee » pour les formations à partir du seuil de vérification.
+        ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Votre formation s\'ouvre dès l\'envoi de votre preuve de paiement.', 'instant' => true],
+        ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Togo, Burkina Faso et Bénin. Chaque paiement est vérifié par notre équipe.'],
     ],
+
+    'verification_guarantee' => ['icon' => 'shield-check', 'title' => 'Accès après vérification', 'text' => 'Votre formation s\'ouvre dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
 
     /*
     |----------------------------------------------------------------------
@@ -378,25 +385,80 @@ return [
 
     'faq' => [
         'home' => [
-            ['question' => 'Comment se passe le paiement ?', 'answer' => 'Le paiement se fait par Mobile Money (T-Money / Yas ou Flooz / Moov) via FedaPay, une plateforme de paiement sécurisée. Vous validez simplement le paiement sur votre téléphone.'],
-            ['question' => 'Quand est-ce que j\'accède à ma formation ?', 'answer' => 'Immédiatement. Dès que votre paiement est confirmé, la formation et son groupe privé sont disponibles dans votre espace élève.'],
+            ['question' => 'Comment se passe le paiement ?', 'answer' => 'Par Mobile Money : vous envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso ou Bénin), puis vous déposez sur le site l\'identifiant de la transaction et une capture d\'écran du paiement. Les frais de transfert sont à la charge de l\'expéditeur.'],
+            ['question' => 'Quand est-ce que j\'accède à ma formation ?', 'answer' => 'Pour les formations de moins de '.$verificationThresholdLabel.' : immédiatement après l\'envoi de votre preuve de paiement (accès provisoire, puis vérification par notre équipe). À partir de '.$verificationThresholdLabel.' : dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
             ['question' => 'Je suis débutant, puis-je suivre les formations ?', 'answer' => 'Oui. Les formations sont expliquées pas à pas, en français simple. Si vous partez de zéro, nous vous conseillons de commencer par la formation ChatGPT & Claude.'],
             ['question' => 'Puis-je suivre les formations sur mon téléphone ?', 'answer' => 'Oui, le site et les vidéos sont pensés pour le téléphone. Pour certaines formations pratiques (sites web, applications), un ordinateur rend l\'exercice plus confortable.'],
             ['question' => 'Combien de temps ai-je accès à une formation ?', 'answer' => 'À vie. Une fois achetée, la formation reste dans votre espace élève : vous la revoyez autant que vous voulez. Vous bénéficiez aussi d\'un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],
-            ['question' => 'Y a-t-il des formations en direct ou en présentiel ?', 'answer' => 'Toutes nos formations sont enregistrées, avec un accès immédiat après paiement. De temps en temps, une formation est aussi proposée en direct sur Google Meet ou en présentiel à Lomé : ces sessions ponctuelles sont annoncées sur le site au moment où elles sont organisées.'],
+            ['question' => 'Y a-t-il des formations en direct ou en présentiel ?', 'answer' => 'Toutes nos formations sont enregistrées : vous les suivez à votre rythme. De temps en temps, une formation est aussi proposée en direct sur Google Meet ou en présentiel à Lomé : ces sessions ponctuelles sont annoncées sur le site au moment où elles sont organisées.'],
             ['question' => 'Comment fonctionne le programme d\'affiliation ?', 'answer' => 'Chaque élève dispose d\'un lien personnel. Pour chaque formation achetée grâce à votre lien, vous gagnez 10 % du prix. Vous pouvez demander le retrait de vos gains par Mobile Money ; chaque retrait est vérifié puis validé par notre équipe.'],
+            ['question' => 'Et si mon paiement n\'est pas reçu ?', 'answer' => 'Chaque paiement est vérifié par notre équipe. Si le paiement n\'est pas reçu sur notre compte, l\'accès provisoire est retiré et vous êtes prévenu par e-mail, avec le motif.'],
             ['question' => 'Puis-je être remboursé ?', 'answer' => 'Oui, dans les 48 heures qui suivent l\'achat, à condition de ne pas avoir commencé la formation (aucune leçon consultée). Il suffit de nous écrire par e-mail ou sur WhatsApp.'],
             ['question' => 'Comment se passe la consultation gratuite ?', 'answer' => 'Elle se réserve depuis la page « Consultation gratuite » du site et se déroule en direct en ligne, par appel vidéo. Elle dure 30 minutes, du lundi au samedi, entre 8 h et 20 h.'],
         ],
         'formation' => [
-            ['question' => 'Quand est-ce que j\'accède à la formation ?', 'answer' => 'Immédiatement après la confirmation de votre paiement, depuis votre espace élève.'],
-            ['question' => 'Comment payer ?', 'answer' => 'Par Mobile Money (T-Money / Yas ou Flooz / Moov), via la plateforme sécurisée FedaPay.'],
+            ['question' => 'Quand est-ce que j\'accède à la formation ?', 'answer' => 'Dès l\'envoi de votre preuve de paiement pour les formations de moins de '.$verificationThresholdLabel.'. À partir de '.$verificationThresholdLabel.', dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
+            ['question' => 'Comment payer ?', 'answer' => 'Par Mobile Money : envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso ou Bénin), puis déposez votre preuve de paiement sur la page de commande.'],
             ['question' => 'Et si j\'ai une question pendant la formation ?', 'answer' => 'Vous la posez dans le groupe privé de la formation, réservé aux élèves inscrits. Vous pouvez aussi nous écrire sur WhatsApp.'],
             ['question' => 'Combien de temps ai-je accès ?', 'answer' => 'À vie, avec un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],
             ['question' => 'Puis-je être remboursé ?', 'answer' => 'Oui, dans les 48 heures qui suivent l\'achat, si vous n\'avez encore consulté aucune leçon de la formation.'],
-            ['question' => 'La formation est-elle en direct ?', 'answer' => 'Non : elle est enregistrée, avec un accès immédiat après paiement. Si une session ponctuelle en direct ou en présentiel à Lomé est organisée, elle est annoncée sur le site.'],
+            ['question' => 'La formation est-elle en direct ?', 'answer' => 'Non : elle est enregistrée et se suit à votre rythme. Si une session ponctuelle en direct ou en présentiel à Lomé est organisée, elle est annoncée sur le site.'],
             ['question' => 'Ai-je besoin de connaissances particulières ?', 'answer' => 'Non, sauf indication contraire sur la page. Il suffit de savoir utiliser un téléphone ou un ordinateur et d\'avoir une connexion Internet.'],
         ],
+    ],
+
+    /*
+    |----------------------------------------------------------------------
+    | Paiement Mobile Money (manuel, avec preuve de paiement)
+    |----------------------------------------------------------------------
+    | L'élève envoie le montant sur l'un de nos numéros, puis dépose la preuve
+    | (identifiant de transaction + capture d'écran) sur le site.
+    |
+    | - « verification_threshold » : en dessous de ce prix, l'accès est ouvert
+    |   aussitôt à titre provisoire ; à partir de ce prix, il n'est ouvert
+    |   qu'après votre validation. À modifier en haut de ce fichier.
+    | - Chaque moyen de paiement peut être désactivé avec 'enabled' => false.
+    | - « color » : couleur de la pastille affichée (pas de logo officiel).
+    */
+
+    'payments' => [
+        'verification_threshold' => $verificationThreshold,
+
+        // Taille maximale de la capture envoyée (en kilo-octets). Elle est ensuite compressée.
+        'proof_max_kb' => 8192,
+
+        // Adresse qui reçoit un e-mail à chaque nouveau paiement à vérifier.
+        'admin_email' => 'academyjoseph71@gmail.com',
+
+        'countries' => [
+            'tg' => ['name' => 'Togo', 'flag' => '🇹🇬', 'dial_code' => '+228', 'note' => null],
+            'bf' => ['name' => 'Burkina Faso', 'flag' => '🇧🇫', 'dial_code' => '+226', 'note' => 'Paiement reçu par notre représentant au Burkina Faso'],
+            'bj' => ['name' => 'Bénin', 'flag' => '🇧🇯', 'dial_code' => '+229', 'note' => 'Paiement reçu par notre représentant au Bénin'],
+        ],
+
+        'methods' => [
+            'tg-mixx' => ['country' => 'tg', 'name' => 'Mixx by Yas', 'number' => '+228 72 24 02 31', 'beneficiary' => 'Ahiankonou Kokou Joseph', 'color' => '#facc15', 'enabled' => true],
+            'tg-flooz' => ['country' => 'tg', 'name' => 'Flooz / Moov Money', 'number' => '+228 79 16 23 90', 'beneficiary' => 'Ahiankonou Kokou Joseph', 'color' => '#3b82f6', 'enabled' => true],
+            'bf-orange' => ['country' => 'bf', 'name' => 'Orange Money', 'number' => '+226 07 27 63 81', 'beneficiary' => 'Anderson Passoule Oyo', 'color' => '#f97316', 'enabled' => true],
+            'bf-wave' => ['country' => 'bf', 'name' => 'Wave', 'number' => '+226 03 53 21 76', 'beneficiary' => 'Anderson Passoule Oyo', 'color' => '#38bdf8', 'enabled' => true],
+            'bj-mtn' => ['country' => 'bj', 'name' => 'MTN', 'number' => '+229 01 51 53 39 35', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#eab308', 'enabled' => true],
+            'bj-moov' => ['country' => 'bj', 'name' => 'Moov', 'number' => '+229 01 94 55 59 14', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#2563eb', 'enabled' => true],
+            'bj-celtiis' => ['country' => 'bj', 'name' => 'Celtiis', 'number' => '+229 01 40 28 57 61', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#a855f7', 'enabled' => true],
+        ],
+
+        // Étapes affichées sous le moyen de paiement choisi.
+        'steps' => [
+            'Ouvrez votre application ou votre menu Mobile Money.',
+            'Envoyez le montant exact au numéro indiqué ci-dessus.',
+            'Vérifiez que le nom du bénéficiaire affiché correspond bien à celui indiqué ici avant de confirmer.',
+            'Gardez le SMS de confirmation et faites une capture d\'écran du paiement.',
+            'Remplissez le formulaire ci-dessous avec l\'identifiant de la transaction et la capture.',
+        ],
+
+        'fees_notice' => 'Les frais de transfert sont à la charge de l\'expéditeur.',
+
+        // Délai de vérification annoncé à l'élève.
+        'verification_hours' => 'du lundi au samedi, de 8 h à 20 h',
     ],
 
     /*
@@ -418,7 +480,7 @@ return [
         'updated_at' => '24 septembre 2026',
         'access_duration' => 'L\'accès à la formation est accordé à vie, avec un accompagnement à vie dans le groupe privé de la formation, tant que la plateforme Lomé IA School est en activité.',
         'refund_policy' => 'Vous pouvez demander le remboursement d\'une formation dans les 48 heures qui suivent son achat, uniquement si elle n\'a pas été commencée, c\'est-à-dire si aucune leçon n\'a été consultée. La demande se fait par e-mail ou sur WhatsApp. Passé ce délai, ou dès qu\'une leçon a été consultée, aucun remboursement n\'est possible.',
-        'data_retention' => 'Vos données personnelles sont conservées 3 ans après votre dernier achat, puis supprimées.',
+        'data_retention' => 'Vos données personnelles, y compris les preuves de paiement (captures d\'écran, identifiants de transaction), sont conservées 3 ans après votre dernier achat, puis supprimées.',
     ],
 
 ];

@@ -38,6 +38,16 @@ return [
             'report' => false,
         ],
 
+        // Captures des preuves de paiement : jamais servies publiquement, lues uniquement par
+        // App\Http\Controllers\PurchaseProofController (élève propriétaire ou admin).
+        'payment_proofs' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/payment-proofs'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
