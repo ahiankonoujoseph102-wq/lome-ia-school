@@ -45,6 +45,7 @@ use Illuminate\Support\Carbon;
  * @property-read User|null $creator
  * @property-read ChatMessage|null $announcement
  * @property-read Collection<int, LiveSessionRegistration> $registrations
+ * @property-read Collection<int, Purchase> $supplements
  */
 class LiveSession extends Model
 {
@@ -116,6 +117,16 @@ class LiveSession extends Model
     public function announcement(): BelongsTo
     {
         return $this->belongsTo(ChatMessage::class, 'announcement_message_id');
+    }
+
+    /**
+     * Suppléments payés pour cette session.
+     *
+     * @return HasMany<Purchase, $this>
+     */
+    public function supplements(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
     }
 
     /**

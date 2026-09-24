@@ -36,6 +36,9 @@
                         @else
                             <span>Tous les élèves de la formation · sans inscription</span>
                         @endif
+                        @if ($session->refunds_count > 0)
+                            <span class="font-semibold text-gold-200">{{ $session->refunds_count }} supplément(s) à rembourser</span>
+                        @endif
                     </p>
                 </a>
             @empty
@@ -55,7 +58,9 @@
                             <span class="block truncate font-semibold text-white">{{ $session->displayTitle() }}</span>
                             <span class="block truncate text-xs text-slate-400">{{ $session->formation->title }} · {{ $session->starts_at->translatedFormat('j F Y') }}</span>
                         </span>
-                        @if ($session->isCancelled())
+                        @if ($session->refunds_count > 0)
+                            <span class="shrink-0 rounded-full bg-gold-400/15 px-2.5 py-1 text-xs font-semibold text-gold-200">{{ $session->refunds_count }} à rembourser</span>
+                        @elseif ($session->isCancelled())
                             <span class="shrink-0 rounded-full bg-rose-500/15 px-2.5 py-1 text-xs font-semibold text-rose-200">Annulée</span>
                         @elseif ($session->isOnsite())
                             <span class="shrink-0 text-xs text-slate-400">{{ $session->attended_count }} présent(s)</span>

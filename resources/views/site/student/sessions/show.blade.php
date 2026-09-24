@@ -90,7 +90,7 @@
                                 </button>
                             </form>
                             @if ($status !== RegistrationStatus::Waitlisted)
-                                <p class="text-center text-xs text-slate-500">Annulation possible jusqu'au {{ $session->cancellationDeadline()->translatedFormat('j F à H\hi') }}.@if ($registration->purchase_id) Le supplément payé n'est pas remboursé en cas d'annulation de votre part.@endif</p>
+                                <p class="text-center text-xs text-slate-500">Annulation possible jusqu'au {{ $session->cancellationDeadline()->translatedFormat('j F à H\hi') }}.@if ($registration->purchase_id) Le supplément payé vous est alors remboursé par Mobile Money. Sans annulation, il n'est pas remboursé en cas d'absence.@endif</p>
                             @endif
                         @else
                             <p class="text-center text-xs text-slate-500">Le délai d'annulation est dépassé ({{ config('live_sessions.cancel_deadline_hours') }} heures avant la session).</p>

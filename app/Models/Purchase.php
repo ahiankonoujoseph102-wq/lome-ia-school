@@ -42,6 +42,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $verified_at
  * @property string|null $rejection_reason
  * @property Carbon|null $refunded_at
+ * @property Carbon|null $refund_due_at Supplément à rembourser : inscription annulée par l'élève dans le délai.
  * @property string|null $affiliate_code Étape 8.
  * @property int|null $discount_amount
  * @property string|null $gateway_reference Référence de la passerelle (FedaPay, plus tard).
@@ -93,6 +94,7 @@ class Purchase extends Model
             'status' => PurchaseStatus::class,
             'verified_at' => 'datetime',
             'refunded_at' => 'datetime',
+            'refund_due_at' => 'datetime',
         ];
     }
 
@@ -181,6 +183,34 @@ class Purchase extends Model
     protected function awaitingVerification(Builder $query): void
     {
         $query->whereIn('status', PurchaseStatus::unverified());
+    }
+
+    /**
+     * Suppléments de session à rembourser : session annulée par l'école, ou inscription annulée
+     * par l'élève dans le délai autorisé. Un élève absent sans avoir annulé n'est pas remboursé.
+     *
+     * @param  Builder<Purchase>  $query
+     */
+    #[Scope]
+    protected function refundDue(Builder $query): void
+    {
+        $query->whereNotNull('live_session_id')
+            ->whereIn('status', PurchaseStatus::accessGranting())
+            ->where(fn (Builder $query) => $query
+                ->whereNotNull('refund_due_at')
+                ->orWhereHas('liveSession', fn (Builder $query) => $query->whereNotNull('cancelled_at')));
+    }
+
+    /**
+     * Motif du remboursement d'un supplément, affiché dans la liste de l'admin.
+     */
+    public function refundReason(): string
+    {
+        if ($this->liveSession?->isCancelled()) {
+            return 'Session annulée par l\'école';
+        }
+
+        return 'Inscription annulée par l\'élève'.($this->refund_due_at ? ' le '.$this->refund_due_at->translatedFormat('j F à H\hi') : '');
     }
 
     /**

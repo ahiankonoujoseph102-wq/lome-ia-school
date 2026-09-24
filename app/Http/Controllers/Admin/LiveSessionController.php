@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\PurchaseStatus;
 use App\Enums\RegistrationStatus;
 use App\Enums\SessionFormat;
 use App\Enums\SessionPriceType;
@@ -63,16 +62,10 @@ class LiveSessionController extends Controller
     {
         $session->load(['formation', 'creator', 'registrations.user', 'registrations.purchase']);
 
-        $refunds = Purchase::query()
-            ->where('live_session_id', $session->id)
-            ->whereIn('status', [PurchaseStatus::Provisional->value, PurchaseStatus::Validated->value])
-            ->with('user')
-            ->get();
-
         return view('site.admin.sessions.show', [
             'session' => $session,
             'registrations' => $session->registrations->groupBy(fn (LiveSessionRegistration $registration): string => $registration->status->value),
-            'refunds' => $session->isCancelled() ? $refunds : collect(),
+            'refunds' => Purchase::query()->where('live_session_id', $session->id)->refundDue()->with(['user', 'liveSession'])->oldest()->get(),
         ]);
     }
 
@@ -165,7 +158,8 @@ class LiveSessionController extends Controller
     }
 
     /**
-     * Supplément remboursé (session annulée) : l'achat passe en « Remboursé ».
+     * Supplément remboursé (session annulée par l'école, ou inscription annulée par l'élève dans le délai) :
+     * l'achat passe en « Remboursé ».
      */
     public function refund(Request $request, LiveSession $session, Purchase $purchase, PurchaseManager $purchases): RedirectResponse
     {
@@ -188,6 +182,7 @@ class LiveSessionController extends Controller
             'registrations as seats_count' => fn ($query) => $query->whereIn('status', RegistrationStatus::seatHolding()),
             'registrations as waitlist_count' => fn ($query) => $query->where('status', RegistrationStatus::Waitlisted->value),
             'registrations as attended_count' => fn ($query) => $query->whereNotNull('attended_at'),
+            'supplements as refunds_count' => fn ($query) => $query->refundDue(),
         ];
     }
 

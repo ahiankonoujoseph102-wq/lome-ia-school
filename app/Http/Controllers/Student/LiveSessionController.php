@@ -78,8 +78,11 @@ class LiveSessionController extends Controller
         $user = $request->user();
         $registration = $session->registrations()->where('user_id', $user->id)->firstOrFail();
         $registrar->cancelByStudent($registration->setRelation('session', $session));
+        $refundDue = $registration->purchase()->whereNotNull('refund_due_at')->exists();
 
-        return to_route('student.sessions.show', $session)->with('status', 'Votre inscription est annulée.');
+        return to_route('student.sessions.show', $session)->with('status', $refundDue
+            ? 'Votre inscription est annulée. Le supplément payé vous sera remboursé par Mobile Money.'
+            : 'Votre inscription est annulée.');
     }
 
     public function payment(Request $request, LiveSession $session): View|RedirectResponse

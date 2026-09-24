@@ -86,13 +86,14 @@
         @if ($refunds->isNotEmpty())
             <section class="card mt-6 p-5 sm:p-6">
                 <h2 class="text-lg font-bold text-white">Suppléments à rembourser</h2>
-                <p class="mt-1 text-sm text-slate-400">La session est annulée : remboursez chaque élève par Mobile Money, puis marquez le supplément comme remboursé.</p>
+                <p class="mt-1 text-sm text-slate-400">Session annulée par l'école ou inscription annulée par l'élève dans le délai : remboursez chaque élève par Mobile Money, puis marquez le supplément comme remboursé. Un élève absent sans avoir annulé n'est pas remboursé.</p>
                 <ul class="mt-3 divide-y divide-white/[0.06]">
                     @foreach ($refunds as $purchase)
                         <li class="flex flex-wrap items-center gap-3 py-3">
                             <span class="min-w-0 flex-1">
                                 <span class="block font-medium text-white">{{ $purchase->user?->name }}</span>
                                 <span class="block text-xs text-slate-400">{{ $purchase->formatted_amount }} · payé depuis le {{ $purchase->payer_phone }} ({{ $purchase->payment_method_name }})</span>
+                                <span class="block text-xs text-gold-200" data-test="refund-reason">{{ $purchase->refundReason() }}</span>
                             </span>
                             @can('access-admin')
                                 <form method="POST" action="{{ route('admin.sessions.refund', [$session, $purchase]) }}">

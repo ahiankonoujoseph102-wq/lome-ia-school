@@ -62,7 +62,8 @@ class SessionRegistrar
     }
 
     /**
-     * Annulation par l'élève, jusqu'au délai prévu avant la session.
+     * Annulation par l'élève, jusqu'au délai prévu avant la session. Un supplément déjà payé est
+     * alors à rembourser : il apparaît dans la liste « Suppléments à rembourser » de la session.
      */
     public function cancelByStudent(LiveSessionRegistration $registration): void
     {
@@ -80,7 +81,15 @@ class SessionRegistrar
             throw ValidationException::withMessages(['session' => 'L\'annulation n\'est plus possible : elle doit être faite au plus tard '.config('live_sessions.cancel_deadline_hours').' heures avant la session.']);
         }
 
-        $this->cancel($registration, 'student');
+        $purchase = $registration->purchase;
+
+        DB::transaction(function () use ($registration, $purchase): void {
+            $this->cancel($registration, 'student');
+
+            if ($purchase !== null && $purchase->status->grantsAccess() && $purchase->refund_due_at === null) {
+                $purchase->forceFill(['refund_due_at' => now()])->save();
+            }
+        });
     }
 
     /**
@@ -165,7 +174,7 @@ class SessionRegistrar
     {
         $registration = $this->registrationFor($purchase);
 
-        if ($registration !== null && $registration->isActive()) {
+        if ($registration !== null && $registration->isActive() && $this->paidBy($registration, $purchase)) {
             $registration->forceFill(['purchase_id' => $purchase->id])->save();
             $this->confirm($registration);
         }
@@ -178,7 +187,7 @@ class SessionRegistrar
     {
         $registration = $this->registrationFor($purchase);
 
-        if ($registration !== null && $registration->isActive()) {
+        if ($registration !== null && $registration->isActive() && $this->paidBy($registration, $purchase)) {
             $this->cancel($registration, 'payment_rejected');
         }
     }
@@ -246,6 +255,15 @@ class SessionRegistrar
             'confirmed_at' => $registration->confirmed_at ?? now(),
             'reserved_until' => null,
         ])->save();
+    }
+
+    /**
+     * L'inscription est-elle bien celle de ce paiement ? (Après une annulation remboursée puis une
+     * nouvelle inscription, l'ancien paiement ne doit ni confirmer ni libérer la nouvelle place.)
+     */
+    private function paidBy(LiveSessionRegistration $registration, Purchase $purchase): bool
+    {
+        return $registration->purchase_id === $purchase->id;
     }
 
     private function registrationFor(Purchase $purchase): ?LiveSessionRegistration

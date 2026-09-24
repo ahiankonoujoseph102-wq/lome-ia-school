@@ -58,6 +58,8 @@ return new class extends Migration
 
         Schema::table('purchases', function (Blueprint $table) {
             $table->foreignId('live_session_id')->nullable()->after('formation_id')->constrained()->nullOnDelete();
+            // Supplément à rembourser : l'élève a annulé son inscription dans le délai autorisé.
+            $table->timestamp('refund_due_at')->nullable()->after('refunded_at');
         });
 
         Schema::table('users', function (Blueprint $table) {
@@ -75,6 +77,7 @@ return new class extends Migration
         });
 
         Schema::table('purchases', function (Blueprint $table) {
+            $table->dropColumn('refund_due_at');
             $table->dropConstrainedForeignId('live_session_id');
         });
 

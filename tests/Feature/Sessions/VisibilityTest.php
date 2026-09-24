@@ -127,6 +127,9 @@ class VisibilityTest extends SessionTestCase
             ->assertSee('Sessions ponctuelles en direct et en présentiel')
             ->assertSee('liste d\'attente', false)
             ->assertSee('jusqu\'à 24 heures avant le début', false)
-            ->assertSee('le supplément éventuellement payé est remboursé');
+            ->assertSee('le supplément éventuellement payé est remboursé')
+            ->assertSee('le supplément payé est remboursé par Mobile Money si l\'élève annule lui-même son inscription dans le délai autorisé', false)
+            ->assertSee('Il n\'est pas remboursé si l\'élève ne se présente pas sans avoir annulé son inscription.', false)
+            ->assertDontSee('Le supplément n\'est pas remboursé lorsque l\'élève annule lui-même son inscription', false);
     }
 }
