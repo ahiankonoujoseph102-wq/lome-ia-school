@@ -38,7 +38,7 @@ return [
         'email' => 'academyjoseph71@gmail.com',
         'address' => 'Adidogomé, Lycée moderne 2, Lomé, Togo',
         'map_url' => 'https://www.google.com/maps/search/?api=1&query=Adidogom%C3%A9+Lyc%C3%A9e+moderne+2+Lom%C3%A9+Togo',
-        'hours' => '[Horaires d\'ouverture à préciser, ex. : du lundi au samedi, de 8 h à 18 h]',
+        'hours' => 'Du lundi au samedi, de 8 h à 20 h',
     ],
 
     'whatsapp' => [
@@ -48,7 +48,8 @@ return [
         'consultation_message' => 'Bonjour Lomé IA School, je souhaite réserver une consultation gratuite.',
     ],
 
-    // Liens vers vos pages. Laissez vide ('') pour masquer une icône.
+    // Liens vers vos pages (adresse complète commençant par https://).
+    // Un réseau dont le lien est vide ('') est masqué automatiquement.
     'social' => [
         'facebook' => '',
         'tiktok' => '',
@@ -65,13 +66,36 @@ return [
         'badge' => 'Formations en intelligence artificielle à Lomé et en ligne',
         'title' => 'Maîtrisez l\'IA et transformez vos compétences en revenus',
         'subtitle' => 'Des formations pratiques en français pour apprendre à utiliser l\'intelligence artificielle, créer, vendre vos services et développer votre activité. Paiement par Mobile Money, accès immédiat.',
+        // Petits arguments affichés sous les boutons de l'accueil.
+        'points' => [
+            'Accès à vie',
+            'Accompagnement à vie',
+            'Paiement T-Money et Flooz',
+        ],
     ],
 
     // Le nombre de formations est calculé automatiquement.
     'stats' => [
-        ['value' => '[Nombre d\'élèves formés]', 'label' => 'élèves formés'],
-        ['value' => '3', 'label' => 'formats : en ligne, en direct, présentiel'],
-        ['value' => '10 %', 'label' => 'de commission en recommandant nos formations'],
+        ['value' => '1 000+', 'label' => 'personnes formées'],
+        ['value' => '2023', 'label' => 'année de création de l\'école'],
+        ['value' => 'À vie', 'label' => 'accès et accompagnement'],
+    ],
+
+    /*
+    |----------------------------------------------------------------------
+    | Accès à vie et accompagnement à vie
+    |----------------------------------------------------------------------
+    | Mis en avant sur l'accueil et sur chaque page de formation.
+    */
+
+    'lifetime' => [
+        'title' => 'Payez une fois, progressez toute votre vie',
+        'text' => 'Chaque formation achetée vous appartient : vous la revoyez autant que vous voulez et vous restez accompagné, même des années plus tard.',
+        'items' => [
+            ['icon' => 'lock-open', 'title' => 'Accès à vie', 'text' => 'Revoyez les vidéos et les ressources de votre formation quand vous voulez, sans abonnement ni date limite.'],
+            ['icon' => 'lifebuoy', 'title' => 'Accompagnement à vie', 'text' => 'Posez vos questions dans le groupe privé de la formation ou sur WhatsApp, aussi longtemps que vous en avez besoin.'],
+        ],
+        'note' => 'Valable tant que la plateforme Lomé IA School est en activité.',
     ],
 
     /*
@@ -85,7 +109,7 @@ return [
         ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Dès que votre paiement est confirmé, votre formation est disponible dans votre espace élève.'],
         ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Payez simplement avec T-Money (Yas) ou Flooz (Moov), en toute sécurité via FedaPay.'],
         ['icon' => 'academic-cap', 'title' => '100 % pratique, en français', 'text' => 'Des formations concrètes, orientées résultats, expliquées simplement et pensées pour notre réalité.'],
-        ['icon' => 'chat-bubble-left-right', 'title' => 'Groupe privé d\'entraide', 'text' => 'Chaque formation a son groupe de discussion réservé aux élèves pour poser vos questions et avancer ensemble.'],
+        ['icon' => 'chat-bubble-left-right', 'title' => 'Accompagnement à vie', 'text' => 'Chaque formation a son groupe de discussion réservé aux élèves : posez vos questions et avancez ensemble, sans limite de durée.'],
         ['icon' => 'map-pin', 'title' => 'Une école basée à Lomé', 'text' => 'Un formateur joignable et une équipe proche de vous, à Adidogomé.'],
         ['icon' => 'banknotes', 'title' => 'Des compétences qui rapportent', 'text' => 'Nous vous apprenons aussi à vendre vos nouvelles compétences à des clients.'],
     ],
@@ -106,14 +130,26 @@ return [
     |----------------------------------------------------------------------
     | Témoignages
     |----------------------------------------------------------------------
-    | Remplacez ces emplacements par de vrais témoignages d'élèves (avec leur accord).
-    | « photo » : fichier facultatif déposé dans public/images/temoignages/.
+    | Uniquement de vrais témoignages d'élèves, publiés avec leur accord.
+    | Tant que la liste est vide, la section « Témoignages » est masquée
+    | partout sur le site.
+    |
+    | Trois types sont possibles (voir les exemples ci-dessous) :
+    | - « text » : nom, formation suivie, texte, photo facultative ;
+    | - « screenshot » : capture d'écran WhatsApp ;
+    | - « video » : vidéo YouTube intégrée (même non répertoriée).
+    | Les images vont dans public/images/temoignages/ (indiquez seulement
+    | le nom du fichier). Pour la capture et la vidéo, « name » et
+    | « formation » sont facultatifs.
+    |
+    | Pour ajouter un témoignage : copiez la ligne d'exemple voulue, retirez
+    | les deux barres « // » du début et remplacez les informations.
     */
 
     'testimonials' => [
-        ['name' => '[Prénom et nom de l\'élève]', 'role' => '[Formation suivie ou métier]', 'quote' => '[Témoignage à remplacer : ce que la formation a changé pour cet élève.]', 'photo' => null],
-        ['name' => '[Prénom et nom de l\'élève]', 'role' => '[Formation suivie ou métier]', 'quote' => '[Témoignage à remplacer : un résultat concret obtenu après la formation.]', 'photo' => null],
-        ['name' => '[Prénom et nom de l\'élève]', 'role' => '[Formation suivie ou métier]', 'quote' => '[Témoignage à remplacer : l\'avis de l\'élève sur l\'accompagnement.]', 'photo' => null],
+        // ['type' => 'text', 'name' => 'Afi K.', 'formation' => 'Formation ChatGPT & Claude', 'text' => 'Grâce à cette formation, je rédige mes rapports deux fois plus vite.', 'photo' => 'afi.jpg'],
+        // ['type' => 'screenshot', 'image' => 'whatsapp-kossi.jpg', 'name' => 'Kossi A.', 'formation' => 'Création d\'affiches pro avec l\'IA'],
+        // ['type' => 'video', 'youtube' => 'https://www.youtube.com/watch?v=XXXXXXXXXXX', 'name' => 'Ama D.', 'formation' => 'Création de site vitrine web avec l\'IA'],
     ],
 
     /*
@@ -137,23 +173,25 @@ return [
     |----------------------------------------------------------------------
     | Formateur
     |----------------------------------------------------------------------
-    | Photo : déposez-la dans public/images/formateur.jpg (format carré conseillé).
+    | Photo : public/images/formateur.jpg (carrée, environ 800 × 800 px).
+    | « photo_alt » : description de la photo pour les lecteurs d'écran et Google.
     */
 
     'trainer' => [
         'name' => 'Joseph Ahiankonou',
         'role' => 'Fondateur et formateur principal de Lomé IA School',
         'photo' => 'images/formateur.jpg',
-        'short_bio' => 'Joseph Ahiankonou accompagne ses élèves dans la maîtrise des outils d\'intelligence artificielle et leur apprend à transformer ces compétences en opportunités concrètes. [Une ou deux phrases sur son expérience à compléter.]',
+        'photo_alt' => 'Portrait de Joseph Ahiankonou, fondateur et formateur de Lomé IA School',
+        'short_bio' => 'Expert et consultant en intelligence artificielle, Joseph Ahiankonou forme depuis 2023 étudiants, professionnels et entreprises à utiliser l\'IA pour obtenir des résultats concrets.',
         'bio' => [
-            '[Paragraphe 1 : parcours de Joseph, comment il s\'est formé à l\'intelligence artificielle.]',
-            '[Paragraphe 2 : ses spécialités, ses réalisations et les projets menés pour des clients.]',
-            '[Paragraphe 3 : sa façon d\'enseigner et ce qu\'il souhaite apporter à ses élèves.]',
+            'Passionné de technologie et de digital, Joseph s\'est spécialisé en intelligence artificielle dès l\'obtention de son bac, en se formant en ligne auprès d\'experts en France et aux États-Unis.',
+            'Depuis 2023, l\'IA est son métier au quotidien. Il a formé plus de 1 000 personnes : étudiants, salariés, entrepreneurs, personnes en recherche d\'emploi, entreprises et centres de formation. Ses formations sont pratiques et directement applicables.',
+            'Il accompagne également des entreprises et des porteurs de projets : sites web, applications, automatisations et conseil en IA. Avec Lomé IA School, il rend ces compétences accessibles à tous, avec un accompagnement à vie.',
         ],
         'highlights' => [
-            '[Point fort 1, ex. : nombre d\'années d\'expérience]',
-            '[Point fort 2, ex. : nombre de projets réalisés]',
-            '[Point fort 3, ex. : certification ou distinction]',
+            'Plus de 1 000 personnes formées depuis 2023',
+            'Formé auprès d\'experts en France et aux États-Unis',
+            'Praticien au quotidien : sites, applications et automatisations pour ses clients',
         ],
     ],
 
@@ -170,7 +208,7 @@ return [
             ['title' => 'Pratique avant tout', 'text' => 'Chaque formation est tournée vers des réalisations concrètes et des résultats mesurables.'],
             ['title' => 'Accompagnement', 'text' => 'Personne n\'apprend seul : chaque formation a son groupe privé pour poser ses questions.'],
         ],
-        'founded' => '[Année de création de Lomé IA School]',
+        'founded' => '2023',
     ],
 
     /*
@@ -180,7 +218,7 @@ return [
     */
 
     'consultation' => [
-        'duration' => '[Durée de la consultation, ex. : 20 minutes]',
+        'duration' => '30 minutes',
         'benefits' => [
             'Faire le point sur votre niveau et vos objectifs',
             'Identifier la formation la plus adaptée à votre projet',
@@ -196,8 +234,9 @@ return [
     */
 
     'guarantees' => [
+        ['icon' => 'lock-open', 'title' => 'Accès à vie', 'text' => 'Revoyez la formation quand vous voulez, sans date limite.'],
+        ['icon' => 'lifebuoy', 'title' => 'Accompagnement à vie', 'text' => 'Vos questions ont toujours une réponse, dans le groupe privé ou sur WhatsApp.'],
         ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Votre formation s\'ouvre dès la confirmation du paiement.'],
-        ['icon' => 'chat-bubble-left-right', 'title' => 'Accompagnement en groupe privé', 'text' => 'Posez vos questions dans le groupe réservé aux élèves de la formation.'],
         ['icon' => 'shield-check', 'title' => 'Paiement sécurisé', 'text' => 'Paiement Mobile Money traité par FedaPay.'],
     ],
 
@@ -215,16 +254,18 @@ return [
             ['question' => 'Quand est-ce que j\'accède à ma formation ?', 'answer' => 'Immédiatement. Dès que votre paiement est confirmé, la formation et son groupe privé sont disponibles dans votre espace élève.'],
             ['question' => 'Je suis débutant, puis-je suivre les formations ?', 'answer' => 'Oui. Les formations sont expliquées pas à pas, en français simple. Si vous partez de zéro, nous vous conseillons de commencer par la formation ChatGPT & Claude.'],
             ['question' => 'Puis-je suivre les formations sur mon téléphone ?', 'answer' => 'Oui, le site et les vidéos sont pensés pour le téléphone. Pour certaines formations pratiques (sites web, applications), un ordinateur rend l\'exercice plus confortable.'],
-            ['question' => 'Combien de temps ai-je accès à une formation ?', 'answer' => '[Durée d\'accès à préciser, ex. : accès illimité aux vidéos.]'],
+            ['question' => 'Combien de temps ai-je accès à une formation ?', 'answer' => 'À vie. Une fois achetée, la formation reste dans votre espace élève : vous la revoyez autant que vous voulez. Vous bénéficiez aussi d\'un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],
             ['question' => 'Comment fonctionnent les formations en direct et en présentiel ?', 'answer' => 'Les formations en direct ont lieu sur Google Meet : le lien de chaque session est communiqué aux inscrits. Les formations en présentiel ont lieu à Adidogomé, Lycée moderne 2, à Lomé. Les dates des sessions sont communiquées aux inscrits.'],
             ['question' => 'Comment fonctionne le programme d\'affiliation ?', 'answer' => 'Chaque élève dispose d\'un lien personnel. Pour chaque formation achetée grâce à votre lien, vous gagnez 10 % du prix. Vous pouvez demander le retrait de vos gains par Mobile Money ; chaque retrait est vérifié puis validé par notre équipe.'],
-            ['question' => 'Puis-je être remboursé ?', 'answer' => '[Politique de remboursement à préciser.]'],
+            ['question' => 'Puis-je être remboursé ?', 'answer' => 'Oui, dans les 48 heures qui suivent l\'achat, à condition de ne pas avoir commencé la formation (aucune leçon consultée). Il suffit de nous écrire par e-mail ou sur WhatsApp.'],
+            ['question' => 'Comment réserver la consultation gratuite ?', 'answer' => 'Depuis la page « Consultation gratuite », en nous écrivant sur WhatsApp. La consultation dure 30 minutes et nous répondons du lundi au samedi, de 8 h à 20 h.'],
         ],
         'formation' => [
             ['question' => 'Quand est-ce que j\'accède à la formation ?', 'answer' => 'Immédiatement après la confirmation de votre paiement, depuis votre espace élève.'],
             ['question' => 'Comment payer ?', 'answer' => 'Par Mobile Money (T-Money / Yas ou Flooz / Moov), via la plateforme sécurisée FedaPay.'],
             ['question' => 'Et si j\'ai une question pendant la formation ?', 'answer' => 'Vous la posez dans le groupe privé de la formation, réservé aux élèves inscrits. Vous pouvez aussi nous écrire sur WhatsApp.'],
-            ['question' => 'Combien de temps ai-je accès ?', 'answer' => '[Durée d\'accès à préciser, ex. : accès illimité aux vidéos.]'],
+            ['question' => 'Combien de temps ai-je accès ?', 'answer' => 'À vie, avec un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],
+            ['question' => 'Puis-je être remboursé ?', 'answer' => 'Oui, dans les 48 heures qui suivent l\'achat, si vous n\'avez encore consulté aucune leçon de la formation.'],
             ['question' => 'Ai-je besoin de connaissances particulières ?', 'answer' => 'Non, sauf indication contraire sur la page. Il suffit de savoir utiliser un téléphone ou un ordinateur et d\'avoir une connexion Internet.'],
         ],
     ],
@@ -237,14 +278,18 @@ return [
 
     'legal' => [
         'company_name' => 'Lomé IA School',
-        'legal_form' => '[Forme juridique à préciser, ex. : entreprise individuelle]',
-        'registration' => '[Numéro RCCM à préciser]',
-        'tax_id' => '[Numéro d\'identification fiscale (NIF) à préciser]',
-        'publisher' => 'Joseph Ahiankonou',
+        // Responsable du site (mentions légales).
+        'owner' => [
+            'name' => 'Joseph Ahiankonou',
+            'address' => 'Adidogomé, Lycée moderne 2, Lomé, Togo',
+            'phone' => '+228 72 24 02 31',
+            'email' => 'academyjoseph71@gmail.com',
+        ],
         'host' => 'Hostinger International Ltd., 61 Lordou Vironos Street, 6023 Larnaca, Chypre (https://www.hostinger.fr)',
-        'updated_at' => '[Date de dernière mise à jour]',
-        'refund_policy' => '[Politique de remboursement à préciser.]',
-        'access_duration' => '[Durée d\'accès aux formations à préciser.]',
+        'updated_at' => '24 septembre 2026',
+        'access_duration' => 'L\'accès à la formation est accordé à vie, avec un accompagnement à vie dans le groupe privé de la formation, tant que la plateforme Lomé IA School est en activité.',
+        'refund_policy' => 'Vous pouvez demander le remboursement d\'une formation dans les 48 heures qui suivent son achat, uniquement si elle n\'a pas été commencée, c\'est-à-dire si aucune leçon n\'a été consultée. La demande se fait par e-mail ou sur WhatsApp. Passé ce délai, ou dès qu\'une leçon a été consultée, aucun remboursement n\'est possible.',
+        'data_retention' => 'Vos données personnelles sont conservées 3 ans après votre dernier achat, puis supprimées.',
     ],
 
 ];

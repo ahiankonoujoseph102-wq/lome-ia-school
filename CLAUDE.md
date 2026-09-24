@@ -53,9 +53,12 @@ Plateforme de vente et de suivi de formations en intelligence artificielle, bas�
 
 ## Site vitrine : où se trouve quoi
 
-- **Textes modifiables** (coordonnées, chiffres, témoignages, FAQ, formateur, mentions légales) : `config/site.php`. Les emplacements à remplir sont écrits entre crochets `[...]` et surlignés en doré sur le site.
+- **Textes modifiables** (coordonnées, horaires, chiffres, « accès à vie / accompagnement à vie », témoignages, FAQ, formateur, mentions légales, réseaux sociaux) : `config/site.php`. Les emplacements à remplir sont écrits entre crochets `[...]` et surlignés en doré sur le site (il n'en reste aucun aujourd'hui).
+- **Témoignages** : liste `testimonials` de `config/site.php`, vide pour l'instant ; tant qu'elle est vide, la section est masquée partout. Trois types (exemples commentés dans le fichier) : `text`, `screenshot` (capture WhatsApp) et `video` (YouTube, lecteur chargé au clic). Lecture et filtrage des entrées incomplètes : `App\Support\Testimonials`, liens YouTube : `App\Support\YouTube`.
+- **Réseaux sociaux** : un réseau dont le lien est vide dans `social` est masqué automatiquement.
+- **Chiffres officiels** (fournis par la porteuse du projet) : plus de 1 000 personnes formées, école créée en 2023, horaires du lundi au samedi de 8 h à 20 h, consultation gratuite de 30 minutes. Ne jamais inventer de chiffres, notes ou avis.
 - **Formations** : table `formations` (modèle `App\Models\Formation`), remplie par `database/seeders/FormationSeeder.php` (relançable sans doublon : `php artisan db:seed --class=FormationSeeder`). Catégories et formats : enums `App\Enums\FormationCategory` et `App\Enums\FormationFormat`.
-- **Images** : logo dans `public/images/logo.svg` (ou `.png`), photo du formateur dans `public/images/formateur.jpg`, images des formations dans `public/images/formations/` (nom du fichier à renseigner dans la colonne `image`), photos des témoignages dans `public/images/temoignages/`. Sans image, un visuel en dégradé est dessiné automatiquement.
+- **Images** : logo dans `public/images/logo.svg` (ou `.png`), photo du formateur dans `public/images/formateur.jpg` (800 × 800 px, déjà en place ; texte alternatif `trainer.photo_alt`), images des formations dans `public/images/formations/` (nom du fichier à renseigner dans la colonne `image`), photos des témoignages dans `public/images/temoignages/`. Sans image, un visuel en dégradé est dessiné automatiquement.
 - **Vues** : `resources/views/site/` (pages), `resources/views/components/site/` (composants), mise en page `resources/views/layouts/site.blade.php`.
 - **CSS/JS du site vitrine**, séparés de l'espace membre pour rester légers : `resources/css/site.css` (Tailwind 4, couleurs `night`, `electric`, `gold`) et `resources/js/site.js` (Alpine.js : menu, filtres du catalogue, animations au défilement).
 - **Images de partage** (Open Graph, 1200 × 630) générées en PHP (GD) par `App\Services\OgImageGenerator`, mises en cache dans `storage/framework/cache/og`. Routes `/og/site.png` et `/og/formations/{slug}.png`.
@@ -92,11 +95,13 @@ php artisan migrate
 
 ## État d'avancement (passation)
 
-**Terminé et fusionné dans `main`** : étapes 1 (mise en place), 2 (site vitrine) et 3 (comptes et espace élève), y compris les écrans « Sécurité du compte » au design du site (PR #1, #2, #3). 102 tests verts.
+**Terminé et fusionné dans `main`** : étapes 1 (mise en place), 2 (site vitrine) et 3 (comptes et espace élève), y compris les écrans « Sécurité du compte » au design du site (PR #1, #2, #3).
 
-**Prochaine étape** :
-1. Mise à jour des contenus : remplir les emplacements `[...]` de `config/site.php` (témoignages, chiffres, biographie, horaires, mentions légales…), ajouter logo, photo du formateur et images des formations, et faire valider les programmes et bonus rédigés dans `FormationSeeder`.
-2. Étape 4 : paiement FedaPay et accès automatique (commencer en mode test/sandbox ; les clés vont dans `.env`, jamais dans le code ni dans la conversation pour les clés de production).
+**Terminé sur la branche `claude/update-showcase-site-content-qub9o0`, en attente de validation de l'aperçu (pas encore de pull request)** : mise à jour des contenus du site vitrine. Chiffres réels, horaires, durée de la consultation, biographie et points forts du formateur, photo `formateur.jpg` (l'original a été retiré du dépôt), « Accès à vie » et « Accompagnement à vie » mis en avant (accueil, pages formation, FAQ, CGV), bloc formateur sur l'accueil, témoignages vides et masqués (3 types prévus), pages légales complétées (responsable du site, remboursement sous 48 h si aucune leçon consultée, conservation des données 3 ans après le dernier achat ; ni RCCM ni NIF). 111 tests verts.
+
+**Reste à fournir par la porteuse du projet** : logo, images des formations, vrais témoignages, liens des réseaux sociaux, validation des programmes et bonus de `FormationSeeder`, et réponses sur les affirmations signalées (formats en direct / présentiel annoncés alors que toutes les formations sont « Enregistrée », « une équipe proche de vous », consultation « par téléphone, WhatsApp ou sur place », envoi d'informations sur les nouvelles formations « si vous l'acceptez » sans case à cocher).
+
+**Prochaine étape** : après validation de l'aperçu et fusion, étape 4 : paiement FedaPay et accès automatique (commencer en mode test/sandbox ; les clés vont dans `.env`, jamais dans le code ni dans la conversation pour les clés de production). Le remboursement sous 48 h « si aucune leçon consultée » suppose de suivre les leçons ouvertes (étape 5).
 
 **Décisions prises** :
 - Mot de passe : 8 caractères minimum avec lettres et chiffres en production (`AppServiceProvider`), sans confirmation à l'inscription.

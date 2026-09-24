@@ -2,6 +2,11 @@
     use App\Enums\FormationCategory;
     use App\Enums\FormationFormat;
     use App\Support\Placeholder;
+    use App\Support\Testimonials;
+
+    $testimonials = Testimonials::all();
+    $trainer = config('site.trainer');
+    $lifetime = config('site.lifetime');
 
     $organization = [
         '@context' => 'https://schema.org',
@@ -50,9 +55,9 @@
                 </div>
 
                 <ul class="mt-8 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-slate-400 lg:justify-start" data-reveal style="--reveal-delay: 320ms">
-                    <li class="inline-flex items-center gap-1.5"><flux:icon.check-circle class="size-4 text-gold-400" /> Paiement T-Money et Flooz</li>
-                    <li class="inline-flex items-center gap-1.5"><flux:icon.check-circle class="size-4 text-gold-400" /> Accès immédiat</li>
-                    <li class="inline-flex items-center gap-1.5"><flux:icon.check-circle class="size-4 text-gold-400" /> Groupe privé d'entraide</li>
+                    @foreach (config('site.hero.points') as $point)
+                        <li class="inline-flex items-center gap-1.5"><flux:icon.check-circle class="size-4 text-gold-400" /> {{ $point }}</li>
+                    @endforeach
                 </ul>
             </div>
 
@@ -73,7 +78,7 @@
                             </a>
                         @endforeach
                         <div class="flex items-center justify-between rounded-2xl bg-linear-to-r from-gold-400/15 to-transparent px-4 py-3 text-sm">
-                            <span class="inline-flex items-center gap-2 text-gold-200"><flux:icon.bolt class="size-4" /> Accès dès le paiement confirmé</span>
+                            <span class="inline-flex items-center gap-2 text-gold-200"><flux:icon.lock-open class="size-4" /> Accès à vie et accompagnement à vie</span>
                         </div>
                     </div>
                 </div>
@@ -95,6 +100,36 @@
                 </div>
             @endforeach
         </dl>
+    </section>
+
+    {{-- Accès à vie et accompagnement à vie --}}
+    <section class="section !pb-0">
+        <div class="relative overflow-hidden rounded-[2rem] border border-gold-400/25 bg-linear-to-br from-gold-400/[0.12] via-night-900 to-night-950 p-6 sm:p-10" data-reveal>
+            <div class="pointer-events-none absolute -top-20 -left-16 size-64 rounded-full bg-gold-400/15 blur-3xl"></div>
+            <div class="relative grid items-center gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
+                <div class="text-center lg:text-left">
+                    <span class="eyebrow !border-gold-400/30 !bg-gold-400/10 !text-gold-200">
+                        <flux:icon.sparkles class="size-3.5" /> Inclus dans chaque formation
+                    </span>
+                    <h2 class="mt-4 text-3xl font-bold tracking-tight text-balance text-white sm:text-4xl">{{ $lifetime['title'] }}</h2>
+                    <p class="mt-4 text-slate-300">{{ $lifetime['text'] }}</p>
+                </div>
+                <div>
+                    <ul class="grid gap-4 sm:grid-cols-2">
+                        @foreach ($lifetime['items'] as $item)
+                            <li class="rounded-2xl bg-white/[0.05] p-5 ring-1 ring-gold-400/25">
+                                <span class="grid size-12 place-items-center rounded-2xl bg-gold-400 text-night-950 shadow-lg shadow-gold-500/20">
+                                    <flux:icon :icon="$item['icon']" class="size-6" />
+                                </span>
+                                <h3 class="mt-4 text-xl font-bold text-gold-200">{{ $item['title'] }}</h3>
+                                <p class="mt-2 text-sm leading-relaxed text-slate-300">{{ $item['text'] }}</p>
+                            </li>
+                        @endforeach
+                    </ul>
+                    <p class="mt-4 text-center text-xs text-slate-500 lg:text-left">{{ $lifetime['note'] }}</p>
+                </div>
+            </div>
+        </div>
     </section>
 
     {{-- Pourquoi nous choisir --}}
@@ -207,14 +242,44 @@
         </div>
     </section>
 
-    {{-- Témoignages --}}
+    {{-- Formateur --}}
     <section class="section">
-        <x-site.section-heading
-            eyebrow="Témoignages"
-            title="Ils se sont formés avec nous"
-        />
-        <x-site.testimonials class="mt-12" />
+        <div class="card relative overflow-hidden p-6 sm:p-10" data-reveal>
+            <div class="pointer-events-none absolute -right-24 -bottom-24 size-72 rounded-full bg-electric-600/20 blur-3xl"></div>
+            <div class="relative grid items-center gap-8 md:grid-cols-[240px_1fr] lg:gap-12">
+                <div class="mx-auto w-full max-w-60">
+                    @include('site.partials.trainer-photo', ['size' => 'aspect-square w-full !rounded-3xl'])
+                </div>
+                <div class="text-center md:text-left">
+                    <span class="eyebrow">Votre formateur</span>
+                    <h2 class="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">{{ $trainer['name'] }}</h2>
+                    <p class="mt-1 text-sm font-medium text-electric-300">{{ $trainer['role'] }}</p>
+                    <p class="mt-4 text-slate-300 sm:text-lg">{{ Placeholder::highlight($trainer['short_bio']) }}</p>
+                    <ul class="mt-6 grid gap-3 text-left sm:grid-cols-3">
+                        @foreach ($trainer['highlights'] as $highlight)
+                            <li class="flex items-start gap-2 rounded-2xl bg-white/[0.04] p-3 text-sm text-slate-200 ring-1 ring-white/10">
+                                <flux:icon.check-circle class="mt-0.5 size-4 shrink-0 text-gold-400" /> <span>{{ Placeholder::highlight($highlight) }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                    <a href="{{ route('about') }}" class="btn-ghost mt-6">
+                        Découvrir son parcours <flux:icon.arrow-right class="size-5" />
+                    </a>
+                </div>
+            </div>
+        </div>
     </section>
+
+    {{-- Témoignages (masqués tant qu'il n'y en a aucun) --}}
+    @if ($testimonials)
+        <section class="section !pt-0">
+            <x-site.section-heading
+                eyebrow="Témoignages"
+                title="Ils se sont formés avec nous"
+            />
+            <x-site.testimonials :items="$testimonials" class="mt-12" />
+        </section>
+    @endif
 
     {{-- Affiliation --}}
     <section class="section !pt-0">

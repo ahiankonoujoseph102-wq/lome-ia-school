@@ -1,5 +1,6 @@
 @php
     use App\Support\Placeholder;
+    use App\Support\Testimonials;
     use App\Support\WhatsApp;
     use Illuminate\Support\Str;
 
@@ -7,6 +8,7 @@
     $buyUrl = route('checkout.show', $formation);
     $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur la formation « '.$formation->title.' ».';
     $trainer = config('site.trainer');
+    $testimonials = Testimonials::all();
 
     $course = [
         '@context' => 'https://schema.org',
@@ -73,7 +75,15 @@
                         @endforeach
                     </div>
 
-                    <div class="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center" data-reveal style="--reveal-delay: 200ms">
+                    <ul class="mt-6 flex flex-wrap gap-2" data-reveal style="--reveal-delay: 180ms">
+                        @foreach (config('site.lifetime.items') as $item)
+                            <li class="inline-flex items-center gap-1.5 rounded-full bg-gold-400/15 px-3 py-1.5 text-sm font-semibold text-gold-200 ring-1 ring-gold-400/40">
+                                <flux:icon :icon="$item['icon']" class="size-4" /> {{ $item['title'] }}
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center" data-reveal style="--reveal-delay: 200ms">
                         <div>
                             <p class="text-sm text-slate-400">Prix de la formation</p>
                             <p class="text-4xl font-bold text-gold-300">{{ $formation->formatted_price }}</p>
@@ -96,7 +106,7 @@
 
     {{-- Garanties --}}
     <section class="border-y border-white/10 bg-white/[0.02]">
-        <ul class="mx-auto grid max-w-6xl gap-4 px-4 py-6 sm:grid-cols-3 sm:px-6">
+        <ul class="mx-auto grid max-w-6xl gap-4 px-4 py-6 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
             @foreach (config('site.guarantees') as $guarantee)
                 <li class="flex items-start gap-3" data-reveal style="--reveal-delay: {{ $loop->index * 80 }}ms">
                     <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-gold-400/15 text-gold-300">
@@ -216,11 +226,13 @@
                 </div>
             </section>
 
-            {{-- Témoignages --}}
-            <section>
-                <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Ce qu'en disent les élèves</h2>
-                <x-site.testimonials class="mt-6 md:!grid-cols-1 xl:!grid-cols-3" />
-            </section>
+            {{-- Témoignages (masqués tant qu'il n'y en a aucun) --}}
+            @if ($testimonials)
+                <section>
+                    <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Ce qu'en disent les élèves</h2>
+                    <x-site.testimonials :items="$testimonials" class="mt-6 lg:!columns-2" />
+                </section>
+            @endif
 
             {{-- FAQ --}}
             <section>
@@ -277,7 +289,7 @@
             <div class="mx-auto flex max-w-xl items-center gap-3">
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-xs text-slate-400">{{ $formation->title }}</p>
-                    <p class="text-lg leading-tight font-bold text-gold-300">{{ $formation->formatted_price }}</p>
+                    <p class="text-lg leading-tight font-bold text-gold-300">{{ $formation->formatted_price }} <span class="text-xs font-medium text-gold-200/80">· accès à vie</span></p>
                 </div>
                 <a href="{{ $buyUrl }}" class="btn-gold shrink-0 !px-5 !py-3">Acheter maintenant</a>
             </div>

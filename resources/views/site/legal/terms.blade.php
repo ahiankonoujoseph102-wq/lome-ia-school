@@ -20,7 +20,8 @@
             <p>La commande nécessite la création d'un compte élève. Le paiement s'effectue en ligne par Mobile Money (T-Money / Yas, Flooz / Moov) via la plateforme de paiement sécurisée FedaPay. {{ $legal['company_name'] }} n'a pas accès à vos identifiants Mobile Money.</p>
 
             <h2>4. Accès à la formation</h2>
-            <p>L'accès à la formation et à son groupe privé de discussion est ouvert dès la confirmation du paiement, depuis l'espace élève. Durée d'accès : {{ Placeholder::highlight($legal['access_duration']) }}</p>
+            <p>L'accès à la formation et à son groupe privé de discussion est ouvert dès la confirmation du paiement, depuis l'espace élève.</p>
+            <p><strong class="text-white">Accès à vie et accompagnement à vie.</strong> {{ Placeholder::highlight($legal['access_duration']) }}</p>
             <p>Pour les formations en direct, les liens des sessions sont communiqués aux inscrits. Pour les formations en présentiel, les dates et le lieu sont communiqués aux inscrits.</p>
 
             <h2>5. Usage personnel</h2>
@@ -36,7 +37,7 @@
             <p>Les élèves peuvent recommander les formations grâce à un lien personnel et percevoir une commission de {{ config('site.affiliate.rate') }} % du prix payé pour chaque vente réalisée grâce à ce lien. Les demandes de retrait par Mobile Money sont vérifiées puis validées par {{ $legal['company_name'] }}. Toute fraude (auto-parrainage, fausses commandes…) entraîne l'annulation des commissions concernées.</p>
 
             <h2>9. Contact</h2>
-            <p>Pour toute question : <a href="mailto:{{ $contact['email'] }}">{{ $contact['email'] }}</a> ou {{ $contact['phones'][0] }}.</p>
+            <p>Pour toute question ou demande de remboursement : <a href="mailto:{{ $legal['owner']['email'] }}">{{ $legal['owner']['email'] }}</a> ou {{ $legal['owner']['phone'] }} (appel ou WhatsApp), {{ mb_lcfirst($contact['hours']) }}.</p>
 
             <p class="pt-6 text-sm text-slate-500">Dernière mise à jour : {{ Placeholder::highlight($legal['updated_at']) }}</p>
         </div>
