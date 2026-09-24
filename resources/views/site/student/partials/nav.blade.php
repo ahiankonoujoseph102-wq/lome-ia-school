@@ -4,6 +4,7 @@
         ['route' => 'dashboard', 'active' => 'dashboard', 'label' => 'Accueil', 'icon' => 'home'],
         ['route' => 'student.formations.index', 'active' => 'student.formations.*', 'label' => 'Mes formations', 'icon' => 'academic-cap'],
         ['route' => 'chat.index', 'active' => ['chat.*', 'moderation.*'], 'label' => 'Groupes', 'icon' => 'chat-bubble-left-right', 'badge' => $unreadTotal],
+        ['route' => 'student.sessions.index', 'active' => 'student.sessions.*', 'label' => 'Sessions', 'icon' => 'calendar-days', 'desktop' => true],
         ['route' => 'student.purchases.index', 'active' => 'student.purchases.*', 'label' => 'Achats', 'icon' => 'receipt-percent'],
         ['route' => 'formations.index', 'active' => 'formations.*', 'label' => 'Catalogue', 'icon' => 'squares-2x2', 'desktop' => true],
         ['route' => 'student.profile', 'active' => ['student.profile', 'security.edit', 'student.notifications'], 'label' => 'Profil', 'icon' => 'user-circle'],

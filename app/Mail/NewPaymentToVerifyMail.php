@@ -22,7 +22,7 @@ class NewPaymentToVerifyMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Paiement à vérifier : '.$this->purchase->formatted_amount.' · '.$this->purchase->formation->title,
+            subject: 'Paiement à vérifier : '.$this->purchase->formatted_amount.' · '.$this->purchase->item_label,
         );
     }
 

@@ -34,6 +34,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property bool $chat_push_enabled Notifications sur téléphone des groupes de discussion.
  * @property bool $chat_digest_enabled E-mail récapitulatif des messages non lus (au plus un par jour).
  * @property Carbon|null $chat_digest_sent_at
+ * @property bool $session_email_enabled Rappels des sessions par e-mail.
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -50,8 +51,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Purchase> $purchases
  * @property-read Collection<int, ChatGroupMember> $chatMemberships
  * @property-read Collection<int, PushSubscription> $pushSubscriptions
+ * @property-read Collection<int, LiveSessionRegistration> $liveSessionRegistrations
  */
-#[Fillable(['name', 'email', 'phone', 'password', 'wants_newsletter', 'chat_push_enabled', 'chat_digest_enabled'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'wants_newsletter', 'chat_push_enabled', 'chat_digest_enabled', 'session_email_enabled'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -83,6 +85,7 @@ class User extends Authenticatable implements PasskeyUser
             'chat_push_enabled' => 'boolean',
             'chat_digest_enabled' => 'boolean',
             'chat_digest_sent_at' => 'datetime',
+            'session_email_enabled' => 'boolean',
         ];
     }
 
@@ -128,6 +131,14 @@ class User extends Authenticatable implements PasskeyUser
     public function pushSubscriptions(): HasMany
     {
         return $this->hasMany(PushSubscription::class);
+    }
+
+    /**
+     * @return HasMany<LiveSessionRegistration, $this>
+     */
+    public function liveSessionRegistrations(): HasMany
+    {
+        return $this->hasMany(LiveSessionRegistration::class);
     }
 
     public function isBlocked(): bool

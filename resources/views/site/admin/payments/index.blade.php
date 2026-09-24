@@ -91,7 +91,7 @@
                                     @endif
                                 </div>
                                 @foreach ([
-                                    'Formation' => $purchase->formation->title,
+                                    $purchase->itemHeading() => $purchase->item_label,
                                     'Moyen de paiement' => $purchase->payment_method_name.' · '.$purchase->payment_number,
                                     'Bénéficiaire' => $purchase->payment_beneficiary,
                                     'Pays' => $purchase->paymentMethod()?->countryName() ?? strtoupper((string) $purchase->country),
@@ -103,10 +103,17 @@
                                         <dd class="font-medium text-white">{{ $value }}</dd>
                                     </div>
                                 @endforeach
-                                <div class="flex flex-wrap justify-between gap-x-4 gap-y-0.5 py-2.5">
-                                    <dt class="text-slate-400">Formation commencée</dt>
-                                    <dd class="font-medium text-white">{{ $startedAt[$purchase->id] ? 'Oui, 1re leçon le '.$startedAt[$purchase->id]->translatedFormat('j F à H\hi') : 'Non, aucune leçon consultée' }}</dd>
-                                </div>
+                                @if ($purchase->isSessionSupplement())
+                                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-0.5 py-2.5">
+                                        <dt class="text-slate-400">Type</dt>
+                                        <dd class="font-medium text-gold-200">Supplément d'une session en présentiel (place réservée pendant la vérification)</dd>
+                                    </div>
+                                @else
+                                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-0.5 py-2.5">
+                                        <dt class="text-slate-400">Formation commencée</dt>
+                                        <dd class="font-medium text-white">{{ $startedAt[$purchase->id] ? 'Oui, 1re leçon le '.$startedAt[$purchase->id]->translatedFormat('j F à H\hi') : 'Non, aucune leçon consultée' }}</dd>
+                                    </div>
+                                @endif
                                 <div class="py-2.5">
                                     <dt class="text-slate-400">Identifiant de transaction</dt>
                                     <dd class="mt-1 rounded-xl bg-white/5 px-3 py-2 font-mono text-base font-bold break-all text-white ring-1 ring-white/10">{{ $purchase->transaction_id }}</dd>
@@ -170,8 +177,8 @@
                     @foreach ($recent as $decision)
                         <li class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
                             <div class="min-w-0">
-                                <p class="font-medium text-white">{{ $decision->user?->name ?? 'Compte supprimé' }} · {{ $decision->formation->title }}</p>
-                                <p class="text-xs text-slate-500">{{ $decision->formatted_amount }} · {{ $decision->verified_at?->translatedFormat('j F Y à H\hi') }}@if ($decision->rejection_reason) · {{ $decision->rejection_reason }}@endif · {{ $startedAt[$decision->id] ? 'formation commencée le '.$startedAt[$decision->id]->translatedFormat('j F') : 'aucune leçon consultée' }}</p>
+                                <p class="font-medium text-white">{{ $decision->user?->name ?? 'Compte supprimé' }} · {{ $decision->item_label }}</p>
+                                <p class="text-xs text-slate-500">{{ $decision->formatted_amount }} · {{ $decision->verified_at?->translatedFormat('j F Y à H\hi') }}@if ($decision->rejection_reason) · {{ $decision->rejection_reason }}@endif @unless ($decision->isSessionSupplement()) · {{ $startedAt[$decision->id] ? 'formation commencée le '.$startedAt[$decision->id]->translatedFormat('j F') : 'aucune leçon consultée' }}@endunless</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 {{ $decision->status->badgeClasses() }}">{{ $decision->status->label() }}</span>

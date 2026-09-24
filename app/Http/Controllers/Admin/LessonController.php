@@ -11,6 +11,7 @@ use App\Models\LessonResource;
 use App\Video\VideoProviders;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
@@ -19,12 +20,18 @@ use Illuminate\Support\Str;
  */
 class LessonController extends Controller
 {
-    public function create(CourseModule $module): View
+    public function create(Request $request, CourseModule $module): View
     {
+        // Pré-remplissage possible, par exemple depuis « Ajouter l'enregistrement comme leçon » d'une session.
         return view('site.admin.content.lesson', [
             'formation' => $module->formation->load('modules'),
             'module' => $module,
-            'lesson' => new Lesson(['course_module_id' => $module->id, 'is_published' => true]),
+            'lesson' => new Lesson([
+                'course_module_id' => $module->id,
+                'is_published' => true,
+                'title' => mb_substr($request->string('titre')->toString(), 0, 255) ?: null,
+                'description' => mb_substr($request->string('description')->toString(), 0, 5000) ?: null,
+            ]),
             'providers' => VideoProviders::all(),
         ]);
     }

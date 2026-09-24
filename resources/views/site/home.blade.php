@@ -235,6 +235,21 @@
         </div>
     </section>
 
+    {{-- Prochaines sessions en direct ou à Lomé : affiché seulement s'il y en a (jamais de lien Google Meet ici) --}}
+    @if ($upcomingSessions->isNotEmpty())
+        <section class="section !pt-0" data-test="home-sessions">
+            <x-site.section-heading eyebrow="Agenda" title="Prochaines sessions" subtitle="Sessions ponctuelles réservées aux élèves de la formation concernée. Heures de Lomé (GMT)." />
+            <div class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                @foreach ($upcomingSessions as $session)
+                    <a href="{{ route('formations.show', $session->formation) }}#prochaine-session" class="card card-hover flex flex-col p-5" data-reveal>
+                        <x-site.session-summary :session="$session" show-formation />
+                        <span class="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm font-semibold text-gold-300">Voir la formation <flux:icon.arrow-right class="size-4" /></span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     {{-- Comment ça marche --}}
     <section class="border-y border-white/10 bg-white/[0.02]">
         <div class="section">

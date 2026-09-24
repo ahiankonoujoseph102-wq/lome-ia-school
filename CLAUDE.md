@@ -125,6 +125,20 @@ Plateforme de vente et de suivi de formations en intelligence artificielle, bas�
 - **Tests** : faux diffuseur `Tests\Fakes\RecordingBroadcaster` (à la place de Pusher, peut simuler une panne) et faux envoi `Tests\Fakes\FakePushSender` ; tests dans `tests/Feature/Chat/`.
 - **Clés** (vides dans `.env.example`) : `BROADCAST_CONNECTION=pusher`, `PUSHER_APP_ID`, `PUSHER_APP_KEY`, `PUSHER_APP_SECRET`, `PUSHER_APP_CLUSTER` ; `WEBPUSH_PUBLIC_KEY`, `WEBPUSH_PRIVATE_KEY` (créées avec `php artisan app:webpush-keys`), `WEBPUSH_SUBJECT`.
 
+## Sessions ponctuelles en direct et en présentiel (étape 7)
+
+- **Principe** : toutes les formations sont enregistrées ; l'admin ou un modérateur annonce de temps en temps une session pour une formation. **Aucune session ni date n'est inventée** : tout est créé depuis l'écran « Sessions » (`/admin/sessions`, permission `manage-sessions` = admin et modérateurs).
+- **Modèles** : `LiveSession` (formation, type `App\Enums\SessionFormat` en direct / présentiel, titre et description facultatifs, `starts_at` à l'heure de Lomé, `duration_minutes`, `ends_at` calculé, lien Google Meet vérifié par `App\Support\GoogleMeet`, lieu pré-rempli, places, tarif `App\Enums\SessionPriceType` inclus / supplément en FCFA, annulation, annonce du groupe, rappels envoyés) et `LiveSessionRegistration` (statut `App\Enums\RegistrationStatus` : inscrit, place réservée, liste d'attente, annulée ; paiement, présence). Réglages : `config/live_sessions.php` (lieu par défaut, délai d'annulation 24 h, bouton « Rejoindre » 15 min avant, rappels veille et 1 h, délai de 24 h pour payer un supplément, heure du Bénin).
+- **Qui voit quoi** (`App\Policies\LiveSessionPolicy`) : élèves ayant accès à la formation (accès provisoire compris) et équipe. Le lien Google Meet n'est **jamais** affiché aux non-acheteurs ni sur les pages publiques (page formation « Prochaine session » et accueil « Prochaines sessions » via `x-site.session-summary`, sans lien).
+- **Présentiel** (`App\LiveSessions\SessionRegistrar`) : inscription obligatoire, places limitées (verrou pour ne jamais dépasser), liste d'attente ; une place libérée va automatiquement à la première personne en attente, prévenue par e-mail et notification. Annulation par l'élève jusqu'au délai. Accès retiré ou compte bloqué → inscriptions annulées (écouteur `CancelSessionRegistrationsOnAccessLoss`).
+- **Supplément** : même paiement Mobile Money avec preuve que les formations (`SubmitManualPayment` avec `$session`, `purchases.live_session_id`, mêmes contrôles, même seuil, même page « Paiements à vérifier », reçu dans « Mes achats », libellés `Purchase::item_label` / `itemHeading()`). Place réservée 24 h pour envoyer la preuve, puis gardée pendant la vérification ; confirmée sous le seuil ou à la validation ; libérée si le paiement est refusé ou la preuve pas envoyée à temps. `PurchaseManager` traite un supplément sans toucher à l'accès à la formation. **Étape 8** : aucune commission d'affiliation sur un supplément de session.
+- **Cycle de vie** (`App\LiveSessions\SessionManager`) : à la création, l'annonce (avec le lien Meet pour le direct) est publiée et épinglée dans le groupe de la formation (`App\Chat\MessagePins`) ; une modification importante (date, heure, durée, lieu, lien) met l'annonce à jour et prévient les élèves concernés ; une annulation annule les inscriptions, désépingle l'annonce, publie un message d'annulation, prévient les élèves et liste les suppléments à rembourser (bouton « Marquer comme remboursé »). L'annonce est désépinglée après la session.
+- **Notifications** (`App\LiveSessions\SessionNotifier`, e-mail `App\Mail\LiveSessionMail`, téléphone `App\Jobs\SendPushNotification`) : rappels la veille et 1 h avant (tous les acheteurs pour le direct, les inscrits pour le présentiel), en respectant les réglages de l'élève (« Rappels des sessions par e-mail » `users.session_email_enabled`, notifications sur téléphone) ; changements et annulations toujours envoyés par e-mail. Cron : `php artisan app:process-live-sessions` toutes les 5 minutes (rappels, places réservées expirées, annonces à désépingler).
+- **Heures** (`App\LiveSessions\SessionTime`) : heure de Lomé « (GMT) », même heure au Burkina Faso, heure du Bénin (GMT+1) affichée à côté. Fichier « Ajouter à mon agenda » `App\LiveSessions\CalendarFile` (.ics en UTC).
+- **Élève** : `/mon-espace/sessions` et `/mon-espace/sessions/{id}` (lien Meet, bouton « Rejoindre la session » actif 15 min avant via `…/rejoindre`, inscription, paiement du supplément, agenda), carte « Sessions en direct ou à Lomé » sur l'accueil de l'espace élève et sur la page de la formation achetée.
+- **Après la session** : feuille de présence imprimable avec cases à cocher (`/admin/sessions/{id}/presence`), bouton admin « Ajouter l'enregistrement comme leçon » (formulaire de leçon pré-rempli dans le dernier module de la formation), historique des sessions passées.
+- **Tests** : `tests/Feature/Sessions/`.
+
 ## Commandes utiles
 
 ```bash
@@ -134,6 +148,7 @@ composer test      # Pint + PHPStan + PHPUnit (à lancer avant chaque push)
 php artisan app:send-chat-digests   # e-mail récapitulatif des non-lus (planifié chaque jour)
 php artisan app:webpush-keys        # clés des notifications sur téléphone, à copier dans .env
 php artisan app:expire-chat-media   # suppression des notes vocales et vidéos expirées (planifiée chaque nuit)
+php artisan app:process-live-sessions  # rappels des sessions, places réservées expirées, annonces (toutes les 5 min)
 npm run build      # compilation CSS/JS
 php artisan migrate
 ```
@@ -154,7 +169,9 @@ php artisan migrate
 
 **Terminé et fusionné** : étape 5, lecteur de cours et gestion du contenu des formations (voir « Cours : contenu et lecteur »), avec Google Drive comme deuxième source vidéo (lecteur de secours) et liens Drive comme ressources (PR #7).
 
-**Terminé sur la branche `claude/update-showcase-site-content-qub9o0` (pull request « Étape 6 : groupes de discussion », aperçu validé)** : étape 6, groupes de discussion (voir « Groupes de discussion »), rôle modérateur, notifications sur téléphone et e-mail récapitulatif, site installable, suppression automatique des notes vocales et vidéos après 12 mois, CGV et politique de confidentialité complétées. 281 tests verts. Validés par Joseph : règles par défaut des groupes, conservation des messages, fonctionnement des notifications.
+**Terminé et fusionné** : étape 6, groupes de discussion (PR #8).
+
+**Terminé sur la branche `claude/update-showcase-site-content-qub9o0` (pas encore de pull request : attendre la validation de l'aperçu)** : étape 7, sessions ponctuelles en direct (Google Meet) et en présentiel à Lomé (voir « Sessions ponctuelles »), avec inscription, liste d'attente, supplément payé par Mobile Money, annonce épinglée dans le groupe, rappels, feuille de présence, agenda, CGV complétées. 313 tests verts. À faire valider par Joseph : phrase des CGV « le supplément n'est pas remboursé lorsque l'élève annule lui-même son inscription ».
 
 **Détail de l'étape 4 (PR #6)** : étape 4 modifiée, paiement Mobile Money manuel avec preuve de paiement (voir « Paiements »), écrans élève (paiement, confirmation, Mes achats, reçu), page admin « Paiements à vérifier », textes du site et pages légales (CGV, confidentialité) adaptés au paiement manuel, FedaPay et T-Money retirés des textes. Puis : numéros de téléphone enregistrés sans perdre aucun chiffre (Bénin 01…, Burkina Faso, Afrique de l'Ouest) et commande de réparation. Aperçu validé et fusionné (PR #6).
 
@@ -162,7 +179,7 @@ php artisan migrate
 
 **Reste à fournir par la porteuse du projet** : après la fusion de l'étape 5, le contenu réel des 17 formations (modules, leçons, liens YouTube non répertoriés et/ou Google Drive partagés « Tous les utilisateurs disposant du lien », fichiers) ; logo, images des formations, vrais témoignages, liens des réseaux sociaux. Validés tels quels par la porteuse du projet : « Ce que vous allez apprendre », « Pour qui est cette formation ? », formations mises en avant, « publication en librairie » (ebooks), « même en partant de zéro en programmation » (applications). Bonus éventuels à fournir.
 
-**Prochaine étape** : fusion de la pull request de l'étape 6 ; la porteuse du projet saisit le contenu de ses formations (écran « Contenu des formations ») ; ensuite étape 7 (sessions ponctuelles en direct et en présentiel). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
+**Prochaine étape** : validation de l'aperçu de l'étape 7 puis pull request ; Joseph saisit le contenu de ses formations (écran « Contenu des formations ») ; ensuite étape 8 (affiliation). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 
 **Décisions prises** :
 - Paiement (étape 4) validé par la porteuse du projet : retrait des mentions T-Money/FedaPay, précision « accès immédiat sous 50 000 FCFA, après vérification au-delà », 5 étapes de paiement, motifs de refus proposés à l'admin, question de FAQ « Et si mon paiement n'est pas reçu ? ».
@@ -189,7 +206,7 @@ php artisan migrate
 4. **Paiement Mobile Money manuel avec preuve et accès** : commande, preuve de paiement, contrôles automatiques, accès provisoire ou après validation, page admin de vérification, reçus. ✅ **FedaPay reporté**, à ajouter plus tard sans refaire le reste.
 5. **Lecteur de cours** : modules, leçons, vidéos (fournisseur interchangeable), progression. ✅ Google Drive en deuxième source (lecteur de secours). Le programme affiché sur la page formation et le récapitulatif de commande est généré à partir des vraies leçons publiées, et masqué si la formation n'en a aucune.
 6. **Groupes de discussion** : chat par formation (texte, images, vocaux, vidéos courtes, fichiers), Pusher. ✅ Modération, rôle modérateur, notifications sur téléphone, e-mail récapitulatif, site installable.
-7. **Sessions ponctuelles en direct et en présentiel** : l'admin pourra annoncer une session en direct ou en présentiel pour une formation ; l'annonce apparaît alors sur la page de la formation. Pour le direct, le lien Google Meet est partagé dans le groupe de discussion de la formation, auquel chaque acheteur est ajouté automatiquement après paiement (étape 6). Rappels éventuels.
+7. **Sessions ponctuelles en direct et en présentiel** : l'admin pourra annoncer une session en direct ou en présentiel pour une formation ; l'annonce apparaît alors sur la page de la formation. Pour le direct, le lien Google Meet est partagé dans le groupe de discussion de la formation, auquel chaque acheteur est ajouté automatiquement après paiement (étape 6). Rappels éventuels. ✅ Inscription en présentiel, liste d'attente, supplément, rappels, feuille de présence.
 8. **Affiliation** : liens, suivi des ventes, commissions de 10 %, demandes de retrait Mobile Money.
 9. **Consultation gratuite** : réservation de créneaux.
 10. **Tableau de bord admin** : formations, élèves, ventes, retraits, chat, statistiques.

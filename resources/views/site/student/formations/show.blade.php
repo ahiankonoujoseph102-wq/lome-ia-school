@@ -52,6 +52,14 @@
             </section>
         @endif
 
+        {{-- Prochaines sessions de la formation --}}
+        @foreach ($sessions as $session)
+            <a href="{{ route('student.sessions.show', $session) }}" class="card card-hover mt-6 block p-5" data-test="formation-session">
+                <x-site.session-summary :session="$session" :show-seats="false" />
+                <span class="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-gold-300">{{ $session->isOnline() ? 'Voir la session et le lien' : 'Voir la session et s\'inscrire' }} <flux:icon.arrow-right class="size-4" /></span>
+            </a>
+        @endforeach
+
         {{-- Groupe de discussion de la formation --}}
         <a href="{{ route('chat.show', $formation) }}" class="card card-hover mt-6 flex items-center gap-4 p-5" data-test="group-link">
             <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-emerald-400/15 text-emerald-300">

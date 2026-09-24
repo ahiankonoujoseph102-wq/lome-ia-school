@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int|null $user_id
  * @property int $formation_id
+ * @property int|null $live_session_id Supplément d'une session en présentiel (sinon : achat de la formation).
  * @property int $amount Montant en FCFA.
  * @property string $currency
  * @property PaymentGateway $gateway
@@ -48,6 +49,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read User|null $user
  * @property-read Formation $formation
+ * @property-read LiveSession|null $liveSession
+ * @property-read string $item_label Ce qui a été payé : titre de la formation, ou session et formation.
  * @property-read User|null $verifier
  * @property-read Enrollment|null $enrollment
  * @property-read string $formatted_amount
@@ -61,6 +64,7 @@ class Purchase extends Model
     protected $fillable = [
         'user_id',
         'formation_id',
+        'live_session_id',
         'amount',
         'currency',
         'gateway',
@@ -106,6 +110,46 @@ class Purchase extends Model
     public function formation(): BelongsTo
     {
         return $this->belongsTo(Formation::class);
+    }
+
+    /**
+     * Session en présentiel dont ce paiement règle le supplément.
+     *
+     * @return BelongsTo<LiveSession, $this>
+     */
+    public function liveSession(): BelongsTo
+    {
+        return $this->belongsTo(LiveSession::class);
+    }
+
+    /**
+     * Paiement du supplément d'une session en présentiel (et non achat d'une formation).
+     */
+    public function isSessionSupplement(): bool
+    {
+        return $this->live_session_id !== null;
+    }
+
+    /**
+     * Intitulé de la ligne « Formation » ou « Session » sur les écrans, e-mails et reçus.
+     */
+    public function itemHeading(): string
+    {
+        return $this->isSessionSupplement() ? 'Session' : 'Formation';
+    }
+
+    /**
+     * @return Attribute<string, never>
+     */
+    protected function itemLabel(): Attribute
+    {
+        return Attribute::get(function (): string {
+            $session = $this->liveSession;
+
+            return $session === null
+                ? $this->formation->title
+                : 'Supplément · '.$session->displayTitle().' du '.$session->starts_at->translatedFormat('j F Y').' · '.$this->formation->title;
+        });
     }
 
     /**

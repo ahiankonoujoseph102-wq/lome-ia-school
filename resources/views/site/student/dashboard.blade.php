@@ -40,13 +40,38 @@
             </div>
         </section>
 
-        {{-- Fonctionnalités des prochaines étapes --}}
+        {{-- Sessions ponctuelles des formations de l'élève --}}
+        <section data-test="dashboard-sessions">
+            <div class="flex items-end justify-between gap-3">
+                <h2 class="text-xl font-bold text-white sm:text-2xl">Sessions en direct ou à Lomé</h2>
+                @if ($sessions->isNotEmpty())
+                    <a href="{{ route('student.sessions.index') }}" class="shrink-0 text-sm font-semibold text-electric-300 hover:text-white">Tout voir</a>
+                @endif
+            </div>
+            <div class="mt-5 space-y-4">
+                @forelse ($sessions->take(3) as $session)
+                    @include('site.student.sessions.card', ['registrations' => $sessionRegistrations])
+                @empty
+                    <div class="card flex items-start gap-4 p-5">
+                        <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-electric-500/15 text-electric-300"><flux:icon.calendar-days class="size-5" /></span>
+                        <p class="text-sm text-slate-400">Aucune session prévue pour l'instant. Quand une session en direct ou à Lomé est annoncée pour l'une de vos formations, vous la retrouvez ici et dans le groupe de la formation.</p>
+                    </div>
+                @endforelse
+            </div>
+        </section>
+
+        {{-- Groupes et fonctionnalités des prochaines étapes --}}
         <section>
-            <h2 class="text-xl font-bold text-white sm:text-2xl">Bientôt dans votre espace</h2>
-            <div class="mt-5 grid gap-4 sm:grid-cols-2">
-                <x-site.coming-soon-card icon="calendar-days" title="Sessions en direct ou à Lomé" text="Quand une session ponctuelle est annoncée pour l'une de vos formations, vous la retrouverez ici." />
-                <x-site.coming-soon-card icon="chat-bubble-left-right" title="Mes groupes de discussion" text="Échangez avec le formateur et les autres élèves de chaque formation." />
-                <x-site.coming-soon-card icon="banknotes" title="Mes gains d'affiliation" text="Votre lien personnel, vos ventes et vos gains de 10 %, retirables par Mobile Money." class="sm:col-span-2" />
+            <div class="grid gap-4 sm:grid-cols-2">
+                <a href="{{ route('chat.index') }}" class="card card-hover flex items-center gap-4 p-5">
+                    <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-emerald-400/15 text-emerald-300"><flux:icon.chat-bubble-left-right class="size-5" /></span>
+                    <span class="min-w-0 flex-1">
+                        <span class="block font-semibold text-white">Mes groupes de discussion</span>
+                        <span class="block text-sm text-slate-400">Échangez avec le formateur et les autres élèves.</span>
+                    </span>
+                    <flux:icon.arrow-right class="size-5 text-slate-500" />
+                </a>
+                <x-site.coming-soon-card icon="banknotes" title="Mes gains d'affiliation" text="Votre lien personnel, vos ventes et vos gains de 10 %, retirables par Mobile Money." />
             </div>
         </section>
 

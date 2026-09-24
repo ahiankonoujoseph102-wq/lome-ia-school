@@ -4,9 +4,9 @@
 @section('heading', 'Merci '.$purchase->user?->first_name.', nous avons bien reçu votre preuve de paiement')
 @section('intro')
     @if ($purchase->status === \App\Enums\PurchaseStatus::Provisional)
-        Votre formation est déjà ouverte. Votre paiement sera vérifié sous peu.
+        {{ $purchase->isSessionSupplement() ? 'Votre place pour la session est confirmée.' : 'Votre formation est déjà ouverte.' }} Votre paiement sera vérifié sous peu.
     @else
-        Votre accès sera ouvert dès que votre paiement aura été vérifié, {{ config('site.payments.verification_hours') }}.
+        {{ $purchase->isSessionSupplement() ? 'Votre place est réservée : elle sera confirmée' : 'Votre accès sera ouvert' }} dès que votre paiement aura été vérifié, {{ config('site.payments.verification_hours') }}.
     @endif
 @endsection
 

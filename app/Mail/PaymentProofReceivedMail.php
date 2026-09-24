@@ -22,7 +22,7 @@ class PaymentProofReceivedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Preuve de paiement reçue : '.$this->purchase->formation->title,
+            subject: 'Preuve de paiement reçue : '.$this->purchase->item_label,
         );
     }
 
