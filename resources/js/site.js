@@ -166,6 +166,67 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod }) => ({
     },
 }));
 
+/**
+ * Admin « Contenu des formations » : aperçu de la vidéo pendant la saisie du lien.
+ * Même reconnaissance des liens que côté serveur (App\Support\YouTube, App\Support\GoogleDrive).
+ */
+const videoSources = {
+    youtube: {
+        parse(value) {
+            const input = (value || '').trim();
+
+            if (/^[\w-]{11}$/.test(input)) {
+                return input;
+            }
+
+            const match = input.match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([\w-]{11})(?![\w-])/);
+
+            return match ? match[1] : null;
+        },
+        embed: (id) => `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&playsinline=1`,
+        problem: () => 'Lien YouTube non reconnu pour l\'instant.',
+    },
+    drive: {
+        parse(value) {
+            const input = (value || '').trim();
+
+            if (/^[\w-]{25,}$/.test(input)) {
+                return input;
+            }
+
+            if (!/^https:\/\/(drive|docs|drive\.usercontent)\.google\.com\//.test(input) || videoSources.drive.isFolder(input)) {
+                return null;
+            }
+
+            const match = input.match(/\/file\/(?:u\/\d+\/)?d\/([\w-]{20,})/) || input.match(/[?&]id=([\w-]{20,})/);
+
+            return match ? match[1] : null;
+        },
+        isFolder: (value) => /drive\.google\.com\/(?:drive\/(?:u\/\d+\/)?)?folders\//.test(value),
+        embed: (id) => `https://drive.google.com/file/d/${id}/preview`,
+        problem: (value) => (videoSources.drive.isFolder(value)
+            ? 'C\'est le lien d\'un dossier : ouvrez la vidéo elle-même dans Drive, puis copiez son lien.'
+            : 'Lien Google Drive non reconnu pour l\'instant.'),
+    },
+};
+
+Alpine.data('lessonVideoPreview', (provider, initialUrl) => ({
+    url: initialUrl || '',
+    source: videoSources[provider] ?? videoSources.youtube,
+
+    get videoId() {
+        return this.source.parse(this.url);
+    },
+
+    get embedUrl() {
+        return this.videoId ? this.source.embed(this.videoId) : '';
+    },
+
+    get problem() {
+        return this.source.problem(this.url);
+    },
+}));
+
 window.Alpine = Alpine;
 Alpine.start();
 

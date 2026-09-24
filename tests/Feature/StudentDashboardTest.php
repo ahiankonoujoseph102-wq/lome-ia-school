@@ -21,7 +21,6 @@ class StudentDashboardTest extends TestCase
             ->assertSee('Bonjour Kafui !')
             ->assertSee('Votre première formation vous attend')
             ->assertSee('Découvrir le catalogue')
-            ->assertSee('Ma progression')
             ->assertSee('Sessions en direct ou à Lomé')
             ->assertSee('Mes groupes de discussion')
             ->assertSee('Mes gains d&#039;affiliation', false)

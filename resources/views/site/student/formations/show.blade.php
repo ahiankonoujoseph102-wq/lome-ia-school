@@ -18,28 +18,42 @@
             </div>
         </div>
 
-        <div class="mt-6 grid gap-4 sm:grid-cols-2">
-            <x-site.coming-soon-card icon="play-circle" title="Lecteur de cours" text="Les vidéos et leçons de cette formation apparaîtront ici, avec votre progression." />
-            <x-site.coming-soon-card icon="chat-bubble-left-right" title="Groupe de discussion" text="Le groupe privé de cette formation sera accessible ici." />
-        </div>
+        @if ($curriculum->isEmpty())
+            <div class="card mt-6 p-6 text-center">
+                <span class="mx-auto grid size-14 place-items-center rounded-2xl bg-electric-500/15 text-electric-300"><flux:icon.play-circle class="size-7" /></span>
+                <p class="mt-4 font-semibold text-white">Les leçons arrivent bientôt</p>
+                <p class="mt-1 text-sm text-slate-400">Elles apparaîtront ici dès leur mise en ligne. Vous serez prévenu dans le groupe de la formation.</p>
+            </div>
+        @else
+            {{-- Progression et reprise --}}
+            <section class="card mt-6 p-5 sm:p-6">
+                <div class="flex items-center justify-between gap-3">
+                    <p class="font-semibold text-white">Votre progression</p>
+                    <p class="text-2xl font-bold text-gold-300 tabular-nums">{{ $summary->percent() }} %</p>
+                </div>
+                <div class="mt-3 h-2.5 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow="{{ $summary->percent() }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progression">
+                    <div class="h-full rounded-full bg-linear-to-r from-electric-500 to-gold-400" style="width: {{ $summary->percent() }}%"></div>
+                </div>
+                <p class="mt-2 text-sm text-slate-400">{{ $summary->completed }} {{ $summary->completed > 1 ? 'leçons terminées' : 'leçon terminée' }} sur {{ $summary->total }}</p>
+                @if ($summary->resumeLesson)
+                    <a href="{{ route('lessons.show', [$formation, $summary->resumeLesson]) }}" class="btn-gold mt-5 w-full sm:w-auto" data-test="resume-button">
+                        <flux:icon.play class="size-5" variant="solid" />
+                        {{ $summary->hasStarted() ? 'Reprendre où j\'en étais' : 'Commencer la formation' }}
+                    </a>
+                    <p class="mt-2 truncate text-xs text-slate-500">{{ $summary->resumeLesson->title }}</p>
+                @endif
+            </section>
 
-        @if ($formation->publicCurriculum())
-            <section class="mt-10">
-                <h2 class="text-xl font-bold text-white">Programme</h2>
-                <ol class="mt-4 space-y-3">
-                    @foreach ($formation->publicCurriculum() as $module)
-                        <li class="card p-4 sm:p-5">
-                            <p class="text-xs font-semibold text-gold-300">Module {{ $loop->iteration }}</p>
-                            <p class="mt-1 font-semibold text-white">{{ $module['title'] }}</p>
-                            <ul class="mt-3 space-y-2 text-sm text-slate-300">
-                                @foreach ($module['lessons'] as $lesson)
-                                    <li class="flex items-start gap-2"><flux:icon.play-circle class="mt-0.5 size-4 shrink-0 text-electric-400" /> {{ $lesson }}</li>
-                                @endforeach
-                            </ul>
-                        </li>
-                    @endforeach
-                </ol>
+            <section class="card mt-6 overflow-hidden">
+                <h2 class="px-5 pt-5 text-lg font-bold text-white">Programme</h2>
+                <div class="px-2 pb-3">
+                    @include('site.lessons.partials.curriculum')
+                </div>
             </section>
         @endif
+
+        <div class="mt-6">
+            <x-site.coming-soon-card icon="chat-bubble-left-right" title="Groupe de discussion" text="Le groupe privé de cette formation sera accessible ici." />
+        </div>
     </div>
 </x-layouts::site>

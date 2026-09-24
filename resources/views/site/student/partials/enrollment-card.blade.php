@@ -16,12 +16,17 @@
             @endif
         </div>
         <div class="mt-auto">
+            @php $cardProgress = ($progress ?? [])[$formation->id] ?? null; @endphp
             <div class="flex items-center justify-between text-xs text-slate-400">
                 <span>Progression</span>
-                <span class="text-slate-500">Bientôt disponible</span>
+                @if ($cardProgress && $cardProgress->total > 0)
+                    <span class="font-semibold text-white tabular-nums">{{ $cardProgress->percent() }} %</span>
+                @else
+                    <span class="text-slate-500">Leçons bientôt disponibles</span>
+                @endif
             </div>
             <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
-                <div class="h-full w-0 rounded-full bg-linear-to-r from-electric-500 to-gold-400"></div>
+                <div class="h-full rounded-full bg-linear-to-r from-electric-500 to-gold-400" style="width: {{ $cardProgress?->percent() ?? 0 }}%"></div>
             </div>
         </div>
         <span class="inline-flex items-center gap-1 text-sm font-semibold text-gold-300 transition group-hover:gap-2">

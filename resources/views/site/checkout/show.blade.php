@@ -2,7 +2,8 @@
     $user = auth()->user();
     $activeTab = old('form') === 'login' ? 'login' : 'register';
     $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur le paiement de la formation « '.$formation->title.' ».';
-    $moduleCount = count($formation->publicCurriculum());
+    $moduleCount = $formation->publicCurriculum()->count();
+    $lessonCount = $formation->orderedPublishedLessons()->count();
 @endphp
 
 <x-layouts::site title="Récapitulatif de commande" :whatsapp-message="$whatsappMessage" noindex>
@@ -104,7 +105,7 @@
                                         <li class="flex gap-2"><flux:icon.bolt class="size-4 shrink-0 text-gold-400" /> Accès immédiat dès l'envoi de la preuve de paiement</li>
                                     @endif
                                     @if ($moduleCount > 0)
-                                        <li class="flex gap-2"><flux:icon.play-circle class="size-4 shrink-0 text-gold-400" /> Programme complet en {{ $moduleCount }} {{ $moduleCount > 1 ? 'modules' : 'module' }}</li>
+                                        <li class="flex gap-2"><flux:icon.play-circle class="size-4 shrink-0 text-gold-400" /> Programme : {{ $moduleCount }} {{ $moduleCount > 1 ? 'modules' : 'module' }}, {{ $lessonCount }} {{ $lessonCount > 1 ? 'leçons' : 'leçon' }}</li>
                                     @endif
                                     <li class="flex gap-2"><flux:icon.chat-bubble-left-right class="size-4 shrink-0 text-gold-400" /> Groupe privé d'accompagnement</li>
                                     @foreach ($formation->bonuses as $bonus)

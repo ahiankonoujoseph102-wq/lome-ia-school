@@ -53,12 +53,6 @@ class FormationSeeder extends Seeder
                     'Utiliser l\'IA pour écrire, résumer, traduire et organiser votre travail',
                     'Éviter les erreurs courantes et vérifier les réponses de l\'IA',
                 ],
-                'curriculum' => [
-                    ['title' => 'Découvrir l\'intelligence artificielle', 'lessons' => ['L\'IA expliquée simplement', 'ChatGPT, Claude : quelles différences ?', 'Créer ses comptes et configurer ses outils']],
-                    ['title' => 'L\'art du prompt', 'lessons' => ['La structure d\'un bon prompt', 'Donner du contexte et un rôle à l\'IA', 'Améliorer une réponse par étapes']],
-                    ['title' => 'L\'IA au quotidien', 'lessons' => ['Écrire des messages, e-mails et courriers', 'Résumer et analyser des documents', 'Traduire et reformuler']],
-                    ['title' => 'Aller plus loin', 'lessons' => ['Organiser ses idées et ses projets', 'Limites de l\'IA et bonnes pratiques', 'Choisir sa prochaine compétence IA']],
-                ],
                 'audience' => [
                     'Les débutants complets qui veulent enfin comprendre et utiliser l\'IA',
                     'Les étudiants, salariés et entrepreneurs qui veulent gagner du temps',
@@ -79,12 +73,6 @@ class FormationSeeder extends Seeder
                     'Adapter vos visuels à chaque réseau social et au format imprimé',
                     'Créer une identité visuelle cohérente pour une marque',
                     'Présenter et vendre vos créations à des clients',
-                ],
-                'curriculum' => [
-                    ['title' => 'Les bases du design', 'lessons' => ['Les règles d\'une affiche efficace', 'Couleurs, typographies et contrastes', 'Analyser des affiches qui fonctionnent']],
-                    ['title' => 'Générer des images avec l\'IA', 'lessons' => ['Choisir le bon outil de génération', 'Écrire des prompts visuels précis', 'Retoucher et améliorer une image']],
-                    ['title' => 'Mise en page professionnelle', 'lessons' => ['Assembler image et texte', 'Formats réseaux sociaux et impression', 'Exporter en haute qualité']],
-                    ['title' => 'Projets et clients', 'lessons' => ['Réaliser des affiches de A à Z', 'Constituer un portfolio', 'Fixer ses prix et trouver ses premiers clients']],
                 ],
                 'audience' => [
                     'Les entrepreneurs qui veulent créer eux-mêmes leurs visuels',
@@ -107,12 +95,6 @@ class FormationSeeder extends Seeder
                     'Monter une vidéo rythmée au bon format pour chaque réseau',
                     'Proposer ce service à des commerçants et entreprises',
                 ],
-                'curriculum' => [
-                    ['title' => 'Penser une publicité qui vend', 'lessons' => ['Les ingrédients d\'une bonne publicité', 'Écrire le script avec l\'IA', 'Construire l\'accroche des 3 premières secondes']],
-                    ['title' => 'Créer les images et séquences', 'lessons' => ['Générer des visuels produits', 'Animer des images en vidéo', 'Garder un style cohérent']],
-                    ['title' => 'Voix, musique et montage', 'lessons' => ['Créer une voix off avec l\'IA', 'Choisir la musique', 'Monter et exporter la publicité']],
-                    ['title' => 'Diffuser et vendre', 'lessons' => ['Adapter la vidéo à chaque plateforme', 'Réaliser une publicité complète', 'Vendre ses services de publicité vidéo']],
-                ],
                 'audience' => [
                     'Les commerçants et entrepreneurs qui veulent promouvoir leurs produits',
                     'Les créateurs de contenu et community managers',
@@ -132,12 +114,6 @@ class FormationSeeder extends Seeder
                     'Générer des illustrations et des personnages cohérents d\'une scène à l\'autre',
                     'Créer une narration expressive avec une voix IA',
                     'Monter une vidéo d\'histoire prête à publier',
-                ],
-                'curriculum' => [
-                    ['title' => 'L\'art de raconter', 'lessons' => ['Trouver des idées d\'histoires', 'Structurer un récit', 'Écrire le script avec l\'IA']],
-                    ['title' => 'Illustrer l\'histoire', 'lessons' => ['Créer des personnages cohérents', 'Générer les scènes clés', 'Donner du mouvement aux images']],
-                    ['title' => 'Narration et ambiance', 'lessons' => ['Créer la voix du narrateur', 'Musique et effets sonores', 'Synchroniser voix et images']],
-                    ['title' => 'Montage et publication', 'lessons' => ['Monter la vidéo complète', 'Sous-titres et miniature', 'Publier et fidéliser son audience']],
                 ],
                 'audience' => [
                     'Les créateurs qui veulent lancer une chaîne d\'histoires',
@@ -159,12 +135,6 @@ class FormationSeeder extends Seeder
                     'Ajouter dialogues, voix et musique de film',
                     'Monter et exporter un court-métrage complet',
                 ],
-                'curriculum' => [
-                    ['title' => 'Du scénario au découpage', 'lessons' => ['Trouver une idée de film', 'Écrire le scénario avec l\'IA', 'Découper le film en plans']],
-                    ['title' => 'Personnages et décors', 'lessons' => ['Concevoir ses personnages', 'Créer les décors', 'Garder la cohérence visuelle']],
-                    ['title' => 'Tourner avec l\'IA', 'lessons' => ['Générer les plans vidéo', 'Mouvements de caméra et ambiance', 'Dialogues et voix des personnages']],
-                    ['title' => 'Post-production', 'lessons' => ['Montage et rythme', 'Musique, sons et étalonnage', 'Diffuser son film']],
-                ],
                 'audience' => [
                     'Les passionnés de cinéma qui veulent réaliser leurs propres films',
                     'Les créateurs de contenu qui veulent se démarquer',
@@ -184,12 +154,6 @@ class FormationSeeder extends Seeder
                     'Améliorer la qualité et la cohérence de vos morceaux',
                     'Créer une vidéo avec les paroles pour les réseaux sociaux',
                     'Vendre des chansons personnalisées à vos clients',
-                ],
-                'curriculum' => [
-                    ['title' => 'Écrire les paroles', 'lessons' => ['Recueillir les bonnes informations', 'Écrire des paroles avec l\'IA', 'Couplets, refrain et rimes']],
-                    ['title' => 'Créer la musique', 'lessons' => ['Découvrir les outils de musique IA', 'Choisir le style et l\'ambiance', 'Générer et sélectionner les versions']],
-                    ['title' => 'Finaliser et livrer', 'lessons' => ['Améliorer le rendu final', 'Créer une vidéo avec les paroles', 'Livrer au bon format']],
-                    ['title' => 'En faire un service', 'lessons' => ['Trouver des clients', 'Fixer ses prix', 'Gérer les commandes']],
                 ],
                 'audience' => [
                     'Toute personne qui veut offrir une chanson unique à un proche',
@@ -211,13 +175,6 @@ class FormationSeeder extends Seeder
                     'Réaliser une mise en page professionnelle et une couverture attractive',
                     'Publier votre livre en format papier et numérique, et le diffuser en librairie',
                 ],
-                'curriculum' => [
-                    ['title' => 'Concevoir le livre', 'lessons' => ['Choisir son sujet et son public', 'Construire le plan détaillé', 'Définir son style d\'écriture']],
-                    ['title' => 'Rédiger avec l\'IA', 'lessons' => ['Méthode de rédaction chapitre par chapitre', 'Garder une voix authentique', 'Relecture et correction']],
-                    ['title' => 'Mise en page et couverture', 'lessons' => ['Mise en page professionnelle du manuscrit', 'Créer une couverture qui donne envie', 'Préparer les fichiers d\'impression et numériques']],
-                    ['title' => 'Édition et publication', 'lessons' => ['Les options d\'édition et d\'impression', 'Publier en ligne et en librairie', 'Démarches et droits d\'auteur']],
-                    ['title' => 'Lancer et vendre son livre', 'lessons' => ['Préparer le lancement', 'Promouvoir son livre', 'Transformer son livre en source de revenus']],
-                ],
                 'audience' => [
                     'Les experts, formateurs et entrepreneurs qui veulent publier leur savoir',
                     'Les auteurs qui veulent écrire et publier plus efficacement',
@@ -237,12 +194,6 @@ class FormationSeeder extends Seeder
                     'Construire un site professionnel adapté au mobile',
                     'Acheter un nom de domaine et mettre le site en ligne',
                     'Réaliser et vendre des sites vitrines à des clients',
-                ],
-                'curriculum' => [
-                    ['title' => 'Préparer son site', 'lessons' => ['Les pages essentielles d\'un site vitrine', 'Rédiger les textes avec l\'IA', 'Choisir le style et les couleurs']],
-                    ['title' => 'Construire le site', 'lessons' => ['Créer les pages avec l\'IA', 'Adapter le site au téléphone', 'Ajouter formulaires et liens WhatsApp']],
-                    ['title' => 'Mettre en ligne', 'lessons' => ['Nom de domaine et hébergement', 'Publier le site', 'Être visible sur Google']],
-                    ['title' => 'Vendre des sites', 'lessons' => ['Trouver ses premiers clients', 'Fixer ses tarifs', 'Livrer un site clé en main']],
                 ],
                 'audience' => [
                     'Les entrepreneurs et commerçants qui veulent leur propre site',
@@ -264,12 +215,6 @@ class FormationSeeder extends Seeder
                     'Tester, corriger et sécuriser votre projet',
                     'Déployer un projet web complet en ligne',
                 ],
-                'curriculum' => [
-                    ['title' => 'Comprendre le web dynamique', 'lessons' => ['Site vitrine et site dynamique', 'Serveur, base de données et interface', 'Choisir ses outils']],
-                    ['title' => 'Concevoir le projet', 'lessons' => ['Définir les fonctionnalités', 'Modéliser les données', 'Préparer le cahier des charges avec l\'IA']],
-                    ['title' => 'Développer avec l\'IA', 'lessons' => ['Générer et comprendre le code', 'Comptes utilisateurs et formulaires', 'Tableaux de bord et listes']],
-                    ['title' => 'Qualité et mise en ligne', 'lessons' => ['Tester et corriger les erreurs', 'Les bases de la sécurité', 'Déployer et maintenir le projet']],
-                ],
                 'audience' => [
                     'Les personnes qui savent déjà créer un site vitrine',
                     'Les freelances qui veulent proposer des projets plus ambitieux',
@@ -289,12 +234,6 @@ class FormationSeeder extends Seeder
                     'Construire une application étape par étape avec l\'IA',
                     'Tester, corriger et améliorer votre application',
                     'Livrer une application à un client ou l\'utiliser dans votre activité',
-                ],
-                'curriculum' => [
-                    ['title' => 'De l\'idée au projet', 'lessons' => ['Identifier un besoin réel', 'Écrire le cahier des charges avec l\'IA', 'Choisir ses outils']],
-                    ['title' => 'Construire l\'application', 'lessons' => ['Créer les écrans', 'Gérer les données', 'Ajouter les fonctionnalités clés']],
-                    ['title' => 'Qualité', 'lessons' => ['Tester son application', 'Corriger les erreurs avec l\'IA', 'Améliorer l\'expérience utilisateur']],
-                    ['title' => 'Livrer et valoriser', 'lessons' => ['Mettre l\'application à disposition', 'Former les utilisateurs', 'Vendre ses services de développement']],
                 ],
                 'audience' => [
                     'Les entrepreneurs qui ont une idée d\'application',
@@ -317,12 +256,6 @@ class FormationSeeder extends Seeder
                     'Lancer votre SaaS et le présenter à vos premiers utilisateurs',
                     'Faire évoluer votre produit à partir des retours',
                 ],
-                'curriculum' => [
-                    ['title' => 'L\'idée et le marché', 'lessons' => ['Comprendre le modèle SaaS', 'Trouver une idée rentable', 'Valider l\'idée avant de construire']],
-                    ['title' => 'Construire le produit', 'lessons' => ['Définir le produit minimum viable', 'Développer avec l\'IA', 'Comptes clients et espace membre']],
-                    ['title' => 'Abonnements et paiements', 'lessons' => ['Définir ses offres et ses prix', 'Mettre en place les paiements', 'Gérer les abonnements']],
-                    ['title' => 'Lancer et grandir', 'lessons' => ['Préparer le lancement', 'Trouver ses premiers clients', 'Améliorer le produit en continu']],
-                ],
                 'audience' => [
                     'Les entrepreneurs qui veulent créer un produit numérique rentable',
                     'Les développeurs et créateurs web qui veulent lancer leur propre logiciel',
@@ -343,12 +276,6 @@ class FormationSeeder extends Seeder
                     'Donner des connaissances et des instructions fiables à votre agent',
                     'Connecter votre agent à des outils (WhatsApp, e-mail, documents)',
                     'Proposer la création d\'agents IA comme service aux entreprises',
-                ],
-                'curriculum' => [
-                    ['title' => 'Comprendre les agents IA', 'lessons' => ['Chatbot, assistant, agent : les différences', 'Exemples d\'agents utiles en entreprise', 'Les outils pour créer des agents']],
-                    ['title' => 'Concevoir son agent', 'lessons' => ['Définir le rôle et les limites', 'Rédiger les instructions', 'Ajouter une base de connaissances']],
-                    ['title' => 'Connecter et automatiser', 'lessons' => ['Relier l\'agent à ses outils', 'Déclencher des actions', 'Tester et fiabiliser l\'agent']],
-                    ['title' => 'Déployer et vendre', 'lessons' => ['Mettre l\'agent à disposition', 'Suivre et améliorer ses réponses', 'Vendre des agents IA aux entreprises']],
                 ],
                 'audience' => [
                     'Les entrepreneurs qui veulent automatiser leur relation client',
@@ -371,12 +298,6 @@ class FormationSeeder extends Seeder
                     'Connecter e-mail, tableurs, réseaux sociaux et messageries',
                     'Vendre des automatisations à des entreprises',
                 ],
-                'curriculum' => [
-                    ['title' => 'Penser automatisation', 'lessons' => ['Identifier les tâches répétitives', 'Découvrir les outils d\'automatisation', 'Déclencheurs et actions']],
-                    ['title' => 'Premières automatisations', 'lessons' => ['Automatiser ses e-mails', 'Automatiser un tableur', 'Publier automatiquement sur les réseaux']],
-                    ['title' => 'Ajouter l\'IA', 'lessons' => ['Faire rédiger et résumer par l\'IA', 'Classer et trier des demandes', 'Construire un flux complet']],
-                    ['title' => 'Professionnaliser', 'lessons' => ['Fiabiliser et surveiller ses automatisations', 'Documenter pour un client', 'Vendre ses services d\'automatisation']],
-                ],
                 'audience' => [
                     'Les entrepreneurs et salariés débordés par les tâches répétitives',
                     'Les freelances qui veulent proposer un service à forte valeur',
@@ -396,12 +317,6 @@ class FormationSeeder extends Seeder
                     'Concevoir le programme d\'une formation qui apporte des résultats',
                     'Produire vos supports : vidéos, documents, exercices',
                     'Lancer et vendre votre formation en ligne',
-                ],
-                'curriculum' => [
-                    ['title' => 'Apprendre avec l\'IA', 'lessons' => ['L\'IA comme professeur particulier', 'Construire son plan d\'apprentissage', 'Mémoriser et pratiquer efficacement']],
-                    ['title' => 'Concevoir sa formation', 'lessons' => ['Choisir son sujet et son public', 'Construire le programme', 'Définir les résultats promis']],
-                    ['title' => 'Produire les contenus', 'lessons' => ['Écrire les scripts avec l\'IA', 'Enregistrer ses vidéos', 'Créer exercices et supports']],
-                    ['title' => 'Vendre sa formation', 'lessons' => ['Fixer le prix', 'Créer sa page de vente', 'Trouver ses premiers élèves']],
                 ],
                 'audience' => [
                     'Les personnes qui veulent apprendre de nouvelles compétences rapidement',
@@ -423,12 +338,6 @@ class FormationSeeder extends Seeder
                     'Communiquer avec des clients internationaux avec l\'aide de l\'IA',
                     'Soigner chaque mission et construire une relation durable avec vos clients',
                 ],
-                'curriculum' => [
-                    ['title' => 'Bien démarrer', 'lessons' => ['Comprendre le fonctionnement d\'Upwork', 'Choisir ses services IA', 'Créer son compte']],
-                    ['title' => 'Un profil qui convainc', 'lessons' => ['Titre et présentation', 'Portfolio et exemples de travaux', 'Fixer ses tarifs']],
-                    ['title' => 'Décrocher des missions', 'lessons' => ['Trouver les bonnes offres', 'Rédiger des propositions efficaces', 'Réussir les échanges avec le client']],
-                    ['title' => 'Livrer et évoluer', 'lessons' => ['Livrer un travail de qualité', 'Obtenir de bonnes évaluations', 'Recevoir ses paiements et développer son activité']],
-                ],
                 'audience' => [
                     'Les personnes qui ont une compétence IA et veulent des clients',
                     'Les freelances qui veulent travailler avec l\'international',
@@ -449,12 +358,6 @@ class FormationSeeder extends Seeder
                     'Adapter votre contenu à TikTok, Facebook et YouTube',
                     'Comprendre les différentes façons de monétiser une audience',
                 ],
-                'curriculum' => [
-                    ['title' => 'Stratégie de contenu', 'lessons' => ['Choisir sa thématique', 'Comprendre les algorithmes', 'Planifier son calendrier de publication']],
-                    ['title' => 'Produire avec l\'IA', 'lessons' => ['Trouver des idées et écrire les scripts', 'Créer les visuels et la voix', 'Monter rapidement ses vidéos']],
-                    ['title' => 'Publier sur chaque plateforme', 'lessons' => ['Spécificités de TikTok', 'Spécificités de Facebook', 'Spécificités de YouTube']],
-                    ['title' => 'Grandir et monétiser', 'lessons' => ['Analyser ses statistiques', 'Fidéliser son audience', 'Les sources de revenus d\'un créateur']],
-                ],
                 'audience' => [
                     'Les créateurs de contenu qui veulent publier plus et mieux',
                     'Les entrepreneurs qui veulent développer leur visibilité',
@@ -474,12 +377,6 @@ class FormationSeeder extends Seeder
                     'Mettre en place une boutique en ligne et les paiements',
                     'Rédiger des pages de vente claires et persuasives',
                     'Attirer des acheteurs grâce aux réseaux sociaux',
-                ],
-                'curriculum' => [
-                    ['title' => 'Comprendre les produits digitaux', 'lessons' => ['Pourquoi vendre des produits digitaux', 'Les types de produits qui se vendent', 'Trouver et valider une idée']],
-                    ['title' => 'Créer ses produits', 'lessons' => ['Créer un guide ou un ebook avec l\'IA', 'Créer des modèles et outils', 'Soigner la présentation']],
-                    ['title' => 'La boutique', 'lessons' => ['Choisir sa plateforme de vente', 'Mettre en place les paiements', 'Écrire une page de vente efficace']],
-                    ['title' => 'Vendre', 'lessons' => ['Attirer des acheteurs', 'Utiliser les réseaux sociaux', 'Augmenter ses ventes dans la durée']],
                 ],
                 'audience' => [
                     'Les personnes qui veulent créer un revenu en ligne',

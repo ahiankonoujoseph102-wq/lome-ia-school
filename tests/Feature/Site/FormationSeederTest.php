@@ -31,7 +31,8 @@ class FormationSeederTest extends TestCase
         Formation::all()->each(function (Formation $formation): void {
             $this->assertTrue($formation->hasFormat(FormationFormat::Recorded));
             $this->assertNotEmpty($formation->outcomes);
-            $this->assertNotEmpty($formation->curriculum);
+            // Aucun module ni aucune leçon inventés : le contenu est ajouté par l'admin.
+            $this->assertSame(0, $formation->modules()->count());
         });
     }
 

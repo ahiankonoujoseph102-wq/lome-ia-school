@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Courses\CourseProgress;
 use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Purchase;
@@ -19,7 +20,7 @@ class PaymentController extends Controller
 {
     public function __construct(private PurchaseManager $purchases) {}
 
-    public function index(PaymentAlerts $alerts): View
+    public function index(PaymentAlerts $alerts, CourseProgress $progress): View
     {
         $pending = Purchase::query()
             ->awaitingVerification()
@@ -27,15 +28,23 @@ class PaymentController extends Controller
             ->latest()
             ->get();
 
+        $recent = Purchase::query()
+            ->whereIn('status', [PurchaseStatus::Validated, PurchaseStatus::Rejected])
+            ->with(['user', 'formation'])
+            ->latest('verified_at')
+            ->limit(10)
+            ->get();
+
+        // Première leçon consultée (règle de remboursement : possible seulement si aucune leçon n'a été consultée).
+        $startedAt = $pending->concat($recent)->mapWithKeys(fn (Purchase $purchase): array => [
+            $purchase->id => $purchase->user ? $progress->startedAt($purchase->user, $purchase->formation) : null,
+        ]);
+
         return view('site.admin.payments.index', [
             'purchases' => $pending,
             'alerts' => $pending->mapWithKeys(fn (Purchase $purchase): array => [$purchase->id => $alerts->for($purchase)]),
-            'recent' => Purchase::query()
-                ->whereIn('status', [PurchaseStatus::Validated, PurchaseStatus::Rejected])
-                ->with(['user', 'formation'])
-                ->latest('verified_at')
-                ->limit(10)
-                ->get(),
+            'recent' => $recent,
+            'startedAt' => $startedAt,
         ]);
     }
 
