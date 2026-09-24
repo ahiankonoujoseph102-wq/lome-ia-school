@@ -1,14 +1,11 @@
 import Alpine from 'alpinejs';
 
 /**
- * Apparition douce des éléments marqués data-reveal quand ils entrent à l'écran.
+ * Apparition douce des éléments marqués data-reveal, uniquement pour ceux encore sous l'écran.
+ * Le contenu reste toujours visible : l'animation n'est qu'un effet ajouté juste avant l'arrivée à l'écran.
  */
 function initReveal() {
-    const elements = document.querySelectorAll('[data-reveal]');
-
-    if (!('IntersectionObserver' in window)) {
-        elements.forEach((element) => element.classList.add('is-visible'));
-
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         return;
     }
 
@@ -16,15 +13,22 @@ function initReveal() {
         (entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
+                    entry.target.classList.add('reveal-play');
                     observer.unobserve(entry.target);
                 }
             });
         },
-        { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
+        { rootMargin: '0px 0px 10% 0px' },
     );
 
-    elements.forEach((element) => observer.observe(element));
+    document.querySelectorAll('[data-reveal]').forEach((element) => {
+        // Déjà à l'écran au chargement : aucun effet, pour ne jamais masquer ce qui est lu.
+        if (element.getBoundingClientRect().top < window.innerHeight) {
+            return;
+        }
+
+        observer.observe(element);
+    });
 }
 
 /**
