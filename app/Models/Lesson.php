@@ -24,6 +24,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $description
  * @property string|null $video_provider Clé du fournisseur (config/video.php).
  * @property string|null $video_id
+ * @property string|null $backup_video_provider Fournisseur de la vidéo de secours (ex. « drive »).
+ * @property string|null $backup_video_id
  * @property int|null $duration_seconds
  * @property bool $is_preview Visible par tous les visiteurs.
  * @property bool $is_published
@@ -45,6 +47,8 @@ class Lesson extends Model
         'description',
         'video_provider',
         'video_id',
+        'backup_video_provider',
+        'backup_video_id',
         'duration_seconds',
         'is_preview',
         'is_published',
@@ -115,9 +119,47 @@ class Lesson extends Model
         return VideoProviders::find($this->video_provider);
     }
 
+    public function backupVideoProvider(): ?VideoProvider
+    {
+        return VideoProviders::find($this->backup_video_provider);
+    }
+
     public function embedUrl(): ?string
     {
         return $this->video_id ? $this->videoProvider()?->embedUrl($this->video_id) : null;
+    }
+
+    /**
+     * Lecteur de secours (autre fournisseur), si la leçon en a un.
+     */
+    public function backupEmbedUrl(): ?string
+    {
+        return $this->backup_video_id ? $this->backupVideoProvider()?->embedUrl($this->backup_video_id) : null;
+    }
+
+    /**
+     * Identifiant de la vidéo pour un fournisseur donné (principale ou de secours), ou null.
+     */
+    public function videoIdFor(string $provider): ?string
+    {
+        return match ($provider) {
+            $this->video_provider => $this->video_id,
+            $this->backup_video_provider => $this->backup_video_id,
+            default => null,
+        };
+    }
+
+    /**
+     * Noms des fournisseurs renseignés, principale d'abord (ex. « YouTube + Google Drive »).
+     *
+     * @return list<string>
+     */
+    public function videoSourceNames(): array
+    {
+        return array_values(array_filter([
+            $this->video_id ? $this->videoProvider()?->name() : null,
+            $this->backup_video_id ? $this->backupVideoProvider()?->name() : null,
+        ]));
     }
 
     /**

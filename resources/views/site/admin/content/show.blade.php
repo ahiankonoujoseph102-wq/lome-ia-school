@@ -62,7 +62,7 @@
                                                 <span class="rounded-full bg-gold-400/15 px-2 py-0.5 font-semibold text-gold-200 ring-1 ring-gold-400/30">Aperçu gratuit</span>
                                             @endif
                                             @if ($lesson->video_id)
-                                                <span class="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-slate-300 ring-1 ring-white/10"><flux:icon.play class="size-3" /> Vidéo</span>
+                                                <span class="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-slate-300 ring-1 ring-white/10"><flux:icon.play class="size-3" /> {{ implode(' + secours ', $lesson->videoSourceNames()) }}</span>
                                             @else
                                                 <span class="rounded-full bg-rose-400/10 px-2 py-0.5 text-rose-200 ring-1 ring-rose-400/30">Sans vidéo</span>
                                             @endif

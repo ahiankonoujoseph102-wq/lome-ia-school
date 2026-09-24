@@ -2,7 +2,12 @@
     use App\Http\Requests\LessonRequest;
 
     $isNew = ! $lesson->exists;
-    $videoUrl = old('video_url', $lesson->video_id ? 'https://youtu.be/'.$lesson->video_id : '');
+    $videoLinks = [];
+    foreach ($providers as $key => $videoProvider) {
+        $savedId = $lesson->exists ? $lesson->videoIdFor($key) : null;
+        $videoLinks[$key] = old('videos.'.$key, $savedId ? $videoProvider->shareUrl($savedId) : '');
+    }
+    $primaryVideo = old('primary_video', $lesson->video_provider ?? array_key_first($providers));
     $durationValue = old('duration', $lesson->duration_seconds ? sprintf('%d:%02d', intdiv($lesson->duration_seconds, 60), $lesson->duration_seconds % 60) : '');
 @endphp
 
@@ -39,37 +44,57 @@
                 </select>
             </div>
 
-            {{-- Vidéo avec aperçu immédiat --}}
-            <div class="space-y-2" x-data="lessonVideoPreview(@js($videoUrl))">
-                <label for="video_url" class="field-label">Lien de la vidéo {{ $provider->name() }}</label>
-                <input
-                    id="video_url"
-                    name="video_url"
-                    type="url"
-                    inputmode="url"
-                    x-model="url"
-                    value="{{ $videoUrl }}"
-                    placeholder="https://youtu.be/…"
-                    @class(['field-input', 'field-input-error' => $errors->has('video_url')])
-                >
-                @error('video_url')
-                    <p class="text-sm text-rose-300">{{ $message }}</p>
-                @else
-                    <p class="text-xs text-slate-500">Sur YouTube : « Partager », puis « Copier le lien ». Le lien normal ou court fonctionne.</p>
-                @enderror
+            {{-- Vidéo : un lien par source (YouTube, Google Drive…), avec aperçu immédiat --}}
+            <fieldset class="space-y-4" x-data="{ primary: @js($primaryVideo) }">
+                <legend class="field-label">Vidéo de la leçon</legend>
+                <p class="-mt-2 text-xs text-slate-500">Renseignez une source, ou les deux : la seconde sert de « lecteur de secours » si la première ne fonctionne pas.</p>
 
-                <template x-if="videoId">
-                    <div class="overflow-hidden rounded-2xl bg-black ring-1 ring-white/10">
-                        <div class="aspect-video">
-                            <iframe :src="embedUrl" title="Aperçu de la vidéo" class="size-full" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
+                @foreach ($providers as $key => $videoProvider)
+                    <div class="space-y-2 rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/10" x-data="lessonVideoPreview(@js($key), @js($videoLinks[$key]))">
+                        <div class="flex items-center justify-between gap-3">
+                            <label for="video-{{ $key }}" class="text-sm font-semibold text-white">Lien {{ $videoProvider->name() }}</label>
+                            @if (count($providers) > 1)
+                                <label class="inline-flex items-center gap-2 text-xs text-slate-300">
+                                    <input type="radio" name="primary_video" value="{{ $key }}" x-model="primary" class="size-4 accent-gold-400">
+                                    Lecteur principal
+                                </label>
+                            @endif
                         </div>
-                        <p class="flex items-center gap-1.5 px-3 py-2 text-xs text-emerald-300"><flux:icon.check-circle class="size-4" /> Lien reconnu. Vérifiez que la vidéo se lance.</p>
+                        @if ($videoProvider->adminReminder())
+                            <p class="flex items-start gap-2 rounded-xl bg-gold-400/10 px-3 py-2 text-xs font-medium text-gold-100 ring-1 ring-gold-400/30">
+                                <flux:icon.exclamation-triangle class="mt-0.5 size-4 shrink-0" /> {{ $videoProvider->adminReminder() }}
+                            </p>
+                        @endif
+                        <input
+                            id="video-{{ $key }}"
+                            name="videos[{{ $key }}]"
+                            type="url"
+                            inputmode="url"
+                            x-model="url"
+                            value="{{ $videoLinks[$key] }}"
+                            placeholder="{{ $key === 'drive' ? 'https://drive.google.com/file/d/…' : 'https://youtu.be/…' }}"
+                            @class(['field-input', 'field-input-error' => $errors->has('videos.'.$key)])
+                        >
+                        @error('videos.'.$key)
+                            <p class="text-sm text-rose-300">{{ $message }}</p>
+                        @else
+                            <p class="text-xs text-slate-500">{{ $videoProvider->linkHelp() }}</p>
+                        @enderror
+
+                        <template x-if="videoId">
+                            <div class="overflow-hidden rounded-2xl bg-black ring-1 ring-white/10">
+                                <div class="aspect-video">
+                                    <iframe :src="embedUrl" title="Aperçu de la vidéo {{ $videoProvider->name() }}" class="size-full" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
+                                </div>
+                                <p class="flex items-center gap-1.5 px-3 py-2 text-xs text-emerald-300"><flux:icon.check-circle class="size-4" /> Lien reconnu. Vérifiez que la vidéo se lance.</p>
+                            </div>
+                        </template>
+                        <p x-show="url.trim() !== '' && !videoId" x-cloak class="flex items-center gap-1.5 text-sm text-amber-200">
+                            <flux:icon.exclamation-triangle class="size-4 shrink-0" /> <span x-text="problem"></span>
+                        </p>
                     </div>
-                </template>
-                <p x-show="url.trim() !== '' && !videoId" x-cloak class="flex items-center gap-1.5 text-sm text-amber-200">
-                    <flux:icon.exclamation-triangle class="size-4" /> Lien non reconnu pour l'instant.
-                </p>
-            </div>
+                @endforeach
+            </fieldset>
 
             <x-site.field name="duration" label="Durée (facultatif)" :value="$durationValue" inputmode="numeric" placeholder="Ex. : 12:30" hint="Minutes:secondes, ou seulement les minutes (ex. 12)." />
 
@@ -99,10 +124,14 @@
                     <ul class="space-y-2">
                         @foreach ($lesson->resources as $resource)
                             <li class="flex items-center gap-3 rounded-2xl bg-white/[0.03] px-3 py-2.5 ring-1 ring-white/10">
-                                <flux:icon.document class="size-5 shrink-0 text-electric-300" />
+                                @if ($resource->isLink())
+                                    <flux:icon.link class="size-5 shrink-0 text-gold-300" />
+                                @else
+                                    <flux:icon.document class="size-5 shrink-0 text-electric-300" />
+                                @endif
                                 <span class="min-w-0 flex-1">
                                     <span class="block truncate text-sm text-white">{{ $resource->name }}</span>
-                                    <span class="text-xs text-slate-500">{{ $resource->extension() }} · {{ $resource->formattedSize() }}</span>
+                                    <span class="text-xs text-slate-500">{{ $resource->details() }}</span>
                                 </span>
                                 <button type="submit" form="supprimer-ressource-{{ $resource->id }}" class="grid size-9 shrink-0 place-items-center rounded-full text-slate-400 ring-1 ring-white/15 hover:text-rose-300" aria-label="Supprimer {{ $resource->name }}">
                                     <flux:icon.trash class="size-4" />
@@ -122,6 +151,24 @@
                     <input id="resources" type="file" name="resources[]" multiple accept=".{{ implode(',.', LessonRequest::RESOURCE_MIMES) }}" class="sr-only" @change="names = Array.from($event.target.files).map((file) => file.name)">
                 </div>
                 <p class="text-xs text-slate-500">PDF, images, Word, Excel, PowerPoint, ZIP… {{ intdiv(LessonRequest::RESOURCE_MAX_KB, 1024) }} Mo maximum par fichier. Ils restent privés : seuls les élèves de la formation peuvent les télécharger.</p>
+                <div class="space-y-2 rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/10">
+                    <p class="text-sm font-semibold text-white">Ou ajouter un lien Google Drive</p>
+                    <p class="flex items-start gap-2 rounded-xl bg-gold-400/10 px-3 py-2 text-xs font-medium text-gold-100 ring-1 ring-gold-400/30">
+                        <flux:icon.exclamation-triangle class="mt-0.5 size-4 shrink-0" /> Le fichier Drive doit être partagé en « Tous les utilisateurs disposant du lien ».
+                    </p>
+                    <label for="link_name" class="sr-only">Nom du lien</label>
+                    <input id="link_name" name="link_name" value="{{ old('link_name') }}" placeholder="Nom affiché (ex. Support de cours)" @class(['field-input', 'field-input-error' => $errors->has('link_name')])>
+                    @error('link_name')
+                        <p class="text-sm text-rose-300">{{ $message }}</p>
+                    @enderror
+                    <label for="link_url" class="sr-only">Lien Google Drive</label>
+                    <input id="link_url" name="link_url" type="url" inputmode="url" value="{{ old('link_url') }}" placeholder="https://drive.google.com/…" @class(['field-input', 'field-input-error' => $errors->has('link_url')])>
+                    @error('link_url')
+                        <p class="text-sm text-rose-300">{{ $message }}</p>
+                    @else
+                        <p class="text-xs text-slate-500">Le lien n'est jamais affiché dans la page : seuls les élèves ayant accès peuvent l'ouvrir.</p>
+                    @enderror
+                </div>
                 @foreach ($errors->get('resources*') as $messages)
                     @foreach ((array) $messages as $message)
                         <p class="text-sm text-rose-300">{{ $message }}</p>

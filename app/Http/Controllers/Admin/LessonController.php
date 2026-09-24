@@ -25,7 +25,7 @@ class LessonController extends Controller
             'formation' => $module->formation->load('modules'),
             'module' => $module,
             'lesson' => new Lesson(['course_module_id' => $module->id, 'is_published' => true]),
-            'provider' => VideoProviders::default(),
+            'providers' => VideoProviders::all(),
         ]);
     }
 
@@ -52,7 +52,7 @@ class LessonController extends Controller
             'formation' => $lesson->module->formation,
             'module' => $lesson->module,
             'lesson' => $lesson,
-            'provider' => VideoProviders::default(),
+            'providers' => VideoProviders::all(),
         ]);
     }
 
@@ -100,11 +100,15 @@ class LessonController extends Controller
         $lesson = $resource->lesson;
         $resource->delete();
 
-        return to_route('admin.lessons.edit', $lesson)->withFragment('ressources')->with('status', 'Fichier « '.$resource->name.' » supprimé.');
+        return to_route('admin.lessons.edit', $lesson)->withFragment('ressources')->with('status', ($resource->isLink() ? 'Lien' : 'Fichier').' « '.$resource->name.' » supprimé.');
     }
 
     private function storeResources(LessonRequest $request, Lesson $lesson): void
     {
+        if ($link = $request->linkResource()) {
+            $lesson->resources()->create(['name' => $link['name'], 'url' => $link['url'], 'size' => 0]);
+        }
+
         /** @var list<UploadedFile> $files */
         $files = $request->file('resources', []);
 

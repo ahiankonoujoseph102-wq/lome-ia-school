@@ -46,11 +46,16 @@ class LessonController extends Controller
         $navigation = $formation->orderedPublishedLessons()->when(! $hasAccess, fn ($lessons) => $lessons->where('is_preview', true))->values();
         $index = $navigation->search(fn (Lesson $item): bool => $item->id === $lesson->id);
         $lesson->load(['resources', 'module']);
+        $useBackup = $request->query('lecteur') === 'secours' && $lesson->backupEmbedUrl() !== null;
 
         return view('site.lessons.show', [
             'formation' => $formation,
             'lesson' => $lesson,
             'hasAccess' => $hasAccess,
+            'useBackup' => $useBackup,
+            'playerUrl' => $useBackup ? $lesson->backupEmbedUrl() : $lesson->embedUrl(),
+            // Les liens Google Drive ne sont montrés qu'aux élèves ayant accès, même sur un aperçu gratuit.
+            'resources' => $lesson->resources->filter(fn (LessonResource $resource): bool => $hasAccess || ! $resource->isLink())->values(),
             'tracked' => $tracked,
             'summary' => $tracked ? $this->progress->summary($user, $formation) : null,
             'curriculum' => $formation->publicCurriculum(),
@@ -75,16 +80,30 @@ class LessonController extends Controller
     }
 
     /**
-     * Ressource d'une leçon : mêmes droits que la leçon, jamais mise en cache.
+     * Ressource d'une leçon : fichier (mêmes droits que la leçon, jamais mis en cache) ou lien Google Drive
+     * (réservé aux élèves ayant accès à la formation, ouvert par redirection sans être affiché dans la page).
      */
-    public function download(Formation $formation, Lesson $lesson, LessonResource $resource): StreamedResponse
+    public function download(Request $request, Formation $formation, Lesson $lesson, LessonResource $resource): StreamedResponse|RedirectResponse
     {
         $this->ensureBelongsTo($formation, $lesson);
         abort_unless($resource->lesson_id === $lesson->id, 404);
         Gate::authorize('view', $lesson);
 
+        if ($resource->isLink()) {
+            if (! $request->user()) {
+                return redirect()->guest(route('login'));
+            }
+
+            Gate::authorize('access', $formation);
+
+            return redirect()->away((string) $resource->url)->withHeaders([
+                'Cache-Control' => 'private, no-store, max-age=0',
+                'Referrer-Policy' => 'no-referrer',
+            ]);
+        }
+
         $disk = Storage::disk(LessonResource::DISK);
-        abort_unless($disk->exists($resource->path), 404);
+        abort_unless($resource->path && $disk->exists($resource->path), 404);
 
         return $disk->download($resource->path, $resource->name, [
             'Cache-Control' => 'private, no-store, max-age=0',

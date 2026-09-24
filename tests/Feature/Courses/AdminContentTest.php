@@ -56,13 +56,13 @@ class AdminContentTest extends TestCase
         $module = CourseModule::firstOrFail();
         $this->assertSame('Introduction', $module->title);
 
-        $this->actingAs($this->admin)->get(route('admin.lessons.create', $module))->assertOk()->assertSee('Lien de la vidéo YouTube');
+        $this->actingAs($this->admin)->get(route('admin.lessons.create', $module))->assertOk()->assertSee('Lien YouTube')->assertSee('Lien Google Drive')->assertSee('Tous les utilisateurs disposant du lien');
 
         $this->actingAs($this->admin)->post(route('admin.lessons.store', $module), [
             'course_module_id' => $module->id,
             'title' => 'Bienvenue',
             'description' => 'Présentation du parcours.',
-            'video_url' => 'https://youtu.be/abcDEF12345?si=partage',
+            'videos' => ['youtube' => 'https://youtu.be/abcDEF12345?si=partage'],
             'duration' => '4:30',
             'is_published' => '1',
             'is_preview' => '1',
@@ -94,10 +94,83 @@ class AdminContentTest extends TestCase
         $this->actingAs($this->admin)->post(route('admin.lessons.store', $module), [
             'course_module_id' => $module->id,
             'title' => 'Leçon',
-            'video_url' => 'https://exemple.com/ma-video',
-        ])->assertSessionHasErrors('video_url');
+            'videos' => ['youtube' => 'https://exemple.com/ma-video'],
+        ])->assertSessionHasErrors('videos.youtube');
 
         $this->assertSame(0, Lesson::count());
+    }
+
+    public function test_admin_adds_a_drive_video_with_a_youtube_backup_and_a_drive_resource(): void
+    {
+        $module = CourseModule::factory()->for($this->formation)->create();
+        $driveId = '1AbCdEfGhIjKlMnOpQrStUvWxYz012345';
+
+        $this->actingAs($this->admin)->post(route('admin.lessons.store', $module), [
+            'course_module_id' => $module->id,
+            'title' => 'Leçon sur Drive',
+            'videos' => [
+                'youtube' => 'https://youtu.be/abcDEF12345',
+                'drive' => "https://drive.google.com/file/d/{$driveId}/view?usp=sharing",
+            ],
+            'primary_video' => 'drive',
+            'link_name' => 'Support de cours',
+            'link_url' => 'https://drive.google.com/drive/folders/1ZyXwVuTsRqPoNmLkJiHgFeDcBa98765',
+            'is_published' => '1',
+        ])->assertSessionHasNoErrors();
+
+        $lesson = Lesson::firstOrFail();
+        $this->assertSame('drive', $lesson->video_provider);
+        $this->assertSame($driveId, $lesson->video_id);
+        $this->assertSame('youtube', $lesson->backup_video_provider);
+        $this->assertSame('abcDEF12345', $lesson->backup_video_id);
+        $this->assertSame("https://drive.google.com/file/d/{$driveId}/preview", $lesson->embedUrl());
+        $this->assertSame(['Google Drive', 'YouTube'], $lesson->videoSourceNames());
+
+        $resource = LessonResource::firstOrFail();
+        $this->assertTrue($resource->isLink());
+        $this->assertNull($resource->path);
+
+        // Le formulaire réaffiche les deux liens pour modification.
+        $this->actingAs($this->admin)->get(route('admin.lessons.edit', $lesson))
+            ->assertOk()
+            ->assertSee("https://drive.google.com/file/d/{$driveId}/view", false)
+            ->assertSee('https://youtu.be/abcDEF12345', false)
+            ->assertSee('Support de cours');
+    }
+
+    public function test_drive_folder_or_foreign_links_are_refused(): void
+    {
+        $module = CourseModule::factory()->for($this->formation)->create();
+
+        $this->actingAs($this->admin)->post(route('admin.lessons.store', $module), [
+            'course_module_id' => $module->id,
+            'title' => 'Leçon',
+            'videos' => ['drive' => 'https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz012345'],
+            'link_name' => 'Fichier',
+            'link_url' => 'https://exemple.com/fichier.pdf',
+        ])->assertSessionHasErrors([
+            'videos.drive' => 'C\'est le lien d\'un dossier : ouvrez la vidéo elle-même dans Drive, puis copiez son lien.',
+            'link_url',
+        ]);
+
+        $this->assertSame(0, Lesson::count());
+    }
+
+    public function test_primary_player_falls_back_to_the_only_link_given(): void
+    {
+        $module = CourseModule::factory()->for($this->formation)->create();
+
+        $this->actingAs($this->admin)->post(route('admin.lessons.store', $module), [
+            'course_module_id' => $module->id,
+            'title' => 'Leçon YouTube seule',
+            'videos' => ['youtube' => 'https://youtu.be/abcDEF12345', 'drive' => ''],
+            'primary_video' => 'drive',
+        ])->assertSessionHasNoErrors();
+
+        $lesson = Lesson::firstOrFail();
+        $this->assertSame('youtube', $lesson->video_provider);
+        $this->assertNull($lesson->backup_video_provider);
+        $this->assertNull($lesson->backupEmbedUrl());
     }
 
     public function test_lesson_cannot_be_moved_into_a_module_of_another_formation(): void
@@ -167,7 +240,7 @@ class AdminContentTest extends TestCase
         $this->actingAs($this->admin)->put(route('admin.lessons.update', $lesson), [
             'course_module_id' => $other->id,
             'title' => 'Nouveau titre',
-            'video_url' => 'https://www.youtube.com/watch?v=ZYX98765432',
+            'videos' => ['youtube' => 'https://www.youtube.com/watch?v=ZYX98765432'],
             'duration' => '12',
         ])->assertRedirect(route('admin.lessons.edit', $lesson));
 

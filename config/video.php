@@ -1,5 +1,6 @@
 <?php
 
+use App\Video\GoogleDriveVideoProvider;
 use App\Video\YouTubeVideoProvider;
 
 /*
@@ -7,8 +8,9 @@ use App\Video\YouTubeVideoProvider;
 | Fournisseur vidéo des leçons
 |--------------------------------------------------------------------------
 |
-| Les leçons enregistrent le fournisseur de leur vidéo : changer ici le
-| fournisseur par défaut n'affecte que les nouvelles leçons. Pour ajouter
+| Chaque leçon enregistre le fournisseur de sa vidéo principale et, si
+| besoin, de sa vidéo de secours (ex. YouTube + Google Drive). L'ordre de
+| « providers » est celui des champs de l'écran admin. Pour ajouter
 | Bunny.net plus tard : une classe qui implémente App\Contracts\VideoProvider,
 | déclarée dans « providers », puis VIDEO_PROVIDER=bunny dans .env.
 |
@@ -20,6 +22,7 @@ return [
 
     'providers' => [
         'youtube' => YouTubeVideoProvider::class,
+        'drive' => GoogleDriveVideoProvider::class,
     ],
 
 ];

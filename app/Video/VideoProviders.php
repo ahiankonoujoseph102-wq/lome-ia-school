@@ -15,6 +15,22 @@ class VideoProviders
         return self::get((string) config('video.default', 'youtube'));
     }
 
+    /**
+     * Tous les fournisseurs déclarés, dans l'ordre de la configuration.
+     *
+     * @return array<string, VideoProvider>
+     */
+    public static function all(): array
+    {
+        $providers = [];
+
+        foreach (array_keys((array) config('video.providers', [])) as $key) {
+            $providers[(string) $key] = self::get((string) $key);
+        }
+
+        return $providers;
+    }
+
     public static function get(string $key): VideoProvider
     {
         $class = config("video.providers.{$key}");

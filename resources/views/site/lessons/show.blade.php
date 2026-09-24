@@ -11,10 +11,10 @@
 
         {{-- Vidéo : pleine largeur sur téléphone, plein écran autorisé --}}
         <div class="-mx-4 mt-3 overflow-hidden bg-black sm:mx-0 sm:rounded-3xl sm:ring-1 sm:ring-white/10">
-            @if ($lesson->embedUrl())
+            @if ($playerUrl)
                 <div class="aspect-video">
                     <iframe
-                        src="{{ $lesson->embedUrl() }}"
+                        src="{{ $playerUrl }}"
                         title="Vidéo : {{ $lesson->title }}"
                         class="size-full"
                         allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -28,6 +28,24 @@
                 </div>
             @endif
         </div>
+
+        {{-- Lecteur de secours : autre source de la même vidéo (ex. Google Drive si YouTube ne fonctionne pas) --}}
+        @if ($lesson->backupEmbedUrl())
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span class="text-slate-400">
+                    Lecteur {{ $useBackup ? 'de secours' : 'principal' }} : {{ ($useBackup ? $lesson->backupVideoProvider() : $lesson->videoProvider())?->name() }}
+                </span>
+                @if ($useBackup)
+                    <a href="{{ route('lessons.show', [$formation, $lesson]) }}" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold text-electric-200 ring-1 ring-white/15 hover:bg-white/10">
+                        <flux:icon.arrow-path class="size-4" /> Revenir au lecteur principal
+                    </a>
+                @else
+                    <a href="{{ route('lessons.show', [$formation, $lesson]) }}?lecteur=secours" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold text-gold-200 ring-1 ring-gold-400/40 hover:bg-gold-400/10" data-test="backup-player">
+                        <flux:icon.arrow-path class="size-4" /> La vidéo ne se lance pas ? Lecteur de secours
+                    </a>
+                @endif
+            </div>
+        @endif
 
         <div class="mt-5">
             <p class="text-xs font-semibold text-electric-300">
@@ -95,19 +113,23 @@
             </section>
         @endif
 
-        @if ($lesson->resources->isNotEmpty())
+        @if ($resources->isNotEmpty())
             <section class="card mt-6 p-5">
                 <h2 class="font-semibold text-white">Fichiers à télécharger</h2>
                 <ul class="mt-3 space-y-2">
-                    @foreach ($lesson->resources as $resource)
+                    @foreach ($resources as $resource)
                         <li>
-                            <a href="{{ route('lessons.resources.download', [$formation, $lesson, $resource]) }}" class="flex items-center gap-3 rounded-2xl bg-white/[0.04] px-3 py-3 ring-1 ring-white/10 hover:bg-white/[0.08]">
+                            <a href="{{ route('lessons.resources.download', [$formation, $lesson, $resource]) }}" @if ($resource->isLink()) target="_blank" rel="noopener noreferrer" @endif class="flex items-center gap-3 rounded-2xl bg-white/[0.04] px-3 py-3 ring-1 ring-white/10 hover:bg-white/[0.08]">
                                 <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-[10px] font-bold text-electric-200">{{ $resource->extension() }}</span>
                                 <span class="min-w-0 flex-1">
                                     <span class="block truncate text-sm font-medium text-white">{{ $resource->name }}</span>
-                                    <span class="text-xs text-slate-500">{{ $resource->formattedSize() }}</span>
+                                    <span class="text-xs text-slate-500">{{ $resource->details() }}</span>
                                 </span>
-                                <flux:icon.arrow-down-tray class="size-5 shrink-0 text-gold-300" />
+                                @if ($resource->isLink())
+                                    <flux:icon.arrow-top-right-on-square class="size-5 shrink-0 text-gold-300" />
+                                @else
+                                    <flux:icon.arrow-down-tray class="size-5 shrink-0 text-gold-300" />
+                                @endif
                             </a>
                         </li>
                     @endforeach

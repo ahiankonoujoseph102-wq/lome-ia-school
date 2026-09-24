@@ -25,6 +25,26 @@ class YouTubeVideoProvider implements VideoProvider
         return YouTube::id($input);
     }
 
+    public function invalidLinkMessage(string $input): string
+    {
+        return 'Ce lien YouTube n\'est pas reconnu. Sur YouTube : « Partager », puis « Copier le lien ».';
+    }
+
+    public function linkHelp(): string
+    {
+        return 'Sur YouTube : « Partager », puis « Copier le lien ». Le lien normal ou court fonctionne. Vidéo en « non répertoriée ».';
+    }
+
+    public function adminReminder(): ?string
+    {
+        return null;
+    }
+
+    public function shareUrl(string $videoId): string
+    {
+        return 'https://youtu.be/'.$videoId;
+    }
+
     /**
      * rel=0 : suggestions limitées à la même chaîne ; iv_load_policy=3 : pas d'annotations ;
      * playsinline=1 : lecture dans la page sur iPhone ; fs=1 : plein écran autorisé.

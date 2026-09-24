@@ -141,6 +141,61 @@ class CoursePlayerTest extends TestCase
         $this->actingAs($this->student())->get(route('lessons.resources.download', [$this->formation, $this->second, $resource]))->assertNotFound();
     }
 
+    public function test_student_can_switch_to_the_backup_player(): void
+    {
+        $driveId = '1AbCdEfGhIjKlMnOpQrStUvWxYz012345';
+        $this->first->update(['backup_video_provider' => 'drive', 'backup_video_id' => $driveId]);
+        $student = $this->student();
+
+        $this->actingAs($student)->get(route('lessons.show', [$this->formation, $this->first]))
+            ->assertOk()
+            ->assertSee('src="https://www.youtube-nocookie.com/embed/abcDEF12345', false)
+            ->assertSee('Lecteur de secours')
+            ->assertSee(route('lessons.show', [$this->formation, $this->first]).'?lecteur=secours', false);
+
+        $this->actingAs($student)->get(route('lessons.show', [$this->formation, $this->first]).'?lecteur=secours')
+            ->assertOk()
+            ->assertSee('src="https://drive.google.com/file/d/'.$driveId.'/preview"', false)
+            ->assertDontSee('src="https://www.youtube-nocookie.com', false)
+            ->assertSee('Revenir au lecteur principal');
+
+        // Sans lecteur de secours, le paramètre est ignoré.
+        $this->actingAs($student)->get(route('lessons.show', [$this->formation, $this->second]).'?lecteur=secours')
+            ->assertOk()
+            ->assertDontSee('Lecteur de secours');
+    }
+
+    public function test_backup_player_is_protected_like_the_lesson(): void
+    {
+        $this->first->update(['backup_video_provider' => 'drive', 'backup_video_id' => '1AbCdEfGhIjKlMnOpQrStUvWxYz012345']);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('lessons.show', [$this->formation, $this->first]).'?lecteur=secours')
+            ->assertForbidden();
+    }
+
+    public function test_drive_resources_are_only_shown_and_opened_for_students_with_access(): void
+    {
+        $driveUrl = 'https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz012345/view?usp=sharing';
+        $link = LessonResource::create(['lesson_id' => $this->preview->id, 'name' => 'Support de cours Drive', 'url' => $driveUrl, 'size' => 0]);
+        $url = route('lessons.resources.download', [$this->formation, $this->preview, $link]);
+
+        // Aperçu gratuit : la leçon est visible, mais pas le lien Drive.
+        $this->get(route('lessons.show', [$this->formation, $this->preview]))
+            ->assertOk()
+            ->assertDontSee('Support de cours Drive')
+            ->assertDontSee($driveUrl, false);
+        $this->get($url)->assertRedirect(route('login'));
+        $this->actingAs(User::factory()->create())->get($url)->assertForbidden();
+
+        $student = $this->student();
+        $this->actingAs($student)->get(route('lessons.show', [$this->formation, $this->preview]))
+            ->assertOk()
+            ->assertSee('Support de cours Drive')
+            ->assertDontSee($driveUrl, false);
+        $this->actingAs($student)->get($url)->assertRedirect($driveUrl);
+    }
+
     public function test_first_view_is_recorded_once_and_progress_is_tracked(): void
     {
         $student = $this->student();
