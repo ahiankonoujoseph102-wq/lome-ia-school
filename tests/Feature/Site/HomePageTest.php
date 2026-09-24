@@ -27,7 +27,7 @@ class HomePageTest extends TestCase
             ->assertSee(route('formations.show', $featured))
             ->assertDontSee('Formation non mise en avant')
             ->assertDontSee('Formation désactivée')
-            ->assertSee('Gagnez 10 % en recommandant nos formations');
+            ->assertSee('Recommandez nos formations, recevez 10 % de chaque achat validé');
     }
 
     public function test_home_page_has_seo_and_sharing_tags(): void

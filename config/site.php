@@ -188,18 +188,20 @@ return [
 
     /*
     |----------------------------------------------------------------------
-    | Programme d'affiliation
+    | Programme d'affiliation (textes de l'accueil)
     |----------------------------------------------------------------------
+    | Les règles (10 %, 30 jours, 7 jours, minimum de retrait) se règlent dans
+    | config/affiliate.php : si vous les changez, adaptez aussi ces textes et
+    | la question de la FAQ sur l'affiliation. Aucune promesse de gains.
     */
 
     'affiliate' => [
-        'rate' => 10,
-        'title' => 'Gagnez 10 % en recommandant nos formations',
-        'text' => 'Chaque élève reçoit un lien de parrainage personnel. Partagez-le sur WhatsApp, Facebook ou TikTok : pour chaque formation achetée grâce à votre lien, vous gagnez 10 % du prix, retirables par Mobile Money.',
+        'title' => 'Recommandez nos formations, recevez 10 % de chaque achat validé',
+        'text' => 'Tout inscrit peut activer son espace affilié, même sans avoir acheté. Partagez vos liens sur WhatsApp, Facebook ou TikTok : pour chaque achat validé passé par votre lien, vous recevez une commission de 10 % du prix payé, retirable par Mobile Money.',
         'points' => [
-            'Un lien personnel disponible dans votre espace élève',
-            '10 % sur chaque vente réalisée grâce à votre lien',
-            'Retrait de vos gains par Mobile Money',
+            'Un lien vers le site et un lien pour chaque formation',
+            '10 % du prix payé sur chaque achat validé passé par votre lien',
+            'Retrait par Mobile Money à partir de 2 000 FCFA',
         ],
     ],
 
@@ -380,7 +382,7 @@ return [
             ['question' => 'Puis-je suivre les formations sur mon téléphone ?', 'answer' => 'Oui, le site et les vidéos sont pensés pour le téléphone. Pour certaines formations pratiques (sites web, applications), un ordinateur rend l\'exercice plus confortable.'],
             ['question' => 'Combien de temps ai-je accès à une formation ?', 'answer' => 'À vie. Une fois achetée, la formation reste dans votre espace élève : vous la revoyez autant que vous voulez. Vous bénéficiez aussi d\'un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],
             ['question' => 'Y a-t-il des formations en direct ou en présentiel ?', 'answer' => 'Toutes nos formations sont enregistrées : vous les suivez à votre rythme. De temps en temps, une formation est aussi proposée en direct sur Google Meet ou en présentiel à Lomé : ces sessions ponctuelles sont annoncées sur le site au moment où elles sont organisées.'],
-            ['question' => 'Comment fonctionne le programme d\'affiliation ?', 'answer' => 'Chaque élève dispose d\'un lien personnel. Pour chaque formation achetée grâce à votre lien, vous gagnez 10 % du prix. Vous pouvez demander le retrait de vos gains par Mobile Money ; chaque retrait est vérifié puis validé par notre équipe.'],
+            ['question' => 'Comment fonctionne le programme d\'affiliation ?', 'answer' => 'Tout inscrit peut activer son espace affilié, même sans avoir acheté. Vous partagez vos liens ; pour chaque achat validé passé par l\'un d\'eux dans les 30 jours qui suivent le clic, vous recevez 10 % du prix payé. La commission devient disponible 7 jours après la validation du paiement, et vous la retirez par Mobile Money à partir de 2 000 FCFA (frais d\'envoi déduits). Chaque retrait est vérifié puis payé par notre équipe.'],
             ['question' => 'Et si mon paiement n\'est pas reçu ?', 'answer' => 'Chaque paiement est vérifié par notre équipe. Si le paiement n\'est pas reçu sur notre compte, l\'accès provisoire est retiré et vous êtes prévenu par e-mail, avec le motif.'],
             ['question' => 'Puis-je être remboursé ?', 'answer' => 'Oui, dans les 48 heures qui suivent l\'achat, à condition de ne pas avoir commencé la formation (aucune leçon consultée). Il suffit de nous écrire par e-mail ou sur WhatsApp.'],
             ['question' => 'Comment se passe la consultation gratuite ?', 'answer' => 'Elle se réserve depuis la page « Consultation gratuite » du site et se déroule en direct en ligne, par appel vidéo. Elle dure 30 minutes, du lundi au samedi, entre 8 h et 20 h.'],

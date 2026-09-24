@@ -68,6 +68,16 @@
                             </ul>
                         @endif
 
+                        @if ($purchase->affiliate)
+                            <div class="space-y-2 rounded-2xl bg-electric-500/10 p-4 ring-1 ring-electric-400/30" data-test="affiliate-purchase">
+                                <p class="flex items-start gap-2 text-sm text-electric-100">
+                                    <flux:icon.link class="mt-0.5 size-4 shrink-0" />
+                                    <span>Achat venu du lien de l'affilié <strong class="text-white">{{ $purchase->affiliate->user->name }}</strong> (code {{ $purchase->affiliate->code }}). Commission de {{ config('affiliate.rate') }} % créée seulement si vous validez : {{ \App\Support\Money::fcfa(intdiv($purchase->amount * (int) config('affiliate.rate'), 100)) }}.</span>
+                                </p>
+                                @include('site.partials.alert-list', ['alerts' => $affiliateAlerts[$purchase->id]])
+                            </div>
+                        @endif
+
                         <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                             {{-- Capture en grand --}}
                             <a href="{{ route('student.purchases.proof', $purchase) }}" target="_blank" rel="noopener" class="group block overflow-hidden rounded-2xl bg-night-950 ring-1 ring-white/10">

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Affiliates\ReferralTracker;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
@@ -32,12 +33,21 @@ class CreateNewUser implements CreatesNewUsers
             'email.unique' => 'Un compte existe déjà avec cette adresse e-mail. Connectez-vous.',
         ])->validate();
 
-        return User::create([
+        $user = User::create([
             'name' => trim((string) $validated['name']),
             'email' => strtolower((string) $validated['email']),
             'phone' => $validated['phone'],
             'password' => $validated['password'],
             'wants_newsletter' => (bool) ($validated['wants_newsletter'] ?? false),
         ]);
+
+        // Inscription arrivée par un lien d'affiliation (statistique « inscriptions » de l'affilié).
+        $referrer = app(ReferralTracker::class)->current(request());
+
+        if ($referrer !== null) {
+            $user->forceFill(['referred_by_affiliate_id' => $referrer->id])->save();
+        }
+
+        return $user;
     }
 }

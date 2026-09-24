@@ -19,6 +19,7 @@ Artisan::command('inspire', function () {
 | - E-mail récapitulatif des messages non lus : une fois par jour.
 | - Notes vocales et vidéos des groupes : supprimées chaque nuit après la durée de conservation.
 | - Sessions : rappels (veille et 1 h avant), places réservées expirées, annonces désépinglées (toutes les 5 min).
+| - Affiliation : commissions devenues disponibles après le délai prévu (toutes les heures).
 |
 */
 
@@ -38,4 +39,8 @@ Schedule::command('app:expire-chat-media')
 
 Schedule::command('app:process-live-sessions')
     ->everyFiveMinutes()
+    ->withoutOverlapping();
+
+Schedule::command('app:release-affiliate-commissions')
+    ->hourly()
     ->withoutOverlapping();

@@ -62,8 +62,19 @@
             <h2>8. Remboursement</h2>
             <p>{{ Placeholder::highlight($legal['refund_policy']) }}</p>
 
-            <h2>9. Programme d'affiliation</h2>
-            <p>Les élèves peuvent recommander les formations grâce à un lien personnel et percevoir une commission de {{ config('site.affiliate.rate') }} % du prix payé pour chaque vente réalisée grâce à ce lien. Les demandes de retrait par Mobile Money sont vérifiées puis validées par {{ $legal['company_name'] }}. Toute fraude (auto-parrainage, fausses commandes…) entraîne l'annulation des commissions concernées.</p>
+            <h2 id="affiliation">9. Programme d'affiliation</h2>
+            <p>Toute personne inscrite sur le site peut devenir affiliée, même sans avoir acheté de formation, en activant son espace affilié et en acceptant les présentes conditions. L'affilié reçoit un lien vers le site et un lien pour chaque formation.</p>
+            <ul>
+                <li><strong class="text-white">Commission</strong> : {{ config('affiliate.rate') }} % du prix payé, sur chaque achat validé passé par le lien de l'affilié : formations et suppléments de sessions en présentiel.</li>
+                <li><strong class="text-white">Attribution</strong> : un clic sur un lien reste valable {{ config('affiliate.cookie_days') }} jours. Si la personne clique ensuite sur le lien d'un autre affilié, c'est le dernier lien cliqué qui compte. Le clic est mémorisé dans le navigateur de la personne (voir la politique de confidentialité).</li>
+                <li><strong class="text-white">Pas d'auto-parrainage</strong> : aucune commission n'est versée sur les propres achats de l'affilié.</li>
+                <li><strong class="text-white">Création de la commission</strong> : uniquement lorsque {{ $legal['company_name'] }} valide le paiement, jamais pendant un accès provisoire.</li>
+                <li><strong class="text-white">Disponibilité</strong> : la commission devient disponible {{ config('affiliate.availability_days') }} jours après la validation du paiement. Elle est annulée si l'achat est refusé ou remboursé avant d'être versée. Si l'achat est remboursé après le versement de la commission, le montant est déduit des prochaines commissions ; le solde de l'affilié peut alors devenir négatif.</li>
+                <li><strong class="text-white">Retraits</strong> : par Mobile Money, sur le compte indiqué par l'affilié dans ses coordonnées de retrait (pays, opérateur, numéro, nom du titulaire), à partir de {{ \App\Support\Money::fcfa((int) config('affiliate.min_withdrawal')) }} de solde, une seule demande en cours à la fois. Chaque demande est vérifiée puis payée manuellement par {{ $legal['company_name'] }}. Les frais d'envoi Mobile Money sont déduits du montant retiré ; le montant reçu est indiqué dans l'historique des retraits. Une demande refusée est motivée et son montant revient dans le solde.</li>
+                <li><strong class="text-white">Confidentialité des acheteurs</strong> : l'affilié voit ses clics, ses inscriptions, ses ventes et ses commissions, mais jamais le nom, le numéro ni l'adresse e-mail des acheteurs.</li>
+                <li><strong class="text-white">Fraude</strong> : toute fraude (auto-parrainage, faux comptes, fausses commandes, envois massifs non sollicités, publicité dans les groupes de discussion) entraîne l'annulation des commissions concernées et peut entraîner la suspension du compte affilié. Un affilié suspendu ne peut plus recevoir de nouvelles commissions ni demander de retrait.</li>
+                <li><strong class="text-white">Aucun gain garanti</strong> : les commissions dépendent uniquement des achats réellement validés grâce aux liens de l'affilié. L'affilié n'est ni salarié ni représentant de {{ $legal['company_name'] }} et ne peut pas prendre d'engagement en son nom.</li>
+            </ul>
 
             <h2>10. Contact</h2>
             <p>Pour toute question ou demande de remboursement : <a href="mailto:{{ $legal['owner']['email'] }}">{{ $legal['owner']['email'] }}</a> ou {{ $legal['owner']['phone'] }} (appel ou WhatsApp), {{ mb_lcfirst($contact['hours']) }}.</p>

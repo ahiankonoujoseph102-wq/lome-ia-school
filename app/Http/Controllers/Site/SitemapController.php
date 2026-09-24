@@ -14,6 +14,7 @@ class SitemapController extends Controller
             route('home'),
             route('formations.index'),
             route('consultation'),
+            route('affiliate.program'),
             route('about'),
             route('contact'),
         ])->map(fn (string $url): array => ['loc' => $url, 'lastmod' => null]);

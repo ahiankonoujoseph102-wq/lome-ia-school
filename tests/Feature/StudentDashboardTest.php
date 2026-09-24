@@ -23,8 +23,9 @@ class StudentDashboardTest extends TestCase
             ->assertSee('Découvrir le catalogue')
             ->assertSee('Sessions en direct ou à Lomé')
             ->assertSee('Mes groupes de discussion')
-            ->assertSee('Mes gains d&#039;affiliation', false)
-            ->assertSee('Bientôt disponible');
+            ->assertSee('Affiliation')
+            ->assertSee('Recommandez nos formations et recevez 10 % de chaque achat validé passé par votre lien.')
+            ->assertDontSee('Bientôt disponible');
     }
 
     public function test_student_sees_their_formations(): void

@@ -19,9 +19,17 @@
                 <li>Vos preuves de paiement : moyen de paiement utilisé, numéro qui a payé, nom de l'expéditeur, identifiant de la transaction et capture d'écran du paiement.</li>
                 <li>Les messages et fichiers que vous publiez dans les groupes de discussion des formations (textes, images, captures d'écran, notes vocales, vidéos, documents), ainsi que les signalements que vous faites.</li>
                 <li>Vos réglages de notifications et, si vous activez les notifications sur votre téléphone, l'adresse technique d'envoi fournie par votre navigateur.</li>
-                <li>Pour l'affiliation : les ventes réalisées grâce à votre lien et le numéro Mobile Money indiqué pour vos retraits.</li>
+                <li>Si vous devenez affilié : la date d'acceptation des conditions, vos coordonnées de retrait (pays, opérateur Mobile Money, numéro et nom du titulaire, ainsi que la date de leurs modifications), vos commissions et vos retraits (montants, frais d'envoi, identifiants de transaction).</li>
+                <li>Si vous arrivez sur le site par le lien d'un affilié : le code de ce lien et la date du clic, puis, si vous vous inscrivez ou achetez, le fait que votre inscription ou votre achat vient de ce lien.</li>
             </ul>
             <p>Les captures d'écran de paiement sont stockées dans un espace privé : elles ne sont jamais publiques et ne sont visibles que par vous et par l'équipe qui vérifie les paiements. Nous ne vous demandons jamais vos codes Mobile Money. Au Burkina Faso et au Bénin, les informations de votre paiement peuvent être communiquées à notre représentant local, uniquement pour vérifier sa réception.</p>
+
+            <h2>Affiliation</h2>
+            <ul>
+                <li>Un affilié voit ses statistiques (clics, inscriptions, ventes) et ses commissions, mais <strong>jamais le nom, le numéro ni l'adresse e-mail des personnes qui ont acheté</strong> grâce à son lien.</li>
+                <li>Les clics sur les liens d'affiliation sont comptés de façon anonyme : nous enregistrons seulement des empreintes chiffrées (un identifiant aléatoire de votre navigateur et une empreinte de votre connexion), jamais votre adresse IP en clair, pour ne compter qu'une fois les clics répétés d'une même personne.</li>
+                <li>Les coordonnées de retrait servent uniquement à payer les retraits de l'affilié. Toute modification est signalée à notre équipe, pour protéger l'affilié contre un détournement de ses commissions. Elles sont aussi comparées au numéro qui a payé un achat, pour repérer un éventuel auto-parrainage.</li>
+            </ul>
 
             <h2>Groupes de discussion</h2>
             <ul>
@@ -42,7 +50,7 @@
             <ul>
                 <li>Créer et gérer votre compte et vos accès aux formations ;</li>
                 <li>Vérifier vos paiements, prévenir la fraude (par exemple une capture ou un identifiant de transaction déjà utilisé) et établir vos reçus ;</li>
-                <li>Traiter vos commissions d'affiliation ;</li>
+                <li>Compter les clics sur les liens d'affiliation, attribuer les achats au bon affilié, calculer et payer les commissions, et prévenir la fraude à l'affiliation ;</li>
                 <li>Vous accompagner et répondre à vos questions, notamment dans les groupes de discussion ;</li>
                 <li>Vous prévenir des nouveaux messages de vos groupes, selon vos réglages de notifications ;</li>
                 <li>Vous informer des nouvelles formations, uniquement si vous avez coché la case « Je souhaite être informé(e) des nouvelles formations » à l'inscription ou dans votre profil.</li>
@@ -50,7 +58,12 @@
             <p>Cette case n'est jamais cochée par défaut. Vous pouvez retirer votre accord à tout moment en la décochant dans votre profil. Vos données ne sont jamais vendues à des tiers.</p>
 
             <h2>Cookies</h2>
-            <p>Le site utilise uniquement les cookies nécessaires à son fonctionnement (session de connexion et sécurité).</p>
+            <p>Le site utilise uniquement les cookies nécessaires à son fonctionnement (session de connexion et sécurité), ainsi que deux cookies liés au programme d'affiliation, déposés seulement lorsque vous cliquez sur le lien d'un affilié :</p>
+            <ul>
+                <li><strong>lis_ref</strong> : le code du dernier lien d'affiliation cliqué et la date du clic, conservé {{ config('affiliate.cookie_days') }} jours, pour attribuer votre éventuel achat à l'affilié qui vous a recommandé le site ;</li>
+                <li><strong>lis_visitor</strong> : un identifiant aléatoire, conservé 12 mois, pour ne compter qu'une fois vos clics sur le lien d'un même affilié.</li>
+            </ul>
+            <p>Aucun cookie publicitaire ni de mesure d'audience tiers n'est utilisé. Vous pouvez supprimer ces cookies à tout moment depuis les réglages de votre navigateur.</p>
 
             <h2>Durée de conservation</h2>
             <p>{{ Placeholder::highlight($legal['data_retention']) }}</p>

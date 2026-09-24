@@ -167,6 +167,45 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod }) => ({
 }));
 
 /**
+ * Bouton « Copier » (liens d'affiliation). Si le presse-papiers est refusé, le texte est sélectionné.
+ */
+Alpine.data('copyText', (text) => ({
+    copied: false,
+
+    async copy() {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch {
+            const field = this.$refs.field;
+            field?.focus();
+            field?.select?.();
+        }
+
+        this.copied = true;
+        setTimeout(() => (this.copied = false), 2000);
+    },
+}));
+
+/**
+ * Coordonnées de retrait de l'affilié : les opérateurs proposés dépendent du pays choisi.
+ */
+Alpine.data('payoutForm', ({ methods, country, method }) => ({
+    methods,
+    country,
+    method,
+
+    get countryMethods() {
+        return this.methods.filter((item) => item.country === this.country);
+    },
+
+    chooseCountry() {
+        if (!this.countryMethods.some((item) => item.key === this.method)) {
+            this.method = this.countryMethods.length === 1 ? this.countryMethods[0].key : '';
+        }
+    },
+}));
+
+/**
  * Admin « Contenu des formations » : aperçu de la vidéo pendant la saisie du lien.
  * Même reconnaissance des liens que côté serveur (App\Support\YouTube, App\Support\GoogleDrive).
  */

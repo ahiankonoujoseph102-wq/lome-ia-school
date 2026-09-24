@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Student;
 
+use App\Affiliates\AffiliateAccount;
 use App\Courses\CourseProgress;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
@@ -11,7 +12,7 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request, CourseProgress $progress): View
+    public function __invoke(Request $request, CourseProgress $progress, AffiliateAccount $affiliates): View
     {
         /** @var User $user */
         $user = $request->user();
@@ -24,6 +25,7 @@ class DashboardController extends Controller
             'progress' => $progress->forEnrollments($user, $enrollments),
             'sessions' => LiveSessionController::upcomingFor($user),
             'sessionRegistrations' => $user->liveSessionRegistrations()->get()->keyBy('live_session_id'),
+            'affiliateBalance' => $user->affiliate ? $affiliates->balance($user->affiliate) : null,
             'suggestions' => Formation::published()->where('is_featured', true)
                 ->whereNotIn('id', $user->enrollments()->select('formation_id'))
                 ->limit(3)

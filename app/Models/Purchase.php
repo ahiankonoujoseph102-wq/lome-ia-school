@@ -43,7 +43,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $rejection_reason
  * @property Carbon|null $refunded_at
  * @property Carbon|null $refund_due_at Supplément à rembourser : inscription annulée par l'élève dans le délai.
- * @property string|null $affiliate_code Étape 8.
+ * @property string|null $affiliate_code Code de l'affilié dont le lien a amené l'achat (dernier lien cliqué, 30 jours).
  * @property int|null $discount_amount
  * @property string|null $gateway_reference Référence de la passerelle (FedaPay, plus tard).
  * @property Carbon|null $created_at
@@ -54,6 +54,8 @@ use Illuminate\Support\Carbon;
  * @property-read string $item_label Ce qui a été payé : titre de la formation, ou session et formation.
  * @property-read User|null $verifier
  * @property-read Enrollment|null $enrollment
+ * @property-read Affiliate|null $affiliate
+ * @property-read AffiliateCommission|null $affiliateCommission
  * @property-read string $formatted_amount
  * @property-read string $receipt_number
  */
@@ -80,6 +82,7 @@ class Purchase extends Model
         'proof_path',
         'proof_hash',
         'status',
+        'affiliate_code',
     ];
 
     /**
@@ -122,6 +125,26 @@ class Purchase extends Model
     public function liveSession(): BelongsTo
     {
         return $this->belongsTo(LiveSession::class);
+    }
+
+    /**
+     * Affilié dont le lien a amené cet achat.
+     *
+     * @return BelongsTo<Affiliate, $this>
+     */
+    public function affiliate(): BelongsTo
+    {
+        return $this->belongsTo(Affiliate::class, 'affiliate_code', 'code');
+    }
+
+    /**
+     * Commission d'affiliation sur cet achat (créée à la validation du paiement).
+     *
+     * @return HasOne<AffiliateCommission, $this>
+     */
+    public function affiliateCommission(): HasOne
+    {
+        return $this->hasOne(AffiliateCommission::class)->where('type', 'sale');
     }
 
     /**

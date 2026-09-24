@@ -68,6 +68,7 @@
                             <a href="{{ route('chat.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.chat-bubble-left-right class="size-4" /> Mes groupes</a>
                             <a href="{{ route('student.sessions.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.calendar-days class="size-4" /> Mes sessions</a>
                             <a href="{{ route('student.purchases.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.receipt-percent class="size-4" /> Mes achats</a>
+                            <a href="{{ route('student.affiliate.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.banknotes class="size-4" /> Affiliation</a>
                             <a href="{{ route('student.profile') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.user-circle class="size-4" /> Mon profil</a>
                             @can('moderate-chat')
                                 <a href="{{ route('admin.sessions.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.calendar-days class="size-4" /> Gérer les sessions</a>
@@ -75,6 +76,7 @@
                             @endcan
                             @can('access-admin')
                                 @include('site.partials.admin-payments-link', ['class' => 'rounded-xl px-3 py-2.5 text-sm'])
+                                @include('site.partials.admin-withdrawals-link', ['class' => 'rounded-xl px-3 py-2.5 text-sm'])
                                 <a href="{{ route('admin.content.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.play-circle class="size-4" /> Contenu des formations</a>
                                 <a href="{{ route('admin.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5"><flux:icon.shield-check class="size-4" /> Administration</a>
                             @endcan
@@ -158,6 +160,7 @@
                     @endcan
                     @can('access-admin')
                         @include('site.partials.admin-payments-link', ['class' => 'card px-4 py-3.5 font-semibold'])
+                        @include('site.partials.admin-withdrawals-link', ['class' => 'card px-4 py-3.5 font-semibold'])
                         <a href="{{ route('admin.content.index') }}" class="card flex items-center gap-2 px-4 py-3.5 font-semibold text-slate-200 hover:bg-white/5"><flux:icon.play-circle class="size-4" /> Contenu des formations</a>
                     @endcan
                     <form method="POST" action="{{ route('logout') }}">

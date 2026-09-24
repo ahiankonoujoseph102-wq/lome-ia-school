@@ -325,7 +325,7 @@
                     <span class="eyebrow !border-gold-400/30 !bg-gold-400/10 !text-gold-200">Programme d'affiliation</span>
                     <h2 class="mt-4 text-3xl font-bold tracking-tight text-balance text-white sm:text-4xl">{{ config('site.affiliate.title') }}</h2>
                     <p class="mt-4 text-slate-300">{{ config('site.affiliate.text') }}</p>
-                    <a href="{{ route('register') }}" class="btn-gold mt-8">Créer mon compte et obtenir mon lien</a>
+                    <a href="{{ route('affiliate.program') }}" class="btn-gold mt-8">Découvrir le programme d'affiliation</a>
                 </div>
                 <ul class="grid gap-3">
                     @foreach (config('site.affiliate.points') as $point)
@@ -337,8 +337,8 @@
                         </li>
                     @endforeach
                     <li class="flex items-center justify-between rounded-2xl bg-gold-400/10 p-4 ring-1 ring-gold-400/25">
-                        <span class="text-sm text-gold-100">Exemple : une formation à 36&nbsp;000&nbsp;FCFA vendue grâce à votre lien</span>
-                        <span class="text-lg font-bold whitespace-nowrap text-gold-300">+ 3&nbsp;600&nbsp;FCFA</span>
+                        <span class="text-sm text-gold-100">Exemple de calcul : une formation à 36&nbsp;000&nbsp;FCFA achetée grâce à votre lien</span>
+                        <span class="text-lg font-bold whitespace-nowrap text-gold-300">{{ \App\Support\Money::fcfa(intdiv(36000 * (int) config('affiliate.rate'), 100)) }}</span>
                     </li>
                 </ul>
             </div>

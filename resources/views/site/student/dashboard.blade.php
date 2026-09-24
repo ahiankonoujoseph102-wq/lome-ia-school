@@ -71,7 +71,18 @@
                     </span>
                     <flux:icon.arrow-right class="size-5 text-slate-500" />
                 </a>
-                <x-site.coming-soon-card icon="banknotes" title="Mes gains d'affiliation" text="Votre lien personnel, vos ventes et vos gains de 10 %, retirables par Mobile Money." />
+                <a href="{{ route('student.affiliate.index') }}" class="card card-hover flex items-center gap-4 p-5" data-test="affiliate-card">
+                    <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-gold-400/15 text-gold-300"><flux:icon.banknotes class="size-5" /></span>
+                    <span class="min-w-0 flex-1">
+                        <span class="block font-semibold text-white">Affiliation</span>
+                        @if ($affiliateBalance !== null)
+                            <span class="block text-sm text-slate-400">Solde : <span class="font-semibold text-gold-300">{{ \App\Support\Money::fcfa($affiliateBalance) }}</span> · vos liens et vos commissions</span>
+                        @else
+                            <span class="block text-sm text-slate-400">Recommandez nos formations et recevez {{ config('affiliate.rate') }} % de chaque achat validé passé par votre lien.</span>
+                        @endif
+                    </span>
+                    <flux:icon.arrow-right class="size-5 text-slate-500" />
+                </a>
             </div>
         </section>
 
