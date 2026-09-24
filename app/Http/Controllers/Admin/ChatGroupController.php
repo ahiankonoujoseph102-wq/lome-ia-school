@@ -48,7 +48,8 @@ class ChatGroupController extends Controller
             'diskByGroup' => $diskByGroup,
             'totalBytes' => (int) $diskByGroup->sum('bytes'),
             'totalFiles' => (int) $diskByGroup->sum('files'),
-            'openReports' => ChatMessageReport::query()->where('status', ReportStatus::Open->value)->count(),
+            // Même compteur que « Messages signalés » : un message signalé plusieurs fois compte une fois.
+            'openReports' => ChatMessageReport::query()->where('status', ReportStatus::Open->value)->distinct()->count('chat_message_id'),
         ]);
     }
 

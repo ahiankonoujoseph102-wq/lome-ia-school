@@ -58,6 +58,8 @@ class NotificationsTest extends ChatTestCase
 
     public function test_no_phone_notification_without_web_push_keys(): void
     {
+        config(['services.webpush.public_key' => null, 'services.webpush.private_key' => null]);
+        $this->app->forgetInstance(PushSender::class);
         $this->assertFalse(app(PushSender::class)->isConfigured());
 
         $reader = $this->student();

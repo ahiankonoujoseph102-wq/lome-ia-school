@@ -200,13 +200,17 @@ class ModerationTest extends ChatTestCase
     public function test_admin_group_list_shows_members_activity_and_disk_usage(): void
     {
         $student = $this->student();
-        $this->message($student, 'Bonjour', ['type' => 'file', 'attachment_path' => 'x.pdf', 'attachment_name' => 'x.pdf', 'attachment_mime' => 'application/pdf', 'attachment_size' => 3 * 1024 * 1024]);
+        $message = $this->message($student, 'Bonjour', ['type' => 'file', 'attachment_path' => 'x.pdf', 'attachment_name' => 'x.pdf', 'attachment_mime' => 'application/pdf', 'attachment_size' => 3 * 1024 * 1024]);
+        foreach ([$this->student(), $this->student()] as $reporter) {
+            ChatMessageReport::query()->create(['chat_message_id' => $message->id, 'user_id' => $reporter->id, 'reason' => 'spam']);
+        }
 
         $this->actingAs($student)->get(route('admin.chat.index'))->assertForbidden();
         $this->actingAs($this->admin())->get(route('admin.chat.index'))
             ->assertOk()
             ->assertSee($this->formation->title)
             ->assertSee('3,0 Mo')
-            ->assertSee('1 fichier');
+            ->assertSee('1 fichier')
+            ->assertViewHas('openReports', 1);
     }
 }
