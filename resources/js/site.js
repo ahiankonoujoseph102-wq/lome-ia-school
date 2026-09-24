@@ -227,7 +227,129 @@ Alpine.data('lessonVideoPreview', (provider, initialUrl) => ({
     },
 }));
 
-window.Alpine = Alpine;
-Alpine.start();
+/**
+ * Notifications sur téléphone (Web Push) : activation en un clic depuis « Notifications ».
+ * Sur iPhone, elles ne fonctionnent qu'une fois le site ajouté à l'écran d'accueil (iOS 16.4 ou plus récent).
+ */
+Alpine.data('pushNotifications', ({ publicKey, subscribeUrl, unsubscribeUrl }) => ({
+    supported: false,
+    ios: false,
+    standalone: false,
+    permission: 'default',
+    subscribed: false,
+    busy: false,
+    message: '',
 
-initReveal();
+    async init() {
+        this.ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        this.standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        this.supported = Boolean(publicKey) && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+        this.permission = 'Notification' in window ? Notification.permission : 'default';
+
+        if (this.supported) {
+            try {
+                const registration = await navigator.serviceWorker.getRegistration();
+                this.subscribed = Boolean(await registration?.pushManager.getSubscription());
+            } catch (error) {
+                this.subscribed = false;
+            }
+        }
+    },
+
+    async request(url, method, body) {
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            throw new Error('request');
+        }
+
+        return response.json();
+    },
+
+    async enable() {
+        this.busy = true;
+        this.message = '';
+
+        try {
+            this.permission = await Notification.requestPermission();
+
+            if (this.permission !== 'granted') {
+                this.message = 'Les notifications sont bloquées. Autorisez-les dans les réglages du navigateur (icône à gauche de l\'adresse du site), puis réessayez.';
+
+                return;
+            }
+
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            await navigator.serviceWorker.ready;
+
+            const key = Uint8Array.from(atob((publicKey + '='.repeat((4 - (publicKey.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+            const subscription = (await registration.pushManager.getSubscription())
+                || (await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
+
+            const encodings = window.PushManager?.supportedContentEncodings || ['aesgcm'];
+            const data = await this.request(subscribeUrl, 'POST', {
+                ...subscription.toJSON(),
+                contentEncoding: encodings.includes('aes128gcm') ? 'aes128gcm' : 'aesgcm',
+            });
+
+            this.subscribed = true;
+            this.message = data.status;
+        } catch (error) {
+            this.message = 'Activation impossible pour le moment. Réessayez dans quelques instants.';
+        } finally {
+            this.busy = false;
+        }
+    },
+
+    async disable() {
+        this.busy = true;
+
+        try {
+            const registration = await navigator.serviceWorker.getRegistration();
+            const subscription = await registration?.pushManager.getSubscription();
+
+            if (subscription) {
+                await this.request(unsubscribeUrl, 'DELETE', { endpoint: subscription.endpoint });
+                await subscription.unsubscribe();
+            }
+
+            this.subscribed = false;
+            this.message = 'Notifications désactivées sur cet appareil.';
+        } catch (error) {
+            this.message = 'Désactivation impossible pour le moment. Réessayez.';
+        } finally {
+            this.busy = false;
+        }
+    },
+}));
+
+/**
+ * Site installable : service worker (il ne met jamais en cache les pages privées, voir /sw.js).
+ */
+if ('serviceWorker' in navigator && window.isSecureContext) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+
+const startAlpine = () => {
+    window.Alpine = Alpine;
+    Alpine.start();
+    initReveal();
+};
+
+// Page d'un groupe de discussion : le code du chat est chargé seulement ici.
+if (document.querySelector('[data-chat]')) {
+    import('./chat.js')
+        .then(({ default: registerChat }) => registerChat(Alpine))
+        .finally(startAlpine);
+} else {
+    startAlpine();
+}

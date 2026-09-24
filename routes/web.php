@@ -1,17 +1,26 @@
 <?php
 
+use App\Http\Controllers\Admin\ChatGroupController as AdminChatGroupController;
 use App\Http\Controllers\Admin\CourseContentController;
 use App\Http\Controllers\Admin\LessonController as AdminLessonController;
+use App\Http\Controllers\Admin\ModeratorController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\Chat\AttachmentController;
+use App\Http\Controllers\Chat\GroupController;
+use App\Http\Controllers\Chat\MessageController;
+use App\Http\Controllers\Chat\ModerationController;
+use App\Http\Controllers\Chat\ReportController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\PurchaseProofController;
 use App\Http\Controllers\Site\CheckoutController;
 use App\Http\Controllers\Site\FormationController;
 use App\Http\Controllers\Site\OgImageController;
 use App\Http\Controllers\Site\PageController;
+use App\Http\Controllers\Site\PwaController;
 use App\Http\Controllers\Site\SitemapController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\FormationController as StudentFormationController;
+use App\Http\Controllers\Student\NotificationController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\PurchaseController;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +47,10 @@ Route::get('og/formations/{formation}.png', [OgImageController::class, 'formatio
 Route::get('sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
 Route::get('robots.txt', [SitemapController::class, 'robots'])->name('robots');
 
+// Site installable sur l'écran d'accueil (manifeste et service worker)
+Route::get('manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
+Route::get('sw.js', [PwaController::class, 'serviceWorker'])->name('pwa.service-worker');
+
 // Parcours d'achat : récapitulatif de commande et paiement Mobile Money avec preuve de paiement
 Route::get('commande/{formation}', [CheckoutController::class, 'show'])->name('checkout.show');
 Route::post('commande/{formation}/paiement', [CheckoutController::class, 'pay'])
@@ -59,6 +72,41 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
     Route::put('profil', [ProfileController::class, 'update'])->name('student.profile.update');
     Route::delete('profil/photo', [ProfileController::class, 'destroyAvatar'])->name('student.profile.avatar.destroy');
     Route::delete('profil', [ProfileController::class, 'destroy'])->name('student.profile.destroy');
+
+    // Notifications des groupes : téléphone (Web Push), e-mail récapitulatif, groupes coupés
+    Route::get('notifications', [NotificationController::class, 'edit'])->name('student.notifications');
+    Route::put('notifications', [NotificationController::class, 'update'])->name('student.notifications.update');
+    Route::post('notifications/appareils', [NotificationController::class, 'subscribe'])->middleware('throttle:20,1')->name('student.notifications.subscribe');
+    Route::delete('notifications/appareils', [NotificationController::class, 'unsubscribe'])->name('student.notifications.unsubscribe');
+
+    // Groupes de discussion (un par formation) : réservés aux acheteurs, à l'admin et aux modérateurs
+    Route::middleware('no-store')->group(function () {
+        Route::get('groupes', [GroupController::class, 'index'])->name('chat.index');
+        Route::get('groupes/{formation}', [GroupController::class, 'show'])->name('chat.show');
+        Route::get('groupes/{formation}/messages', [GroupController::class, 'messages'])->name('chat.messages.index');
+        Route::post('groupes/{formation}/messages', [MessageController::class, 'store'])->middleware('throttle:chat-messages')->name('chat.messages.store');
+        Route::delete('groupes/{formation}/messages/{message}', [MessageController::class, 'destroy'])->name('chat.messages.destroy');
+        Route::post('groupes/{formation}/messages/{message}/epingler', [MessageController::class, 'togglePin'])->name('chat.messages.pin');
+        Route::post('groupes/{formation}/messages/{message}/signaler', [MessageController::class, 'report'])->middleware('throttle:20,1')->name('chat.messages.report');
+        Route::get('groupes/{formation}/fichiers/{message}', [AttachmentController::class, 'show'])->name('chat.attachments.show');
+        Route::post('groupes/{formation}/lu', [GroupController::class, 'read'])->name('chat.read');
+        Route::post('groupes/{formation}/regles', [GroupController::class, 'rulesSeen'])->name('chat.rules.seen');
+        Route::post('groupes/{formation}/notifications', [GroupController::class, 'toggleNotifications'])->name('chat.notifications');
+        Route::get('groupes/{formation}/membres', [GroupController::class, 'members'])->name('chat.members');
+
+        // Modération (admin et modérateurs)
+        Route::post('groupes/{formation}/annonces', [ModerationController::class, 'toggleAnnouncements'])->name('chat.announcements');
+        Route::post('groupes/{formation}/membres/{user}/sourdine', [ModerationController::class, 'mute'])->name('chat.members.mute');
+        Route::delete('groupes/{formation}/membres/{user}/sourdine', [ModerationController::class, 'unmute'])->name('chat.members.unmute');
+        Route::post('groupes/{formation}/membres/{user}/exclure', [ModerationController::class, 'exclude'])->name('chat.members.exclude');
+        Route::post('groupes/{formation}/membres/{user}/reintegrer', [ModerationController::class, 'reinstate'])->name('chat.members.reinstate');
+    });
+});
+
+// « Messages signalés » : admin et modérateurs
+Route::middleware(['auth', 'can:moderate-chat', 'no-store'])->prefix('moderation')->name('moderation.')->group(function () {
+    Route::get('signalements', [ReportController::class, 'index'])->name('reports.index');
+    Route::post('signalements/{report}', [ReportController::class, 'handle'])->name('reports.handle');
 });
 
 Route::redirect('dashboard', '/mon-espace');
@@ -87,6 +135,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('lecons/{lesson}/publication', [AdminLessonController::class, 'togglePublish'])->name('lessons.publish');
     Route::delete('lecons/{lesson}', [AdminLessonController::class, 'destroy'])->name('lessons.destroy');
     Route::delete('ressources/{resource}', [AdminLessonController::class, 'destroyResource'])->name('resources.destroy');
+
+    // Groupes de discussion : activité, espace disque, règles ; équipe de modération
+    Route::get('groupes', [AdminChatGroupController::class, 'index'])->name('chat.index');
+    Route::get('groupes/{group}/regles', [AdminChatGroupController::class, 'edit'])->name('chat.edit');
+    Route::put('groupes/{group}/regles', [AdminChatGroupController::class, 'updateRules'])->name('chat.rules');
+    Route::post('groupes/{group}/annonces', [AdminChatGroupController::class, 'toggleAnnouncements'])->name('chat.announcements');
+    Route::get('equipe', [ModeratorController::class, 'index'])->name('moderators.index');
+    Route::post('equipe', [ModeratorController::class, 'store'])->name('moderators.store');
+    Route::delete('equipe/{user}', [ModeratorController::class, 'destroy'])->name('moderators.destroy');
 });
 
 require __DIR__.'/settings.php';

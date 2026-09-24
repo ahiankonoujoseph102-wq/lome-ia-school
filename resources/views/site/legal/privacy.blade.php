@@ -17,17 +17,34 @@
                 <li>Votre choix concernant l'information sur les nouvelles formations (oui ou non).</li>
                 <li>Les informations liées à vos achats : formations achetées, montants, dates.</li>
                 <li>Vos preuves de paiement : moyen de paiement utilisé, numéro qui a payé, nom de l'expéditeur, identifiant de la transaction et capture d'écran du paiement.</li>
-                <li>Les messages que vous publiez dans les groupes de discussion des formations.</li>
+                <li>Les messages et fichiers que vous publiez dans les groupes de discussion des formations (textes, images, captures d'écran, notes vocales, vidéos, documents), ainsi que les signalements que vous faites.</li>
+                <li>Vos réglages de notifications et, si vous activez les notifications sur votre téléphone, l'adresse technique d'envoi fournie par votre navigateur.</li>
                 <li>Pour l'affiliation : les ventes réalisées grâce à votre lien et le numéro Mobile Money indiqué pour vos retraits.</li>
             </ul>
             <p>Les captures d'écran de paiement sont stockées dans un espace privé : elles ne sont jamais publiques et ne sont visibles que par vous et par l'équipe qui vérifie les paiements. Nous ne vous demandons jamais vos codes Mobile Money. Au Burkina Faso et au Bénin, les informations de votre paiement peuvent être communiquées à notre représentant local, uniquement pour vérifier sa réception.</p>
+
+            <h2>Groupes de discussion</h2>
+            <ul>
+                <li>Dans un groupe, les autres membres voient uniquement votre nom et votre photo de profil. <strong>Votre numéro de téléphone et votre adresse e-mail ne sont jamais visibles des autres membres.</strong></li>
+                <li>Les messages et fichiers d'un groupe sont stockés dans un espace privé et ne sont accessibles qu'aux membres de ce groupe et à l'équipe (formateur et modérateurs).</li>
+                <li>Ils sont conservés tant que le groupe de la formation existe. Lorsqu'un message est supprimé, son contenu et son fichier sont effacés immédiatement. Si vous supprimez votre compte, vos messages et fichiers sont supprimés.</li>
+                <li>L'équipe peut lire les messages signalés pour faire respecter les règles du groupe.</li>
+            </ul>
+
+            <h2>Notifications</h2>
+            <ul>
+                <li>Notifications sur votre téléphone : elles ne sont envoyées que si vous les activez vous-même, sur chaque appareil. Elles passent par le service de notifications de votre navigateur (par exemple Google ou Apple), qui reçoit un contenu chiffré.</li>
+                <li>E-mail récapitulatif : au plus un e-mail par jour, seulement si des messages non lus vous attendent.</li>
+                <li>Vous pouvez désactiver chaque type de notification, ou couper un groupe précis, à tout moment dans « Mon profil » puis « Notifications ».</li>
+            </ul>
 
             <h2>Utilisation des données</h2>
             <ul>
                 <li>Créer et gérer votre compte et vos accès aux formations ;</li>
                 <li>Vérifier vos paiements, prévenir la fraude (par exemple une capture ou un identifiant de transaction déjà utilisé) et établir vos reçus ;</li>
                 <li>Traiter vos commissions d'affiliation ;</li>
-                <li>Vous accompagner et répondre à vos questions ;</li>
+                <li>Vous accompagner et répondre à vos questions, notamment dans les groupes de discussion ;</li>
+                <li>Vous prévenir des nouveaux messages de vos groupes, selon vos réglages de notifications ;</li>
                 <li>Vous informer des nouvelles formations, uniquement si vous avez coché la case « Je souhaite être informé(e) des nouvelles formations » à l'inscription ou dans votre profil.</li>
             </ul>
             <p>Cette case n'est jamais cochée par défaut. Vous pouvez retirer votre accord à tout moment en la décochant dans votre profil. Vos données ne sont jamais vendues à des tiers.</p>

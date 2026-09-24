@@ -66,6 +66,18 @@
             </form>
         @endif
 
+        {{-- Notifications des groupes --}}
+        <a href="{{ route('student.notifications') }}" class="card card-hover flex items-center gap-4 p-5">
+            <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-gold-400/15 text-gold-300">
+                <flux:icon.bell class="size-5" />
+            </span>
+            <span class="min-w-0 flex-1">
+                <span class="block font-semibold text-white">Notifications</span>
+                <span class="block text-sm text-slate-400">Téléphone, e-mail récapitulatif, groupes coupés</span>
+            </span>
+            <flux:icon.arrow-right class="size-5 text-slate-500" />
+        </a>
+
         {{-- Sécurité (pages de paramètres existantes) --}}
         <a href="{{ route('security.edit') }}" class="card card-hover flex items-center gap-4 p-5">
             <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-electric-500/15 text-electric-300">

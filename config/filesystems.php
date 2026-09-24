@@ -58,6 +58,16 @@ return [
             'report' => false,
         ],
 
+        // Fichiers des groupes de discussion (images, notes vocales, vidéos, documents) : jamais servis
+        // publiquement, lus uniquement par App\Http\Controllers\Chat\AttachmentController (membres du groupe).
+        'chat_media' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/chat'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

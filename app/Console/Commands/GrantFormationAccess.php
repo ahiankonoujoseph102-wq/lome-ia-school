@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Enums\EnrollmentSource;
+use App\Events\FormationAccessGranted;
+use App\Events\FormationAccessRevoked;
 use App\Models\Formation;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -40,6 +42,11 @@ class GrantFormationAccess extends Command
 
         if ($this->option('revoke')) {
             $deleted = $user->enrollments()->where('formation_id', $formation->id)->delete();
+
+            if ($deleted) {
+                FormationAccessRevoked::dispatch($user, $formation);
+            }
+
             $deleted
                 ? $this->components->info("Accès à « {$formation->title} » retiré pour {$user->email}.")
                 : $this->components->warn("{$user->email} n'avait pas accès à « {$formation->title} ».");
@@ -53,7 +60,7 @@ class GrantFormationAccess extends Command
             return self::SUCCESS;
         }
 
-        $user->enroll($formation, EnrollmentSource::Admin);
+        FormationAccessGranted::dispatch($user->enroll($formation, EnrollmentSource::Admin));
         $this->components->info("Accès à « {$formation->title} » donné à {$user->email}.");
 
         return self::SUCCESS;
