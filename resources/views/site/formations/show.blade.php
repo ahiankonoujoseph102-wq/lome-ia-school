@@ -289,7 +289,7 @@
             <div class="mx-auto flex max-w-xl items-center gap-3">
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-xs text-slate-400">{{ $formation->title }}</p>
-                    <p class="text-lg leading-tight font-bold text-gold-300">{{ $formation->formatted_price }} <span class="text-xs font-medium text-gold-200/80">· accès à vie</span></p>
+                    <p class="text-lg leading-tight font-bold text-gold-300">{{ $formation->formatted_price }}</p>
                 </div>
                 <a href="{{ $buyUrl }}" class="btn-gold shrink-0 !px-5 !py-3">Acheter maintenant</a>
             </div>
