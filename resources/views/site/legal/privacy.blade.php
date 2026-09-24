@@ -27,7 +27,7 @@
             <ul>
                 <li>Dans un groupe, les autres membres voient uniquement votre nom et votre photo de profil. <strong>Votre numéro de téléphone et votre adresse e-mail ne sont jamais visibles des autres membres.</strong></li>
                 <li>Les messages et fichiers d'un groupe sont stockés dans un espace privé et ne sont accessibles qu'aux membres de ce groupe et à l'équipe (formateur et modérateurs).</li>
-                <li>Ils sont conservés tant que le groupe de la formation existe. Lorsqu'un message est supprimé, son contenu et son fichier sont effacés immédiatement. Si vous supprimez votre compte, vos messages et fichiers sont supprimés.</li>
+                <li>Les textes, images et documents sont conservés tant que le groupe de la formation existe. <strong>Les notes vocales et les vidéos sont supprimées automatiquement {{ (int) config('chat.media_retention_months', 12) }} mois après leur envoi</strong> : le message reste dans la conversation avec la mention « Fichier expiré ». Lorsqu'un message est supprimé, son contenu et son fichier sont effacés immédiatement. Si vous supprimez votre compte, vos messages et fichiers sont supprimés.</li>
                 <li>L'équipe peut lire les messages signalés pour faire respecter les règles du groupe.</li>
             </ul>
 

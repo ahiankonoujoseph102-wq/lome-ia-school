@@ -66,7 +66,22 @@
                 </button>
             @endif
 
-            @switch ($message->type)
+            @if ($message->isExpired())
+                {{-- Note vocale ou vidéo supprimée après la durée de conservation : le message reste. --}}
+                <p class="chat-expired" data-test="expired-file">
+                    @if ($message->type === ChatMessageType::Voice)
+                        <flux:icon.microphone class="size-5 shrink-0" />
+                    @else
+                        <flux:icon.video-camera class="size-5 shrink-0" />
+                    @endif
+                    <span>
+                        <span class="block font-semibold">Fichier expiré</span>
+                        <span class="block text-xs opacity-80">{{ $message->type === ChatMessageType::Voice ? 'Note vocale' : 'Vidéo' }} supprimée automatiquement {{ (int) config('chat.media_retention_months', 12) }} mois après son envoi</span>
+                    </span>
+                </p>
+            @endif
+
+            @switch ($message->isExpired() ? null : $message->type)
                 @case (ChatMessageType::Image)
                     <a href="{{ $message->attachmentUrl() }}" class="chat-media block overflow-hidden rounded-xl" data-lightbox aria-label="Agrandir l'image">
                         <img

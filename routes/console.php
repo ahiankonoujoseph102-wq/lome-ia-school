@@ -17,6 +17,7 @@ Artisan::command('inspire', function () {
 |
 | - File d'attente (e-mails, notifications sur téléphone) : traitée chaque minute, sans processus permanent.
 | - E-mail récapitulatif des messages non lus : une fois par jour.
+| - Notes vocales et vidéos des groupes : supprimées chaque nuit après la durée de conservation.
 |
 */
 
@@ -26,5 +27,10 @@ Schedule::command('queue:work --stop-when-empty --tries=3 --max-time=50')
 
 Schedule::command('app:send-chat-digests')
     ->dailyAt((string) config('chat.digest_time', '18:00'))
+    ->timezone('Africa/Lome')
+    ->withoutOverlapping();
+
+Schedule::command('app:expire-chat-media')
+    ->dailyAt('03:00')
     ->timezone('Africa/Lome')
     ->withoutOverlapping();

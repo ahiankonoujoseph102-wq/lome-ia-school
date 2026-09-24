@@ -54,7 +54,7 @@ abstract class ChatTestCase extends TestCase
         return ChatGroup::forFormation($formation ?? $this->formation);
     }
 
-    protected function message(User $author, string $body = 'Bonjour à tous', array $attributes = []): ChatMessage
+    protected function message(User $author, ?string $body = 'Bonjour à tous', array $attributes = []): ChatMessage
     {
         return $this->group()->messages()->create([
             'user_id' => $author->id,

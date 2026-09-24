@@ -5,6 +5,7 @@ Ce fichier donne à Claude le contexte du projet. Le lire avant toute modificati
 ## La personne qui porte le projet
 
 - N'est **pas développeuse ou développeur** et travaille **uniquement depuis un téléphone**, via Claude Code sur le web.
+- **Langue (règle absolue)** : toutes les réponses, tous les résumés et tous les messages destinés à Joseph (porteur du projet) sont rédigés **en français simple, sans exception** : réponses dans la conversation, résumés de fin d'étape, commentaires et descriptions de pull request, messages d'aperçu. Jamais d'anglais, même pour une réponse courte.
 - Toujours expliquer simplement, en français, ce qui a été fait et pourquoi.
 - Signaler clairement tout ce qu'elle doit faire elle-même : créer un compte, fournir une clé d'API, cliquer sur un bouton dans un tableau de bord, valider une pull request…
 - Aucune commande ne peut être lancée de son côté sur un ordinateur : Claude exécute, vérifie et pousse tout.
@@ -118,8 +119,9 @@ Plateforme de vente et de suivi de formations en intelligence artificielle, bas�
 - **Modération** (admin et modérateurs, `Chat\ModerationController`, `Chat\ReportController`) : supprimer n'importe quel message, épingler (5 au maximum, affichés en haut du groupe), sourdine (durées dans `config/chat.php`), exclusion et réintégration (page « Membres du groupe »), mode « annonces seulement », page « Messages signalés » `/moderation/signalements`. Règles du groupe affichées à l'entrée et après chaque modification, modifiables par l'admin (`/admin/groupes`, avec « appliquer à tous les groupes » ; texte par défaut dans `config/chat.php`).
 - **Admin** « Groupes de discussion » `/admin/groupes` : membres, messages, activité de la semaine, espace disque des fichiers (total et par groupe), mode annonces, règles.
 - **Notifications** : sur téléphone (Web Push, interface `App\Contracts\PushSender`, `App\Push\WebPushSender` avec les clés VAPID de `.env`, sinon `NullPushSender`), envoyées par la file d'attente (`App\Jobs\SendChatPushNotifications`) aux membres qui ne lisent pas déjà le groupe ; abonnements `push_subscriptions`. Réglages `/mon-espace/notifications` (téléphone, e-mail récapitulatif, groupes coupés) avec l'explication iPhone (ajout à l'écran d'accueil, iOS 16.4+). E-mail récapitulatif `App\Mail\ChatDigestMail` par `php artisan app:send-chat-digests` (planifié chaque jour à 18 h, heure de Lomé ; au plus un par jour, seulement s'il y a des non-lus pas encore annoncés).
+- **Expiration des fichiers lourds** : les notes vocales et les vidéos sont supprimées automatiquement après `media_retention_months` mois (`config/chat.php`, 12 par défaut, 0 = jamais) par `php artisan app:expire-chat-media` (planifié chaque nuit à 3 h, heure de Lomé). Le message reste avec la mention « Fichier expiré » (colonne `chat_messages.attachment_expired_at`, `ChatMessage::isExpired()`). Les textes, images et documents sont conservés. Annoncé dans les règles des groupes et la politique de confidentialité.
 - **Site installable** : `/manifest.webmanifest` et `/sw.js` (`Site\PwaController`, vue `resources/views/pwa/service-worker.blade.php`), icônes provisoires dans `public/icons/` (à remplacer par le logo). Le service worker ne met en cache **que** `/build/assets/` et `/icons/` : jamais une page, un message ni un fichier (test qui exécute sa règle avec Node.js).
-- **Tâches planifiées** (`routes/console.php`) : une seule ligne de cron sur Hostinger, `* * * * * php artisan schedule:run`, qui traite la file d'attente chaque minute (`queue:work --stop-when-empty`) et lance l'e-mail récapitulatif. `public/.user.ini` relève les limites d'envoi de PHP (vidéos de 50 Mo).
+- **Tâches planifiées** (`routes/console.php`) : une seule ligne de cron sur Hostinger, `* * * * * php artisan schedule:run`, qui traite la file d'attente chaque minute (`queue:work --stop-when-empty`), lance l'e-mail récapitulatif et l'expiration des notes vocales et vidéos. `public/.user.ini` relève les limites d'envoi de PHP (vidéos de 50 Mo).
 - **Tests** : faux diffuseur `Tests\Fakes\RecordingBroadcaster` (à la place de Pusher, peut simuler une panne) et faux envoi `Tests\Fakes\FakePushSender` ; tests dans `tests/Feature/Chat/`.
 - **Clés** (vides dans `.env.example`) : `BROADCAST_CONNECTION=pusher`, `PUSHER_APP_ID`, `PUSHER_APP_KEY`, `PUSHER_APP_SECRET`, `PUSHER_APP_CLUSTER` ; `WEBPUSH_PUBLIC_KEY`, `WEBPUSH_PRIVATE_KEY` (créées avec `php artisan app:webpush-keys`), `WEBPUSH_SUBJECT`.
 
@@ -131,6 +133,7 @@ composer dev       # serveur de développement
 composer test      # Pint + PHPStan + PHPUnit (à lancer avant chaque push)
 php artisan app:send-chat-digests   # e-mail récapitulatif des non-lus (planifié chaque jour)
 php artisan app:webpush-keys        # clés des notifications sur téléphone, à copier dans .env
+php artisan app:expire-chat-media   # suppression des notes vocales et vidéos expirées (planifiée chaque nuit)
 npm run build      # compilation CSS/JS
 php artisan migrate
 ```
@@ -143,6 +146,7 @@ php artisan migrate
 - `fonts.bunny.net` est bloqué : la police Instrument Sans est donc servie en local via le paquet npm `@fontsource-variable/instrument-sans`. C'est aussi plus rapide pour les visiteurs.
 - PHP 8.4 minimum (les dépendances Symfony 8 l'exigent) : sélectionner PHP 8.4 dans le panneau Hostinger.
 - Hostinger mutualisé ne dispose pas forcément de Node.js : prévoir à l'étape 11 de compiler les fichiers CSS/JS ailleurs (GitHub Actions) avant le déploiement.
+- **À vérifier à l'étape 11** : l'envoi réel d'une vidéo de 50 Mo dans un groupe sur Hostinger. `public/.user.ini` demande `upload_max_filesize = 64M` et `post_max_size = 70M`, mais Hostinger peut imposer ses propres limites : vérifier dans le panneau Hostinger (Avancé > Configuration PHP > Options PHP : `upload_max_filesize`, `post_max_size`, `max_execution_time`, `memory_limit`) et les augmenter si nécessaire, puis refaire l'essai depuis un téléphone.
 
 ## État d'avancement (passation)
 
@@ -150,7 +154,7 @@ php artisan migrate
 
 **Terminé et fusionné** : étape 5, lecteur de cours et gestion du contenu des formations (voir « Cours : contenu et lecteur »), avec Google Drive comme deuxième source vidéo (lecteur de secours) et liens Drive comme ressources (PR #7).
 
-**Terminé sur la branche `claude/update-showcase-site-content-qub9o0` (pas encore de pull request : attendre la validation de l'aperçu)** : étape 6, groupes de discussion (voir « Groupes de discussion »), rôle modérateur, notifications sur téléphone et e-mail récapitulatif, site installable, CGV et politique de confidentialité complétées. 277 tests verts. Texte à faire valider : règles par défaut des groupes (`config/chat.php`), durée de conservation des messages dans la politique de confidentialité.
+**Terminé sur la branche `claude/update-showcase-site-content-qub9o0` (pull request « Étape 6 : groupes de discussion », aperçu validé)** : étape 6, groupes de discussion (voir « Groupes de discussion »), rôle modérateur, notifications sur téléphone et e-mail récapitulatif, site installable, suppression automatique des notes vocales et vidéos après 12 mois, CGV et politique de confidentialité complétées. 281 tests verts. Validés par Joseph : règles par défaut des groupes, conservation des messages, fonctionnement des notifications.
 
 **Détail de l'étape 4 (PR #6)** : étape 4 modifiée, paiement Mobile Money manuel avec preuve de paiement (voir « Paiements »), écrans élève (paiement, confirmation, Mes achats, reçu), page admin « Paiements à vérifier », textes du site et pages légales (CGV, confidentialité) adaptés au paiement manuel, FedaPay et T-Money retirés des textes. Puis : numéros de téléphone enregistrés sans perdre aucun chiffre (Bénin 01…, Burkina Faso, Afrique de l'Ouest) et commande de réparation. Aperçu validé et fusionné (PR #6).
 
@@ -158,7 +162,7 @@ php artisan migrate
 
 **Reste à fournir par la porteuse du projet** : après la fusion de l'étape 5, le contenu réel des 17 formations (modules, leçons, liens YouTube non répertoriés et/ou Google Drive partagés « Tous les utilisateurs disposant du lien », fichiers) ; logo, images des formations, vrais témoignages, liens des réseaux sociaux. Validés tels quels par la porteuse du projet : « Ce que vous allez apprendre », « Pour qui est cette formation ? », formations mises en avant, « publication en librairie » (ebooks), « même en partant de zéro en programmation » (applications). Bonus éventuels à fournir.
 
-**Prochaine étape** : validation de l'aperçu de l'étape 6 puis pull request ; la porteuse du projet saisit le contenu de ses formations (écran « Contenu des formations ») ; ensuite étape 7 (sessions ponctuelles en direct et en présentiel). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
+**Prochaine étape** : fusion de la pull request de l'étape 6 ; la porteuse du projet saisit le contenu de ses formations (écran « Contenu des formations ») ; ensuite étape 7 (sessions ponctuelles en direct et en présentiel). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 
 **Décisions prises** :
 - Paiement (étape 4) validé par la porteuse du projet : retrait des mentions T-Money/FedaPay, précision « accès immédiat sous 50 000 FCFA, après vérification au-delà », 5 étapes de paiement, motifs de refus proposés à l'admin, question de FAQ « Et si mon paiement n'est pas reçu ? ».
@@ -189,4 +193,4 @@ php artisan migrate
 8. **Affiliation** : liens, suivi des ventes, commissions de 10 %, demandes de retrait Mobile Money.
 9. **Consultation gratuite** : réservation de créneaux.
 10. **Tableau de bord admin** : formations, élèves, ventes, retraits, chat, statistiques.
-11. **Mise en production** : Hostinger, MySQL, cron, e-mails, sauvegardes, nom de domaine. Créer le compte admin avec `php artisan app:make-admin academyjoseph71@gmail.com` (mot de passe choisi au moment de la commande).
+11. **Mise en production** : Hostinger, MySQL, cron, e-mails, sauvegardes, nom de domaine. Vérifier l'envoi réel d'une vidéo de 50 Mo (limites PHP du panneau Hostinger, à augmenter si nécessaire). Créer le compte admin avec `php artisan app:make-admin academyjoseph71@gmail.com` (mot de passe choisi au moment de la commande).

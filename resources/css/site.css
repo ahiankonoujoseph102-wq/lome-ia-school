@@ -356,6 +356,10 @@ body {
     background: var(--color-gold-300);
 }
 
+@utility chat-expired {
+    @apply mt-0.5 flex w-64 max-w-full items-center gap-3 rounded-xl bg-black/20 px-3 py-2.5 text-sm text-slate-300 italic;
+}
+
 @utility chat-file {
     @apply mt-0.5 flex w-72 max-w-full items-center gap-3 rounded-xl bg-black/20 p-2.5 transition hover:bg-black/30;
 }

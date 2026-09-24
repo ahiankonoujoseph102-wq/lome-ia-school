@@ -29,6 +29,7 @@ use Illuminate\Support\Str;
  * @property int|null $width
  * @property int|null $height
  * @property int|null $duration_seconds
+ * @property Carbon|null $attachment_expired_at Note vocale ou vidéo supprimée après la durée de conservation.
  * @property Carbon|null $pinned_at
  * @property int|null $pinned_by
  * @property Carbon|null $deleted_at
@@ -70,6 +71,7 @@ class ChatMessage extends Model
             'width' => 'integer',
             'height' => 'integer',
             'duration_seconds' => 'integer',
+            'attachment_expired_at' => 'datetime',
             'pinned_at' => 'datetime',
             'deleted_at' => 'datetime',
         ];
@@ -126,6 +128,14 @@ class ChatMessage extends Model
         return $this->pinned_at !== null && ! $this->isDeleted();
     }
 
+    /**
+     * Fichier supprimé automatiquement après la durée de conservation (le message reste).
+     */
+    public function isExpired(): bool
+    {
+        return $this->attachment_expired_at !== null && ! $this->isDeleted();
+    }
+
     public function hasAttachment(): bool
     {
         return $this->attachment_path !== null && ! $this->isDeleted();
@@ -149,6 +159,10 @@ class ChatMessage extends Model
         $label = $this->type === ChatMessageType::File && $this->attachment_name
             ? '📄 '.$this->attachment_name
             : $this->type->preview();
+
+        if ($this->isExpired()) {
+            $label .= ' (fichier expiré)';
+        }
 
         return Str::limit($text !== '' ? $label.' · '.$text : $label, $limit);
     }
@@ -209,6 +223,7 @@ class ChatMessage extends Model
             'width' => null,
             'height' => null,
             'duration_seconds' => null,
+            'attachment_expired_at' => null,
             'pinned_at' => null,
             'pinned_by' => null,
             'deleted_at' => now(),

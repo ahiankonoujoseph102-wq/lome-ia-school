@@ -48,6 +48,11 @@ return [
         'file' => ['max_kb' => 20 * 1024, 'mimes' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 'txt']],
     ],
 
+    // Notes vocales et vidéos : fichier supprimé automatiquement après ce nombre de mois (tâche planifiée
+    // chaque nuit). Le message reste avec la mention « Fichier expiré ». Textes, images et documents sont conservés.
+    // Mettre 0 pour ne jamais supprimer.
+    'media_retention_months' => 12,
+
     // Durées de mise en sourdine proposées aux modérateurs (en heures).
     'mute_durations' => [
         1 => '1 heure',
@@ -70,6 +75,7 @@ Bienvenue dans le groupe de la formation ! Ce groupe est réservé aux élèves 
 • Ne partagez pas le contenu de la formation (vidéos, fichiers) en dehors du groupe.
 • Ne demandez pas et ne publiez pas de numéros de téléphone ou de données personnelles.
 • Utilisez le bouton « Signaler » si un message pose problème : l'équipe s'en occupe.
+• Les notes vocales et les vidéos sont supprimées automatiquement 12 mois après leur envoi : enregistrez celles que vous voulez garder.
 
 L'équipe peut supprimer un message, mettre un membre en sourdine ou l'exclure du groupe en cas de non-respect de ces règles.
 TXT,
