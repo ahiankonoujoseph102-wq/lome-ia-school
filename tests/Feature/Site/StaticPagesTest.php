@@ -18,7 +18,7 @@ class StaticPagesTest extends TestCase
         return [
             'à propos' => ['about', 'Joseph Ahiankonou'],
             'contact' => ['contact', 'academyjoseph71@gmail.com'],
-            'consultation' => ['consultation', 'Réserver ma consultation gratuite'],
+            'consultation' => ['consultation', 'Réservez votre créneau'],
             'mentions légales' => ['legal.notice', 'Mentions légales'],
             'CGV' => ['legal.terms', 'Conditions générales de vente'],
             'confidentialité' => ['legal.privacy', 'Politique de confidentialité'],

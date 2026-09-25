@@ -3,6 +3,11 @@
         <div class="space-y-3">
             @include('site.partials.admin-payments-link', ['class' => 'card px-4 py-4 font-semibold'])
             @include('site.partials.admin-withdrawals-link', ['class' => 'card px-4 py-4 font-semibold'])
+            @include('site.partials.admin-consultations-link', ['class' => 'card px-4 py-4 font-semibold'])
+            <a href="{{ route('admin.consultations.availability') }}" class="card flex items-center gap-2 px-4 py-4 font-semibold text-slate-200 hover:bg-veil/5">
+                <flux:icon.clock class="size-4" /> Disponibilités des consultations
+                <flux:icon.chevron-right class="ml-auto size-4 text-slate-500" />
+            </a>
             <a href="{{ route('admin.affiliates.index') }}" class="card flex items-center gap-2 px-4 py-4 font-semibold text-slate-200 hover:bg-veil/5">
                 <flux:icon.users class="size-4" /> Affiliés
                 <flux:icon.chevron-right class="ml-auto size-4 text-slate-500" />

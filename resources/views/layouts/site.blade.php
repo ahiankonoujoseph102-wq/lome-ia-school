@@ -110,6 +110,7 @@
             @endif
 
             <main id="contenu">
+                @include('site.partials.admin-meet-alert')
                 {{ $slot }}
             </main>
 

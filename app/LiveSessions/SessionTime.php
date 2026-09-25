@@ -50,9 +50,17 @@ class SessionTime
      */
     public static function neighbours(LiveSession $session): string
     {
+        return self::neighboursAt($session->starts_at);
+    }
+
+    /**
+     * Même chose pour n'importe quelle heure de début (consultations, créneaux).
+     */
+    public static function neighboursAt(CarbonInterface $start): string
+    {
         return collect((array) config('live_sessions.other_timezones'))
-            ->map(function (string $timezone, string $country) use ($session): string {
-                $local = $session->starts_at->copy()->setTimezone($timezone);
+            ->map(function (string $timezone, string $country) use ($start): string {
+                $local = $start->copy()->setTimezone($timezone);
                 $offset = $local->offsetHours;
 
                 return self::hour($local).' au '.$country.' (GMT'.($offset >= 0 ? '+' : '').$offset.')';
