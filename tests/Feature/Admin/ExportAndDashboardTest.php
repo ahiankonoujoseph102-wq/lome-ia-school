@@ -6,6 +6,8 @@ use App\Enums\AdminAction;
 use App\Enums\PurchaseStatus;
 use App\Models\Consultation;
 use App\Models\Formation;
+use App\Models\Lesson;
+use App\Models\LessonView;
 use App\Models\Purchase;
 use App\Models\User;
 use Illuminate\Testing\TestResponse;
@@ -90,5 +92,19 @@ class ExportAndDashboardTest extends AdminTestCase
             ->assertSee('Formation la plus vendue')
             ->assertSee('aria-label="Paiements à vérifier : 1"', false)
             ->assertSee('Ventes validées sur 30 jours');
+    }
+
+    public function test_active_students_are_counted_over_the_last_30_days(): void
+    {
+        $lesson = Lesson::factory()->create();
+        $view = fn (User $user, int $daysAgo) => LessonView::query()->create(['user_id' => $user->id, 'lesson_id' => $lesson->id, 'first_viewed_at' => now()->subDays($daysAgo), 'last_viewed_at' => now()->subDays($daysAgo)]);
+        $view(User::factory()->create(), 2);
+        $view(User::factory()->create(), 29);
+        $view(User::factory()->create(), 31);
+
+        $content = (string) $this->actingAs($this->admin)->get(route('admin.index'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/<span class="text-2xl font-bold text-white">2<\/span>\s*<span class="text-sm text-slate-300">sur les 30 derniers jours/', $content);
+        $this->assertStringNotContainsString('sur 7 jours', $content);
     }
 }

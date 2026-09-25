@@ -18,7 +18,7 @@ class InstallableSiteTest extends TestCase
             ->assertHeader('Content-Type', 'application/manifest+json')
             ->assertJsonPath('display', 'standalone')
             ->assertJsonPath('lang', 'fr')
-            ->assertJsonPath('icons.0.src', '/icons/icon-192.png')
+            ->assertJsonPath('icons.0.src', asset('icons/icon-192.png'))
             ->assertJsonPath('icons.2.purpose', 'maskable');
 
         foreach (['icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'badge-96.png'] as $icon) {

@@ -68,11 +68,14 @@ return [
         'youtube' => '',
     ],
 
-    // Logo et image de partage envoyés depuis l'admin (chemins sur le disque « public »). Vides : logo
-    // provisoire (ou public/images/logo.svg) et image de partage générée automatiquement.
+    // Logo, icônes et image de partage. Valeurs de départ : fichiers générés depuis les originaux de
+    // resources/brand/ (commande « php artisan app:brand-assets »). Modifiables dans l'admin (Réglages du
+    // site > Logo et image de partage) : un fichier envoyé est alors enregistré sur le disque « public ».
     'brand' => [
-        'logo' => null,
-        'og_image' => null,
+        'logo' => 'images/brand/logo-horizontal.png',
+        'logo_vertical' => 'images/brand/logo-vertical.jpg',
+        'icons' => 'icons',
+        'og_image' => 'images/brand/partage.jpg',
     ],
 
     /*

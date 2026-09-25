@@ -43,9 +43,13 @@
                 </div>
             @endforeach
         </div>
-        <div class="grid gap-3 sm:grid-cols-2">
-            <div class="card p-4"><p class="text-sm text-slate-400">Élèves actifs sur 7 jours</p><p class="mt-1 text-2xl font-bold text-white">{{ $activeStudents }}</p><p class="text-xs text-slate-500">Au moins une leçon consultée</p></div>
-            <div class="card p-4"><p class="text-sm text-slate-400">Élèves actifs sur 30 jours</p><p class="mt-1 text-2xl font-bold text-white">{{ $activeStudentsMonth }}</p><p class="text-xs text-slate-500">Au moins une leçon consultée</p></div>
+        <div class="card p-4" data-test="active-students">
+            <p class="text-sm text-slate-400">Élèves actifs</p>
+            <p class="mt-1 flex flex-wrap items-baseline gap-x-2">
+                <span class="text-2xl font-bold text-white">{{ $activeStudents }}</span>
+                <span class="text-sm text-slate-300">sur les 30 derniers jours (du {{ $activeSince->translatedFormat('j M') }} à aujourd'hui)</span>
+            </p>
+            <p class="text-xs text-slate-500">Élèves ayant consulté au moins une leçon pendant cette période.</p>
         </div>
     </section>
 

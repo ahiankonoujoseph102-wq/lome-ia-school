@@ -55,6 +55,9 @@
         <div class="section">
             <div class="grid gap-10 lg:grid-cols-2 lg:items-center">
                 <div data-reveal>
+                    @if ($verticalLogo = \App\Support\Brand::url(config('site.brand.logo_vertical')))
+                        <img src="{{ $verticalLogo }}" alt="Logo de Lomé IA School" class="mb-6 size-40 rounded-3xl shadow-xl shadow-black/40 ring-1 ring-veil/15 sm:size-48" width="192" height="192" loading="lazy" data-test="about-logo">
+                    @endif
                     <span class="eyebrow">Lomé IA School</span>
                     <h2 class="mt-4 text-3xl font-bold text-white sm:text-4xl">Notre mission</h2>
                     <p class="mt-4 text-lg leading-relaxed text-slate-300">{{ $about['mission'] }}</p>

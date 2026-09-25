@@ -42,8 +42,9 @@ class DashboardController extends Controller
 
         return view('site.admin.dashboard', [
             'stats' => $stats,
-            'activeStudents' => LessonView::query()->where('last_viewed_at', '>=', $now->subDays(7))->distinct()->count('user_id'),
-            'activeStudentsMonth' => LessonView::query()->where('last_viewed_at', '>=', $now->subDays(30))->distinct()->count('user_id'),
+            // Élèves actifs : au moins une leçon consultée sur les 30 derniers jours.
+            'activeStudents' => LessonView::query()->where('last_viewed_at', '>=', $now->subDays(30))->distinct()->count('user_id'),
+            'activeSince' => $now->subDays(30),
             'chart' => $this->dailySales($now),
             'top' => $this->topFormations($now),
             'todo' => [

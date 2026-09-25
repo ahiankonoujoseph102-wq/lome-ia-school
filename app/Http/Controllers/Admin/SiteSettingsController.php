@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Admin\ActivityLog;
+use App\Branding\BrandAssets;
 use App\Enums\AdminAction;
 use App\Http\Controllers\Controller;
 use App\Services\ImageUploader;
@@ -11,7 +12,9 @@ use App\Support\PhoneNumber;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -26,7 +29,7 @@ class SiteSettingsController extends Controller
      */
     public const array SECTIONS = [
         'coordonnees' => ['title' => 'Coordonnées et chiffres clés', 'text' => 'Téléphones, e-mail, adresse, horaires, WhatsApp, réseaux sociaux, personnes formées, année de création.', 'icon' => 'phone'],
-        'image' => ['title' => 'Logo et image de partage', 'text' => 'Logo du site et image affichée lors d\'un partage sur WhatsApp ou Facebook.', 'icon' => 'photo'],
+        'image' => ['title' => 'Logo, icône et image de partage', 'text' => 'Logo du site, icône (onglet du navigateur, écran d\'accueil du téléphone) et image affichée lors d\'un partage sur WhatsApp ou Facebook.', 'icon' => 'photo'],
         'paiements' => ['title' => 'Moyens de paiement', 'text' => 'Numéros Mobile Money, bénéficiaires, pays, mention du représentant, adresse des alertes.', 'icon' => 'banknotes', 'sensitive' => true],
         'regles' => ['title' => 'Seuils et délais', 'text' => 'Seuil d\'accès provisoire, délai de vérification, réglages des sessions.', 'icon' => 'adjustments-horizontal'],
         'affiliation' => ['title' => 'Affiliation', 'text' => 'Taux de commission, durée des liens, délai de disponibilité, retrait minimum.', 'icon' => 'share', 'sensitive' => true],
@@ -137,38 +140,48 @@ class SiteSettingsController extends Controller
     {
         $request->validate([
             'logo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'icon' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192', 'dimensions:min_width=512,min_height=512'],
             'og_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
-            'remove_logo' => ['nullable', 'boolean'],
-            'remove_og_image' => ['nullable', 'boolean'],
+            'reset' => ['nullable', 'array'],
+            'reset.*' => [Rule::in(['logo', 'icons', 'og_image'])],
         ], [
             'logo.image' => 'Le logo doit être une image (PNG, JPEG ou WebP).',
+            'icon.image' => 'L\'icône doit être une image (PNG, JPEG ou WebP).',
+            'icon.dimensions' => 'L\'icône doit mesurer au moins 512 × 512 pixels (carrée de préférence).',
             'og_image.image' => 'L\'image de partage doit être une image (JPEG, PNG ou WebP).',
         ]);
 
         $brand = (array) SiteSettings::get('site.brand');
+        $defaults = (array) SiteSettings::default('site.brand');
+        $labels = ['logo' => 'logo', 'icons' => 'icône', 'og_image' => 'image de partage'];
         $changes = [];
 
-        if ($request->boolean('remove_logo') && ! empty($brand['logo'])) {
-            $images->delete((string) $brand['logo']);
-            $brand['logo'] = null;
-            $changes[] = 'logo retiré';
-        }
-
-        if ($request->boolean('remove_og_image') && ! empty($brand['og_image'])) {
-            $images->delete((string) $brand['og_image']);
-            $brand['og_image'] = null;
-            $changes[] = 'image de partage retirée';
+        // Revenir aux fichiers d'origine (logo et icône de Lomé IA School livrés avec le site).
+        foreach ((array) $request->input('reset', []) as $key) {
+            if (($brand[$key] ?? null) !== ($defaults[$key] ?? null)) {
+                $this->deleteUploaded($key, (string) ($brand[$key] ?? ''), $images);
+                $brand[$key] = $defaults[$key] ?? null;
+                $changes[] = $labels[$key].' d\'origine rétabli';
+            }
         }
 
         if ($request->hasFile('logo')) {
-            $images->delete($brand['logo'] ?? null);
-            // Logo : réduit (hauteur 144 px, affiché à 36 px), transparence conservée.
-            $brand['logo'] = $images->fit($request->file('logo'), 'site', 640, 144, keepTransparency: true, field: 'logo');
+            $this->deleteUploaded('logo', (string) ($brand['logo'] ?? ''), $images);
+            // Logo horizontal : hauteur 120 px (affiché à 40 px sur les écrans 3x), transparence conservée.
+            $brand['logo'] = $images->fit($request->file('logo'), 'site', 600, 120, keepTransparency: true, field: 'logo');
             $changes[] = 'nouveau logo';
         }
 
+        if ($request->hasFile('icon')) {
+            $this->deleteUploaded('icons', (string) ($brand['icons'] ?? ''), $images);
+            $directory = 'site/icones-'.Str::lower(Str::random(12));
+            app(BrandAssets::class)->icons((string) $request->file('icon')->getRealPath(), Storage::disk('public')->path($directory));
+            $brand['icons'] = $directory;
+            $changes[] = 'nouvelle icône (favicon et écran d\'accueil)';
+        }
+
         if ($request->hasFile('og_image')) {
-            $images->delete($brand['og_image'] ?? null);
+            $this->deleteUploaded('og_image', (string) ($brand['og_image'] ?? ''), $images);
             $brand['og_image'] = $images->cover($request->file('og_image'), 'site', 1200, 630, field: 'og_image');
             $changes[] = 'nouvelle image de partage';
         }
@@ -178,7 +191,19 @@ class SiteSettingsController extends Controller
         }
 
         SiteSettings::save(['site.brand' => $brand]);
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Logo et image de partage : '.implode(', ', $changes).'.');
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Logo, icône et image de partage : '.implode(', ', $changes).'.');
+    }
+
+    /**
+     * Supprime un fichier envoyé depuis l'admin (jamais les fichiers d'origine livrés dans public/).
+     */
+    private function deleteUploaded(string $key, string $path, ImageUploader $images): void
+    {
+        if ($path === '' || ! str_starts_with($path, 'site/')) {
+            return;
+        }
+
+        $key === 'icons' ? Storage::disk('public')->deleteDirectory($path) : $images->delete($path);
     }
 
     private function updatePayments(Request $request): void

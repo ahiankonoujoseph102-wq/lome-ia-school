@@ -24,7 +24,7 @@ class SeoFilesTest extends TestCase
 
     public function test_site_share_image_is_available(): void
     {
-        $this->get(route('og.site'))->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->get(route('og.site'))->assertOk()->assertHeader('Content-Type', 'image/jpeg');
     }
 
     public function test_inactive_formation_has_no_share_image(): void

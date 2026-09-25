@@ -208,6 +208,25 @@ class SiteSettingsTest extends AdminTestCase
 
         $this->get(route('home'))->assertOk()->assertSee(Storage::disk('public')->url($logo));
         $this->get(route('og.site'))->assertOk()->assertHeader('Content-Type', 'image/jpeg');
+
+        // Nouvelle icône : toutes les tailles sont créées et utilisées (onglet, écran d'accueil, notifications).
+        $this->actingAs($this->admin)->put(route('admin.settings.update', 'image'), [
+            'icon' => UploadedFile::fake()->image('icone.png', 600, 600),
+        ])->assertSessionHasNoErrors();
+        $icons = (string) config('site.brand.icons');
+        Storage::disk('public')->assertExists(["{$icons}/favicon.ico", "{$icons}/favicon-32.png", "{$icons}/apple-touch-icon.png", "{$icons}/icon-512.png", "{$icons}/icon-maskable-512.png", "{$icons}/badge-96.png"]);
+        $this->get(route('home'))->assertSee(Storage::disk('public')->url("{$icons}/favicon-32.png"));
+        $this->get(route('pwa.manifest'))->assertJsonPath('icons.0.src', Storage::disk('public')->url("{$icons}/icon-192.png"));
+
+        // Retour aux fichiers d'origine : les fichiers envoyés sont supprimés.
+        $this->actingAs($this->admin)->put(route('admin.settings.update', 'image'), ['reset' => ['logo', 'icons', 'og_image']])->assertSessionHasNoErrors();
+        $this->assertSame('images/brand/logo-horizontal.png', config('site.brand.logo'));
+        $this->assertSame('icons', config('site.brand.icons'));
+        Storage::disk('public')->assertMissing([$logo, $og, "{$icons}/icon-192.png"]);
+        $this->get(route('home'))->assertSee(asset('images/brand/logo-horizontal.png'));
+
+        // Une icône trop petite est refusée.
+        $this->actingAs($this->admin)->put(route('admin.settings.update', 'image'), ['icon' => UploadedFile::fake()->image('petite.png', 100, 100)])->assertSessionHasErrors('icon');
     }
 
     public function test_settings_are_forbidden_to_students_and_moderators(): void
