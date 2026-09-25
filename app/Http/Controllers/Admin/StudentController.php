@@ -13,13 +13,14 @@ use App\Models\AdminActivity;
 use App\Models\Consultation;
 use App\Models\Formation;
 use App\Models\User;
-use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * « Élèves » (admin uniquement) : liste avec recherche et filtres, fiche complète, accès manuel.
@@ -145,7 +146,11 @@ class StudentController extends Controller
         $admin = $request->user();
         $formation = Formation::query()->findOrFail((int) $validated['formation_id']);
 
-        $access->grant($user, $formation, (int) $validated['amount'], (string) $validated['method'], (string) $validated['reason'], $admin);
+        try {
+            $access->grant($user, $formation, (int) $validated['amount'], (string) $validated['method'], (string) $validated['reason'], $admin);
+        } catch (ValidationException $exception) {
+            throw $exception->errorBag('manualAccess');
+        }
 
         return back()->with('status', 'Accès ouvert à « '.$formation->title.' » pour '.$user->name.'. L\'élève a reçu son reçu par e-mail et a rejoint le groupe de la formation.');
     }
@@ -154,7 +159,7 @@ class StudentController extends Controller
      * Historique du compte : inscription, achats, accès, consultations, actions de l'équipe.
      *
      * @param  Collection<int, Consultation>  $consultations
-     * @return Collection<int, array{at: CarbonInterface, icon: string, text: string}>
+     * @return Collection<int, array{at: Carbon, icon: string, text: string}>
      */
     private function history(User $user, Collection $consultations): Collection
     {
@@ -181,7 +186,7 @@ class StudentController extends Controller
             ->where('subject_type', $user->getMorphClass())
             ->where('subject_id', $user->id)
             ->get()
-            ->each(fn (AdminActivity $activity) => $events->push(['at' => $activity->created_at, 'icon' => 'shield-check', 'text' => $activity->action->label().' par '.($activity->user?->name ?? 'le système').($activity->description ? ' : '.$activity->description : '')]));
+            ->each(fn (AdminActivity $activity) => $events->push(['at' => $activity->created_at, 'icon' => 'shield-check', 'text' => $activity->action->label().' par '.($activity->user->name ?? 'le système').($activity->description ? ' : '.$activity->description : '')]));
 
         return $events->filter(fn (array $event): bool => $event['at'] !== null)->sortByDesc('at')->values();
     }

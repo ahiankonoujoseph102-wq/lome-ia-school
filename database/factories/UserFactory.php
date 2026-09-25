@@ -46,7 +46,7 @@ class UserFactory extends Factory
     public function configure(): static
     {
         return $this->afterMaking(function (User $user): void {
-            if ($user->role instanceof UserRole && $user->role->isStaff() && $user->two_factor_confirmed_at === null && $user->two_factor_secret !== 'none') {
+            if (in_array($user->getAttribute('role'), [UserRole::Admin, UserRole::Moderator], true) && $user->two_factor_confirmed_at === null && $user->two_factor_secret !== 'none') {
                 $user->forceFill([
                     'two_factor_secret' => encrypt('secret'),
                     'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),

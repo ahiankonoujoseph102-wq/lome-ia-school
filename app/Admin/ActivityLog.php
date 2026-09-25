@@ -49,7 +49,7 @@ class ActivityLog
         ]));
 
         foreach ($recipients as $email) {
-            Mail::to($email)->send(new SecurityAlertMail($activity, $by?->name ?? 'Système', (string) request()->ip()));
+            Mail::to($email)->send(new SecurityAlertMail($activity, $by->name ?? 'Système', (string) request()->ip()));
         }
     }
 }

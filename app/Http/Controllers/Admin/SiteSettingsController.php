@@ -327,7 +327,13 @@ class SiteSettingsController extends Controller
             }
         }
 
-        SiteSettings::save(collect($validated)->mapWithKeys(fn ($value, $key): array => ['affiliate.'.$key => (int) $value])->all());
+        $values = [];
+
+        foreach ($validated as $key => $value) {
+            $values['affiliate.'.$key] = (int) $value;
+        }
+
+        SiteSettings::save($values);
 
         ActivityLog::record(AdminAction::AffiliateSettingsUpdated, 'Réglages d\'affiliation modifiés'.($changes === [] ? ' (aucune valeur changée).' : ' : '.implode(', ', $changes).'.'));
     }
@@ -473,17 +479,5 @@ class SiteSettingsController extends Controller
     public static function palette(): array
     {
         return ['#facc15', '#3b82f6', '#f97316', '#38bdf8', '#eab308', '#2563eb', '#a855f7', '#22c55e', '#ef4444'];
-    }
-
-    /**
-     * Règles des pays pour la liste de sélection.
-     *
-     * @return array<string, string>
-     */
-    public static function countryOptions(): array
-    {
-        return collect((array) SiteSettings::get('site.payments.countries'))
-            ->map(fn ($country, $code): string => trim(($country['flag'] ?? '').' '.($country['name'] ?? $code)))
-            ->all();
     }
 }

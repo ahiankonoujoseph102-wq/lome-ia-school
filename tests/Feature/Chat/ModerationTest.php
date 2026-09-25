@@ -174,8 +174,8 @@ class ModerationTest extends ChatTestCase
 
         $this->actingAs($future)->get(route('admin.moderators.index'))->assertForbidden();
 
-        $this->actingAs($admin)->post(route('admin.moderators.store'), ['email' => 'inconnu@example.com'])->assertSessionHasErrors('email');
-        $this->actingAs($admin)->post(route('admin.moderators.store'), ['email' => 'ESI@example.com'])->assertSessionHasNoErrors();
+        $this->actingAs($admin)->post(route('admin.moderators.store'), ['email' => 'inconnu@example.com', 'current_password' => 'password'])->assertSessionHasErrors('email');
+        $this->actingAs($admin)->post(route('admin.moderators.store'), ['email' => 'ESI@example.com', 'current_password' => 'password'])->assertSessionHasNoErrors();
 
         $this->assertSame(UserRole::Moderator, $future->refresh()->role);
         $this->assertTrue(ChatGroupMember::query()->where('user_id', $future->id)->where('chat_group_id', $this->group()->id)->whereNull('removed_at')->exists());
@@ -184,7 +184,7 @@ class ModerationTest extends ChatTestCase
         $this->actingAs($this->student())->get($this->url('chat.show'))->assertSee('Équipe');
         $this->actingAs($admin)->get(route('admin.moderators.index'))->assertSee('Esi Amevor');
 
-        $this->actingAs($admin)->delete(route('admin.moderators.destroy', $future))->assertRedirect();
+        $this->actingAs($admin)->delete(route('admin.moderators.destroy', $future), ['current_password' => 'password'])->assertRedirect();
         $this->assertSame(UserRole::Student, $future->refresh()->role);
         $this->assertFalse(ChatGroupMember::query()->where('user_id', $future->id)->whereNull('removed_at')->exists());
         $this->actingAs($future)->get($this->url('chat.show'))->assertForbidden();

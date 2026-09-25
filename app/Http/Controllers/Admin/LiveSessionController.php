@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Admin\ActivityLog;
+use App\Enums\AdminAction;
 use App\Enums\RegistrationStatus;
 use App\Enums\SessionFormat;
 use App\Enums\SessionPriceType;
@@ -54,6 +56,7 @@ class LiveSessionController extends Controller
         /** @var User $user */
         $user = $request->user();
         $session = $this->manager->create($request->sessionData(), $user);
+        ActivityLog::record(AdminAction::SessionCreated, 'Session créée : '.$session->displayTitle().' ('.$session->formation->title.'), le '.$session->starts_at->translatedFormat('j F Y à H\hi').'.', $session);
 
         return to_route('admin.sessions.show', $session)->with('status', 'Session créée. L\'annonce est publiée et épinglée dans le groupe de la formation.');
     }
@@ -93,6 +96,7 @@ class LiveSessionController extends Controller
         }
 
         $changes = $this->manager->update($session, $data, $user);
+        ActivityLog::record(AdminAction::SessionUpdated, 'Session modifiée : '.$session->displayTitle().($changes === [] ? '.' : ' ('.implode(', ', $changes).').'), $session);
 
         return to_route('admin.sessions.show', $session)->with('status', $changes === []
             ? 'Session enregistrée.'
@@ -106,6 +110,7 @@ class LiveSessionController extends Controller
         /** @var User $user */
         $user = $request->user();
         $this->manager->cancel($session, is_string($reason) ? $reason : null, $user);
+        ActivityLog::record(AdminAction::SessionCancelled, 'Session annulée : '.$session->displayTitle().(is_string($reason) && $reason !== '' ? '. Motif : '.$reason : '.'), $session);
 
         return to_route('admin.sessions.show', $session)->with('status', 'Session annulée. Les élèves concernés sont prévenus par e-mail et notification.');
     }
@@ -169,6 +174,7 @@ class LiveSessionController extends Controller
         /** @var User $admin */
         $admin = $request->user();
         $purchases->refund($purchase, $admin);
+        ActivityLog::record(AdminAction::PaymentRefunded, 'Supplément remboursé : '.$purchase->item_label.' ('.$purchase->formatted_amount.') pour '.($purchase->user->name ?? 'un élève').'.', $purchase);
 
         return back()->with('status', 'Supplément marqué comme remboursé.');
     }

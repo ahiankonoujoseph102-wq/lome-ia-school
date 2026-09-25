@@ -51,7 +51,7 @@ class AdminConsultationsTest extends ConsultationTestCase
             ->assertSee('Créer mon site vitrine')
             ->assertSee('https://wa.me/22890123411', false);
 
-        $this->actingAs($admin)->get(route('admin.index'))->assertSee('Consultations du jour')->assertSee('aria-label="1 aujourd\'hui"', false);
+        $this->actingAs($admin)->get(route('admin.index'))->assertSee('Consultations du jour')->assertSee('aria-label="Consultations du jour : 1"', false);
     }
 
     public function test_admin_cancels_with_a_message_to_the_visitor(): void

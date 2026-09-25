@@ -99,10 +99,10 @@ class DashboardController extends Controller
 
         $titles = Formation::query()->whereIn('id', $rows->pluck('formation_id'))->pluck('title', 'id');
 
-        return $rows->map(fn ($row): array => [
+        return array_values($rows->map(fn ($row): array => [
             'title' => (string) ($titles[$row->getAttribute('formation_id')] ?? 'Formation supprimée'),
             'sales' => (int) $row->getAttribute('sales'),
             'revenue' => (int) $row->getAttribute('revenue'),
-        ])->values()->all();
+        ])->all());
     }
 }

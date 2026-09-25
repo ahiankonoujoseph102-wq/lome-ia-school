@@ -20,7 +20,7 @@
                 <a href="{{ $item['route'] }}" @class([
                     'card flex items-center gap-3 p-4 hover:bg-veil/5 lg:flex-col lg:items-start',
                     'ring-1 ring-gold-400/60' => $item['count'] > 0,
-                ]) data-test="todo-item">
+                ]) aria-label="{{ $item['label'] }} : {{ $item['count'] }}" data-test="todo-item">
                     <flux:icon :name="$item['icon']" @class(['size-5 shrink-0', 'text-gold-300' => $item['count'] > 0, 'text-slate-500' => $item['count'] === 0]) />
                     <span class="min-w-0 flex-1 text-sm text-slate-200">{{ $item['label'] }}</span>
                     <span @class(['text-2xl font-bold', 'text-white' => $item['count'] > 0, 'text-slate-500' => $item['count'] === 0])>{{ $item['count'] }}</span>

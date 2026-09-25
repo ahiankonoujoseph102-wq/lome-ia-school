@@ -84,7 +84,7 @@ class ImageUploader
 
     private function canvas(int $width, int $height, bool $opaque): GdImage
     {
-        $canvas = imagecreatetruecolor($width, $height);
+        $canvas = imagecreatetruecolor(max(1, $width), max(1, $height));
 
         if ($opaque) {
             // Fond blanc pour les images transparentes enregistrées en JPEG.
