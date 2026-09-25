@@ -34,8 +34,8 @@ class FormationPagesTest extends TestCase
             'price' => 30000,
             'outcomes' => ['Concevoir un agent adapté à un besoin précis'],
             'audience' => ['Les freelances'],
+            'bonuses' => ['Des modèles d\'instructions'],
         ]);
-        config(['site.bonuses.creation-agents-ia' => ['Des modèles d\'instructions']]);
 
         $this->get(route('formations.show', $formation))
             ->assertOk()

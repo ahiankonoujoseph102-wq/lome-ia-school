@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
+use App\Support\Brand;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
@@ -26,16 +27,17 @@ class PwaController extends Controller
             'scope' => '/',
             'display' => 'standalone',
             'orientation' => 'portrait',
-            'background_color' => '#050817',
+            'background_color' => '#030a2c',
             'theme_color' => '#0b1030',
             'icons' => [
-                ['src' => '/icons/icon-192.png', 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
-                ['src' => '/icons/icon-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
-                ['src' => '/icons/icon-maskable-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
+                ['src' => Brand::icon('icon-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+                ['src' => Brand::icon('icon-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+                ['src' => Brand::icon('icon-maskable-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'maskable'],
+                ['src' => Brand::icon('icon-maskable-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
             ],
             'shortcuts' => [
-                ['name' => 'Mes groupes', 'url' => '/mon-espace/groupes', 'icons' => [['src' => '/icons/icon-192.png', 'sizes' => '192x192']]],
-                ['name' => 'Mes formations', 'url' => '/mon-espace/formations', 'icons' => [['src' => '/icons/icon-192.png', 'sizes' => '192x192']]],
+                ['name' => 'Mes groupes', 'url' => '/mon-espace/groupes', 'icons' => [['src' => Brand::icon('icon-192.png'), 'sizes' => '192x192']]],
+                ['name' => 'Mes formations', 'url' => '/mon-espace/formations', 'icons' => [['src' => Brand::icon('icon-192.png'), 'sizes' => '192x192']]],
             ],
         ], 200, ['Content-Type' => 'application/manifest+json', 'Cache-Control' => 'public, max-age=3600'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }

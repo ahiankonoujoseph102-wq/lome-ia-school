@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Admin\ActivityLog;
 use App\Affiliates\AffiliateAlerts;
 use App\Courses\CourseProgress;
+use App\Enums\AdminAction;
 use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Purchase;
@@ -56,6 +58,7 @@ class PaymentController extends Controller
         $admin = $request->user();
 
         $this->purchases->validate($purchase, $admin);
+        ActivityLog::record(AdminAction::PaymentValidated, 'Paiement validé : '.$purchase->item_label.' ('.$purchase->formatted_amount.') pour '.($purchase->user->name ?? 'un élève').'.', $purchase);
 
         return to_route('admin.payments.index')->with('status', 'Paiement validé pour '.($purchase->user->name ?? 'l\'élève').'. Le reçu lui a été envoyé.');
     }
@@ -74,6 +77,7 @@ class PaymentController extends Controller
         $block = $request->boolean('block_user');
 
         $this->purchases->reject($purchase, $admin, (string) $validated['reason'], $block);
+        ActivityLog::record(AdminAction::PaymentRejected, 'Paiement refusé : '.$purchase->item_label.' ('.$purchase->formatted_amount.') pour '.($purchase->user->name ?? 'un élève').'. Motif : '.$validated['reason'].($block ? ' Compte bloqué.' : ''), $purchase);
 
         return to_route('admin.payments.index')->with('status', 'Paiement refusé : l\'accès a été retiré'.($block ? ' et le compte bloqué' : '').'. L\'élève a été prévenu par e-mail.');
     }
@@ -83,6 +87,7 @@ class PaymentController extends Controller
         abort_if($user->isAdmin(), 403);
 
         $this->purchases->block($user);
+        ActivityLog::record(AdminAction::UserBlocked, 'Compte bloqué : '.$user->name.' ('.$user->email.').', $user);
 
         return back()->with('status', 'Le compte de '.$user->name.' est bloqué.');
     }
@@ -90,6 +95,7 @@ class PaymentController extends Controller
     public function unblock(User $user): RedirectResponse
     {
         $this->purchases->unblock($user);
+        ActivityLog::record(AdminAction::UserUnblocked, 'Compte débloqué : '.$user->name.' ('.$user->email.').', $user);
 
         return back()->with('status', 'Le compte de '.$user->name.' est débloqué.');
     }

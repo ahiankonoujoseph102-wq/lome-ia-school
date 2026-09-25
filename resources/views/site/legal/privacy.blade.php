@@ -15,12 +15,13 @@
             <ul>
                 <li>Les informations de votre compte : nom, numéro WhatsApp, adresse e-mail et, si vous en ajoutez une, votre photo de profil.</li>
                 <li>Votre choix concernant l'information sur les nouvelles formations (oui ou non).</li>
-                <li>Les informations liées à vos achats : formations achetées, montants, dates.</li>
+                <li>Les informations liées à vos achats : formations achetées, montants, dates et, le cas échéant, le code promo utilisé.</li>
                 <li>Vos preuves de paiement : moyen de paiement utilisé, numéro qui a payé, nom de l'expéditeur, identifiant de la transaction et capture d'écran du paiement.</li>
                 <li>Les messages et fichiers que vous publiez dans les groupes de discussion des formations (textes, images, captures d'écran, notes vocales, vidéos, documents), ainsi que les signalements que vous faites.</li>
                 <li>Vos réglages de notifications et, si vous activez les notifications sur votre téléphone, l'adresse technique d'envoi fournie par votre navigateur.</li>
                 <li>Si vous devenez affilié : la date d'acceptation des conditions, vos coordonnées de retrait (pays, opérateur Mobile Money, numéro et nom du titulaire, ainsi que la date de leurs modifications), vos commissions et vos retraits (montants, frais d'envoi, identifiants de transaction).</li>
                 <li>Si vous réservez une consultation gratuite : votre nom, votre numéro WhatsApp, votre adresse e-mail, le sujet dont vous voulez parler, la formation qui vous intéresse (facultatif) et la date du rendez-vous ; après l'appel, votre présence, les notes de {{ config('site.trainer.name') }} et la formation recommandée.</li>
+                <li>Si vous acceptez de publier un témoignage : votre nom, la formation suivie, votre texte et, selon le cas, votre photo, la capture d'écran de votre message (numéro masqué) ou votre vidéo. Un témoignage n'est publié qu'avec votre accord et est retiré sur simple demande.</li>
                 <li>Si vous arrivez sur le site par le lien d'un affilié : le code de ce lien et la date du clic, puis, si vous vous inscrivez ou achetez, le fait que votre inscription ou votre achat vient de ce lien.</li>
             </ul>
             <p>Les captures d'écran de paiement sont stockées dans un espace privé : elles ne sont jamais publiques et ne sont visibles que par vous et par l'équipe qui vérifie les paiements. Nous ne vous demandons jamais vos codes Mobile Money. Au Burkina Faso et au Bénin, les informations de votre paiement peuvent être communiquées à notre représentant local, uniquement pour vérifier sa réception.</p>

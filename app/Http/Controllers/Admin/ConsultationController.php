@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Admin\ActivityLog;
 use App\Consultations\ConsultationBooker;
+use App\Enums\AdminAction;
 use App\Enums\ConsultationAttendance;
 use App\Enums\ConsultationStatus;
 use App\Http\Controllers\Controller;
@@ -50,6 +52,7 @@ class ConsultationController extends Controller
         ], ['message.required' => 'Écrivez un message au visiteur : il le reçoit par e-mail.']);
 
         $booker->cancel($consultation, 'admin', (string) $validated['message']);
+        ActivityLog::record(AdminAction::ConsultationCancelled, 'Consultation annulée : '.$consultation->name.', '.$consultation->starts_at->translatedFormat('j F Y à H\hi').'.', $consultation);
 
         return back()->with('status', 'Consultation annulée. Le visiteur a été prévenu par e-mail et le créneau est de nouveau disponible.');
     }

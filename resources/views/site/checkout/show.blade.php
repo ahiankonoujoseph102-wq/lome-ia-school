@@ -114,9 +114,44 @@
                                 </ul>
                             </div>
 
-                            <div class="flex items-center justify-between border-t border-veil/10 pt-4">
-                                <span class="text-slate-300">Total à payer</span>
-                                <span class="text-2xl font-bold text-gold-300">{{ $formation->formatted_price }}</span>
+                            {{-- Code promo : le montant à payer tient compte de la remise --}}
+                            @unless ($alreadyEnrolled)
+                                <details class="group border-t border-veil/10 pt-4" @if ($promoCode !== '') open @endif>
+                                    <summary class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-electric-200">
+                                        Vous avez un code promo ?
+                                        <flux:icon.chevron-down class="size-4 transition group-open:rotate-180" />
+                                    </summary>
+                                    <form method="GET" action="{{ route('checkout.show', $formation) }}" class="mt-3 flex gap-2">
+                                        <label for="code-promo" class="sr-only">Code promo</label>
+                                        <input id="code-promo" name="code" value="{{ $promoCode }}" maxlength="40" autocomplete="off" autocapitalize="characters" placeholder="Code promo" @class(['field-input min-w-0 flex-1 uppercase', 'field-input-error' => $promoError])>
+                                        <button type="submit" class="shrink-0 rounded-full px-4 text-sm font-semibold text-white ring-1 ring-veil/20 hover:bg-veil/10">Appliquer</button>
+                                    </form>
+                                    @if ($promoError)
+                                        <p class="mt-2 text-sm text-rose-300" data-test="promo-error">{{ $promoError }}</p>
+                                    @elseif ($quote)
+                                        <p class="mt-2 flex items-center justify-between gap-2 text-sm text-emerald-200" data-test="promo-applied">
+                                            <span class="flex items-center gap-1.5"><flux:icon.check-circle class="size-4" /> Code {{ $quote->code->code }} appliqué</span>
+                                            <a href="{{ route('checkout.show', $formation) }}" class="text-slate-400 underline hover:text-white">Retirer</a>
+                                        </p>
+                                    @endif
+                                </details>
+                            @endunless
+
+                            <div class="border-t border-veil/10 pt-4">
+                                @if ($quote)
+                                    <div class="flex items-center justify-between text-sm text-slate-400">
+                                        <span>Prix de la formation</span>
+                                        <s data-test="original-price">{{ $formation->formatted_price }}</s>
+                                    </div>
+                                    <div class="mt-1 flex items-center justify-between text-sm text-emerald-200">
+                                        <span>Remise ({{ $quote->code->valueLabel() }})</span>
+                                        <span>-{{ \App\Support\Money::fcfa($quote->discount) }}</span>
+                                    </div>
+                                @endif
+                                <div class="mt-2 flex items-center justify-between">
+                                    <span class="text-slate-300">Total à payer</span>
+                                    <span class="text-2xl font-bold text-gold-300" data-test="total-to-pay">{{ $payAmount }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -70,17 +70,7 @@
                             <a href="{{ route('student.purchases.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.receipt-percent class="size-4" /> Mes achats</a>
                             <a href="{{ route('student.affiliate.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.banknotes class="size-4" /> Affiliation</a>
                             <a href="{{ route('student.profile') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.user-circle class="size-4" /> Mon profil</a>
-                            @can('moderate-chat')
-                                <a href="{{ route('admin.sessions.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.calendar-days class="size-4" /> Gérer les sessions</a>
-                                <a href="{{ route('moderation.reports.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.flag class="size-4" /> Messages signalés</a>
-                            @endcan
-                            @can('access-admin')
-                                @include('site.partials.admin-payments-link', ['class' => 'rounded-xl px-3 py-2.5 text-sm'])
-                                @include('site.partials.admin-withdrawals-link', ['class' => 'rounded-xl px-3 py-2.5 text-sm'])
-                                @include('site.partials.admin-consultations-link', ['class' => 'rounded-xl px-3 py-2.5 text-sm'])
-                                <a href="{{ route('admin.content.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.play-circle class="size-4" /> Contenu des formations</a>
-                                <a href="{{ route('admin.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.shield-check class="size-4" /> Administration</a>
-                            @endcan
+                            @include('site.partials.admin-entry-link', ['class' => 'rounded-xl px-3 py-2.5 text-sm'])
                             <form method="POST" action="{{ route('logout') }}" class="border-t border-veil/10 pt-1">
                                 @csrf
                                 <button type="submit" class="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-slate-300 hover:bg-veil/5"><flux:icon.arrow-right-start-on-rectangle class="size-4" /> Se déconnecter</button>
@@ -155,16 +145,7 @@
                         </div>
                     </div>
                     <a href="{{ route('dashboard') }}" class="btn-ghost w-full">Mon espace</a>
-                    @can('moderate-chat')
-                        <a href="{{ route('admin.sessions.index') }}" class="card flex items-center gap-2 px-4 py-3.5 font-semibold text-slate-200 hover:bg-veil/5"><flux:icon.calendar-days class="size-4" /> Gérer les sessions</a>
-                        <a href="{{ route('moderation.reports.index') }}" class="card flex items-center gap-2 px-4 py-3.5 font-semibold text-slate-200 hover:bg-veil/5"><flux:icon.flag class="size-4" /> Messages signalés</a>
-                    @endcan
-                    @can('access-admin')
-                        @include('site.partials.admin-payments-link', ['class' => 'card px-4 py-3.5 font-semibold'])
-                        @include('site.partials.admin-withdrawals-link', ['class' => 'card px-4 py-3.5 font-semibold'])
-                        @include('site.partials.admin-consultations-link', ['class' => 'card px-4 py-3.5 font-semibold'])
-                        <a href="{{ route('admin.content.index') }}" class="card flex items-center gap-2 px-4 py-3.5 font-semibold text-slate-200 hover:bg-veil/5"><flux:icon.play-circle class="size-4" /> Contenu des formations</a>
-                    @endcan
+                    @include('site.partials.admin-entry-link', ['class' => 'card px-4 py-3.5 font-semibold'])
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="w-full rounded-full py-3 text-sm font-semibold text-slate-400 hover:text-white">Se déconnecter</button>

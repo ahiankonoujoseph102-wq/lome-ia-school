@@ -15,16 +15,17 @@
 
             <h2>2. Prix</h2>
             <p>Les prix sont indiqués en francs CFA (FCFA / XOF) sur la page de chaque formation. Le prix applicable est celui affiché au moment de la commande.</p>
+            <p id="codes-promo"><strong class="text-white">Codes promo.</strong> Un code promo peut réduire le prix d'une formation. La réduction et le nouveau montant sont affichés sur le récapitulatif de commande, avant le paiement. Chaque code a ses propres conditions (dates de validité, formations concernées, nombre d'utilisations) et ne peut être ni échangé ni remboursé en argent. Une réduction ne s'applique jamais à un achat déjà fait.</p>
 
             <h2>3. Commande et paiement</h2>
             <p>La commande nécessite la création d'un compte élève. Le paiement s'effectue par Mobile Money, en envoyant le montant sur l'un des numéros indiqués sur la page de commande (Togo, Burkina Faso ou Bénin). Au Burkina Faso et au Bénin, le paiement est reçu par un représentant de {{ $legal['company_name'] }}.</p>
-            <p>{{ config('site.payments.fees_notice') }} Le montant reçu doit être exactement égal au prix de la formation.</p>
+            <p>{{ config('site.payments.fees_notice') }} Le montant reçu doit être exactement égal au montant affiché sur la page de commande (prix de la formation, remise éventuelle déduite).</p>
             <p>Après le paiement, l'élève dépose sur le site sa preuve de paiement : moyen utilisé, numéro qui a payé, nom de l'expéditeur, identifiant de la transaction et capture d'écran. Un même identifiant de transaction ou une même capture ne peut être utilisé qu'une seule fois, et un seul paiement peut être en cours de vérification à la fois. Une formation déjà possédée ne peut pas être achetée une seconde fois. {{ $legal['company_name'] }} n'a jamais besoin de vos codes Mobile Money : ne les communiquez à personne.</p>
 
             <h2>4. Vérification du paiement et accès à la formation</h2>
             <p>Chaque paiement est vérifié par {{ $legal['company_name'] }}, {{ config('site.payments.verification_hours') }}.</p>
             <ul>
-                <li>Pour une formation dont le prix est inférieur à {{ \App\Support\Money::fcfa((int) config('site.payments.verification_threshold')) }}, l'accès à la formation et à son groupe privé est ouvert dès l'envoi de la preuve, à titre provisoire, puis confirmé après vérification.</li>
+                <li>Lorsque le montant payé (remise éventuelle déduite) est inférieur à {{ \App\Support\Money::fcfa((int) config('site.payments.verification_threshold')) }}, l'accès à la formation et à son groupe privé est ouvert dès l'envoi de la preuve, à titre provisoire, puis confirmé après vérification.</li>
                 <li>À partir de {{ \App\Support\Money::fcfa((int) config('site.payments.verification_threshold')) }}, l'accès est ouvert après la vérification du paiement.</li>
                 <li>Si le paiement n'est pas reçu, ou ne correspond pas à la preuve envoyée, le paiement est refusé : l'accès, même provisoire, est retiré immédiatement et l'élève en est informé par e-mail, avec le motif. En cas de fraude, le compte peut être bloqué.</li>
             </ul>

@@ -2,11 +2,14 @@
 
 namespace App\Support;
 
+use App\Models\Testimonial;
+use Illuminate\Support\Facades\Storage;
+
 class Testimonials
 {
     /**
-     * Témoignages de config/site.php prêts à afficher. Les entrées incomplètes
-     * (texte vide, image introuvable, lien YouTube invalide) sont ignorées.
+     * Témoignages actifs (gérés dans l'admin), dans l'ordre choisi, prêts à afficher.
+     * Les entrées incomplètes (texte vide, image introuvable, lien YouTube invalide) sont ignorées.
      *
      * @return list<array{type: string, name: ?string, formation: ?string, text: ?string, photo: ?string, image: ?string, youtube: ?string}>
      */
@@ -14,34 +17,36 @@ class Testimonials
     {
         $testimonials = [];
 
-        foreach ((array) config('site.testimonials', []) as $item) {
-            if (! is_array($item)) {
-                continue;
-            }
-
+        foreach (Testimonial::query()->where('is_active', true)->ordered()->get() as $item) {
             $testimonial = [
-                'type' => (string) ($item['type'] ?? 'text'),
-                'name' => self::string($item['name'] ?? null),
-                'formation' => self::string($item['formation'] ?? null),
-                'text' => self::string($item['text'] ?? null),
-                'photo' => self::image($item['photo'] ?? null),
-                'image' => self::image($item['image'] ?? null),
-                'youtube' => YouTube::id($item['youtube'] ?? null),
+                'type' => $item->type,
+                'name' => self::string($item->name),
+                'formation' => self::string($item->formation),
+                'text' => self::string($item->text),
+                'photo' => self::image($item->photo_path),
+                'image' => self::image($item->image_path),
+                'youtube' => YouTube::id($item->youtube_url),
             ];
 
-            $isValid = match ($testimonial['type']) {
-                'text' => $testimonial['text'] !== null && $testimonial['name'] !== null,
-                'screenshot' => $testimonial['image'] !== null,
-                'video' => $testimonial['youtube'] !== null,
-                default => false,
-            };
-
-            if ($isValid) {
+            if (self::isValid($testimonial)) {
                 $testimonials[] = $testimonial;
             }
         }
 
         return $testimonials;
+    }
+
+    /**
+     * @param  array{type: string, name: ?string, formation: ?string, text: ?string, photo: ?string, image: ?string, youtube: ?string}  $testimonial
+     */
+    public static function isValid(array $testimonial): bool
+    {
+        return match ($testimonial['type']) {
+            'text' => $testimonial['text'] !== null && $testimonial['name'] !== null,
+            'screenshot' => $testimonial['image'] !== null,
+            'video' => $testimonial['youtube'] !== null,
+            default => false,
+        };
     }
 
     private static function string(mixed $value): ?string
@@ -52,12 +57,10 @@ class Testimonials
     }
 
     /**
-     * Nom d'un fichier présent dans public/images/temoignages/, sinon null.
+     * Adresse d'une image envoyée depuis l'admin (disque « public »), si le fichier existe.
      */
-    private static function image(mixed $file): ?string
+    private static function image(?string $path): ?string
     {
-        $file = basename(trim((string) $file));
-
-        return $file !== '' && is_file(public_path('images/temoignages/'.$file)) ? $file : null;
+        return $path !== null && $path !== '' && Storage::disk('public')->exists($path) ? Storage::disk('public')->url($path) : null;
     }
 }

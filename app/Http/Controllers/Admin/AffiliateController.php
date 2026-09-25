@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Admin\ActivityLog;
 use App\Affiliates\AffiliateAccount;
 use App\Affiliates\AffiliateAlerts;
 use App\Affiliates\AffiliateManager;
 use App\Affiliates\WithdrawalManager;
+use App\Enums\AdminAction;
 use App\Enums\WithdrawalStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\AffiliateWithdrawal;
 use App\Models\User;
+use App\Support\Money;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,6 +61,7 @@ class AffiliateController extends Controller
         /** @var User $admin */
         $admin = $request->user();
         $manager->markPaid($withdrawal, $admin, (int) $validated['fee'], (string) $validated['transaction_id']);
+        ActivityLog::record(AdminAction::WithdrawalPaid, 'Retrait payé : '.Money::fcfa($withdrawal->amount).' à '.$withdrawal->affiliate->user->name.' (frais '.Money::fcfa((int) $validated['fee']).', transaction '.$validated['transaction_id'].').', $withdrawal);
 
         return to_route('admin.affiliates.withdrawals')->with('status', 'Retrait marqué comme payé. L\'affilié a été prévenu par e-mail.');
     }
@@ -73,6 +77,7 @@ class AffiliateController extends Controller
         /** @var User $admin */
         $admin = $request->user();
         $manager->reject($withdrawal, $admin, (string) $validated['reason']);
+        ActivityLog::record(AdminAction::WithdrawalRejected, 'Retrait refusé : '.Money::fcfa($withdrawal->amount).' pour '.$withdrawal->affiliate->user->name.'. Motif : '.$validated['reason'], $withdrawal);
 
         return to_route('admin.affiliates.withdrawals')->with('status', 'Retrait refusé : le montant est revenu dans le solde de l\'affilié, qui a été prévenu par e-mail.');
     }
@@ -92,6 +97,7 @@ class AffiliateController extends Controller
     {
         $validated = $request->validate(['reason' => ['nullable', 'string', 'max:500']]);
         $manager->suspend($affiliate, $validated['reason'] ?? null);
+        ActivityLog::record(AdminAction::AffiliateSuspended, 'Affilié suspendu : '.$affiliate->user->name.(filled($validated['reason'] ?? null) ? '. Motif : '.$validated['reason'] : '.'), $affiliate);
 
         return back()->with('status', 'Affilié suspendu : ses liens ne sont plus actifs, aucune nouvelle commission et aucun retrait.');
     }
@@ -99,6 +105,7 @@ class AffiliateController extends Controller
     public function unsuspend(Affiliate $affiliate, AffiliateManager $manager): RedirectResponse
     {
         $manager->unsuspend($affiliate);
+        ActivityLog::record(AdminAction::AffiliateUnsuspended, 'Affilié réactivé : '.$affiliate->user->name.'.', $affiliate);
 
         return back()->with('status', 'Affilié réactivé.');
     }

@@ -63,7 +63,7 @@
         <meta property="og:description" content="{{ $description }}">
         <meta property="og:url" content="{{ $canonical }}">
         <meta property="og:image" content="{{ $image }}">
-        <meta property="og:image:type" content="image/png">
+        <meta property="og:image:type" content="{{ $image === route('og.site') ? \App\Support\Brand::shareImageType() : 'image/png' }}">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:image:alt" content="{{ $title ?? $siteName }}">
@@ -72,9 +72,10 @@
         <meta name="twitter:description" content="{{ $description }}">
         <meta name="twitter:image" content="{{ $image }}">
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="icon" href="{{ \App\Support\Brand::icon('favicon.ico') }}" sizes="48x48">
+        <link rel="icon" href="{{ \App\Support\Brand::icon('favicon-32.png') }}" type="image/png" sizes="32x32">
+        <link rel="icon" href="{{ \App\Support\Brand::icon('favicon-16.png') }}" type="image/png" sizes="16x16">
+        <link rel="apple-touch-icon" href="{{ \App\Support\Brand::icon('apple-touch-icon.png') }}" sizes="180x180">
         {{-- Site installable sur l'écran d'accueil (nécessaire aux notifications sur iPhone) --}}
         <link rel="manifest" href="{{ route('pwa.manifest') }}">
         <meta name="mobile-web-app-capable" content="yes">
@@ -110,6 +111,7 @@
             @endif
 
             <main id="contenu">
+                @include('site.partials.admin-bar')
                 @include('site.partials.admin-meet-alert')
                 {{ $slot }}
             </main>

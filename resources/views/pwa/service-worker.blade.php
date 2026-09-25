@@ -71,8 +71,8 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
         self.registration.showNotification(data.title || 'Lomé IA School', {
             body: data.body || 'Nouveau message dans votre groupe.',
-            icon: '/icons/icon-192.png',
-            badge: '/icons/badge-96.png',
+            icon: @js(\App\Support\Brand::icon('icon-192.png')),
+            badge: @js(\App\Support\Brand::icon('badge-96.png')),
             tag: data.tag || 'lomeia',
             renotify: true,
             data: { url: data.url || '/mon-espace/groupes' },

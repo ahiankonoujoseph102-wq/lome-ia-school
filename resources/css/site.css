@@ -7,6 +7,9 @@
 @source '../views/site';
 @source '../views/layouts/site.blade.php';
 @source '../views/components/site';
+@source '../views/components/admin';
+@source '../../app/Enums';
+@source '../../app/Admin';
 @source '../js/site.js';
 @source '../js/chat.js';
 

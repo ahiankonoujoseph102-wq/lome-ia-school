@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Payments\PaymentMethod;
 use App\Payments\PaymentMethods;
 use App\Payments\ProofImageProcessor;
+use App\Promotions\PromoCodes;
 use App\Services\PurchaseManager;
 use App\Support\PhoneNumber;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -40,14 +41,21 @@ class SubmitManualPayment
         private PurchaseManager $purchases,
         private SessionRegistrar $sessions,
         private ReferralTracker $referrals,
+        private PromoCodes $promoCodes,
     ) {}
 
     /**
-     * @param  array{payment_method: string, payer_phone: string, payer_name: string, transaction_id: string}  $input
+     * @param  array{payment_method: string, payer_phone: string, payer_name: string, transaction_id: string, promo_code?: string|null}  $input
      */
     public function handle(User $user, Formation $formation, array $input, UploadedFile $proof, ?LiveSession $session = null): Purchase
     {
         $amount = $session !== null ? (int) $session->supplement_amount : $formation->price;
+        // Code promo (formations uniquement) : vérifié une première fois ici, puis sous verrou au moment d'enregistrer.
+        $promoInput = $session === null ? trim((string) ($input['promo_code'] ?? '')) : '';
+
+        if ($promoInput !== '') {
+            $this->promoCodes->quote($promoInput, $formation, $user);
+        }
 
         $method = PaymentMethods::findEnabled($input['payment_method']);
 
@@ -72,11 +80,16 @@ class SubmitManualPayment
         $path = $this->proofs->store($proof, $user->id);
 
         try {
-            $purchase = DB::transaction(function () use ($user, $formation, $session, $amount, $method, $transactionId, $payerPhone, $input, $path, $proofHash, $affiliateCode): Purchase {
+            $purchase = DB::transaction(function () use ($user, $formation, $session, $amount, $method, $transactionId, $payerPhone, $input, $path, $proofHash, $affiliateCode, $promoInput): Purchase {
                 // Verrou sur l'élève : deux envois simultanés ne peuvent pas passer tous les deux.
                 User::query()->whereKey($user->id)->lockForUpdate()->first();
                 $this->ensureCanPay($user, $formation, $session);
 
+                // Verrou sur le code promo : sa limite d'utilisations n'est jamais dépassée.
+                $quote = $promoInput !== '' ? $this->promoCodes->quote($promoInput, $formation, $user, lock: true) : null;
+                $amount = $quote?->amount() ?? $amount;
+
+                // Seuil d'accès provisoire appliqué au montant réellement payé (remise comprise).
                 $status = $amount < PaymentMethods::verificationThreshold()
                     ? PurchaseStatus::Provisional
                     : PurchaseStatus::Pending;
@@ -100,6 +113,9 @@ class SubmitManualPayment
                     'proof_hash' => $proofHash,
                     'status' => $status,
                     'affiliate_code' => $affiliateCode,
+                    'original_amount' => $quote?->originalAmount,
+                    'discount_amount' => $quote?->discount,
+                    'promo_code_id' => $quote?->code->id,
                 ]);
 
                 if ($session !== null) {

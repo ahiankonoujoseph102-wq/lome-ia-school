@@ -5,7 +5,8 @@
 @php
     $liveSession ??= null;
     $user ??= auth()->user();
-    $amount = $liveSession ? $liveSession->formattedSupplement() : $formation->formatted_price;
+    $amount = $liveSession ? $liveSession->formattedSupplement() : ($payAmount ?? $formation->formatted_price);
+    $quote ??= null;
     $payAction = $liveSession ? route('student.sessions.pay', $liveSession) : route('checkout.pay', $formation);
     $payments = config('site.payments');
     $samePayment = $unverifiedPurchase && ($liveSession
@@ -37,6 +38,9 @@
         class="space-y-6"
     >
         @error('formation')
+            <x-site.alert type="error">{{ $message }}</x-site.alert>
+        @enderror
+        @error('promo_code')
             <x-site.alert type="error">{{ $message }}</x-site.alert>
         @enderror
 
@@ -145,6 +149,9 @@
         {{-- Étape 3 : preuve de paiement --}}
         <form method="POST" action="{{ $payAction }}" enctype="multipart/form-data" class="card space-y-5 p-5 sm:p-6" aria-labelledby="titre-preuve">
             @csrf
+            @if ($quote)
+                <input type="hidden" name="promo_code" value="{{ $quote->code->code }}">
+            @endif
 
             <div>
                 <h2 id="titre-preuve" class="flex items-center gap-2 text-lg font-semibold text-white">

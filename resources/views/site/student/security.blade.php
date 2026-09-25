@@ -28,6 +28,13 @@
             <x-site.alert>{{ $messages[$status] }}</x-site.alert>
         @endif
 
+        @if ($user->isStaff() && ! $twoFactorEnabled)
+            <div class="rounded-2xl border-2 border-gold-400 bg-gold-400/15 px-4 py-3 text-sm text-gold-100" role="alert" data-test="two-factor-required">
+                <p class="font-bold text-white">Double authentification obligatoire</p>
+                <p class="mt-1">{{ \App\Http\Middleware\RequireStaffTwoFactor::MESSAGE }} Installez une application d'authentification (Google Authenticator, Microsoft Authenticator…), puis suivez les étapes ci-dessous.</p>
+            </div>
+        @endif
+
         {{-- Mot de passe --}}
         <section class="card p-5 sm:p-7" aria-labelledby="titre-mot-de-passe">
             <h2 id="titre-mot-de-passe" class="flex items-center gap-2 text-lg font-semibold text-white">
@@ -70,32 +77,49 @@
                     @if ($twoFactorEnabled)
                         <span class="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">Activée</span>
                     @else
-                        <span class="rounded-full border border-veil/15 bg-veil/5 px-2.5 py-1 text-xs font-semibold text-slate-300">Facultative</span>
+                        <span class="rounded-full border border-veil/15 bg-veil/5 px-2.5 py-1 text-xs font-semibold text-slate-300">{{ $user->isStaff() ? 'Obligatoire' : 'Facultative' }}</span>
                     @endif
                 </div>
 
                 @if ($twoFactorEnabled)
                     <p class="mt-2 text-sm text-slate-400">À chaque connexion, un code à 6 chiffres vous est demandé. Vous le trouvez dans votre application d'authentification.</p>
 
-                    <div class="mt-5 rounded-2xl border border-veil/10 bg-veil/[0.03] p-4" x-data="{ open: @js($showCodes) }">
+                    {{-- Codes de récupération : très visibles juste après l'activation ou le renouvellement. Style stable en mode sombre forcé. --}}
+                    <div @class([
+                        'mt-5 rounded-2xl p-4 sm:p-5',
+                        'border-2 border-gold-400 bg-gold-400/10' => $showCodes,
+                        'border border-veil/10 bg-veil/[0.03]' => ! $showCodes,
+                    ]) x-data="{ open: @js($showCodes), copied: false, codes: @js(implode("\n", $recoveryCodes)), copy() { const done = () => { this.copied = true; setTimeout(() => this.copied = false, 2500); }; if (navigator.clipboard?.writeText) { navigator.clipboard.writeText(this.codes).then(done); } else { const area = this.$refs.codes; area.hidden = false; area.select(); document.execCommand('copy'); area.hidden = true; done(); } } }" data-test="recovery-codes">
                         <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                                <p class="font-semibold text-white">Codes de récupération</p>
-                                <p class="text-sm text-slate-400">À utiliser si vous perdez votre téléphone. Chaque code ne sert qu'une fois.</p>
+                            <div class="min-w-0 flex-1">
+                                <p class="flex items-center gap-2 font-semibold text-white"><flux:icon.key class="size-5 text-gold-300" /> Codes de récupération</p>
+                                <p class="text-sm text-slate-300">À utiliser si vous perdez votre téléphone : chacun remplace une seule fois le code à 6 chiffres.</p>
                             </div>
-                            <button type="button" @click="open = !open" class="btn-ghost !px-4 !py-2 !text-sm" x-text="open ? 'Masquer les codes' : 'Voir les codes'">Voir les codes</button>
+                            @unless ($showCodes)
+                                <button type="button" @click="open = !open" class="btn-ghost !px-4 !py-2 !text-sm" x-text="open ? 'Masquer les codes' : 'Voir les codes'">Voir les codes</button>
+                            @endunless
                         </div>
-                        <div x-show="open" x-cloak class="mt-4 space-y-4">
-                            <ul class="grid grid-cols-2 gap-2 rounded-xl bg-night-950/80 p-4 font-mono text-sm text-gold-200 ring-1 ring-veil/10" aria-label="Codes de récupération">
+                        <div x-show="open" @unless ($showCodes) x-cloak @endunless class="mt-4 space-y-4">
+                            <p class="rounded-xl border border-gold-400/70 bg-night-950/60 px-4 py-3 text-sm font-semibold text-gold-100" role="alert" data-test="recovery-warning">
+                                <flux:icon.exclamation-triangle class="mr-1 inline size-5 align-text-bottom text-gold-300" />
+                                {{ 'Notez ces codes hors de votre téléphone. Sans eux, la perte du téléphone vous empêche d\'accéder '.($user->isStaff() ? 'à l\'administration.' : 'à votre compte.') }}
+                            </p>
+                            <ul class="grid grid-cols-2 gap-2 rounded-xl bg-night-950/80 p-4 font-mono text-base tracking-wide text-gold-100 ring-1 ring-gold-400/40 select-all" aria-label="Codes de récupération">
                                 @foreach ($recoveryCodes as $code)
                                     <li>{{ $code }}</li>
                                 @endforeach
                             </ul>
-                            <p class="text-xs text-slate-500">Conservez-les dans un endroit sûr (gestionnaire de mots de passe, carnet rangé).</p>
-                            <form method="POST" action="{{ route('two-factor.regenerate-recovery-codes') }}">
-                                @csrf
-                                <button type="submit" class="text-sm font-semibold text-electric-300 hover:text-white">Créer de nouveaux codes</button>
-                            </form>
+                            <textarea x-ref="codes" hidden readonly class="sr-only" aria-hidden="true">{{ implode("\n", $recoveryCodes) }}</textarea>
+                            <p class="text-xs text-slate-400">Par exemple : écrivez-les dans un carnet rangé chez vous, ou envoyez-les à une adresse e-mail que vous consultez depuis un autre appareil.</p>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" @click="copy()" class="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-gold-100 ring-2 ring-gold-400 hover:bg-gold-400/15" data-test="copy-recovery-codes">
+                                    <flux:icon.clipboard-document class="size-4" /> <span x-text="copied ? 'Codes copiés' : 'Copier les codes'">Copier les codes</span>
+                                </button>
+                                <form method="POST" action="{{ route('two-factor.regenerate-recovery-codes') }}" onsubmit="return confirm('Créer de nouveaux codes ? Les anciens ne fonctionneront plus.')">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-slate-200 ring-1 ring-veil/20 hover:bg-veil/10"><flux:icon.arrow-path class="size-4" /> Générer de nouveaux codes</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
 

@@ -14,24 +14,36 @@
         <form method="POST" action="{{ route('admin.moderators.store') }}" class="card mt-6 space-y-4 p-5 sm:p-6">
             @csrf
             <x-site.field name="email" label="Adresse e-mail du compte à nommer modérateur" type="email" :value="old('email')" required inputmode="email" autocomplete="off" />
-            <p class="text-xs text-slate-500">La personne doit d'abord avoir créé son compte sur le site.</p>
+            <p class="text-xs text-slate-500">La personne doit d'abord avoir créé son compte sur le site. Elle devra activer la double authentification pour accéder à la modération.</p>
+            <x-admin.password-confirm />
             <button type="submit" class="btn-gold w-full sm:w-auto"><flux:icon.user-plus class="size-5" /> Nommer modérateur</button>
         </form>
 
         <h2 class="mt-8 text-lg font-bold text-white">Modérateurs</h2>
         <ul class="card mt-3 divide-y divide-veil/[0.06]" data-test="moderators">
             @forelse ($moderators as $moderator)
-                <li class="flex items-center gap-3 px-4 py-3">
-                    <x-site.avatar :user="$moderator" class="size-10 text-xs" />
-                    <div class="min-w-0 flex-1">
-                        <p class="flex items-center gap-1.5"><span class="truncate font-semibold text-white">{{ $moderator->name }}</span> <span class="chat-badge chat-badge-team">Équipe</span></p>
-                        <p class="truncate text-xs text-slate-500">{{ $moderator->email }}</p>
+                @php $demoteErrors = $errors->getBag('demote'.$moderator->id); @endphp
+                <li class="px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <x-site.avatar :user="$moderator" class="size-10 text-xs" />
+                        <div class="min-w-0 flex-1">
+                            <p class="flex items-center gap-1.5"><span class="truncate font-semibold text-white">{{ $moderator->name }}</span> <span class="chat-badge chat-badge-team">Équipe</span></p>
+                            <p class="truncate text-xs text-slate-500">{{ $moderator->email }}</p>
+                        </div>
                     </div>
-                    <form method="POST" action="{{ route('admin.moderators.destroy', $moderator) }}" onsubmit="return confirm('Retirer le rôle de modérateur ?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="rounded-full px-3 py-2 text-sm font-semibold text-rose-300 ring-1 ring-rose-400/40 hover:bg-rose-500/10">Retirer</button>
-                    </form>
+                    <details class="group mt-2" @if ($demoteErrors->any()) open @endif>
+                        <summary class="inline-flex cursor-pointer list-none rounded-full px-3 py-1.5 text-sm font-semibold text-rose-300 ring-1 ring-rose-400/40 hover:bg-rose-500/10">Retirer le rôle</summary>
+                        <form method="POST" action="{{ route('admin.moderators.destroy', $moderator) }}" class="mt-3 space-y-3 rounded-2xl bg-rose-500/5 p-3 ring-1 ring-rose-400/30">
+                            @csrf
+                            @method('DELETE')
+                            <label for="demote-password-{{ $moderator->id }}" class="field-label">Votre mot de passe pour confirmer</label>
+                            <input id="demote-password-{{ $moderator->id }}" name="current_password" type="password" required autocomplete="current-password" @class(['field-input', 'field-input-error' => $demoteErrors->has('current_password')])>
+                            @if ($demoteErrors->has('current_password'))
+                                <p class="text-sm text-rose-300">{{ $demoteErrors->first('current_password') }}</p>
+                            @endif
+                            <button type="submit" class="rounded-full px-4 py-2 text-sm font-semibold text-rose-200 ring-1 ring-rose-400/50 hover:bg-rose-500/10">Confirmer le retrait</button>
+                        </form>
+                    </details>
                 </li>
             @empty
                 <li class="px-4 py-5 text-center text-sm text-slate-400">Aucun modérateur pour l'instant.</li>

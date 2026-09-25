@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\LogoutBlockedUser;
 use App\Http\Middleware\PreventPrivateCaching;
+use App\Http\Middleware\RequireStaffTwoFactor;
 use App\Http\Middleware\TrackAffiliateReferral;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'no-store' => PreventPrivateCaching::class,
+            'staff-2fa' => RequireStaffTwoFactor::class,
         ]);
 
         $middleware->web(append: [
