@@ -46,17 +46,19 @@
         <section class="card mt-6 p-5 sm:p-6">
             <h2 class="font-semibold text-white">Détails du paiement</h2>
             <dl class="mt-4 divide-y divide-veil/10 text-sm">
-                @foreach ([
+                @foreach (array_filter([
                     $purchase->itemHeading() => $purchase->item_label,
+                    'Prix avant remise' => $purchase->discount_amount ? \App\Support\Money::fcfa((int) $purchase->original_amount) : null,
+                    'Remise (code promo)' => $purchase->discount_amount ? '-'.\App\Support\Money::fcfa($purchase->discount_amount).($purchase->promoCode ? ' · '.$purchase->promoCode->code : '') : null,
                     'Montant' => $purchase->formatted_amount,
-                    'Moyen de paiement' => $purchase->payment_method_name.' · '.$purchase->payment_number,
+                    'Moyen de paiement' => collect([$purchase->payment_method_name, $purchase->payment_number])->filter()->implode(' · '),
                     'Bénéficiaire' => $purchase->payment_beneficiary,
                     'Numéro qui a payé' => $purchase->payer_phone,
                     'Nom de l\'expéditeur' => $purchase->payer_name,
                     'Identifiant de transaction' => $purchase->transaction_id,
                     'Envoyé le' => $purchase->created_at?->translatedFormat('j F Y à H\hi'),
                     'Référence' => $purchase->receipt_number,
-                ] as $label => $value)
+                ]) as $label => $value)
                     <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-2.5">
                         <dt class="text-slate-400">{{ $label }}</dt>
                         <dd class="font-medium break-all text-white">{{ $value }}</dd>

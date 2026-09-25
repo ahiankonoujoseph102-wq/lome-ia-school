@@ -26,6 +26,7 @@ class StorePaymentProofRequest extends FormRequest
             'payer_phone' => ['required', 'string', 'max:30'],
             'payer_name' => ['required', 'string', 'min:2', 'max:120'],
             'transaction_id' => ['required', 'string', 'min:4', 'max:100', 'regex:/^[\pL\pN\s.\-_\/:#]+$/u'],
+            'promo_code' => ['nullable', 'string', 'max:40'],
             'proof' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.(int) config('site.payments.proof_max_kb', 8192)],
         ];
     }

@@ -4,6 +4,7 @@ namespace App\Affiliates;
 
 use App\Enums\CommissionStatus;
 use App\Enums\CommissionType;
+use App\Enums\PaymentGateway;
 use App\Enums\PurchaseStatus;
 use App\Mail\AffiliateMail;
 use App\Models\Affiliate;
@@ -26,7 +27,8 @@ class CommissionManager
 {
     public function createFor(Purchase $purchase): ?AffiliateCommission
     {
-        if ($purchase->status !== PurchaseStatus::Validated || blank($purchase->affiliate_code)) {
+        // Jamais de commission sur un accès manuel (paiement reçu hors du site).
+        if ($purchase->status !== PurchaseStatus::Validated || blank($purchase->affiliate_code) || $purchase->gateway === PaymentGateway::Manual) {
             return null;
         }
 

@@ -3,9 +3,9 @@
 namespace Tests\Feature\Site;
 
 use App\Models\Formation;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Testimonial;
 use Database\Seeders\FormationSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 

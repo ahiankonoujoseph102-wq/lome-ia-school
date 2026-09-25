@@ -40,6 +40,7 @@ use Illuminate\Support\Collection;
  * @property-read string $formatted_price
  * @property-read string|null $image_url
  * @property-read EloquentCollection<int, Enrollment> $enrollments
+ * @property-read EloquentCollection<int, Purchase> $purchases
  * @property-read EloquentCollection<int, CourseModule> $modules
  * @property-read ChatGroup|null $chatGroup
  */
@@ -100,6 +101,16 @@ class Formation extends Model
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
+    }
+
+    /**
+     * Achats de la formation (et suppléments de ses sessions, « live_session_id » renseigné).
+     *
+     * @return HasMany<Purchase, $this>
+     */
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
     }
 
     /**

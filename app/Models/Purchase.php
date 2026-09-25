@@ -44,7 +44,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $refunded_at
  * @property Carbon|null $refund_due_at Supplément à rembourser : inscription annulée par l'élève dans le délai.
  * @property string|null $affiliate_code Code de l'affilié dont le lien a amené l'achat (dernier lien cliqué, 30 jours).
- * @property int|null $discount_amount
+ * @property int|null $original_amount Prix avant remise (code promo, accès manuel) ; « amount » est le montant réellement payé.
+ * @property int|null $discount_amount Remise du code promo, en FCFA.
+ * @property int|null $promo_code_id
+ * @property string|null $manual_reason Accès manuel : motif saisi par l'admin.
+ * @property-read PromoCode|null $promoCode
  * @property string|null $gateway_reference Référence de la passerelle (FedaPay, plus tard).
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -83,6 +87,9 @@ class Purchase extends Model
         'proof_hash',
         'status',
         'affiliate_code',
+        'original_amount',
+        'discount_amount',
+        'promo_code_id',
     ];
 
     /**
@@ -92,6 +99,7 @@ class Purchase extends Model
     {
         return [
             'amount' => 'integer',
+            'original_amount' => 'integer',
             'discount_amount' => 'integer',
             'gateway' => PaymentGateway::class,
             'status' => PurchaseStatus::class,
@@ -150,6 +158,22 @@ class Purchase extends Model
     /**
      * Paiement du supplément d'une session en présentiel (et non achat d'une formation).
      */
+    /**
+     * @return BelongsTo<PromoCode, $this>
+     */
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class);
+    }
+
+    /**
+     * Accès donné par l'admin pour un paiement reçu hors du site.
+     */
+    public function isManual(): bool
+    {
+        return $this->gateway === PaymentGateway::Manual;
+    }
+
     public function isSessionSupplement(): bool
     {
         return $this->live_session_id !== null;

@@ -51,7 +51,7 @@ enum PurchaseStatus: string
             self::Pending => 'bg-gold-400/15 text-gold-200 ring-gold-400/40',
             self::Validated => 'bg-emerald-400/15 text-emerald-200 ring-emerald-400/40',
             self::Rejected => 'bg-rose-400/15 text-rose-200 ring-rose-400/40',
-            self::Refunded => 'bg-white/10 text-slate-300 ring-white/20',
+            self::Refunded => 'bg-veil/10 text-slate-300 ring-veil/20',
         };
     }
 

@@ -93,7 +93,13 @@
                     <tr><th>{{ $purchase->itemHeading() }}</th><td>{{ $purchase->item_label }}</td></tr>
                     <tr><th>Date du paiement</th><td>{{ $purchase->created_at?->translatedFormat('j F Y') }}</td></tr>
                     <tr><th>Moyen de paiement</th><td>{{ $purchase->payment_method_name }}</td></tr>
-                    <tr><th>Identifiant de transaction</th><td>{{ $purchase->transaction_id }}</td></tr>
+                    @if ($purchase->transaction_id)
+                        <tr><th>Identifiant de transaction</th><td>{{ $purchase->transaction_id }}</td></tr>
+                    @endif
+                    @if ($purchase->discount_amount)
+                        <tr><th>Prix avant remise</th><td>{{ \App\Support\Money::fcfa((int) $purchase->original_amount) }}</td></tr>
+                        <tr><th>Remise{{ $purchase->promoCode ? ' (code '.$purchase->promoCode->code.')' : '' }}</th><td>-{{ \App\Support\Money::fcfa($purchase->discount_amount) }}</td></tr>
+                    @endif
                     <tr class="total"><th>Montant payé</th><td>{{ $purchase->formatted_amount }}</td></tr>
                 </table>
             </div>

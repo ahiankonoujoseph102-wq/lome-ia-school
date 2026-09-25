@@ -1,14 +1,23 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AffiliateController as AdminAffiliateController;
 use App\Http\Controllers\Admin\ChatGroupController as AdminChatGroupController;
 use App\Http\Controllers\Admin\ConsultationAvailabilityController;
 use App\Http\Controllers\Admin\ConsultationController as AdminConsultationController;
 use App\Http\Controllers\Admin\CourseContentController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ExportController;
+use App\Http\Controllers\Admin\FormationController as AdminFormationController;
 use App\Http\Controllers\Admin\LessonController as AdminLessonController;
 use App\Http\Controllers\Admin\LiveSessionController as AdminLiveSessionController;
 use App\Http\Controllers\Admin\ModeratorController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\Admin\PromoCodeController;
+use App\Http\Controllers\Admin\SalesController;
+use App\Http\Controllers\Admin\SiteSettingsController;
+use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Chat\AttachmentController;
 use App\Http\Controllers\Chat\GroupController;
 use App\Http\Controllers\Chat\MessageController;
@@ -165,7 +174,30 @@ Route::redirect('dashboard', '/mon-espace');
 
 // Administration (pages construites à l'étape 10) : accès réservé aux comptes admin
 Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.')->group(function () {
-    Route::view('/', 'site.admin.index')->name('index');
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('index');
+
+    // Ventes, codes promo, exports (étape 10)
+    Route::get('ventes', [SalesController::class, 'index'])->name('sales.index');
+    Route::get('codes-promo', [PromoCodeController::class, 'index'])->name('promo-codes.index');
+    Route::get('codes-promo/nouveau', [PromoCodeController::class, 'create'])->name('promo-codes.create');
+    Route::post('codes-promo', [PromoCodeController::class, 'store'])->name('promo-codes.store');
+    Route::get('codes-promo/{promoCode}', [PromoCodeController::class, 'edit'])->name('promo-codes.edit');
+    Route::put('codes-promo/{promoCode}', [PromoCodeController::class, 'update'])->name('promo-codes.update');
+    Route::post('codes-promo/{promoCode}/activation', [PromoCodeController::class, 'toggle'])->name('promo-codes.toggle');
+    Route::delete('codes-promo/{promoCode}', [PromoCodeController::class, 'destroy'])->name('promo-codes.destroy');
+    Route::get('exports', [ExportController::class, 'index'])->name('exports.index');
+    Route::get('exports/{type}', [ExportController::class, 'download'])->name('exports.download');
+
+    // Formations (prix, textes, image, bonus) et élèves (fiche, accès manuel)
+    Route::get('formations', [AdminFormationController::class, 'index'])->name('formations.index');
+    Route::get('formations/nouvelle', [AdminFormationController::class, 'create'])->name('formations.create');
+    Route::post('formations', [AdminFormationController::class, 'store'])->name('formations.store');
+    Route::get('formations/{formation}', [AdminFormationController::class, 'edit'])->name('formations.edit');
+    Route::put('formations/{formation}', [AdminFormationController::class, 'update'])->name('formations.update');
+    Route::post('formations/{formation}/deplacer/{direction}', [AdminFormationController::class, 'move'])->whereIn('direction', ['up', 'down'])->name('formations.move');
+    Route::get('eleves', [StudentController::class, 'index'])->name('students.index');
+    Route::get('eleves/{user}', [StudentController::class, 'show'])->name('students.show');
+    Route::post('eleves/{user}/acces', [StudentController::class, 'grantAccess'])->name('students.access');
     Route::get('paiements', [AdminPaymentController::class, 'index'])->name('payments.index');
     Route::post('paiements/{purchase}/valider', [AdminPaymentController::class, 'approve'])->name('payments.approve');
     Route::post('paiements/{purchase}/refuser', [AdminPaymentController::class, 'reject'])->name('payments.reject');
@@ -204,6 +236,20 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::get('affiliation/affilies', [AdminAffiliateController::class, 'index'])->name('affiliates.index');
     Route::post('affiliation/affilies/{affiliate}/suspendre', [AdminAffiliateController::class, 'suspend'])->name('affiliates.suspend');
     Route::post('affiliation/affilies/{affiliate}/reactiver', [AdminAffiliateController::class, 'unsuspend'])->name('affiliates.unsuspend');
+
+    // Réglages du site, témoignages et journal d'activité (étape 10)
+    Route::get('reglages', [SiteSettingsController::class, 'index'])->name('settings.index');
+    Route::get('reglages/{section}', [SiteSettingsController::class, 'edit'])->name('settings.edit');
+    Route::put('reglages/{section}', [SiteSettingsController::class, 'update'])->name('settings.update');
+    Route::get('temoignages', [TestimonialController::class, 'index'])->name('testimonials.index');
+    Route::get('temoignages/nouveau', [TestimonialController::class, 'create'])->name('testimonials.create');
+    Route::post('temoignages', [TestimonialController::class, 'store'])->name('testimonials.store');
+    Route::get('temoignages/{testimonial}', [TestimonialController::class, 'edit'])->name('testimonials.edit');
+    Route::put('temoignages/{testimonial}', [TestimonialController::class, 'update'])->name('testimonials.update');
+    Route::post('temoignages/{testimonial}/affichage', [TestimonialController::class, 'toggle'])->name('testimonials.toggle');
+    Route::post('temoignages/{testimonial}/deplacer/{direction}', [TestimonialController::class, 'move'])->whereIn('direction', ['up', 'down'])->name('testimonials.move');
+    Route::delete('temoignages/{testimonial}', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
+    Route::get('journal', [ActivityController::class, 'index'])->name('activity.index');
 
     // Consultation gratuite : rendez-vous et disponibilités (admin uniquement : Joseph fait seul les consultations)
     Route::get('consultations', [AdminConsultationController::class, 'index'])->name('consultations.index');

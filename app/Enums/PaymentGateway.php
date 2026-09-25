@@ -11,10 +11,28 @@ enum PaymentGateway: string
 {
     case ManualMobileMoney = 'manual_mobile_money';
 
+    // Accès donné par l'admin pour un paiement reçu hors du site (espèces, WhatsApp…) : aucune commission d'affiliation.
+    case Manual = 'manual';
+
     public function label(): string
     {
         return match ($this) {
             self::ManualMobileMoney => 'Mobile Money (preuve de paiement)',
+            self::Manual => 'Accès manuel (paiement reçu hors du site)',
         };
+    }
+
+    /**
+     * Moyens proposés pour un accès manuel : clé enregistrée dans « payment_method » => libellé.
+     *
+     * @return array<string, string>
+     */
+    public static function manualMethods(): array
+    {
+        return [
+            'manual-cash' => 'Espèces',
+            'manual-whatsapp' => 'Paiement convenu sur WhatsApp',
+            'manual-other' => 'Autre',
+        ];
     }
 }
