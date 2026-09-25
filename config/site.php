@@ -19,11 +19,19 @@
 | Les formations elles-mêmes (titres, prix, programmes) sont dans la base de
 | données, remplie à partir de database/seeders/FormationSeeder.php.
 |
+| DEPUIS L'ÉTAPE 10, CES VALEURS SONT LES VALEURS DE DÉPART : la plupart se
+| modifient dans l'admin (Réglages du site) et sont alors enregistrées en base
+| (table « site_settings », voir App\Settings\SiteSettings), où elles
+| remplacent celles de ce fichier.
+|
+| Marqueurs remplacés automatiquement dans les textes : {seuil} (seuil de
+| vérification des paiements), {affiliation_taux}, {affiliation_jours_lien},
+| {affiliation_jours_dispo}, {affiliation_minimum} (réglages d'affiliation).
+|
 */
 
 // Prix à partir duquel l'accès n'est ouvert qu'après validation du paiement par l'équipe (en FCFA).
 $verificationThreshold = 50000;
-$verificationThresholdLabel = number_format($verificationThreshold, 0, ',', "\u{00A0}")."\u{00A0}FCFA";
 
 return [
 
@@ -58,6 +66,13 @@ return [
         'facebook' => '',
         'tiktok' => '',
         'youtube' => '',
+    ],
+
+    // Logo et image de partage envoyés depuis l'admin (chemins sur le disque « public »). Vides : logo
+    // provisoire (ou public/images/logo.svg) et image de partage générée automatiquement.
+    'brand' => [
+        'logo' => null,
+        'og_image' => null,
     ],
 
     /*
@@ -110,7 +125,7 @@ return [
     */
 
     'why_us' => [
-        ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Dès l\'envoi de votre preuve de paiement, votre formation s\'ouvre dans votre espace élève. À partir de '.$verificationThresholdLabel.', elle s\'ouvre après vérification du paiement.'],
+        ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Dès l\'envoi de votre preuve de paiement, votre formation s\'ouvre dans votre espace élève. À partir de {seuil}, elle s\'ouvre après vérification du paiement.'],
         ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Payez depuis le Togo, le Burkina Faso ou le Bénin avec votre compte Mobile Money, puis envoyez votre preuve de paiement sur le site.'],
         ['icon' => 'academic-cap', 'title' => '100 % pratique, en français', 'text' => 'Des formations concrètes, orientées résultats, expliquées simplement et pensées pour notre réalité.'],
         ['icon' => 'chat-bubble-left-right', 'title' => 'Accompagnement à vie', 'text' => 'Chaque formation a son groupe de discussion réservé aux élèves : posez vos questions et avancez ensemble, sans limite de durée.'],
@@ -133,7 +148,7 @@ return [
         'recorded' => [
             'title' => 'Formations enregistrées',
             'badge' => 'Accès immédiat après paiement',
-            'text' => 'Toutes nos formations sont en vidéo. Dès l\'envoi de votre preuve de paiement, vous les suivez à votre rythme, depuis votre téléphone ou votre ordinateur, autant de fois que vous voulez. À partir de '.$verificationThresholdLabel.', l\'accès s\'ouvre après vérification du paiement.',
+            'text' => 'Toutes nos formations sont en vidéo. Dès l\'envoi de votre preuve de paiement, vous les suivez à votre rythme, depuis votre téléphone ou votre ordinateur, autant de fois que vous voulez. À partir de {seuil}, l\'accès s\'ouvre après vérification du paiement.',
             'points' => [
                 'Accès immédiat après paiement',
                 'À votre rythme, sur téléphone ou ordinateur',
@@ -157,34 +172,10 @@ return [
     'steps' => [
         ['title' => 'Je choisis ma formation', 'text' => 'Parcourez le catalogue et choisissez la formation qui correspond à votre objectif.'],
         ['title' => 'Je paie par Mobile Money', 'text' => 'J\'envoie le montant sur l\'un des numéros Mobile Money de l\'école (Togo, Burkina Faso ou Bénin), puis je dépose ma preuve de paiement.'],
-        ['title' => 'J\'accède à ma formation', 'text' => 'Ma formation et son groupe privé s\'ouvrent dans mon espace élève : aussitôt, ou après vérification du paiement à partir de '.$verificationThresholdLabel.'.'],
+        ['title' => 'J\'accède à ma formation', 'text' => 'Ma formation et son groupe privé s\'ouvrent dans mon espace élève : aussitôt, ou après vérification du paiement à partir de {seuil}.'],
     ],
 
-    /*
-    |----------------------------------------------------------------------
-    | Témoignages
-    |----------------------------------------------------------------------
-    | Uniquement de vrais témoignages d'élèves, publiés avec leur accord.
-    | Tant que la liste est vide, la section « Témoignages » est masquée
-    | partout sur le site.
-    |
-    | Trois types sont possibles (voir les exemples ci-dessous) :
-    | - « text » : nom, formation suivie, texte, photo facultative ;
-    | - « screenshot » : capture d'écran WhatsApp ;
-    | - « video » : vidéo YouTube intégrée (même non répertoriée).
-    | Les images vont dans public/images/temoignages/ (indiquez seulement
-    | le nom du fichier). Pour la capture et la vidéo, « name » et
-    | « formation » sont facultatifs.
-    |
-    | Pour ajouter un témoignage : copiez la ligne d'exemple voulue, retirez
-    | les deux barres « // » du début et remplacez les informations.
-    */
-
-    'testimonials' => [
-        // ['type' => 'text', 'name' => 'Afi K.', 'formation' => 'Formation ChatGPT & Claude', 'text' => 'Grâce à cette formation, je rédige mes rapports deux fois plus vite.', 'photo' => 'afi.jpg'],
-        // ['type' => 'screenshot', 'image' => 'whatsapp-kossi.jpg', 'name' => 'Kossi A.', 'formation' => 'Création d\'affiches pro avec l\'IA'],
-        // ['type' => 'video', 'youtube' => 'https://www.youtube.com/watch?v=XXXXXXXXXXX', 'name' => 'Ama D.', 'formation' => 'Création de site vitrine web avec l\'IA'],
-    ],
+    // Les témoignages se gèrent dans l'admin (Réglages > Témoignages, table « testimonials »).
 
     /*
     |----------------------------------------------------------------------
@@ -196,12 +187,12 @@ return [
     */
 
     'affiliate' => [
-        'title' => 'Recommandez nos formations, recevez 10 % de chaque achat validé',
-        'text' => 'Tout inscrit peut activer son espace affilié, même sans avoir acheté. Partagez vos liens sur WhatsApp, Facebook ou TikTok : pour chaque achat validé passé par votre lien, vous recevez une commission de 10 % du prix payé, retirable par Mobile Money.',
+        'title' => 'Recommandez nos formations, recevez {affiliation_taux} % de chaque achat validé',
+        'text' => 'Tout inscrit peut activer son espace affilié, même sans avoir acheté. Partagez vos liens sur WhatsApp, Facebook ou TikTok : pour chaque achat validé passé par votre lien, vous recevez une commission de {affiliation_taux} % du prix payé, retirable par Mobile Money.',
         'points' => [
             'Un lien vers le site et un lien pour chaque formation',
-            '10 % du prix payé sur chaque achat validé passé par votre lien',
-            'Retrait par Mobile Money à partir de 2 000 FCFA',
+            '{affiliation_taux} % du prix payé sur chaque achat validé passé par votre lien',
+            'Retrait par Mobile Money à partir de {affiliation_minimum}',
         ],
     ],
 
@@ -298,73 +289,7 @@ return [
         'L\'accès à vie et l\'accompagnement à vie',
     ],
 
-    /*
-    |----------------------------------------------------------------------
-    | Bonus des formations
-    |----------------------------------------------------------------------
-    | Une liste par formation (repérée par son slug, l'adresse de sa page).
-    | Liste vide [] : la section « Bonus » est complètement masquée.
-    | N'ajoutez que des bonus réellement fournis aux élèves.
-    |
-    | Exemple pour ajouter deux bonus à la formation ChatGPT & Claude :
-    | 'chatgpt-claude-initiation-ia' => [
-    |     'Texte du premier bonus',
-    |     'Texte du deuxième bonus',
-    | ],
-    */
-
-    'bonuses' => [
-        // Formation ChatGPT & Claude
-        'chatgpt-claude-initiation-ia' => [],
-
-        // Création d'affiches pro avec l'IA
-        'creation-affiches-pro-ia' => [],
-
-        // Création de vidéos publicitaires avec l'IA
-        'videos-publicitaires-ia' => [],
-
-        // Création de vidéos d'histoire avec l'IA
-        'videos-histoire-ia' => [],
-
-        // Création de vidéos films avec l'IA
-        'videos-films-ia' => [],
-
-        // Création de chansons personnalisées avec l'IA
-        'chansons-personnalisees-ia' => [],
-
-        // Rédaction d'ebooks et livres professionnels avec l'IA
-        'ebooks-livres-professionnels-ia' => [],
-
-        // Création de site vitrine web avec l'IA
-        'site-vitrine-web-ia' => [],
-
-        // Création de sites web avec base de données et projets web avancés
-        'sites-web-base-de-donnees-projets-avances' => [],
-
-        // Création d'applications et logiciels avec l'IA
-        'applications-logiciels-ia' => [],
-
-        // Création de SaaS avec l'IA
-        'creation-saas-ia' => [],
-
-        // Création d'agents IA
-        'creation-agents-ia' => [],
-
-        // Automatisation avec l'IA
-        'automatisation-ia' => [],
-
-        // Créer des formations et apprendre n'importe quelle compétence avec l'IA
-        'creer-formations-apprendre-competences-ia' => [],
-
-        // Décrocher des missions sur Upwork avec les compétences IA
-        'missions-upwork-competences-ia' => [],
-
-        // Création de contenu TikTok, Facebook et YouTube avec les vidéos IA
-        'contenu-tiktok-facebook-youtube-videos-ia' => [],
-
-        // E-commerce de produits digitaux avec l'IA
-        'e-commerce-produits-digitaux-ia' => [],
-    ],
+    // Les bonus de chaque formation se modifient dans l'admin (Formations > Modifier), vides par défaut.
 
     /*
     |----------------------------------------------------------------------
@@ -377,18 +302,18 @@ return [
     'faq' => [
         'home' => [
             ['question' => 'Comment se passe le paiement ?', 'answer' => 'Par Mobile Money : vous envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso ou Bénin), puis vous déposez sur le site l\'identifiant de la transaction et une capture d\'écran du paiement. Les frais de transfert sont à la charge de l\'expéditeur.'],
-            ['question' => 'Quand est-ce que j\'accède à ma formation ?', 'answer' => 'Pour les formations de moins de '.$verificationThresholdLabel.' : immédiatement après l\'envoi de votre preuve de paiement (accès provisoire, puis vérification par notre équipe). À partir de '.$verificationThresholdLabel.' : dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
+            ['question' => 'Quand est-ce que j\'accède à ma formation ?', 'answer' => 'Pour les formations de moins de {seuil} : immédiatement après l\'envoi de votre preuve de paiement (accès provisoire, puis vérification par notre équipe). À partir de {seuil} : dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
             ['question' => 'Je suis débutant, puis-je suivre les formations ?', 'answer' => 'Oui. Les formations sont expliquées pas à pas, en français simple. Si vous partez de zéro, nous vous conseillons de commencer par la formation ChatGPT & Claude.'],
             ['question' => 'Puis-je suivre les formations sur mon téléphone ?', 'answer' => 'Oui, le site et les vidéos sont pensés pour le téléphone. Pour certaines formations pratiques (sites web, applications), un ordinateur rend l\'exercice plus confortable.'],
             ['question' => 'Combien de temps ai-je accès à une formation ?', 'answer' => 'À vie. Une fois achetée, la formation reste dans votre espace élève : vous la revoyez autant que vous voulez. Vous bénéficiez aussi d\'un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],
             ['question' => 'Y a-t-il des formations en direct ou en présentiel ?', 'answer' => 'Toutes nos formations sont enregistrées : vous les suivez à votre rythme. De temps en temps, une formation est aussi proposée en direct sur Google Meet ou en présentiel à Lomé : ces sessions ponctuelles sont annoncées sur le site au moment où elles sont organisées.'],
-            ['question' => 'Comment fonctionne le programme d\'affiliation ?', 'answer' => 'Tout inscrit peut activer son espace affilié, même sans avoir acheté. Vous partagez vos liens ; pour chaque achat validé passé par l\'un d\'eux dans les 30 jours qui suivent le clic, vous recevez 10 % du prix payé. La commission devient disponible 7 jours après la validation du paiement, et vous la retirez par Mobile Money à partir de 2 000 FCFA (frais d\'envoi déduits). Chaque retrait est vérifié puis payé par notre équipe.'],
+            ['question' => 'Comment fonctionne le programme d\'affiliation ?', 'answer' => 'Tout inscrit peut activer son espace affilié, même sans avoir acheté. Vous partagez vos liens ; pour chaque achat validé passé par l\'un d\'eux dans les {affiliation_jours_lien} jours qui suivent le clic, vous recevez {affiliation_taux} % du prix payé. La commission devient disponible {affiliation_jours_dispo} jours après la validation du paiement, et vous la retirez par Mobile Money à partir de {affiliation_minimum} (frais d\'envoi déduits). Chaque retrait est vérifié puis payé par notre équipe.'],
             ['question' => 'Et si mon paiement n\'est pas reçu ?', 'answer' => 'Chaque paiement est vérifié par notre équipe. Si le paiement n\'est pas reçu sur notre compte, l\'accès provisoire est retiré et vous êtes prévenu par e-mail, avec le motif.'],
             ['question' => 'Puis-je être remboursé ?', 'answer' => 'Oui, dans les 48 heures qui suivent l\'achat, à condition de ne pas avoir commencé la formation (aucune leçon consultée). Il suffit de nous écrire par e-mail ou sur WhatsApp.'],
             ['question' => 'Comment se passe la consultation gratuite ?', 'answer' => 'Elle se réserve depuis la page « Consultation gratuite » du site et se déroule en direct en ligne, par appel vidéo. Elle dure 30 minutes, du lundi au samedi, entre 8 h et 20 h.'],
         ],
         'formation' => [
-            ['question' => 'Quand est-ce que j\'accède à la formation ?', 'answer' => 'Dès l\'envoi de votre preuve de paiement pour les formations de moins de '.$verificationThresholdLabel.'. À partir de '.$verificationThresholdLabel.', dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
+            ['question' => 'Quand est-ce que j\'accède à la formation ?', 'answer' => 'Dès l\'envoi de votre preuve de paiement pour les formations de moins de {seuil}. À partir de {seuil}, dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
             ['question' => 'Comment payer ?', 'answer' => 'Par Mobile Money : envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso ou Bénin), puis déposez votre preuve de paiement sur la page de commande.'],
             ['question' => 'Et si j\'ai une question pendant la formation ?', 'answer' => 'Vous la posez dans le groupe privé de la formation, réservé aux élèves inscrits. Vous pouvez aussi nous écrire sur WhatsApp.'],
             ['question' => 'Combien de temps ai-je accès ?', 'answer' => 'À vie, avec un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],

@@ -39,6 +39,40 @@ class UserFactory extends Factory
     }
 
     /**
+     * L'admin et les modérateurs ont toujours la double authentification activée (elle leur est obligatoire,
+     * voir App\Http\Middleware\RequireStaffTwoFactor). Pour tester un compte de l'équipe sans elle,
+     * utiliser l'état withoutTwoFactor().
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (User $user): void {
+            if ($user->role instanceof UserRole && $user->role->isStaff() && $user->two_factor_confirmed_at === null && $user->two_factor_secret !== 'none') {
+                $user->forceFill([
+                    'two_factor_secret' => encrypt('secret'),
+                    'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
+                    'two_factor_confirmed_at' => now(),
+                ]);
+            }
+
+            if ($user->two_factor_secret === 'none') {
+                $user->two_factor_secret = null;
+            }
+        });
+    }
+
+    /**
+     * Compte de l'équipe sans double authentification (pour tester l'écran de mise en place obligatoire).
+     */
+    public function withoutTwoFactor(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'two_factor_secret' => 'none',
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
+        ]);
+    }
+
+    /**
      * Compte administrateur.
      */
     public function admin(): static

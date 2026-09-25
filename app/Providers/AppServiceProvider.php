@@ -6,6 +6,7 @@ use App\Contracts\PushSender;
 use App\Models\User;
 use App\Push\NullPushSender;
 use App\Push\WebPushSender;
+use App\Settings\SiteSettings;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -38,6 +39,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Réglages modifiés depuis l'admin : ils remplacent les valeurs des fichiers config/*.php.
+        SiteSettings::apply();
+
         $this->configureDefaults();
     }
 

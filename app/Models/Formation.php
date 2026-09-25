@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\FormationCategory;
 use App\Enums\FormationFormat;
+use App\Services\ImageUploader;
 use App\Support\Money;
 use Database\Factories\FormationFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -29,13 +30,13 @@ use Illuminate\Support\Collection;
  * @property int $price Prix en FCFA (entier).
  * @property FormationCategory $category
  * @property Collection<int, FormationFormat> $formats
- * @property string|null $image Fichier dans public/images/formations.
+ * @property string|null $image Image envoyée depuis l'admin (disque « public », dossier formations/) ou ancien fichier de public/images/formations.
  * @property int $sort_order
  * @property bool $is_featured
  * @property bool $is_active
  * @property list<string>|null $outcomes Ce que l'élève va apprendre.
  * @property list<string>|null $audience Pour qui est la formation.
- * @property-read list<string> $bonuses Bonus facultatifs, définis dans config/site.php (clé « bonuses »).
+ * @property list<string> $bonuses Bonus facultatifs, saisis dans l'admin (vides par défaut).
  * @property-read string $formatted_price
  * @property-read string|null $image_url
  * @property-read EloquentCollection<int, Enrollment> $enrollments
@@ -61,6 +62,7 @@ class Formation extends Model
         'is_active',
         'outcomes',
         'audience',
+        'bonuses',
     ];
 
     /**
@@ -140,26 +142,33 @@ class Formation extends Model
     }
 
     /**
-     * URL de l'image déposée dans public/images/formations, ou null pour le visuel de remplacement.
+     * URL de l'image (envoyée depuis l'admin, ou ancien fichier de public/images/formations), ou null pour le visuel de remplacement.
      *
      * @return Attribute<string|null, never>
      */
     protected function imageUrl(): Attribute
     {
-        return Attribute::get(fn (): ?string => $this->image ? asset('images/formations/'.$this->image) : null);
+        return Attribute::get(fn (): ?string => match (true) {
+            blank($this->image) => null,
+            str_contains((string) $this->image, '/') => ImageUploader::url($this->image),
+            default => asset('images/formations/'.$this->image),
+        });
     }
 
     /**
-     * Bonus de la formation, définis dans config/site.php (clé « bonuses », par slug). Liste vide : aucun bonus affiché.
+     * Bonus de la formation, saisis dans l'admin (colonne « bonuses »). Liste vide : aucun bonus affiché.
      *
-     * @return Attribute<list<non-empty-string>, never>
+     * @return Attribute<list<non-empty-string>, list<string>|null>
      */
     protected function bonuses(): Attribute
     {
-        return Attribute::get(fn (): array => array_values(array_filter(
-            array_map(fn ($bonus): string => trim((string) $bonus), (array) config('site.bonuses.'.$this->slug, [])),
-            fn (string $bonus): bool => $bonus !== '',
-        )));
+        return Attribute::make(
+            get: fn (?string $value): array => array_values(array_filter(
+                array_map(fn ($bonus): string => trim((string) $bonus), (array) json_decode((string) $value, true)),
+                fn (string $bonus): bool => $bonus !== '',
+            )),
+            set: fn (?array $value): ?string => $value === null ? null : (string) json_encode(array_values($value), JSON_UNESCAPED_UNICODE),
+        );
     }
 
     /**

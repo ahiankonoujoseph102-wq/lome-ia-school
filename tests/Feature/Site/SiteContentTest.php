@@ -4,28 +4,14 @@ namespace Tests\Feature\Site;
 
 use App\Models\Formation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
+use App\Models\Testimonial;
+use Database\Seeders\FormationSeeder;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SiteContentTest extends TestCase
 {
     use RefreshDatabase;
-
-    private string $screenshot;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->screenshot = public_path('images/temoignages/test-capture-whatsapp.jpg');
-    }
-
-    protected function tearDown(): void
-    {
-        File::delete($this->screenshot);
-
-        parent::tearDown();
-    }
 
     public function test_home_page_highlights_key_figures_lifetime_access_and_the_trainer(): void
     {
@@ -64,7 +50,7 @@ class SiteContentTest extends TestCase
 
     public function test_testimonials_section_is_hidden_when_the_list_is_empty(): void
     {
-        config(['site.testimonials' => []]);
+        Testimonial::query()->create(['type' => 'text', 'name' => 'Masqué', 'text' => 'Témoignage masqué.', 'is_active' => false]);
         $formation = Formation::factory()->create();
 
         $this->get(route('home'))->assertOk()->assertDontSee('Ils se sont formés avec nous');
@@ -73,23 +59,24 @@ class SiteContentTest extends TestCase
 
     public function test_the_three_testimonial_types_are_displayed(): void
     {
-        File::put($this->screenshot, 'image');
+        Storage::fake('public');
+        Storage::disk('public')->put('testimonials/capture.jpg', 'image');
 
-        config(['site.testimonials' => [
-            ['type' => 'text', 'name' => 'Afi K.', 'formation' => 'Formation ChatGPT & Claude', 'text' => 'Une formation très concrète.', 'photo' => null],
-            ['type' => 'screenshot', 'image' => 'test-capture-whatsapp.jpg', 'name' => 'Kossi A.'],
-            ['type' => 'video', 'youtube' => 'https://youtu.be/dQw4w9WgXcQ', 'name' => 'Ama D.'],
-            ['type' => 'screenshot', 'image' => 'fichier-absent.jpg', 'name' => 'Capture introuvable'],
-        ]]);
+        Testimonial::query()->create(['type' => 'text', 'name' => 'Afi K.', 'formation' => 'Formation ChatGPT & Claude', 'text' => 'Une formation très concrète.', 'position' => 1]);
+        Testimonial::query()->create(['type' => 'screenshot', 'image_path' => 'testimonials/capture.jpg', 'name' => 'Kossi A.', 'position' => 2]);
+        Testimonial::query()->create(['type' => 'video', 'youtube_url' => 'https://youtu.be/dQw4w9WgXcQ', 'name' => 'Ama D.', 'position' => 3]);
+        Testimonial::query()->create(['type' => 'screenshot', 'image_path' => 'testimonials/absent.jpg', 'name' => 'Capture introuvable', 'position' => 4]);
+        Testimonial::query()->create(['type' => 'text', 'name' => 'Témoin masqué', 'text' => 'Masqué.', 'is_active' => false]);
 
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('Ils se sont formés avec nous')
             ->assertSee('Une formation très concrète.')
             ->assertSee('Afi K.')
-            ->assertSee('images/temoignages/test-capture-whatsapp.jpg')
+            ->assertSee('testimonials/capture.jpg')
             ->assertSee('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ', false)
-            ->assertDontSee('Capture introuvable');
+            ->assertDontSee('Capture introuvable')
+            ->assertDontSee('Témoin masqué');
     }
 
     public function test_social_links_are_hidden_when_empty(): void
@@ -125,8 +112,7 @@ class SiteContentTest extends TestCase
 
     public function test_bonus_section_is_hidden_when_the_formation_has_no_bonus(): void
     {
-        $formation = Formation::factory()->create();
-        config(['site.bonuses.'.$formation->slug => []]);
+        $formation = Formation::factory()->create(['bonuses' => []]);
 
         $this->get(route('formations.show', $formation))
             ->assertOk()
@@ -135,10 +121,9 @@ class SiteContentTest extends TestCase
             ->assertSee('L&#039;accès au groupe privé de discussion de la formation', false);
     }
 
-    public function test_bonuses_from_the_config_are_displayed(): void
+    public function test_bonuses_entered_in_the_admin_are_displayed(): void
     {
-        $formation = Formation::factory()->create();
-        config(['site.bonuses.'.$formation->slug => ['Un vrai bonus fourni aux élèves', '  ']]);
+        $formation = Formation::factory()->create(['bonuses' => ['Un vrai bonus fourni aux élèves', '  ']]);
 
         $this->get(route('formations.show', $formation))
             ->assertOk()
@@ -148,7 +133,9 @@ class SiteContentTest extends TestCase
 
     public function test_no_formation_has_a_bonus_by_default(): void
     {
-        $this->assertSame([], array_filter(config('site.bonuses')));
+        $this->seed(FormationSeeder::class);
+
+        $this->assertSame(0, Formation::query()->get()->filter(fn (Formation $formation): bool => $formation->bonuses !== [])->count());
     }
 
     public function test_site_is_always_dark_whatever_the_phone_setting(): void

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Site;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Services\OgImageGenerator;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
@@ -16,6 +17,16 @@ class OgImageController extends Controller
 
     public function site(): BinaryFileResponse
     {
+        // Image de partage envoyée depuis l'admin (Réglages du site), sinon image générée.
+        $uploaded = config('site.brand.og_image');
+
+        if (is_string($uploaded) && $uploaded !== '' && Storage::disk('public')->exists($uploaded)) {
+            return response()->file(Storage::disk('public')->path($uploaded), [
+                'Content-Type' => 'image/jpeg',
+                'Cache-Control' => 'public, max-age=3600',
+            ]);
+        }
+
         return $this->respond($this->generator->forSite());
     }
 

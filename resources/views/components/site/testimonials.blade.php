@@ -1,4 +1,4 @@
-{{-- Témoignages de config/site.php (voir App\Support\Testimonials). À n'afficher que si la liste n'est pas vide. --}}
+{{-- Témoignages gérés dans l'admin (voir App\Support\Testimonials). À n'afficher que si la liste n'est pas vide. --}}
 @props(['items'])
 
 @php
@@ -13,9 +13,9 @@
 
         <figure class="card mb-5 flex break-inside-avoid flex-col gap-5 overflow-hidden p-6" data-reveal style="--reveal-delay: {{ $loop->index * 100 }}ms">
             @if ($testimonial['type'] === 'screenshot')
-                <a href="{{ asset('images/temoignages/'.$testimonial['image']) }}" target="_blank" rel="noopener" class="-mx-6 -mt-6 block bg-night-950">
+                <a href="{{ $testimonial['image'] }}" target="_blank" rel="noopener" class="-mx-6 -mt-6 block bg-night-950">
                     <img
-                        src="{{ asset('images/temoignages/'.$testimonial['image']) }}"
+                        src="{{ $testimonial['image'] }}"
                         alt="Capture d'écran d'un message WhatsApp{{ $author ? ' de '.$author : ' d\'un élève' }}"
                         class="mx-auto w-full"
                         loading="lazy"
@@ -55,7 +55,7 @@
                 <figcaption class="flex items-center gap-3">
                     @if ($testimonial['type'] === 'text')
                         @if ($testimonial['photo'])
-                            <img src="{{ asset('images/temoignages/'.$testimonial['photo']) }}" alt="Photo de {{ $testimonial['name'] }}" class="size-11 rounded-full object-cover" loading="lazy" width="44" height="44">
+                            <img src="{{ $testimonial['photo'] }}" alt="Photo de {{ $testimonial['name'] }}" class="size-11 rounded-full object-cover" loading="lazy" width="44" height="44">
                         @else
                             <span class="grid size-11 shrink-0 place-items-center rounded-full bg-linear-to-br from-electric-500 to-electric-700 text-white" aria-hidden="true">
                                 <flux:icon.user class="size-5" />

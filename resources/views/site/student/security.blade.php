@@ -28,6 +28,13 @@
             <x-site.alert>{{ $messages[$status] }}</x-site.alert>
         @endif
 
+        @if ($user->isStaff() && ! $twoFactorEnabled)
+            <div class="rounded-2xl border-2 border-gold-400 bg-gold-400/15 px-4 py-3 text-sm text-gold-100" role="alert" data-test="two-factor-required">
+                <p class="font-bold text-white">Double authentification obligatoire</p>
+                <p class="mt-1">{{ \App\Http\Middleware\RequireStaffTwoFactor::MESSAGE }} Installez une application d'authentification (Google Authenticator, Microsoft Authenticator…), puis suivez les étapes ci-dessous.</p>
+            </div>
+        @endif
+
         {{-- Mot de passe --}}
         <section class="card p-5 sm:p-7" aria-labelledby="titre-mot-de-passe">
             <h2 id="titre-mot-de-passe" class="flex items-center gap-2 text-lg font-semibold text-white">
@@ -70,7 +77,7 @@
                     @if ($twoFactorEnabled)
                         <span class="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">Activée</span>
                     @else
-                        <span class="rounded-full border border-veil/15 bg-veil/5 px-2.5 py-1 text-xs font-semibold text-slate-300">Facultative</span>
+                        <span class="rounded-full border border-veil/15 bg-veil/5 px-2.5 py-1 text-xs font-semibold text-slate-300">{{ $user->isStaff() ? 'Obligatoire' : 'Facultative' }}</span>
                     @endif
                 </div>
 

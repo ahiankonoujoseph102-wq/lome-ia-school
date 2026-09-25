@@ -129,17 +129,19 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
         Route::post('groupes/{formation}/notifications', [GroupController::class, 'toggleNotifications'])->name('chat.notifications');
         Route::get('groupes/{formation}/membres', [GroupController::class, 'members'])->name('chat.members');
 
-        // Modération (admin et modérateurs)
-        Route::post('groupes/{formation}/annonces', [ModerationController::class, 'toggleAnnouncements'])->name('chat.announcements');
-        Route::post('groupes/{formation}/membres/{user}/sourdine', [ModerationController::class, 'mute'])->name('chat.members.mute');
-        Route::delete('groupes/{formation}/membres/{user}/sourdine', [ModerationController::class, 'unmute'])->name('chat.members.unmute');
-        Route::post('groupes/{formation}/membres/{user}/exclure', [ModerationController::class, 'exclude'])->name('chat.members.exclude');
-        Route::post('groupes/{formation}/membres/{user}/reintegrer', [ModerationController::class, 'reinstate'])->name('chat.members.reinstate');
+        // Modération (admin et modérateurs, double authentification obligatoire)
+        Route::middleware('staff-2fa')->group(function () {
+            Route::post('groupes/{formation}/annonces', [ModerationController::class, 'toggleAnnouncements'])->name('chat.announcements');
+            Route::post('groupes/{formation}/membres/{user}/sourdine', [ModerationController::class, 'mute'])->name('chat.members.mute');
+            Route::delete('groupes/{formation}/membres/{user}/sourdine', [ModerationController::class, 'unmute'])->name('chat.members.unmute');
+            Route::post('groupes/{formation}/membres/{user}/exclure', [ModerationController::class, 'exclude'])->name('chat.members.exclude');
+            Route::post('groupes/{formation}/membres/{user}/reintegrer', [ModerationController::class, 'reinstate'])->name('chat.members.reinstate');
+        });
     });
 });
 
 // Sessions en direct et en présentiel : admin et modérateurs
-Route::middleware(['auth', 'can:manage-sessions'])->prefix('admin/sessions')->name('admin.sessions.')->group(function () {
+Route::middleware(['auth', 'can:manage-sessions', 'staff-2fa'])->prefix('admin/sessions')->name('admin.sessions.')->group(function () {
     Route::get('/', [AdminLiveSessionController::class, 'index'])->name('index');
     Route::get('nouvelle', [AdminLiveSessionController::class, 'create'])->name('create');
     Route::post('/', [AdminLiveSessionController::class, 'store'])->name('store');
@@ -154,7 +156,7 @@ Route::middleware(['auth', 'can:manage-sessions'])->prefix('admin/sessions')->na
 });
 
 // « Messages signalés » : admin et modérateurs
-Route::middleware(['auth', 'can:moderate-chat', 'no-store'])->prefix('moderation')->name('moderation.')->group(function () {
+Route::middleware(['auth', 'can:moderate-chat', 'staff-2fa', 'no-store'])->prefix('moderation')->name('moderation.')->group(function () {
     Route::get('signalements', [ReportController::class, 'index'])->name('reports.index');
     Route::post('signalements/{report}', [ReportController::class, 'handle'])->name('reports.handle');
 });
@@ -162,7 +164,7 @@ Route::middleware(['auth', 'can:moderate-chat', 'no-store'])->prefix('moderation
 Route::redirect('dashboard', '/mon-espace');
 
 // Administration (pages construites à l'étape 10) : accès réservé aux comptes admin
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.')->group(function () {
     Route::view('/', 'site.admin.index')->name('index');
     Route::get('paiements', [AdminPaymentController::class, 'index'])->name('payments.index');
     Route::post('paiements/{purchase}/valider', [AdminPaymentController::class, 'approve'])->name('payments.approve');
