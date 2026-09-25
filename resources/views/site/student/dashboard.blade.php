@@ -60,7 +60,19 @@
             </div>
         </section>
 
-        {{-- Groupes et fonctionnalités des prochaines étapes --}}
+        {{-- Consultation gratuite réservée (rattachée au compte par le numéro WhatsApp ou l'e-mail) --}}
+        @if ($consultation)
+            <a href="{{ route('student.consultation', $consultation) }}" class="card card-hover flex items-center gap-4 p-5" data-test="consultation-card">
+                <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-electric-500/15 text-electric-300"><flux:icon.video-camera class="size-5" /></span>
+                <span class="min-w-0 flex-1">
+                    <span class="block font-semibold text-white">Ma consultation gratuite</span>
+                    <span class="block text-sm text-slate-400">{{ ucfirst(\App\Consultations\ConsultationTime::short($consultation)) }} (heure de Lomé) · lien de l'appel vidéo</span>
+                </span>
+                <flux:icon.arrow-right class="size-5 text-slate-500" />
+            </a>
+        @endif
+
+        {{-- Groupes et affiliation --}}
         <section>
             <div class="grid gap-4 sm:grid-cols-2">
                 <a href="{{ route('chat.index') }}" class="card card-hover flex items-center gap-4 p-5">

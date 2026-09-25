@@ -257,8 +257,8 @@ return [
         'duration' => '30 minutes',
         'mode' => 'En direct en ligne, par appel vidéo',
         'steps' => [
-            ['title' => 'Vous réservez', 'text' => 'Cliquez sur le bouton de réservation et envoyez-nous votre demande.'],
-            ['title' => 'Nous fixons un créneau', 'text' => 'Nous convenons ensemble d\'un moment qui vous arrange, du lundi au samedi, entre 8 h et 20 h.'],
+            ['title' => 'Vous choisissez un créneau', 'text' => 'Choisissez le jour et l\'heure qui vous arrangent, puis indiquez vos coordonnées. Aucun compte n\'est nécessaire.'],
+            ['title' => 'Vous recevez la confirmation', 'text' => 'Par e-mail, avec le lien de l\'appel vidéo et un lien pour déplacer ou annuler votre rendez-vous.'],
             ['title' => 'Nous échangeons en appel vidéo', 'text' => 'En direct en ligne, nous parlons de vos objectifs et vous repartez avec une recommandation claire.'],
         ],
         'benefits' => [

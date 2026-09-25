@@ -35,11 +35,6 @@ class PageController extends Controller
         return view('site.affiliate');
     }
 
-    public function consultation(): View
-    {
-        return view('site.consultation');
-    }
-
     public function legalNotice(): View
     {
         return view('site.legal.notice');

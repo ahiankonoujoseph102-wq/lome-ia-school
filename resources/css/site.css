@@ -154,7 +154,8 @@ html.force-dark {
     --tw-shadow-color: rgb(4 64 219 / 0.4);
 }
 
-.force-dark .btn-gold:disabled {
+/* Bouton doré grisé quand il est désactivé (classe disabled:brightness-75), comme le design normal. */
+.force-dark .btn-gold.disabled\:brightness-75:disabled {
     filter: invert(1) brightness(0.75);
 }
 

@@ -76,7 +76,16 @@
                 <li><strong class="text-white">Aucun gain garanti</strong> : les commissions dépendent uniquement des achats réellement validés grâce aux liens de l'affilié. L'affilié n'est ni salarié ni représentant de {{ $legal['company_name'] }} et ne peut pas prendre d'engagement en son nom.</li>
             </ul>
 
-            <h2>10. Contact</h2>
+            <h2 id="consultation">10. Consultation gratuite</h2>
+            <p>La consultation gratuite dure {{ config('site.consultation.duration') }}. Elle a lieu en direct en ligne, par appel vidéo (Google Meet), avec {{ config('site.trainer.name') }}. Elle ne crée aucune obligation d'achat.</p>
+            <ul>
+                <li>Elle se réserve sur le site, sans compte, en choisissant un créneau libre. Une seule réservation à venir est possible par numéro WhatsApp et par adresse e-mail.</li>
+                <li>La confirmation, le lien de l'appel vidéo et un lien personnel pour déplacer ou annuler le rendez-vous sont envoyés par e-mail. Le déplacement ou l'annulation en ligne sont possibles jusqu'à {{ \App\Models\ConsultationSettings::current()->manage_deadline_hours }} heures avant le rendez-vous ; ensuite, il faut nous prévenir sur WhatsApp.</li>
+                <li>En cas d'empêchement, {{ $legal['company_name'] }} peut annuler un rendez-vous : la personne est prévenue par e-mail et peut réserver un autre créneau.</li>
+                <li>Après l'échange, une formation peut vous être recommandée par e-mail. Cette recommandation est un conseil : aucun résultat n'est promis.</li>
+            </ul>
+
+            <h2>11. Contact</h2>
             <p>Pour toute question ou demande de remboursement : <a href="mailto:{{ $legal['owner']['email'] }}">{{ $legal['owner']['email'] }}</a> ou {{ $legal['owner']['phone'] }} (appel ou WhatsApp), {{ mb_lcfirst($contact['hours']) }}.</p>
 
             <p class="pt-6 text-sm text-slate-500">Dernière mise à jour : {{ Placeholder::highlight($legal['updated_at']) }}</p>

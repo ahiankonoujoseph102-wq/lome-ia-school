@@ -20,6 +20,7 @@ Artisan::command('inspire', function () {
 | - Notes vocales et vidéos des groupes : supprimées chaque nuit après la durée de conservation.
 | - Sessions : rappels (veille et 1 h avant), places réservées expirées, annonces désépinglées (toutes les 5 min).
 | - Affiliation : commissions devenues disponibles après le délai prévu (toutes les heures).
+| - Consultations gratuites : rappels (veille et 1 h avant) et suppression des anciens rendez-vous (toutes les 5 min).
 |
 */
 
@@ -43,4 +44,8 @@ Schedule::command('app:process-live-sessions')
 
 Schedule::command('app:release-affiliate-commissions')
     ->hourly()
+    ->withoutOverlapping();
+
+Schedule::command('app:process-consultations')
+    ->everyFiveMinutes()
     ->withoutOverlapping();

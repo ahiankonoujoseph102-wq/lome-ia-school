@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\AffiliateController as AdminAffiliateController;
 use App\Http\Controllers\Admin\ChatGroupController as AdminChatGroupController;
+use App\Http\Controllers\Admin\ConsultationAvailabilityController;
+use App\Http\Controllers\Admin\ConsultationController as AdminConsultationController;
 use App\Http\Controllers\Admin\CourseContentController;
 use App\Http\Controllers\Admin\LessonController as AdminLessonController;
 use App\Http\Controllers\Admin\LiveSessionController as AdminLiveSessionController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\Chat\ReportController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\PurchaseProofController;
 use App\Http\Controllers\Site\CheckoutController;
+use App\Http\Controllers\Site\ConsultationController;
 use App\Http\Controllers\Site\FormationController;
 use App\Http\Controllers\Site\OgImageController;
 use App\Http\Controllers\Site\PageController;
@@ -38,7 +41,15 @@ Route::get('formations/{formation}', [FormationController::class, 'show'])->name
 Route::get('formations/{formation}/lecons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
 Route::get('formations/{formation}/lecons/{lesson}/fichiers/{resource}', [LessonController::class, 'download'])->name('lessons.resources.download');
 Route::post('formations/{formation}/lecons/{lesson}/terminee', [LessonController::class, 'complete'])->middleware('auth')->name('lessons.complete');
-Route::get('consultation-gratuite', [PageController::class, 'consultation'])->name('consultation');
+// Consultation gratuite : réservation sans compte, puis gestion par lien sécurisé (le lien Google Meet n'est visible que là)
+Route::get('consultation-gratuite', [ConsultationController::class, 'show'])->name('consultation');
+Route::post('consultation-gratuite', [ConsultationController::class, 'store'])->middleware('throttle:5,10')->name('consultation.store');
+Route::middleware(['no-store', 'throttle:60,1'])->prefix('consultation-gratuite/rendez-vous/{token}')->name('consultation.')->group(function () {
+    Route::get('/', [ConsultationController::class, 'manage'])->name('manage');
+    Route::put('/', [ConsultationController::class, 'move'])->name('move');
+    Route::delete('/', [ConsultationController::class, 'cancel'])->name('cancel');
+    Route::get('agenda.ics', [ConsultationController::class, 'calendar'])->name('calendar');
+});
 Route::get('a-propos', [PageController::class, 'about'])->name('about');
 Route::get('contact', [PageController::class, 'contact'])->name('contact');
 Route::get('devenir-affilie', [PageController::class, 'affiliate'])->name('affiliate.program');
@@ -69,6 +80,7 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
     Route::get('formations/{formation}', [StudentFormationController::class, 'show'])
         ->middleware('can:access,formation')
         ->name('student.formations.show');
+    Route::get('consultation/{consultation}', [ConsultationController::class, 'student'])->name('student.consultation');
     Route::get('achats', [PurchaseController::class, 'index'])->name('student.purchases.index');
     Route::get('achats/{purchase}', [PurchaseController::class, 'show'])->middleware('can:view,purchase')->name('student.purchases.show');
     Route::get('achats/{purchase}/recu', [PurchaseController::class, 'receipt'])->middleware('can:viewReceipt,purchase')->name('student.purchases.receipt');
@@ -190,6 +202,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('affiliation/affilies', [AdminAffiliateController::class, 'index'])->name('affiliates.index');
     Route::post('affiliation/affilies/{affiliate}/suspendre', [AdminAffiliateController::class, 'suspend'])->name('affiliates.suspend');
     Route::post('affiliation/affilies/{affiliate}/reactiver', [AdminAffiliateController::class, 'unsuspend'])->name('affiliates.unsuspend');
+
+    // Consultation gratuite : rendez-vous et disponibilités (admin uniquement : Joseph fait seul les consultations)
+    Route::get('consultations', [AdminConsultationController::class, 'index'])->name('consultations.index');
+    Route::post('consultations/{consultation}/annuler', [AdminConsultationController::class, 'cancel'])->name('consultations.cancel');
+    Route::post('consultations/{consultation}/presence', [AdminConsultationController::class, 'attendance'])->name('consultations.attendance');
+    Route::put('consultations/{consultation}/suivi', [AdminConsultationController::class, 'followUp'])->name('consultations.follow-up');
+    Route::post('consultations/{consultation}/recommandation', [AdminConsultationController::class, 'recommend'])->name('consultations.recommend');
+    Route::get('consultations/disponibilites', [ConsultationAvailabilityController::class, 'edit'])->name('consultations.availability');
+    Route::put('consultations/disponibilites', [ConsultationAvailabilityController::class, 'updateSettings'])->name('consultations.settings');
+    Route::post('consultations/disponibilites/horaires', [ConsultationAvailabilityController::class, 'storeHour'])->name('consultations.hours.store');
+    Route::delete('consultations/disponibilites/horaires/{hour}', [ConsultationAvailabilityController::class, 'destroyHour'])->name('consultations.hours.destroy');
+    Route::post('consultations/disponibilites/blocages', [ConsultationAvailabilityController::class, 'storeBlock'])->name('consultations.blocks.store');
+    Route::delete('consultations/disponibilites/blocages/{block}', [ConsultationAvailabilityController::class, 'destroyBlock'])->name('consultations.blocks.destroy');
 });
 
 require __DIR__.'/settings.php';

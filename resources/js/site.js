@@ -206,6 +206,44 @@ Alpine.data('payoutForm', ({ methods, country, method }) => ({
 }));
 
 /**
+ * Consultation gratuite : choix du jour puis du créneau (heure de Lomé, avec l'équivalent au Bénin).
+ */
+Alpine.data('slotPicker', ({ days, selected }) => ({
+    days,
+    day: null,
+    slot: selected || '',
+
+    init() {
+        const initial = this.days.find((item) => item.slots.some((slot) => slot.value === this.slot));
+        this.day = (initial ?? this.days[0])?.date ?? null;
+    },
+
+    get current() {
+        return this.days.find((item) => item.date === this.day) ?? null;
+    },
+
+    get chosen() {
+        for (const item of this.days) {
+            const found = item.slots.find((slot) => slot.value === this.slot);
+            if (found) {
+                return { ...found, title: item.title };
+            }
+        }
+
+        return null;
+    },
+
+    chooseDay(date) {
+        this.day = date;
+    },
+
+    chooseSlot(value) {
+        this.slot = value;
+        this.$nextTick(() => this.$refs.next?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    },
+}));
+
+/**
  * Admin « Contenu des formations » : aperçu de la vidéo pendant la saisie du lien.
  * Même reconnaissance des liens que côté serveur (App\Support\YouTube, App\Support\GoogleDrive).
  */

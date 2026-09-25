@@ -56,7 +56,7 @@ class CalendarFile
         return implode("\r\n", array_map(self::fold(...), $lines))."\r\n";
     }
 
-    private static function escape(string $text): string
+    public static function escape(string $text): string
     {
         return str_replace(['\\', ';', ',', "\r\n", "\n"], ['\\\\', '\;', '\\,', '\\n', '\\n'], $text);
     }
@@ -64,7 +64,7 @@ class CalendarFile
     /**
      * Lignes de 75 octets au plus, les suivantes commencent par une espace (norme iCalendar).
      */
-    private static function fold(string $line): string
+    public static function fold(string $line): string
     {
         if (strlen($line) <= 75) {
             return $line;

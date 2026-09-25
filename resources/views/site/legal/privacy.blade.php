@@ -20,9 +20,18 @@
                 <li>Les messages et fichiers que vous publiez dans les groupes de discussion des formations (textes, images, captures d'écran, notes vocales, vidéos, documents), ainsi que les signalements que vous faites.</li>
                 <li>Vos réglages de notifications et, si vous activez les notifications sur votre téléphone, l'adresse technique d'envoi fournie par votre navigateur.</li>
                 <li>Si vous devenez affilié : la date d'acceptation des conditions, vos coordonnées de retrait (pays, opérateur Mobile Money, numéro et nom du titulaire, ainsi que la date de leurs modifications), vos commissions et vos retraits (montants, frais d'envoi, identifiants de transaction).</li>
+                <li>Si vous réservez une consultation gratuite : votre nom, votre numéro WhatsApp, votre adresse e-mail, le sujet dont vous voulez parler, la formation qui vous intéresse (facultatif) et la date du rendez-vous ; après l'appel, votre présence, les notes de {{ config('site.trainer.name') }} et la formation recommandée.</li>
                 <li>Si vous arrivez sur le site par le lien d'un affilié : le code de ce lien et la date du clic, puis, si vous vous inscrivez ou achetez, le fait que votre inscription ou votre achat vient de ce lien.</li>
             </ul>
             <p>Les captures d'écran de paiement sont stockées dans un espace privé : elles ne sont jamais publiques et ne sont visibles que par vous et par l'équipe qui vérifie les paiements. Nous ne vous demandons jamais vos codes Mobile Money. Au Burkina Faso et au Bénin, les informations de votre paiement peuvent être communiquées à notre représentant local, uniquement pour vérifier sa réception.</p>
+
+            <h2>Consultation gratuite</h2>
+            <ul>
+                <li>La réservation se fait sans compte. Si votre numéro WhatsApp ou votre adresse e-mail correspond à un compte élève, le rendez-vous est rattaché à ce compte et apparaît dans votre espace.</li>
+                <li>Ces informations servent uniquement à organiser la consultation : confirmation, rappels, lien de l'appel vidéo, déplacement ou annulation, puis, éventuellement, l'envoi d'une recommandation de formation. Elles ne sont visibles que par {{ config('site.trainer.name') }}.</li>
+                <li>Le lien personnel reçu par e-mail permet de voir, déplacer ou annuler le rendez-vous : ne le partagez pas.</li>
+                <li><strong>Les rendez-vous et les informations du formulaire sont supprimés automatiquement {{ (int) config('consultations.retention_months', 12) }} mois après la date de la consultation.</strong> Si vous achetez ensuite une formation, les données de votre compte et de vos achats suivent les règles de conservation indiquées plus bas.</li>
+            </ul>
 
             <h2>Affiliation</h2>
             <ul>
@@ -52,6 +61,7 @@
                 <li>Vérifier vos paiements, prévenir la fraude (par exemple une capture ou un identifiant de transaction déjà utilisé) et établir vos reçus ;</li>
                 <li>Compter les clics sur les liens d'affiliation, attribuer les achats au bon affilié, calculer et payer les commissions, et prévenir la fraude à l'affiliation ;</li>
                 <li>Vous accompagner et répondre à vos questions, notamment dans les groupes de discussion ;</li>
+                <li>Organiser votre consultation gratuite (confirmation, rappels, lien de l'appel vidéo) et, si vous le souhaitez, vous recommander une formation ;</li>
                 <li>Vous prévenir des nouveaux messages de vos groupes, selon vos réglages de notifications ;</li>
                 <li>Vous informer des nouvelles formations, uniquement si vous avez coché la case « Je souhaite être informé(e) des nouvelles formations » à l'inscription ou dans votre profil.</li>
             </ul>
