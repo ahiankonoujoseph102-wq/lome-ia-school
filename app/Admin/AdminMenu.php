@@ -68,7 +68,7 @@ class AdminMenu
     public static function todoTotal(User $user): int
     {
         if ($user->isAdmin()) {
-            return AdminTodo::paymentsToVerify() + AdminTodo::withdrawalsToPay() + AdminTodo::openReports() + AdminTodo::refundsDue();
+            return AdminTodo::paymentsToVerify() + AdminTodo::withdrawalsToPay() + AdminTodo::openReports() + AdminTodo::consultationsToday() + AdminTodo::refundsDue();
         }
 
         return $user->isStaff() ? AdminTodo::openReports() : 0;

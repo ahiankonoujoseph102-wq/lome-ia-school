@@ -32,22 +32,24 @@
             <p class="text-sm text-slate-400">Vérifiez chaque numéro et le nom exact du bénéficiaire : l'élève les compare avant de payer. Un moyen désactivé n'est plus proposé mais reste visible sur les anciens achats.</p>
 
             <template x-for="(method, index) in methods" :key="index">
-                <div class="card space-y-3 p-4 sm:p-5">
+                <div class="card p-4 sm:p-5" x-data="{ open: ! method.key }">
                     <div class="flex items-center gap-3">
-                        <span class="grid size-9 shrink-0 place-items-center rounded-full text-xs font-bold text-night-950 ring-2 ring-veil/20" :style="`background:${method.color}`" aria-hidden="true"></span>
-                        <p class="min-w-0 flex-1 truncate font-semibold text-white" x-text="method.name || 'Nouveau moyen de paiement'"></p>
-                        <label class="inline-flex items-center gap-2 text-sm text-slate-200">
+                        <span class="size-9 shrink-0 rounded-full ring-2 ring-veil/20" :style="`background:${method.color}`" aria-hidden="true"></span>
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate font-semibold text-white" x-text="method.name || 'Nouveau moyen de paiement'"></p>
+                            <p class="truncate font-mono text-sm text-slate-300" x-text="method.number"></p>
+                            <p class="truncate text-xs text-slate-400" x-text="method.beneficiary"></p>
+                        </div>
+                        <label class="inline-flex shrink-0 items-center gap-2 text-sm text-slate-200">
                             <input type="checkbox" value="1" class="size-5 accent-gold-400" :name="`methods[${index}][enabled]`" x-model="method.enabled"> Actif
                         </label>
                     </div>
+                    <button type="button" x-show="! open" @click="open = true" class="mt-3 rounded-full px-3 py-1.5 text-sm font-semibold text-electric-200 ring-1 ring-electric-400/40 hover:bg-electric-500/10">Modifier</button>
                     <input type="hidden" :name="`methods[${index}][key]`" :value="method.key">
-                    <div class="grid gap-3 sm:grid-cols-2">
+                    <div x-show="open" class="mt-4 grid gap-3 sm:grid-cols-2">
                         <label class="space-y-1.5"><span class="field-label">Pays</span>
-                            <select class="field-input" :name="`methods[${index}][country]`" x-model="method.country">
-                                <template x-for="country in countries" :key="country.code">
-                                    <option :value="country.code" x-text="`${country.flag} ${country.name}`" :selected="country.code === method.country"></option>
-                                </template>
-                            </select>
+                            {{-- Options construites en JavaScript : un <template> dans un <select> casserait la page. --}}
+                            <select class="field-input" :name="`methods[${index}][country]`" @change="method.country = $event.target.value" x-effect="$el.replaceChildren(...countries.map(country => new Option(`${country.flag} ${country.name}`, country.code))); $el.value = method.country"></select>
                         </label>
                         <label class="space-y-1.5"><span class="field-label">Nom (Mixx by Yas, Flooz…)</span>
                             <input type="text" class="field-input" :name="`methods[${index}][name]`" x-model="method.name" required>
@@ -58,11 +60,11 @@
                         <label class="space-y-1.5"><span class="field-label">Nom exact du bénéficiaire</span>
                             <input type="text" class="field-input" :name="`methods[${index}][beneficiary]`" x-model="method.beneficiary" required>
                         </label>
-                        <label class="space-y-1.5"><span class="field-label">Couleur de la pastille</span>
-                            <input type="color" class="h-11 w-full rounded-xl bg-transparent ring-1 ring-veil/15" :name="`methods[${index}][color]`" x-model="method.color">
+                        <label class="flex items-center gap-3"><span class="field-label">Couleur de la pastille</span>
+                            <input type="color" class="h-10 w-16 rounded-lg bg-transparent" :name="`methods[${index}][color]`" x-model="method.color">
                         </label>
+                        <button type="button" x-show="! method.key" @click="methods.splice(index, 1)" class="justify-self-start text-sm font-semibold text-rose-200 hover:text-rose-100">Retirer cette ligne</button>
                     </div>
-                    <button type="button" x-show="! method.key" @click="methods.splice(index, 1)" class="text-sm font-semibold text-rose-200 hover:text-rose-100">Retirer cette ligne</button>
                 </div>
             </template>
             <button type="button" @click="addMethod()" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-electric-200 ring-1 ring-electric-400/40 hover:bg-electric-500/10"><flux:icon.plus class="size-4" /> Ajouter un numéro</button>
