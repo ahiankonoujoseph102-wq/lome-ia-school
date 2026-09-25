@@ -46,6 +46,9 @@
             @endforeach
         </table>
         <p style="margin:18px 0 0;"><strong>Pour bien se préparer :</strong> installez-vous dans un endroit calme, vérifiez votre connexion internet et rejoignez l'appel à l'heure, depuis votre téléphone ou votre ordinateur.</p>
+        @if (! $meetUrl)
+            <p style="margin:14px 0 0;">Le lien de l'appel vidéo vous sera envoyé par e-mail avant le rendez-vous.</p>
+        @endif
         @if ($meetUrl)
             <p style="margin:26px 0 0;text-align:center;">
                 <a href="{{ $meetUrl }}" style="display:inline-block;background:#fbbf24;color:#0b1030;font-weight:bold;font-size:16px;text-decoration:none;padding:14px 28px;border-radius:999px;">Rejoindre l'appel vidéo</a>
