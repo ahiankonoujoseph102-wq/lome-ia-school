@@ -17,6 +17,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Emplacement des fichiers envoyés (App\Support\FileStorage)
+    |--------------------------------------------------------------------------
+    |
+    | « local » (Hostinger) : dossiers du serveur, disques ci-dessous tels quels.
+    | Nom d'un disque de stockage objet (Laravel Cloud : nom donné au bucket dans le tableau de bord ;
+    | autre hébergeur : « s3 » avec les variables AWS_*) : les fichiers y sont enregistrés.
+    | - PRIVATE_FILES_DISK : captures de paiement, ressources des leçons, fichiers des groupes (bucket privé,
+    |   lus uniquement après vérification des droits, par un lien temporaire signé).
+    | - PUBLIC_FILES_DISK : photos de profil, images des formations, témoignages, logo (bucket public).
+    |
+    */
+
+    'private_files_disk' => env('PRIVATE_FILES_DISK', 'local'),
+
+    'public_files_disk' => env('PUBLIC_FILES_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

@@ -51,7 +51,7 @@
         <meta name="description" content="{{ $description }}">
         <link rel="canonical" href="{{ $canonical }}">
         <meta name="theme-color" content="#0b1030">
-        @if ($noindex || in_array($variant, ['student', 'chat'], true))
+        @if ($noindex || in_array($variant, ['student', 'chat'], true) || config('app.test_banner'))
             <meta name="robots" content="noindex, nofollow">
         @endif
 
@@ -94,12 +94,16 @@
     <body @class([
         'font-sans',
         'min-h-screen overflow-x-clip' => $variant !== 'chat',
-        'h-dvh overflow-hidden' => $variant === 'chat',
+        'flex h-dvh flex-col overflow-hidden' => $variant === 'chat',
         'pb-24 lg:pb-0' => $stickyCta || $variant === 'student',
     ])>
+        @include('site.partials.test-banner')
+
         @if ($variant === 'chat')
-            {{-- Conversation d'un groupe : plein écran, sans en-tête ni pied de page du site. --}}
-            {{ $slot }}
+            {{-- Conversation d'un groupe : plein écran (sous le bandeau de test éventuel), sans en-tête ni pied de page du site. --}}
+            <div class="min-h-0 flex-1">
+                {{ $slot }}
+            </div>
             {{ $after ?? '' }}
         @else
             <a href="#contenu" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-full focus:bg-veil focus:px-4 focus:py-2 focus:text-night-950">Aller au contenu</a>

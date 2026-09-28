@@ -7,8 +7,10 @@ use App\Models\User;
 use App\Push\NullPushSender;
 use App\Push\WebPushSender;
 use App\Settings\SiteSettings;
+use App\Support\FileStorage;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Fichiers envoyés : dossiers du serveur (Hostinger) ou stockage objet (Laravel Cloud), selon .env.
+        FileStorage::configure();
+
         // Notifications sur téléphone : envoi réel seulement si les clés VAPID sont dans .env.
         $this->app->singleton(PushSender::class, function (): PushSender {
             /** @var array{public_key: string|null, private_key: string|null, subject: string|null} $config */
@@ -43,6 +48,11 @@ class AppServiceProvider extends ServiceProvider
         SiteSettings::apply();
 
         $this->configureDefaults();
+
+        // Derrière un proxy (Laravel Cloud) : vraie adresse IP des visiteurs et https.
+        if (filled($proxies = config('app.trusted_proxies'))) {
+            TrustProxies::at((string) $proxies === '*' ? '*' : array_map('trim', explode(',', (string) $proxies)));
+        }
     }
 
     /**

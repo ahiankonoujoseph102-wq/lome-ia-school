@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\Testimonial;
-use Illuminate\Support\Facades\Storage;
 
 class Testimonials
 {
@@ -61,6 +60,6 @@ class Testimonials
      */
     private static function image(?string $path): ?string
     {
-        return $path !== null && $path !== '' && Storage::disk('public')->exists($path) ? Storage::disk('public')->url($path) : null;
+        return FileStorage::publicUrl($path);
     }
 }

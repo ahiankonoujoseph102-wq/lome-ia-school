@@ -21,13 +21,13 @@ class Brand
         return match (true) {
             $path === '' => null,
             is_file(public_path($path)) => asset($path),
-            Storage::disk('public')->exists($path) => Storage::disk('public')->url($path),
-            default => null,
+            default => FileStorage::publicUrl($path),
         };
     }
 
     /**
-     * Chemin du fichier sur le serveur (pour le servir directement), ou null.
+     * Chemin du fichier sur le serveur (pour le servir directement), ou null
+     * (fichier introuvable, ou envoyé sur un stockage objet : utiliser alors url()).
      */
     public static function path(?string $path): ?string
     {
@@ -36,7 +36,7 @@ class Brand
         return match (true) {
             $path === '' => null,
             is_file(public_path($path)) => public_path($path),
-            Storage::disk('public')->exists($path) => Storage::disk('public')->path($path),
+            FileStorage::isLocal('public') && Storage::disk('public')->exists($path) => Storage::disk('public')->path($path),
             default => null,
         };
     }
@@ -61,9 +61,9 @@ class Brand
      */
     public static function shareImageType(): string
     {
-        $path = self::path(config('site.brand.og_image'));
+        $path = config('site.brand.og_image');
 
-        return $path !== null ? self::mimeType($path) : 'image/png';
+        return self::url($path) !== null ? self::mimeType((string) $path) : 'image/png';
     }
 
     public static function mimeType(string $path): string

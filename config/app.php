@@ -123,4 +123,30 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Proxys de confiance
+    |--------------------------------------------------------------------------
+    |
+    | Laravel Cloud (et Cloudflare) placent le site derrière un proxy : TRUSTED_PROXIES=* pour connaître
+    | la vraie adresse IP des visiteurs (anti-spam, affiliation) et le https. Vide sur Hostinger.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bandeau « Version de test »
+    |--------------------------------------------------------------------------
+    |
+    | TEST_BANNER=true : bandeau en haut de toutes les pages et site non référencé par Google
+    | (mise en ligne temporaire pour tester avec l'équipe). false (ou absent) en production.
+    |
+    */
+
+    'test_banner' => (bool) env('TEST_BANNER', false),
+
+    'test_banner_text' => env('TEST_BANNER_TEXT') ?: 'Version de test : le site est en cours de préparation.',
+
 ];
