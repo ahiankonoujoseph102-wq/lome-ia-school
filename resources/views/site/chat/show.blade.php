@@ -43,7 +43,7 @@
     <div
         data-chat
         x-data="chatRoom(@js($config))"
-        class="relative mx-auto flex h-dvh max-w-4xl flex-col bg-night-950 lg:border-x lg:border-veil/10"
+        class="relative mx-auto flex h-full max-w-4xl flex-col bg-night-950 lg:border-x lg:border-veil/10"
         @chat-jump.window="jumpTo($event.detail)"
     >
         {{-- En-tête du groupe --}}

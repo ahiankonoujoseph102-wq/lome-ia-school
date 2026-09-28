@@ -31,7 +31,8 @@ class SitemapController extends Controller
 
     public function robots(): Response
     {
-        $lines = app()->isProduction()
+        // Version de test (TEST_BANNER=true) : jamais référencée, même en production.
+        $lines = app()->isProduction() && ! config('app.test_banner')
             ? ['User-agent: *', 'Disallow: /dashboard', 'Disallow: /settings', '', 'Sitemap: '.route('sitemap')]
             : ['User-agent: *', 'Disallow: /'];
 

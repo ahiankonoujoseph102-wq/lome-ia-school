@@ -12,6 +12,7 @@ use App\Support\PhoneNumber;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -175,7 +176,7 @@ class SiteSettingsController extends Controller
         if ($request->hasFile('icon')) {
             $this->deleteUploaded('icons', (string) ($brand['icons'] ?? ''), $images);
             $directory = 'site/icones-'.Str::lower(Str::random(12));
-            app(BrandAssets::class)->icons((string) $request->file('icon')->getRealPath(), Storage::disk('public')->path($directory));
+            $this->storeIcons((string) $request->file('icon')->getRealPath(), $directory);
             $brand['icons'] = $directory;
             $changes[] = 'nouvelle icône (favicon et écran d\'accueil)';
         }
@@ -192,6 +193,23 @@ class SiteSettingsController extends Controller
 
         SiteSettings::save(['site.brand' => $brand]);
         ActivityLog::record(AdminAction::SettingsUpdated, 'Logo, icône et image de partage : '.implode(', ', $changes).'.');
+    }
+
+    /**
+     * Jeu d'icônes créé dans un dossier temporaire du serveur, puis copié sur le disque « public »
+     * (dossier du serveur sur Hostinger, stockage objet sur Laravel Cloud).
+     */
+    private function storeIcons(string $source, string $directory): void
+    {
+        $temporary = storage_path('app/tmp/'.Str::lower(Str::random(16)));
+
+        try {
+            foreach (app(BrandAssets::class)->icons($source, $temporary) as $file) {
+                Storage::disk('public')->put($directory.'/'.basename($file), (string) file_get_contents($file));
+            }
+        } finally {
+            File::deleteDirectory($temporary);
+        }
     }
 
     /**

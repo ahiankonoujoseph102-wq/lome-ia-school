@@ -39,6 +39,7 @@
         .receipt-page td { font-weight: 600; word-break: break-word; }
         .receipt-page .total td, .receipt-page .total th { border-bottom: 0; font-size: 18px; color: #0b1030; }
         .receipt-page .foot { padding: 16px 24px; background: #f7f7fb; font-size: 12px; color: #6b7094; }
+        .test-banner { margin: 0; padding: 6px 16px; border-bottom: 2px solid #d98a06; background: #fff7e0; color: #5c3a00; font-size: 13px; font-weight: 600; text-align: center; }
         @media (max-width: 480px) {
             .receipt-page .meta { text-align: left; }
         }
@@ -52,6 +53,10 @@
     </style>
 </head>
 <body>
+@if (config('app.test_banner'))
+    {{-- Version de test : aussi imprimée, pour qu'un reçu de test ne soit jamais pris pour un vrai. --}}
+    <p class="test-banner" role="status" data-test="test-banner">TEST · {{ config('app.test_banner_text') }}</p>
+@endif
 <div class="receipt-page">
     <div class="page">
         <div class="actions">

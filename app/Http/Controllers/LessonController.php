@@ -7,12 +7,13 @@ use App\Models\Formation;
 use App\Models\Lesson;
 use App\Models\LessonResource;
 use App\Models\User;
+use App\Support\FileStorage;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Lecteur de cours : page d'une leçon, leçon terminée, téléchargement des ressources.
@@ -83,7 +84,7 @@ class LessonController extends Controller
      * Ressource d'une leçon : fichier (mêmes droits que la leçon, jamais mis en cache) ou lien Google Drive
      * (réservé aux élèves ayant accès à la formation, ouvert par redirection sans être affiché dans la page).
      */
-    public function download(Request $request, Formation $formation, Lesson $lesson, LessonResource $resource): StreamedResponse|RedirectResponse
+    public function download(Request $request, Formation $formation, Lesson $lesson, LessonResource $resource): Response
     {
         $this->ensureBelongsTo($formation, $lesson);
         abort_unless($resource->lesson_id === $lesson->id, 404);
@@ -102,14 +103,13 @@ class LessonController extends Controller
             ]);
         }
 
-        $disk = Storage::disk(LessonResource::DISK);
-        abort_unless($resource->path && $disk->exists($resource->path), 404);
+        $path = (string) $resource->path;
 
-        return $disk->download($resource->path, $resource->name, [
+        return FileStorage::privateResponse(LessonResource::DISK, $path, (string) $resource->name, false, null, fn (Filesystem $disk): Response => $disk->download($path, $resource->name, [
             'Cache-Control' => 'private, no-store, max-age=0',
             'X-Robots-Tag' => 'noindex, nofollow',
             'X-Content-Type-Options' => 'nosniff',
-        ]);
+        ]));
     }
 
     private function ensureBelongsTo(Formation $formation, Lesson $lesson): void
