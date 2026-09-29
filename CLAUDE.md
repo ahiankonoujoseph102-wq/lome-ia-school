@@ -312,7 +312,7 @@ php artisan migrate
 
 **En cours sur la branche `claude/modest-shannon-sicqty`** : assistante vocale IA « Ama » (agent ElevenLabs), bouton « Parler avec notre assistante » (voir « Site vitrine »). Aperçu validé par Joseph, ainsi que la version fixée du widget (0.18.3) et la phrase sur l'identifiant technique dans la politique de confidentialité. Pull request « Assistante vocale Ama ». À faire de son côté après la fusion : activer l'interrupteur dans Réglages du site > Assistante vocale.
 
-**En cours sur la branche `claude/formation-share-button-lue6wp`** : bouton « Partager cette formation » (voir « Partager une formation »), image de la formation dans l'aperçu WhatsApp/Facebook, « Copier le lien » dans l'admin. Aperçu à faire valider par Joseph avant la pull request.
+**En cours sur la branche `claude/formation-share-button-lue6wp`** : bouton « Partager cette formation » (voir « Partager une formation »), image de la formation dans l'aperçu WhatsApp/Facebook, « Copier le lien » dans l'admin. Aperçu validé par Joseph. Pull request « Bouton Partager cette formation ».
 
 **Prochaine étape** : fusion de la branche en cours ; Joseph colle le lien de sa vidéo et choisit son format (Réglages du site > Page Entreprises), saisit le contenu de ses formations (écran « Contenu des formations ») et son lien Google Meet (« Disponibilités »). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 
