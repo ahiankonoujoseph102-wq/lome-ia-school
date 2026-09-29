@@ -1,4 +1,5 @@
 @php
+    use App\Support\FormationShare;
     use App\Support\Placeholder;
     use App\Support\Testimonials;
     use App\Support\WhatsApp;
@@ -16,8 +17,8 @@
         'name' => $formation->title,
         'description' => Str::limit($formation->description, 300),
         'inLanguage' => 'fr',
-        'url' => route('formations.show', $formation),
-        'image' => route('og.formation', $formation),
+        'url' => FormationShare::url($formation),
+        'image' => FormationShare::imageUrl($formation),
         'provider' => ['@type' => 'EducationalOrganization', 'name' => config('app.name'), 'url' => route('home')],
         'offers' => [
             '@type' => 'Offer',
@@ -33,7 +34,8 @@
 <x-layouts::site
     :title="$formation->title"
     :description="Str::limit($formation->subtitle ?: $formation->description, 155)"
-    :image="route('og.formation', $formation).'?v='.$formation->updated_at?->timestamp"
+    :image="FormationShare::imageUrl($formation)"
+    :image-type="FormationShare::imageType($formation)"
     type="product"
     :json-ld="[$course]"
     :sticky-cta="true"
@@ -95,6 +97,9 @@
                             </a>
                         </div>
                     </div>
+
+                    {{-- Partage : visible par tous, connectés ou non --}}
+                    <x-site.share-formation :formation="$formation" class="mt-4" data-reveal style="--reveal-delay: 220ms" />
                 </div>
 
                 <div class="order-1 lg:order-2" data-reveal>

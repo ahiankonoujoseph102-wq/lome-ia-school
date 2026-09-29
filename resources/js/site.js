@@ -169,13 +169,39 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod }) => ({
 /**
  * Bouton « Copier » (liens d'affiliation). Si le presse-papiers est refusé, le texte est sélectionné.
  */
+/**
+ * Copie un texte dans le presse-papiers. Solution de secours (navigateur ancien, page sans https) :
+ * sélection d'un champ temporaire et commande « copier » du navigateur.
+ */
+async function copyToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+
+        return true;
+    } catch {
+        const field = document.createElement('textarea');
+        field.value = text;
+        field.setAttribute('readonly', '');
+        field.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+        document.body.appendChild(field);
+        field.select();
+        let done = false;
+        try {
+            done = document.execCommand('copy');
+        } catch {
+            done = false;
+        }
+        field.remove();
+
+        return done;
+    }
+}
+
 Alpine.data('copyText', (text) => ({
     copied: false,
 
     async copy() {
-        try {
-            await navigator.clipboard.writeText(text);
-        } catch {
+        if (!(await copyToClipboard(text))) {
             const field = this.$refs.field;
             field?.focus();
             field?.select?.();
@@ -183,6 +209,46 @@ Alpine.data('copyText', (text) => ({
 
         this.copied = true;
         setTimeout(() => (this.copied = false), 2000);
+    },
+}));
+
+/**
+ * Bouton « Partager cette formation » : sur téléphone, partage natif du navigateur s'il existe ;
+ * sinon (ou sur ordinateur), menu « Copier le lien », « WhatsApp », « Facebook ».
+ */
+Alpine.data('shareFormation', ({ url, title }) => ({
+    open: false,
+    copied: false,
+    failed: false,
+
+    async share() {
+        const phone = window.matchMedia?.('(pointer: coarse)').matches;
+
+        if (phone && typeof navigator.share === 'function') {
+            try {
+                await navigator.share({ title, text: title, url });
+
+                return;
+            } catch (error) {
+                // Partage fermé par l'élève : rien à faire. Autre erreur : on propose le menu.
+                if (error?.name === 'AbortError') return;
+            }
+        }
+
+        this.open = !this.open;
+    },
+
+    async copy() {
+        this.copied = await copyToClipboard(url);
+        this.failed = !this.copied;
+
+        if (this.failed) {
+            this.$refs.field?.select?.();
+
+            return;
+        }
+
+        setTimeout(() => (this.copied = false), 2500);
     },
 }));
 
