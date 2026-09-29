@@ -50,7 +50,17 @@
 
             <x-site.field name="name" label="Nom complet" :value="old('name', $user->name)" required autocomplete="name" autocapitalize="words" />
             <x-site.phone-field :dial-code="$dialCode" :number="$localNumber" />
-            <x-site.field name="email" label="Adresse e-mail" type="email" :value="old('email', $user->email)" required autocomplete="email" inputmode="email" />
+            <div class="space-y-2">
+                <x-site.field name="email" label="Adresse e-mail" type="email" :value="old('email', $user->email)" required autocomplete="email" inputmode="email" hint="Si vous la changez, un code de confirmation est envoyé à la nouvelle adresse." />
+                @if ($user->hasConfirmedEmail())
+                    <p class="flex items-center gap-1.5 text-xs text-emerald-300" data-test="email-status"><flux:icon.check-badge class="size-4" /> Adresse confirmée</p>
+                @else
+                    <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gold-200" data-test="email-status">
+                        <flux:icon.exclamation-circle class="size-4" /> Adresse pas encore confirmée
+                        <a href="{{ route('email-confirmation.show') }}" class="font-semibold text-gold-300 underline hover:text-gold-200">Confirmer maintenant</a>
+                    </p>
+                @endif
+            </div>
             <x-site.newsletter-checkbox id="profil-newsletter" :checked="old('_token') ? old('wants_newsletter') : $user->wants_newsletter" />
 
             <button type="submit" class="btn-gold w-full sm:w-auto">Enregistrer les modifications</button>

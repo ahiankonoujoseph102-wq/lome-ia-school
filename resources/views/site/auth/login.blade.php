@@ -7,6 +7,9 @@
         @if (session('status'))
             <x-site.alert class="mb-5">{{ session('status') }}</x-site.alert>
         @endif
+        @if (session('warning'))
+            <x-site.alert type="error" class="mb-5">{{ session('warning') }}</x-site.alert>
+        @endif
 
         <x-site.passkey-login />
 

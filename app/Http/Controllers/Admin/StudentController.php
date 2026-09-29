@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Accounts\EmailConfirmation;
+use App\Admin\ActivityLog;
 use App\Admin\ManualAccess;
 use App\Affiliates\AffiliateAccount;
 use App\Courses\CourseProgress;
+use App\Enums\AdminAction;
 use App\Enums\PaymentGateway;
 use App\Enums\PurchaseStatus;
 use App\Enums\UserRole;
@@ -39,6 +42,7 @@ class StudentController extends Controller
         'affilies' => 'Affiliés',
         'annonces' => 'Acceptent les annonces',
         'equipe' => 'Équipe (admin, modérateurs)',
+        'email-non-confirme' => 'E-mail non confirmé',
     ];
 
     public function index(Request $request): View
@@ -92,6 +96,7 @@ class StudentController extends Controller
             'affilies' => $query->whereHas('affiliate'),
             'annonces' => $query->where('wants_newsletter', true),
             'equipe' => $query->whereIn('role', [UserRole::Admin, UserRole::Moderator]),
+            'email-non-confirme' => $query->whereNull('email_verified_at'),
             default => null,
         };
 
@@ -153,6 +158,22 @@ class StudentController extends Controller
         }
 
         return back()->with('status', 'Accès ouvert à « '.$formation->title.' » pour '.$user->name.'. L\'élève a reçu son reçu par e-mail et a rejoint le groupe de la formation.');
+    }
+
+    /**
+     * L'élève n'arrive pas à confirmer son adresse (e-mail introuvable…) : l'admin la confirme lui-même,
+     * après avoir vérifié l'adresse avec lui (WhatsApp). Noté dans le journal d'activité.
+     */
+    public function confirmEmail(User $user, EmailConfirmation $confirmation): RedirectResponse
+    {
+        if ($user->hasConfirmedEmail()) {
+            return back()->with('status', 'L\'adresse e-mail de '.$user->name.' est déjà confirmée.');
+        }
+
+        $confirmation->markConfirmed($user);
+        ActivityLog::record(AdminAction::EmailConfirmed, 'Adresse '.$user->email.' confirmée manuellement', $user, ['email' => $user->email]);
+
+        return back()->with('status', 'Adresse e-mail de '.$user->name.' confirmée. L\'élève peut maintenant payer et demander des retraits.');
     }
 
     /**

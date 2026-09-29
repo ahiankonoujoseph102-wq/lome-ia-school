@@ -34,6 +34,7 @@ use App\Http\Controllers\Site\PwaController;
 use App\Http\Controllers\Site\SitemapController;
 use App\Http\Controllers\Student\AffiliateController;
 use App\Http\Controllers\Student\DashboardController;
+use App\Http\Controllers\Student\EmailConfirmationController;
 use App\Http\Controllers\Student\FormationController as StudentFormationController;
 use App\Http\Controllers\Student\LiveSessionController as StudentLiveSessionController;
 use App\Http\Controllers\Student\NotificationController;
@@ -80,12 +81,25 @@ Route::get('sw.js', [PwaController::class, 'serviceWorker'])->name('pwa.service-
 // Parcours d'achat : récapitulatif de commande et paiement Mobile Money avec preuve de paiement
 Route::get('commande/{formation}', [CheckoutController::class, 'show'])->name('checkout.show');
 Route::post('commande/{formation}/paiement', [CheckoutController::class, 'pay'])
-    ->middleware(['auth', 'throttle:10,1'])
+    ->middleware(['auth', 'email-confirmed', 'throttle:10,1'])
     ->name('checkout.pay');
+
+// Confirmation de l'adresse e-mail : bouton de l'e-mail (valable 30 minutes, une seule fois, même sans être connecté)
+Route::get('confirmer-email/{token}', [EmailConfirmationController::class, 'link'])
+    ->middleware(['no-store', 'throttle:20,1'])
+    ->name('email-confirmation.link');
 
 // Espace élève « Mon espace »
 Route::middleware('auth')->prefix('mon-espace')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+
+    // « Confirmez votre e-mail » : code à 6 chiffres, nouveau code (limité), correction de l'adresse
+    Route::middleware('no-store')->group(function () {
+        Route::get('confirmer-email', [EmailConfirmationController::class, 'show'])->name('email-confirmation.show');
+        Route::post('confirmer-email', [EmailConfirmationController::class, 'confirm'])->middleware('throttle:20,1')->name('email-confirmation.confirm');
+        Route::post('confirmer-email/renvoyer', [EmailConfirmationController::class, 'resend'])->middleware('throttle:10,1')->name('email-confirmation.resend');
+        Route::put('confirmer-email/adresse', [EmailConfirmationController::class, 'updateEmail'])->middleware('throttle:10,1')->name('email-confirmation.email');
+    });
     Route::get('formations', [StudentFormationController::class, 'index'])->name('student.formations.index');
     Route::get('formations/{formation}', [StudentFormationController::class, 'show'])
         ->middleware('can:access,formation')
@@ -112,7 +126,7 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
     Route::get('affiliation/commissions', [AffiliateController::class, 'commissions'])->name('student.affiliate.commissions');
     Route::get('affiliation/retraits', [AffiliateController::class, 'withdrawals'])->name('student.affiliate.withdrawals');
     Route::put('affiliation/coordonnees', [AffiliateController::class, 'updatePayout'])->middleware('throttle:10,1')->name('student.affiliate.payout');
-    Route::post('affiliation/retraits', [AffiliateController::class, 'requestWithdrawal'])->middleware('throttle:10,1')->name('student.affiliate.withdraw');
+    Route::post('affiliation/retraits', [AffiliateController::class, 'requestWithdrawal'])->middleware(['email-confirmed', 'throttle:10,1'])->name('student.affiliate.withdraw');
 
     // Sessions ponctuelles en direct et en présentiel (élèves ayant accès à la formation)
     Route::get('sessions', [StudentLiveSessionController::class, 'index'])->name('student.sessions.index');
@@ -120,7 +134,7 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
     Route::post('sessions/{session}/inscription', [StudentLiveSessionController::class, 'register'])->middleware('throttle:20,1')->name('student.sessions.register');
     Route::delete('sessions/{session}/inscription', [StudentLiveSessionController::class, 'cancel'])->name('student.sessions.cancel');
     Route::get('sessions/{session}/paiement', [StudentLiveSessionController::class, 'payment'])->name('student.sessions.payment');
-    Route::post('sessions/{session}/paiement', [StudentLiveSessionController::class, 'pay'])->middleware('throttle:10,1')->name('student.sessions.pay');
+    Route::post('sessions/{session}/paiement', [StudentLiveSessionController::class, 'pay'])->middleware(['email-confirmed', 'throttle:10,1'])->name('student.sessions.pay');
     Route::get('sessions/{session}/agenda.ics', [StudentLiveSessionController::class, 'calendar'])->name('student.sessions.calendar');
     Route::get('sessions/{session}/rejoindre', [StudentLiveSessionController::class, 'join'])->name('student.sessions.join');
 
@@ -199,6 +213,7 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::get('eleves', [StudentController::class, 'index'])->name('students.index');
     Route::get('eleves/{user}', [StudentController::class, 'show'])->name('students.show');
     Route::post('eleves/{user}/acces', [StudentController::class, 'grantAccess'])->name('students.access');
+    Route::post('eleves/{user}/confirmer-email', [StudentController::class, 'confirmEmail'])->name('students.confirm-email');
     Route::get('paiements', [AdminPaymentController::class, 'index'])->name('payments.index');
     Route::post('paiements/{purchase}/valider', [AdminPaymentController::class, 'approve'])->name('payments.approve');
     Route::post('paiements/{purchase}/refuser', [AdminPaymentController::class, 'reject'])->name('payments.reject');

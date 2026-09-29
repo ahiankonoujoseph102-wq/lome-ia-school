@@ -38,7 +38,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $chat_digest_sent_at
  * @property bool $session_email_enabled Rappels des sessions par e-mail.
  * @property int|null $referred_by_affiliate_id Inscrit arrivé par un lien d'affiliation.
- * @property Carbon|null $email_verified_at
+ * @property Carbon|null $email_verified_at Adresse e-mail confirmée (null : pas encore confirmée).
  * @property string $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
@@ -164,6 +164,15 @@ class User extends Authenticatable implements PasskeyUser
     public function referrer(): BelongsTo
     {
         return $this->belongsTo(Affiliate::class, 'referred_by_affiliate_id');
+    }
+
+    /**
+     * Adresse e-mail confirmée (code ou bouton de l'e-mail, ou par l'admin). Nécessaire pour payer
+     * et pour demander un retrait d'affiliation (voir App\Accounts\EmailConfirmation).
+     */
+    public function hasConfirmedEmail(): bool
+    {
+        return $this->email_verified_at !== null;
     }
 
     public function isBlocked(): bool

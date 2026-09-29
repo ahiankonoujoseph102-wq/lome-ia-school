@@ -117,6 +117,9 @@
             <main id="contenu">
                 @include('site.partials.admin-bar')
                 @include('site.partials.admin-meet-alert')
+                @if ($variant === 'student')
+                    @include('site.student.partials.email-banner')
+                @endif
                 {{ $slot }}
             </main>
 

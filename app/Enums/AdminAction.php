@@ -13,6 +13,7 @@ enum AdminAction: string
     case ManualAccess = 'manual_access';
     case UserBlocked = 'user_blocked';
     case UserUnblocked = 'user_unblocked';
+    case EmailConfirmed = 'email_confirmed';
     case RoleChanged = 'role_changed';
     case SettingsUpdated = 'settings_updated';
     case PaymentMethodsUpdated = 'payment_methods_updated';
@@ -42,6 +43,7 @@ enum AdminAction: string
             self::ManualAccess => 'Accès manuel',
             self::UserBlocked => 'Compte bloqué',
             self::UserUnblocked => 'Compte débloqué',
+            self::EmailConfirmed => 'E-mail confirmé manuellement',
             self::RoleChanged => 'Rôle modifié',
             self::SettingsUpdated => 'Réglages modifiés',
             self::PaymentMethodsUpdated => 'Moyens de paiement modifiés',

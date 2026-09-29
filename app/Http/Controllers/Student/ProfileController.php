@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Student;
 
+use App\Accounts\EmailConfirmation;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Http\Controllers\Controller;
@@ -18,7 +19,7 @@ class ProfileController extends Controller
 {
     use PasswordValidationRules, ProfileValidationRules;
 
-    public function __construct(private AvatarProcessor $avatars) {}
+    public function __construct(private AvatarProcessor $avatars, private EmailConfirmation $confirmation) {}
 
     public function edit(Request $request): View
     {
@@ -57,7 +58,11 @@ class ProfileController extends Controller
             'wants_newsletter' => $request->boolean('wants_newsletter'),
         ]);
 
-        if ($user->isDirty('email')) {
+        // Nouvelle adresse : elle doit être confirmée comme à l'inscription (code et bouton envoyés à la nouvelle adresse).
+        $emailChanged = $user->isDirty('email');
+
+        if ($emailChanged) {
+            $this->confirmation->ensureCanSend($user, 'email');
             $user->email_verified_at = null;
         }
 
@@ -68,6 +73,12 @@ class ProfileController extends Controller
         }
 
         $user->save();
+
+        if ($emailChanged) {
+            $this->confirmation->send($user);
+
+            return to_route('email-confirmation.show')->with('status', 'Votre profil a été mis à jour. Confirmez votre nouvelle adresse avec le code envoyé à '.$user->email.'.');
+        }
 
         return to_route('student.profile')->with('status', 'Votre profil a été mis à jour.');
     }

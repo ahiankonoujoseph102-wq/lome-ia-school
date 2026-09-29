@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\BlockSearchEngines;
+use App\Http\Middleware\EnsureEmailIsConfirmed;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\LogoutBlockedUser;
 use App\Http\Middleware\PreventPrivateCaching;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'email-confirmed' => EnsureEmailIsConfirmed::class,
             'no-store' => PreventPrivateCaching::class,
             'staff-2fa' => RequireStaffTwoFactor::class,
         ]);
