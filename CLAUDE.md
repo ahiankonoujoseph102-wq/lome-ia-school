@@ -296,7 +296,7 @@ php artisan migrate
 
 **Terminé et fusionné** : corrections Laravel Cloud (Pusher, `NOINDEX`, hébergeur des pages légales, Google Agenda, `app:reencrypt-data`), page « Entreprises et centres de formation » avec « Réserver un appel gratuit » et profil de la consultation (PR #14). **APP_KEY** : Joseph la changera lors du passage sur Hostinger (commande `app:reencrypt-data`) ; ne jamais afficher de clé ni de secret dans les réponses.
 
-**En cours sur la branche `claude/inspiring-heisenberg-7kmmvq`** : format de la vidéo de la page Entreprises (horizontal / vertical téléphone, Shorts détectés automatiquement). En attente de la validation de l'aperçu par Joseph avant la pull request.
+**En cours sur la branche `claude/inspiring-heisenberg-7kmmvq`** : format de la vidéo de la page Entreprises (horizontal / vertical téléphone, Shorts détectés automatiquement). Aperçu validé par Joseph. Pull request « Vidéo Entreprises au format vertical ».
 
 **Prochaine étape** : fusion de la branche en cours ; Joseph colle le lien de sa vidéo et choisit son format (Réglages du site > Page Entreprises), saisit le contenu de ses formations (écran « Contenu des formations ») et son lien Google Meet (« Disponibilités »). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 
