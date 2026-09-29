@@ -242,4 +242,43 @@ class SiteSettingsTest extends AdminTestCase
 
         $this->assertSame(0, AdminActivity::query()->count());
     }
+
+    public function test_social_and_map_links_are_cleaned_before_being_checked(): void
+    {
+        $form = [
+            'phones' => ['+228 90 00 00 01'],
+            'email' => 'contact@exemple.test',
+            'address' => 'Adidogomé, Lomé',
+            'hours' => 'Du lundi au samedi, de 8 h à 20 h',
+            'whatsapp_number' => '+228 90 00 00 01',
+            'whatsapp_message' => 'Bonjour',
+            'consultation_message' => 'Bonjour, consultation',
+            'trained' => '1 000+',
+            'founded' => '2023',
+        ];
+
+        $this->actingAs($this->admin)->put(route('admin.settings.update', 'coordonnees'), [...$form,
+            'map_url' => "Notre adresse : maps.app.goo.gl/AbCdEf123\u{200B}",
+            'social' => [
+                'facebook' => "  Www.facebook.com/LomeIASchool\u{00A0}\n",
+                'tiktok' => "Suivez-nous sur TikTok : https://www.tiktok.com/@lomeiaschool\u{FEFF}",
+                'youtube' => 'Https://www.youtube.com/@LomeIASchool',
+            ],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('https://maps.app.goo.gl/AbCdEf123', config('site.contact.map_url'));
+        $this->assertSame('https://www.facebook.com/LomeIASchool', config('site.social.facebook'));
+        $this->assertSame('https://www.tiktok.com/@lomeiaschool', config('site.social.tiktok'));
+        $this->assertSame('https://www.youtube.com/@LomeIASchool', config('site.social.youtube'));
+
+        $this->actingAs($this->admin)->put(route('admin.settings.update', 'coordonnees'), [...$form,
+            'map_url' => '',
+            'social' => ['facebook' => 'ma page facebook', 'tiktok' => '', 'youtube' => ''],
+        ])->assertSessionHasErrors(['social.facebook' => 'Le lien Facebook doit ressembler à https://www.facebook.com/votre-page.']);
+        $this->assertSame('https://www.facebook.com/LomeIASchool', config('site.social.facebook'));
+
+        $this->actingAs($this->admin)->get(route('admin.settings.edit', 'coordonnees'))->assertOk()
+            ->assertDontSee('type="url"', false)
+            ->assertSee('inputmode="url" autocapitalize="none"', false);
+    }
 }

@@ -255,4 +255,45 @@ class AdminContentTest extends TestCase
         $this->assertModelMissing($resource);
         Storage::disk('lesson_resources')->assertMissing('1/a.pdf');
     }
+
+    public function test_video_and_resource_links_are_cleaned_before_being_checked(): void
+    {
+        $module = CourseModule::factory()->for($this->formation)->create();
+        $pasted = [
+            ["  https://youtu.be/abcDEF12345 \n", "\u{200B}https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view\u{00A0}"],
+            ['Https://Www.youtube.com/watch?v=abcDEF12345', 'Https://Drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view'],
+            ['Ma vidéo : https://youtu.be/abcDEF12345', 'La vidéo de secours : https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view?usp=sharing'],
+            ['youtu.be/abcDEF12345', 'drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view'],
+        ];
+
+        foreach ($pasted as $index => [$youtube, $drive]) {
+            $this->actingAs($this->admin)->post(route('admin.lessons.store', $module), [
+                'course_module_id' => $module->id,
+                'title' => 'Leçon '.$index,
+                'videos' => ['youtube' => $youtube, 'drive' => $drive],
+                'primary_video' => 'youtube',
+                'link_name' => 'Support',
+                'link_url' => "Support du cours :\u{00A0}docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit\u{200B}",
+            ])->assertSessionHasNoErrors();
+
+            $lesson = Lesson::query()->where('title', 'Leçon '.$index)->firstOrFail();
+            $this->assertSame(['youtube', 'abcDEF12345', 'drive', '1AbCdEfGhIjKlMnOpQrStUvWxYz'], [$lesson->video_provider, $lesson->video_id, $lesson->backup_video_provider, $lesson->backup_video_id]);
+            $this->assertSame('https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit', $lesson->resources()->value('url'));
+        }
+
+        $this->actingAs($this->admin)->post(route('admin.lessons.store', $module), [
+            'course_module_id' => $module->id,
+            'title' => 'Refusée',
+            'videos' => ['youtube' => 'https://exemple.com/ma-video', 'drive' => 'n\'importe quoi'],
+            'link_name' => 'Support',
+            'link_url' => 'https://exemple.com/fichier.pdf',
+        ])->assertSessionHasErrors([
+            'videos.youtube' => 'Le lien YouTube doit ressembler à https://www.youtube.com/watch?v=abcdefghijk ou https://youtu.be/abcdefghijk. Sur YouTube : « Partager », puis « Copier le lien ».',
+            'videos.drive' => 'Le lien Google Drive doit ressembler à https://drive.google.com/file/d/…/view. Dans Drive : « Partager », puis « Copier le lien » de la vidéo.',
+            'link_url',
+        ]);
+        $this->assertSame(0, Lesson::query()->where('title', 'Refusée')->count());
+
+        $this->actingAs($this->admin)->get(route('admin.lessons.create', $module))->assertOk()->assertDontSee('type="url"', false);
+    }
 }

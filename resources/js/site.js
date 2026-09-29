@@ -247,10 +247,37 @@ Alpine.data('slotPicker', ({ days, selected }) => ({
  * Admin « Contenu des formations » : aperçu de la vidéo pendant la saisie du lien.
  * Même reconnaissance des liens que côté serveur (App\Support\YouTube, App\Support\GoogleDrive).
  */
+/**
+ * Même nettoyage que App\Support\PastedLink côté serveur : caractères invisibles, espaces spéciaux,
+ * texte autour du lien, majuscules du « https:// » et du nom de domaine, « https:// » manquant.
+ */
+const cleanPastedLink = (value) => {
+    const text = (value || '')
+        .replace(/[\u00AD\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]/g, '')
+        .replace(/[\s\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]+/g, ' ')
+        .trim();
+    const domain = '(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z]{2,}';
+    const match = text.match(/https?:\/+\S+/i)
+        || text.match(new RegExp(`(?<![\\w@./-])${domain}[/?#]\\S*(?![\\w@-])`, 'i'))
+        || text.match(new RegExp(`(?<![\\w@./-])${domain}(?![\\w@-])`, 'i'));
+
+    if (!match) {
+        return text;
+    }
+
+    const link = match[0]
+        .replace(/^[<(["'«“]+/, '')
+        .replace(/[.,;:!?)\]>"'»”]+$/, '')
+        .replace(/^https?:\/+/i, '')
+        .replace(/^[^/?#]+/, (host) => host.toLowerCase());
+
+    return `https://${link}`;
+};
+
 const videoSources = {
     youtube: {
         parse(value) {
-            const input = (value || '').trim();
+            const input = cleanPastedLink(value);
 
             if (/^[\w-]{11}$/.test(input)) {
                 return input;
@@ -265,7 +292,7 @@ const videoSources = {
     },
     drive: {
         parse(value) {
-            const input = (value || '').trim();
+            const input = cleanPastedLink(value);
 
             if (/^[\w-]{25,}$/.test(input)) {
                 return input;
@@ -279,7 +306,7 @@ const videoSources = {
 
             return match ? match[1] : null;
         },
-        isFolder: (value) => /drive\.google\.com\/(?:drive\/(?:u\/\d+\/)?)?folders\//.test(value),
+        isFolder: (value) => /drive\.google\.com\/(?:drive\/(?:u\/\d+\/)?)?folders\//.test(cleanPastedLink(value)),
         embed: (id) => `https://drive.google.com/file/d/${id}/preview`,
         problem: (value) => (videoSources.drive.isFolder(value)
             ? 'C\'est le lien d\'un dossier : ouvrez la vidéo elle-même dans Drive, puis copiez son lien.'

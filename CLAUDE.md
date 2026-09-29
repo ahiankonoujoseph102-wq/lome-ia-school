@@ -57,6 +57,7 @@ Plateforme de vente et de suivi de formations en intelligence artificielle, bas�
 - **Mobile d'abord** : concevoir chaque écran pour un petit écran, puis l'agrandir.
 - **Tâches longues** (e-mails, traitements de médias) : en file d'attente (driver `database`), jamais pendant la requête.
 - **Tests** : un test de fonctionnalité (PHPUnit) pour chaque parcours important (achat, accès, affiliation, retrait).
+- **Champs de lien de l'admin** (lien Google Meet de la consultation et des sessions, liens YouTube et Google Drive des leçons et ressources, vidéo de la page Entreprises, vidéo des témoignages, carte et réseaux sociaux) : toujours **nettoyés avant la vérification** par `App\Support\PastedLink` (`PastedLink::cleanRequest($request, [...])` dans le contrôleur ou `prepareForValidation()` du FormRequest) : caractères invisibles (espace insécable, largeur nulle…) et espaces retirés, lien extrait d'un texte plus long (« Rejoindre avec Google Meet : https://… »), majuscules du clavier retirées de « https:// » et du nom de domaine (jamais du chemin : identifiants YouTube et Drive), « https:// » ajouté s'il manque. `GoogleMeet::normalize`, `YouTube::id`, `GoogleDrive::fileId` nettoient aussi. Message d'erreur qui montre la forme attendue (`GoogleMeet::invalidMessage()`, `YouTube::invalidMessage()`). Dans les vues, **jamais `type="url"`** (le navigateur refuserait lui-même un lien sans https ou entouré de texte) : `type="text" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false"` (fait automatiquement par `x-admin.field type="url"`). Même nettoyage côté navigateur pour l'aperçu vidéo (`cleanPastedLink` dans `site.js`). Tests : `tests/Unit/PastedLinkTest.php` et un test par écran.
 
 ## Site vitrine : où se trouve quoi
 
@@ -300,6 +301,8 @@ php artisan migrate
 **En cours sur la branche `claude/inspiring-heisenberg-7kmmvq`** : format de la vidéo de la page Entreprises (horizontal / vertical téléphone, Shorts détectés automatiquement). Aperçu validé par Joseph. Pull request « Vidéo Entreprises au format vertical ».
 
 **En cours sur la branche `claude/sweet-dirac-n5db8u`** : vérification de l'adresse e-mail à l'inscription (voir « Confirmation de l'adresse e-mail »). Aperçu validé par Joseph, ainsi que l'exception à la règle des e-mails en file d'attente (l'e-mail du code part immédiatement, juste après la réponse). Pull request « Vérification de l'email à l'inscription ».
+
+**En cours sur la branche `claude/hopeful-cannon-ueyezg`** : champs de lien de l'admin plus tolérants (voir « Champs de lien de l'admin » dans les conventions de code). Pull request « Champs de lien plus tolérants dans l'admin ».
 
 **Prochaine étape** : fusion de la branche en cours ; Joseph colle le lien de sa vidéo et choisit son format (Réglages du site > Page Entreprises), saisit le contenu de ses formations (écran « Contenu des formations ») et son lien Google Meet (« Disponibilités »). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 

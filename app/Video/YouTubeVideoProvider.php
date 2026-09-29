@@ -27,7 +27,7 @@ class YouTubeVideoProvider implements VideoProvider
 
     public function invalidLinkMessage(string $input): string
     {
-        return 'Ce lien YouTube n\'est pas reconnu. Sur YouTube : « Partager », puis « Copier le lien ».';
+        return YouTube::invalidMessage();
     }
 
     public function linkHelp(): string

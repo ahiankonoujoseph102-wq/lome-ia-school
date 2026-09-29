@@ -32,7 +32,7 @@ class GoogleDriveVideoProvider implements VideoProvider
             return 'C\'est le lien d\'un dossier : ouvrez la vidéo elle-même dans Drive, puis copiez son lien.';
         }
 
-        return 'Ce lien Google Drive n\'est pas reconnu. Dans Drive : « Partager », puis « Copier le lien » de la vidéo.';
+        return 'Le lien Google Drive doit ressembler à https://drive.google.com/file/d/…/view. Dans Drive : « Partager », puis « Copier le lien » de la vidéo.';
     }
 
     public function linkHelp(): string

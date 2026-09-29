@@ -13,7 +13,7 @@ class GoogleDrive
      */
     public static function fileId(?string $value): ?string
     {
-        $value = trim((string) $value);
+        $value = PastedLink::clean($value);
 
         if (preg_match('/^[\w-]{25,}$/', $value)) {
             return $value;
@@ -36,7 +36,7 @@ class GoogleDrive
 
     public static function isFolder(string $value): bool
     {
-        return (bool) preg_match('~drive\.google\.com/(?:drive/(?:u/\d+/)?)?folders/~', $value);
+        return (bool) preg_match('~drive\.google\.com/(?:drive/(?:u/\d+/)?)?folders/~', PastedLink::clean($value));
     }
 
     /**
@@ -44,9 +44,10 @@ class GoogleDrive
      */
     public static function isGoogleUrl(string $value): bool
     {
-        $host = strtolower((string) parse_url(trim($value), PHP_URL_HOST));
+        $value = PastedLink::clean($value);
+        $host = strtolower((string) parse_url($value, PHP_URL_HOST));
 
-        return str_starts_with(trim($value), 'https://')
+        return str_starts_with($value, 'https://')
             && in_array($host, ['drive.google.com', 'docs.google.com', 'drive.usercontent.google.com'], true);
     }
 

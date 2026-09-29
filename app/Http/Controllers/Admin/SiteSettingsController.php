@@ -8,6 +8,7 @@ use App\Enums\AdminAction;
 use App\Http\Controllers\Controller;
 use App\Services\ImageUploader;
 use App\Settings\SiteSettings;
+use App\Support\PastedLink;
 use App\Support\PhoneNumber;
 use App\Support\YouTube;
 use Illuminate\Contracts\View\View;
@@ -82,6 +83,8 @@ class SiteSettingsController extends Controller
 
     private function updateContact(Request $request): void
     {
+        PastedLink::cleanRequest($request, ['map_url', 'social.*']);
+
         $validated = $request->validate([
             'phones' => ['array', 'max:5'],
             'phones.*' => ['nullable', 'string', 'max:30'],
@@ -99,8 +102,10 @@ class SiteSettingsController extends Controller
             'trained' => ['required', 'string', 'max:20'],
             'founded' => ['required', 'integer', 'between:2000,2100'],
         ], [
-            'map_url.url' => 'Le lien de la carte doit commencer par https://.',
-            'social.*.url' => 'Le lien doit être une adresse complète commençant par https://.',
+            'map_url.url' => 'Le lien de la carte doit ressembler à https://maps.app.goo.gl/… (dans Google Maps : « Partager », puis « Copier le lien »).',
+            'social.facebook.url' => 'Le lien Facebook doit ressembler à https://www.facebook.com/votre-page.',
+            'social.tiktok.url' => 'Le lien TikTok doit ressembler à https://www.tiktok.com/@votre-compte.',
+            'social.youtube.url' => 'Le lien YouTube doit ressembler à https://www.youtube.com/@votre-chaine.',
         ]);
 
         $whatsapp = PhoneNumber::normalize((string) $validated['whatsapp_number']);
@@ -439,6 +444,8 @@ class SiteSettingsController extends Controller
 
     private function updateBusiness(Request $request): void
     {
+        PastedLink::cleanRequest($request, ['video_url']);
+
         $validated = $request->validate([
             'video_url' => ['nullable', 'string', 'max:500'],
             'video_format' => ['nullable', Rule::in(YouTube::FORMATS)],
@@ -454,7 +461,7 @@ class SiteSettingsController extends Controller
         $video = trim((string) ($validated['video_url'] ?? ''));
 
         if ($video !== '' && YouTube::id($video) === null) {
-            throw ValidationException::withMessages(['video_url' => 'Lien YouTube non reconnu. Exemple : https://www.youtube.com/watch?v=… ou https://youtu.be/…']);
+            throw ValidationException::withMessages(['video_url' => YouTube::invalidMessage().' Un lien Shorts (https://www.youtube.com/shorts/…) fonctionne aussi.']);
         }
 
         $services = self::lines($validated['services'] ?? []);

@@ -149,4 +149,34 @@ class AdminConsultationsTest extends ConsultationTestCase
         $this->actingAs($admin)->delete(route('admin.consultations.blocks.destroy', $block))->assertRedirect();
         $this->assertContains('09:30', $this->slotsOn('2026-10-08'));
     }
+
+    public function test_the_meet_link_is_cleaned_before_being_checked(): void
+    {
+        $admin = $this->admin();
+        $settings = ['duration_minutes' => 30, 'buffer_minutes' => 15, 'min_notice_hours' => 3, 'max_days_ahead' => 30, 'max_per_day' => '', 'manage_deadline_hours' => 3];
+        $pasted = [
+            'espaces et retours à la ligne' => "  https://meet.google.com/kkk-llll-mmm \n",
+            'caractères invisibles' => "\u{200B}https://meet.google.com/kkk-llll-mmm\u{00A0}",
+            'majuscule du clavier' => 'Https://Meet.google.com/kkk-llll-mmm',
+            'texte en plus' => 'Rejoindre avec Google Meet : https://meet.google.com/kkk-llll-mmm',
+            'https manquant' => 'meet.google.com/kkk-llll-mmm',
+        ];
+
+        foreach ($pasted as $case => $value) {
+            ConsultationSettings::current()->update(['meet_url' => self::MEET]);
+
+            $this->actingAs($admin)->put(route('admin.consultations.settings'), [...$settings, 'meet_url' => $value])->assertSessionHasNoErrors();
+            $this->assertSame('https://meet.google.com/kkk-llll-mmm', ConsultationSettings::current()->meet_url, $case);
+        }
+
+        // Lien vraiment invalide : refusé, message clair sous le champ, lien précédent gardé.
+        $this->actingAs($admin)->from(route('admin.consultations.availability'))
+            ->put(route('admin.consultations.settings'), [...$settings, 'meet_url' => 'https://meet.google.com/abc-defg'])
+            ->assertSessionHasErrors(['meet_url' => 'Le lien Google Meet doit ressembler à https://meet.google.com/abc-defg-hij : 3 lettres, un tiret, 4 lettres, un tiret, 3 lettres. Vérifiez qu\'il ne manque aucune lettre du code de la réunion.'], null, 'settings');
+        $this->assertSame('https://meet.google.com/kkk-llll-mmm', ConsultationSettings::current()->meet_url);
+
+        // Le champ ne laisse pas le navigateur refuser le lien lui-même (type « url »).
+        $this->actingAs($admin)->get(route('admin.consultations.availability'))->assertOk()
+            ->assertSee('name="meet_url" type="text" inputmode="url" autocapitalize="none"', false);
+    }
 }
