@@ -51,7 +51,7 @@
         <meta name="description" content="{{ $description }}">
         <link rel="canonical" href="{{ $canonical }}">
         <meta name="theme-color" content="#0b1030">
-        @if ($noindex || in_array($variant, ['student', 'chat'], true) || config('app.test_banner'))
+        @if ($noindex || in_array($variant, ['student', 'chat'], true) || config('app.noindex'))
             <meta name="robots" content="noindex, nofollow">
         @endif
 

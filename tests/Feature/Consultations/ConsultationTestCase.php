@@ -47,6 +47,8 @@ abstract class ConsultationTestCase extends TestCase
             'phone_country' => '+228',
             'phone' => '90 12 34 '.str_pad((string) (10 + $this->visitors), 2, '0', STR_PAD_LEFT),
             'email' => 'afi'.$this->visitors.'@example.com',
+            'requester_type' => 'individual',
+            'organization_name' => '',
             'topic' => 'Je veux apprendre à créer des visuels pour mon commerce.',
             'formation_id' => '',
             'starts_at' => $slot,

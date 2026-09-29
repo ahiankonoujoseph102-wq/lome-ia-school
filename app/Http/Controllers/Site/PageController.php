@@ -30,6 +30,11 @@ class PageController extends Controller
         return view('site.contact');
     }
 
+    public function business(): View
+    {
+        return view('site.business');
+    }
+
     public function affiliate(): View
     {
         return view('site.affiliate');

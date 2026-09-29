@@ -3,7 +3,7 @@
     use App\Support\PhoneNumber;
 
     [$title, $intro] = match ($kind) {
-        'booked' => ['Nouvelle consultation', $consultation->name.' a réservé une consultation gratuite.'],
+        'booked' => ['Nouvelle consultation', $consultation->name.($consultation->requester_type->isOrganization() && $consultation->organization_name ? ' ('.$consultation->organization_name.')' : '').' a réservé une consultation gratuite.'],
         'moved' => ['Consultation déplacée', $consultation->name.' a déplacé sa consultation.'],
         'cancelled' => ['Consultation annulée', $consultation->name.' a annulé sa consultation.'],
         default => ['Consultation', $consultation->name],
@@ -13,6 +13,8 @@
         'Nom' => $consultation->name,
         'WhatsApp' => PhoneNumber::format($consultation->phone),
         'E-mail' => $consultation->email,
+        'Profil' => $consultation->requester_type->label(),
+        'Structure' => $consultation->requester_type->isOrganization() ? $consultation->organization_name : null,
         'Besoin' => $consultation->topic,
         'Formation' => $consultation->formation?->title,
         'Compte élève' => $consultation->user ? 'Oui ('.$consultation->user->email.')' : 'Non',

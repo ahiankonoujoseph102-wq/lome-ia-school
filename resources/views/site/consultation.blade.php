@@ -53,6 +53,32 @@
 
                     <div class="space-y-4 border-t border-veil/10 pt-6" x-ref="next">
                         <p class="font-semibold text-white">Vos coordonnées</p>
+
+                        {{-- Profil : obligatoire ; « Une entreprise » présélectionné depuis la page Entreprises (modifiable). --}}
+                        <div class="space-y-4" x-data="{ requester: @js((string) old('requester_type', $requesterType?->value ?? '')) }">
+                            <fieldset class="space-y-2" data-test="requester-type">
+                                <legend class="field-label">Vous êtes</legend>
+                                <div class="grid gap-2 sm:grid-cols-3">
+                                    @foreach (\App\Enums\ConsultationRequesterType::cases() as $type)
+                                        <label class="group flex cursor-pointer items-center gap-3 rounded-2xl bg-veil/5 px-4 py-3 text-sm font-semibold text-slate-200 ring-1 ring-veil/15 transition hover:bg-veil/10 has-[:checked]:bg-gold-400/10 has-[:checked]:text-white has-[:checked]:ring-2 has-[:checked]:ring-gold-400 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold-300">
+                                            <input type="radio" name="requester_type" value="{{ $type->value }}" x-model="requester" class="sr-only" required @checked(old('requester_type', $requesterType?->value) === $type->value)>
+                                            <span class="grid size-5 shrink-0 place-items-center rounded-full ring-1 ring-veil/30 group-has-[:checked]:ring-gold-400">
+                                                <flux:icon.check class="size-3.5 text-gold-300 opacity-0 group-has-[:checked]:opacity-100" />
+                                            </span>
+                                            {{ $type->choiceLabel() }}
+                                        </label>
+                                    @endforeach
+                                </div>
+                                @error('requester_type') <p class="text-sm text-rose-300">{{ $message }}</p> @enderror
+                            </fieldset>
+
+                            <div class="space-y-1.5" x-show="requester !== '' && requester !== 'individual'" x-cloak data-test="organization-field">
+                                <label for="champ-organization" class="field-label">Nom de votre centre ou de votre entreprise</label>
+                                <input id="champ-organization" type="text" name="organization_name" maxlength="150" autocomplete="organization" value="{{ old('organization_name') }}" :required="requester !== '' && requester !== 'individual'" :disabled="requester === '' || requester === 'individual'" @class(['field-input', 'field-input-error' => $errors->has('organization_name')])>
+                                @error('organization_name') <p class="text-sm text-rose-300">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+
                         <x-site.field name="name" label="Nom et prénom" autocomplete="name" :value="old('name', $user?->name)" required />
                         <x-site.phone-field :dial-code="$user?->phone ? \App\Support\PhoneNumber::split($user->phone)[0] : null" :number="$user?->phone ? \App\Support\PhoneNumber::groupDigits(\App\Support\PhoneNumber::split($user->phone)[1]) : null" />
                         <x-site.field name="email" label="Adresse e-mail" type="email" autocomplete="email" :value="old('email', $user?->email)" hint="La confirmation et le lien de l'appel vidéo y sont envoyés." required />

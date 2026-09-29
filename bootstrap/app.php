@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\BlockSearchEngines;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\LogoutBlockedUser;
 use App\Http\Middleware\PreventPrivateCaching;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             LogoutBlockedUser::class,
             TrackAffiliateReferral::class,
+            BlockSearchEngines::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

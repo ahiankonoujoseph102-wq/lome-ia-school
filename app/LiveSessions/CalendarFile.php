@@ -3,6 +3,7 @@
 namespace App\LiveSessions;
 
 use App\Models\LiveSession;
+use App\Support\GoogleCalendar;
 
 /**
  * Fichier .ics « Ajouter à mon agenda » (Google Agenda, agenda de l'iPhone, Outlook).
@@ -12,19 +13,6 @@ class CalendarFile
 {
     public static function for(LiveSession $session): string
     {
-        $formation = $session->formation;
-        $description = $formation->title.' · '.$session->format->longLabel();
-
-        if ($session->isOnline() && $session->meet_url) {
-            $description .= "\nLien Google Meet : ".$session->meet_url;
-        }
-
-        if (filled($session->description)) {
-            $description .= "\n\n".$session->description;
-        }
-
-        $description .= "\n\n".route('student.sessions.show', $session);
-
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
@@ -37,9 +25,9 @@ class CalendarFile
             'SEQUENCE:'.($session->updated_at?->getTimestamp() ?? 0),
             'DTSTART:'.$session->starts_at->copy()->utc()->format('Ymd\THis\Z'),
             'DTEND:'.$session->ends_at->copy()->utc()->format('Ymd\THis\Z'),
-            'SUMMARY:'.self::escape($session->displayTitle().' · '.$formation->title),
-            'DESCRIPTION:'.self::escape($description),
-            'LOCATION:'.self::escape($session->isOnline() ? (string) ($session->meet_url ?? 'Google Meet') : (string) $session->location),
+            'SUMMARY:'.self::escape(self::title($session)),
+            'DESCRIPTION:'.self::escape(self::description($session)),
+            'LOCATION:'.self::escape(self::location($session)),
             'STATUS:'.($session->isCancelled() ? 'CANCELLED' : 'CONFIRMED'),
         ];
 
@@ -54,6 +42,39 @@ class CalendarFile
         array_push($lines, 'END:VEVENT', 'END:VCALENDAR');
 
         return implode("\r\n", array_map(self::fold(...), $lines))."\r\n";
+    }
+
+    /**
+     * Lien « Ajouter à Google Agenda » avec la session préremplie (mêmes informations que le fichier .ics).
+     */
+    public static function googleUrl(LiveSession $session): string
+    {
+        return GoogleCalendar::url(self::title($session), $session->starts_at, $session->ends_at, self::description($session), self::location($session));
+    }
+
+    private static function title(LiveSession $session): string
+    {
+        return $session->displayTitle().' · '.$session->formation->title;
+    }
+
+    private static function description(LiveSession $session): string
+    {
+        $description = $session->formation->title.' · '.$session->format->longLabel();
+
+        if ($session->isOnline() && $session->meet_url) {
+            $description .= "\nLien Google Meet : ".$session->meet_url;
+        }
+
+        if (filled($session->description)) {
+            $description .= "\n\n".$session->description;
+        }
+
+        return $description."\n\n".route('student.sessions.show', $session);
+    }
+
+    private static function location(LiveSession $session): string
+    {
+        return $session->isOnline() ? (string) ($session->meet_url ?? 'Google Meet') : (string) $session->location;
     }
 
     public static function escape(string $text): string

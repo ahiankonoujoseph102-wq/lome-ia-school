@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sessions;
 
 use App\Enums\PurchaseStatus;
+use App\LiveSessions\CalendarFile;
 use App\Models\Purchase;
 use App\Models\User;
 use App\Services\PurchaseManager;
@@ -118,6 +119,32 @@ class VisibilityTest extends SessionTestCase
         foreach (explode("\r\n", $ics) as $line) {
             $this->assertLessThanOrEqual(75, strlen($line));
         }
+    }
+
+    public function test_google_calendar_button_prefills_the_session(): void
+    {
+        $student = $this->student();
+        $session = $this->online(['title' => 'Atelier pratique', 'starts_at' => now()->addDays(5)->setTime(10, 0), 'duration_minutes' => 90]);
+
+        $url = CalendarFile::googleUrl($session);
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+
+        $this->assertStringStartsWith('https://calendar.google.com/calendar/render?', $url);
+        $this->assertSame('Atelier pratique · '.$this->formation->title, $query['text']);
+        $day = $session->starts_at->format('Ymd');
+        $this->assertSame($day.'T100000/'.$day.'T113000', $query['dates']);
+        $this->assertSame('Africa/Lome', $query['ctz']);
+        $this->assertStringContainsString(self::MEET, (string) $query['details']);
+
+        $this->actingAs($student)->get(route('student.sessions.show', $session))
+            ->assertOk()
+            ->assertSee('Ajouter à Google Agenda')
+            ->assertSee(e($url), false)
+            ->assertSee(route('student.sessions.calendar', $session));
+
+        // Session annulée : plus de bouton d'agenda.
+        $session->forceFill(['cancelled_at' => now()])->save();
+        $this->actingAs($student)->get(route('student.sessions.show', $session))->assertOk()->assertDontSee('calendar.google.com');
     }
 
     public function test_terms_explain_sessions_registration_and_supplement(): void

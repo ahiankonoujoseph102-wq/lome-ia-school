@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Services\ImageUploader;
 use App\Settings\SiteSettings;
 use App\Support\PhoneNumber;
+use App\Support\YouTube;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,6 +36,8 @@ class SiteSettingsController extends Controller
         'regles' => ['title' => 'Seuils et délais', 'text' => 'Seuil d\'accès provisoire, délai de vérification, réglages des sessions.', 'icon' => 'adjustments-horizontal'],
         'affiliation' => ['title' => 'Affiliation', 'text' => 'Taux de commission, durée des liens, délai de disponibilité, retrait minimum.', 'icon' => 'share', 'sensitive' => true],
         'textes' => ['title' => 'Textes du site', 'text' => 'Accroche de l\'accueil, présentation du formateur, questions fréquentes.', 'icon' => 'document-text'],
+        'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
+        'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
     ];
 
     public function index(): View
@@ -70,6 +73,8 @@ class SiteSettingsController extends Controller
             'regles' => $this->updateRules($request),
             'affiliation' => $this->updateAffiliate($request),
             'textes' => $this->updateTexts($request),
+            'entreprises' => $this->updateBusiness($request),
+            'legal' => $this->updateLegal($request),
         };
 
         return to_route('admin.settings.edit', $section)->with('status', 'Réglages enregistrés : ils sont déjà visibles sur le site.');
@@ -430,6 +435,63 @@ class SiteSettingsController extends Controller
         ]);
 
         ActivityLog::record(AdminAction::SettingsUpdated, 'Textes du site modifiés (accueil, formateur, questions fréquentes).');
+    }
+
+    private function updateBusiness(Request $request): void
+    {
+        $validated = $request->validate([
+            'video_url' => ['nullable', 'string', 'max:500'],
+            'title' => ['required', 'string', 'max:160'],
+            'intro' => ['array', 'max:6'],
+            'intro.*' => ['nullable', 'string', 'max:1500'],
+            'services' => ['array', 'max:30'],
+            'services.*' => ['nullable', 'string', 'max:200'],
+            'home_title' => ['required', 'string', 'max:160'],
+            'home_text' => ['required', 'string', 'max:400'],
+        ]);
+
+        $video = trim((string) ($validated['video_url'] ?? ''));
+
+        if ($video !== '' && YouTube::id($video) === null) {
+            throw ValidationException::withMessages(['video_url' => 'Lien YouTube non reconnu. Exemple : https://www.youtube.com/watch?v=… ou https://youtu.be/…']);
+        }
+
+        $services = self::lines($validated['services'] ?? []);
+
+        if ($services === []) {
+            throw ValidationException::withMessages(['services' => 'Indiquez au moins un service.']);
+        }
+
+        SiteSettings::save(['site.business' => [
+            'video_url' => $video,
+            'title' => trim((string) $validated['title']),
+            'intro' => self::lines($validated['intro'] ?? []),
+            'services' => $services,
+            'home_title' => trim((string) $validated['home_title']),
+            'home_text' => trim((string) $validated['home_text']),
+        ]]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Page « Entreprises et centres de formation » modifiée'.($video === '' ? ' (sans vidéo).' : '.'));
+    }
+
+    private function updateLegal(Request $request): void
+    {
+        $validated = $request->validate([
+            'host' => ['required', 'string', 'max:300'],
+            'data_location' => ['required', 'string', 'max:200'],
+        ], [
+            'host.required' => 'Indiquez l\'hébergeur du site.',
+            'data_location.required' => 'Indiquez le lieu de stockage des données.',
+        ]);
+
+        $before = [(string) config('site.legal.host'), (string) config('site.legal.data_location')];
+
+        SiteSettings::save([
+            'site.legal.host' => trim((string) $validated['host']),
+            'site.legal.data_location' => trim((string) $validated['data_location']),
+        ]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Pages légales : hébergeur « '.$before[0].' » → « '.trim((string) $validated['host']).' », lieu de stockage « '.$before[1].' » → « '.trim((string) $validated['data_location']).' ».');
     }
 
     /**

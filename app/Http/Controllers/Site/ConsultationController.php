@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Site;
 use App\Consultations\ConsultationBooker;
 use App\Consultations\ConsultationCalendar;
 use App\Consultations\SlotFinder;
+use App\Enums\ConsultationRequesterType;
 use App\Http\Controllers\Controller;
 use App\LiveSessions\SessionTime;
 use App\Models\Consultation;
@@ -38,6 +39,8 @@ class ConsultationController extends Controller
             'days' => self::daysForView((new SlotFinder)->available()),
             'formations' => Formation::query()->published()->orderBy('title')->get(['id', 'title']),
             'user' => $user,
+            // Depuis la page Entreprises (?profil=entreprise) : « Une entreprise » présélectionné, modifiable.
+            'requesterType' => ConsultationRequesterType::fromQuery(is_string($request->query('profil')) ? $request->query('profil') : null),
         ]);
     }
 
@@ -55,22 +58,32 @@ class ConsultationController extends Controller
             'name' => ['required', 'string', 'min:2', 'max:100'],
             'phone' => ['required', 'string', new WhatsAppNumber],
             'email' => ['required', 'string', 'email', 'max:255'],
+            'requester_type' => ['required', Rule::enum(ConsultationRequesterType::class)],
+            'organization_name' => [Rule::requiredIf(fn (): bool => ConsultationRequesterType::tryFrom((string) ($input['requester_type'] ?? ''))?->isOrganization() ?? false), 'nullable', 'string', 'max:150'],
             'topic' => ['required', 'string', 'min:5', 'max:600'],
             'formation_id' => ['nullable', 'integer', Rule::exists('formations', 'id')->where('is_active', true)],
             'starts_at' => ['required', 'date_format:Y-m-d H:i'],
         ], [
             'name.required' => 'Indiquez votre nom.',
             'email.required' => 'Indiquez votre adresse e-mail : la confirmation et le lien de l\'appel vidéo y sont envoyés.',
+            'requester_type.required' => 'Indiquez si vous êtes un particulier, un centre de formation ou une entreprise.',
+            'requester_type.enum' => 'Indiquez si vous êtes un particulier, un centre de formation ou une entreprise.',
+            'organization_name.required' => 'Indiquez le nom de votre centre ou de votre entreprise.',
             'topic.required' => 'Dites-nous en quelques mots ce dont vous voulez parler.',
             'topic.min' => 'Dites-nous en quelques mots ce dont vous voulez parler.',
             'starts_at.required' => 'Choisissez un jour et une heure.',
             'starts_at.date_format' => 'Choisissez un jour et une heure.',
         ])->validate();
 
+        $type = ConsultationRequesterType::from((string) $validated['requester_type']);
+
         [$consultation, $token] = $booker->book([
             'name' => trim((string) $validated['name']),
             'phone' => (string) $validated['phone'],
             'email' => strtolower(trim((string) $validated['email'])),
+            'requester_type' => $type,
+            // Particulier : aucun nom de structure enregistré, même si le champ masqué avait été rempli.
+            'organization_name' => $type->isOrganization() ? trim((string) $validated['organization_name']) : null,
             'topic' => trim((string) $validated['topic']),
             'formation_id' => isset($validated['formation_id']) ? (int) $validated['formation_id'] : null,
         ], self::parseSlot((string) $validated['starts_at']));
