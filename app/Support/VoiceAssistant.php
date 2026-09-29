@@ -16,9 +16,15 @@ namespace App\Support;
 class VoiceAssistant
 {
     /**
-     * Script officiel du widget (adresse donnée par ElevenLabs).
+     * Version du widget testée (libellés français par « text-contents », placement, ouverture directe).
+     * Fixée pour qu'une mise à jour d'ElevenLabs ne casse rien sans vérification : voir CLAUDE.md pour la changer.
      */
-    public const string SCRIPT_URL = 'https://unpkg.com/@elevenlabs/convai-widget-embed';
+    public const string WIDGET_VERSION = '0.18.3';
+
+    /**
+     * Script officiel du widget (adresse donnée par ElevenLabs), à la version testée.
+     */
+    public const string SCRIPT_URL = 'https://unpkg.com/@elevenlabs/convai-widget-embed@'.self::WIDGET_VERSION;
 
     /**
      * Pages publiques où le bouton apparaît (noms de routes). Jamais l'admin, l'espace élève ni le lecteur de cours.

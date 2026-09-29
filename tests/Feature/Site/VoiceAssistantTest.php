@@ -224,6 +224,15 @@ class VoiceAssistantTest extends TestCase
             ->assertOk()
             ->assertSee('Ama est une intelligence artificielle.')
             ->assertSee('traitées par le service ElevenLabs')
-            ->assertSee('conservés 90 jours');
+            ->assertSee('conservés 90 jours')
+            ->assertSee('enregistre dans votre navigateur un identifiant technique de visiteur');
+    }
+
+    public function test_the_widget_script_is_pinned_to_the_tested_version(): void
+    {
+        $this->assertSame('https://unpkg.com/@elevenlabs/convai-widget-embed@0.18.3', VoiceAssistant::SCRIPT_URL);
+
+        $this->enable();
+        $this->get(route('home'))->assertOk()->assertSee('convai-widget-embed@0.18.3', false);
     }
 }
