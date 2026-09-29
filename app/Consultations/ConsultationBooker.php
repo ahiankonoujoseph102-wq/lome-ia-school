@@ -2,6 +2,7 @@
 
 namespace App\Consultations;
 
+use App\Enums\ConsultationRequesterType;
 use App\Enums\ConsultationStatus;
 use App\Mail\ConsultationAdminMail;
 use App\Mail\ConsultationMail;
@@ -25,7 +26,7 @@ use Illuminate\Validation\ValidationException;
 class ConsultationBooker
 {
     /**
-     * @param  array{name: string, phone: string, email: string, topic: string, formation_id: int|null}  $data
+     * @param  array{name: string, phone: string, email: string, requester_type: ConsultationRequesterType, organization_name: string|null, topic: string, formation_id: int|null}  $data
      * @return array{0: Consultation, 1: string} Le rendez-vous et le jeton de son lien de gestion.
      */
     public function book(array $data, CarbonImmutable $start): array

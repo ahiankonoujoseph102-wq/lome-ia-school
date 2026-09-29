@@ -239,11 +239,6 @@ body {
     @apply btn bg-electric-600 text-white shadow-lg shadow-electric-600/30 hover:bg-electric-500 focus-visible:outline-electric-400;
 }
 
-/* WhatsApp : fond vert translucide sur fond foncé, texte clair et contour en anneau (stable face au mode sombre forcé). */
-@utility btn-whatsapp {
-    @apply btn bg-[#25D366]/15 text-white ring-1 ring-[#25D366]/70 ring-inset hover:bg-[#25D366]/25 focus-visible:outline-[#25D366];
-}
-
 @utility btn-ghost {
     @apply btn border border-veil/15 bg-veil/5 text-white backdrop-blur hover:border-veil/30 hover:bg-veil/10 focus-visible:outline-veil;
 }

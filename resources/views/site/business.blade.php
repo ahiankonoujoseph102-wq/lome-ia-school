@@ -1,21 +1,16 @@
 @php
-    use App\Support\PhoneNumber;
-    use App\Support\WhatsApp;
     use App\Support\YouTube;
 
     $business = (array) config('site.business');
     $videoId = YouTube::id($business['video_url'] ?? null);
-    $transcript = trim((string) ($business['transcript'] ?? ''));
-    // Paragraphes séparés par une ligne vide ; un simple retour à la ligne est conservé.
-    $paragraphs = $transcript === '' ? [] : preg_split('/\n\s*\n/', $transcript);
-    $whatsappUrl = WhatsApp::url($business['whatsapp_message'] ?? null, $business['whatsapp_number'] ?? null);
-    $whatsappDisplay = PhoneNumber::format('+'.ltrim((string) ($business['whatsapp_number'] ?? ''), '+'));
+    // Même réservation que la consultation gratuite, avec « Une entreprise » présélectionné (modifiable).
+    $bookingUrl = route('consultation', ['profil' => 'entreprise']).'#reserver';
+    $bookingNote = 'Appel vidéo gratuit de '.config('site.consultation.duration').' sur Google Meet, au créneau de votre choix.';
 @endphp
 
 <x-layouts::site
     title="Entreprises et centres de formation"
     description="Accompagnement des centres de formation et des entreprises dans l'intégration de l'intelligence artificielle : formation des employés, automatisation, agents IA, création de contenu."
-    :whatsapp-message="$business['whatsapp_message'] ?? null"
 >
     @include('site.partials.page-header', [
         'eyebrow' => 'Entreprises et centres de formation',
@@ -46,19 +41,6 @@
                     </button>
                 </div>
 
-                @if ($paragraphs !== [])
-                    <details class="group border-t border-veil/10" data-test="business-transcript">
-                        <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 font-semibold text-white hover:bg-veil/5 [&::-webkit-details-marker]:hidden">
-                            <span class="flex items-center gap-2"><flux:icon.document-text class="size-5 text-electric-300" /> Lire la transcription</span>
-                            <flux:icon.chevron-down class="size-5 text-slate-400 transition group-open:rotate-180" />
-                        </summary>
-                        <div class="space-y-4 px-5 pb-6 text-[15px] leading-relaxed text-slate-300">
-                            @foreach ($paragraphs as $paragraph)
-                                <p>{!! nl2br(e(trim($paragraph))) !!}</p>
-                            @endforeach
-                        </div>
-                    </details>
-                @endif
             </div>
         @endif
 
@@ -69,9 +51,10 @@
         </div>
 
         <div class="mt-8" data-reveal>
-            <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="btn-whatsapp w-full sm:w-auto" data-test="business-whatsapp">
-                <x-site.whatsapp-icon class="size-5 text-white" /> Discuter de votre projet sur WhatsApp
+            <a href="{{ $bookingUrl }}" class="btn-gold w-full sm:w-auto" data-test="business-booking">
+                <flux:icon.calendar-days class="size-5" /> Réserver un appel gratuit
             </a>
+            <p class="mt-3 text-sm text-slate-400">{{ $bookingNote }}</p>
         </div>
     </section>
 
@@ -96,10 +79,10 @@
             <div class="relative mx-auto max-w-2xl">
                 <h2 class="text-3xl font-bold tracking-tight text-balance text-white sm:text-4xl">Parlons de votre projet</h2>
                 <p class="mt-4 text-base text-pretty text-slate-200 sm:text-lg">Présentez-moi votre centre de formation ou votre entreprise et vos besoins : nous verrons ensemble comment avancer.</p>
-                <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="btn-whatsapp mt-8 w-full sm:w-auto">
-                    <x-site.whatsapp-icon class="size-5 text-white" /> Écrire sur WhatsApp
+                <a href="{{ $bookingUrl }}" class="btn-gold mt-8 w-full sm:w-auto">
+                    <flux:icon.calendar-days class="size-5" /> Réserver un appel gratuit
                 </a>
-                <p class="mt-4 text-sm text-slate-300">WhatsApp : {{ $whatsappDisplay }}</p>
+                <p class="mt-4 text-sm text-slate-300">{{ $bookingNote }}</p>
             </div>
         </div>
     </section>

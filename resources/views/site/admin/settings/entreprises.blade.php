@@ -6,7 +6,7 @@
 
 <x-admin.page :title="$section['title']" :back="route('admin.settings.index')" back-label="Réglages du site">
     <div class="card flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-slate-300">
-        <p>Page « Entreprises et centres de formation », visible dans le menu, le pied de page et sur l'accueil.</p>
+        <p>Page « Entreprises et centres de formation », visible dans le menu, le pied de page et sur l'accueil. Son bouton « Réserver un appel gratuit » utilise la consultation gratuite (mêmes disponibilités, même lien Google Meet).</p>
         <a href="{{ route('business') }}" target="_blank" class="btn-ghost !px-4 !py-2 !text-sm">Voir la page <flux:icon.arrow-up-right class="size-4" /></a>
     </div>
 
@@ -21,7 +21,6 @@
         <section class="card space-y-4 p-5 sm:p-6">
             <h2 class="font-semibold text-white">Vidéo de présentation</h2>
             <x-admin.field name="video_url" label="Lien de la vidéo YouTube" type="url" :value="$business['video_url'] ?? ''" placeholder="https://www.youtube.com/watch?v=…" hint="Laissez vide pour masquer le bloc vidéo. Vidéo publique ou non répertoriée." />
-            <x-admin.field name="transcript" label="Transcription de la vidéo" type="textarea" :rows="10" :value="$business['transcript'] ?? ''" hint="Collez ici le texte de la vidéo. Affiché sous la vidéo dans un bloc « Lire la transcription ». Laissez une ligne vide entre deux paragraphes. Vide = bloc masqué." />
         </section>
 
         <section class="card space-y-4 p-5 sm:p-6">
@@ -31,11 +30,6 @@
             <x-admin.list-editor name="services" label="Services" :items="$business['services'] ?? []" add-label="Ajouter un service" />
         </section>
 
-        <section class="card space-y-4 p-5 sm:p-6">
-            <h2 class="font-semibold text-white">Bouton WhatsApp</h2>
-            <x-admin.field name="whatsapp_number" label="Numéro WhatsApp" :value="'+'.ltrim((string) ($business['whatsapp_number'] ?? ''), '+')" hint="Format international, ex. +228 72 24 02 31." />
-            <x-admin.field name="whatsapp_message" label="Message prérempli" type="textarea" :rows="3" :value="$business['whatsapp_message'] ?? ''" />
-        </section>
 
         <section class="card space-y-4 p-5 sm:p-6">
             <h2 class="font-semibold text-white">Bloc de l'accueil</h2>

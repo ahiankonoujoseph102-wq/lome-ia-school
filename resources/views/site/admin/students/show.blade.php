@@ -147,7 +147,7 @@
             <ul class="mt-3 space-y-2 text-sm">
                 @forelse ($consultations as $consultation)
                     <li class="flex flex-wrap justify-between gap-2">
-                        <span class="text-slate-200">{{ $consultation->starts_at->translatedFormat('j M Y à H\hi') }}</span>
+                        <span class="text-slate-200">{{ $consultation->starts_at->translatedFormat('j M Y à H\hi') }} <span class="text-slate-400">· {{ $consultation->requesterSummary() }}</span></span>
                         <span class="text-slate-400">{{ $consultation->isCancelled() ? 'Annulée' : ($consultation->attendance?->label() ?? ($consultation->isPast() ? 'Passée' : 'À venir')) }}</span>
                     </li>
                 @empty

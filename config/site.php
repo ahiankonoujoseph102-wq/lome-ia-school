@@ -385,12 +385,11 @@ return [
     | Page « Entreprises et centres de formation » (/entreprises)
     |----------------------------------------------------------------------
     | Tout se modifie dans l'admin (Réglages du site > Page Entreprises). Vidéo YouTube vide = bloc
-    | vidéo masqué ; transcription vide = bloc « Lire la transcription » masqué.
+    | vidéo masqué. Le bouton « Réserver un appel gratuit » mène à la consultation gratuite.
     */
 
     'business' => [
         'video_url' => '',
-        'transcript' => '',
         'title' => 'Intégrer l\'intelligence artificielle dans votre organisation',
         'intro' => [
             'L\'intelligence artificielle transforme le monde du travail, y compris en Afrique de l\'Ouest : de nouveaux outils apparaissent, les métiers évoluent et les compétences attendues changent.',
@@ -409,9 +408,6 @@ return [
             'La formation des employés',
             'L\'intégration de formations en IA dans les programmes des centres de formation',
         ],
-        // Numéro au format international, sans « + » ni espaces.
-        'whatsapp_number' => '22872240231',
-        'whatsapp_message' => 'Bonjour, je représente un centre de formation / une entreprise et je souhaite discuter d\'un accompagnement en IA.',
         // Petit bloc de l'accueil.
         'home_title' => 'Vous êtes un centre de formation ou une entreprise ?',
         'home_text' => 'Formation de vos équipes, automatisation, agents IA, intégration de l\'IA dans vos programmes : découvrez comment je vous accompagne.',

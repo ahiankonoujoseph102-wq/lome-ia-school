@@ -160,6 +160,8 @@ class ExportController extends Controller
             $consultation->name,
             PhoneNumber::format($consultation->phone),
             $consultation->email,
+            $consultation->requester_type->label(),
+            $consultation->requester_type->isOrganization() ? $consultation->organization_name : null,
             $consultation->topic,
             $consultation->formation?->title,
             $consultation->status->label(),
@@ -169,7 +171,7 @@ class ExportController extends Controller
             $consultation->user_id ? 'Oui' : 'Non',
         ]);
 
-        return CsvExport::download('consultations-'.now()->format('Y-m-d').'.csv', ['Date', 'Nom', 'WhatsApp', 'E-mail', 'Besoin', 'Formation qui l\'intéresse', 'Statut', 'Présence', 'Formation recommandée', 'Recommandation envoyée le', 'Compte élève'], $rows);
+        return CsvExport::download('consultations-'.now()->format('Y-m-d').'.csv', ['Date', 'Nom', 'WhatsApp', 'E-mail', 'Profil', 'Structure', 'Besoin', 'Formation qui l\'intéresse', 'Statut', 'Présence', 'Formation recommandée', 'Recommandation envoyée le', 'Compte élève'], $rows);
     }
 
     private static function date(?CarbonInterface $date): ?string

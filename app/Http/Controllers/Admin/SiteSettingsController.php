@@ -36,7 +36,7 @@ class SiteSettingsController extends Controller
         'regles' => ['title' => 'Seuils et délais', 'text' => 'Seuil d\'accès provisoire, délai de vérification, réglages des sessions.', 'icon' => 'adjustments-horizontal'],
         'affiliation' => ['title' => 'Affiliation', 'text' => 'Taux de commission, durée des liens, délai de disponibilité, retrait minimum.', 'icon' => 'share', 'sensitive' => true],
         'textes' => ['title' => 'Textes du site', 'text' => 'Accroche de l\'accueil, présentation du formateur, questions fréquentes.', 'icon' => 'document-text'],
-        'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, transcription, présentation, services, message WhatsApp et bloc de l\'accueil.', 'icon' => 'building-office-2'],
+        'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
     ];
 
@@ -441,14 +441,11 @@ class SiteSettingsController extends Controller
     {
         $validated = $request->validate([
             'video_url' => ['nullable', 'string', 'max:500'],
-            'transcript' => ['nullable', 'string', 'max:30000'],
             'title' => ['required', 'string', 'max:160'],
             'intro' => ['array', 'max:6'],
             'intro.*' => ['nullable', 'string', 'max:1500'],
             'services' => ['array', 'max:30'],
             'services.*' => ['nullable', 'string', 'max:200'],
-            'whatsapp_number' => ['required', 'string', 'max:30'],
-            'whatsapp_message' => ['required', 'string', 'max:300'],
             'home_title' => ['required', 'string', 'max:160'],
             'home_text' => ['required', 'string', 'max:400'],
         ]);
@@ -459,12 +456,6 @@ class SiteSettingsController extends Controller
             throw ValidationException::withMessages(['video_url' => 'Lien YouTube non reconnu. Exemple : https://www.youtube.com/watch?v=… ou https://youtu.be/…']);
         }
 
-        $whatsapp = PhoneNumber::normalize((string) $validated['whatsapp_number']);
-
-        if ($whatsapp === null) {
-            throw ValidationException::withMessages(['whatsapp_number' => 'Numéro WhatsApp invalide. Exemple : +228 72 24 02 31.']);
-        }
-
         $services = self::lines($validated['services'] ?? []);
 
         if ($services === []) {
@@ -473,13 +464,9 @@ class SiteSettingsController extends Controller
 
         SiteSettings::save(['site.business' => [
             'video_url' => $video,
-            // Retours à la ligne uniformisés, espaces inutiles retirés en début et fin.
-            'transcript' => trim(str_replace("\r\n", "\n", (string) ($validated['transcript'] ?? ''))),
             'title' => trim((string) $validated['title']),
             'intro' => self::lines($validated['intro'] ?? []),
             'services' => $services,
-            'whatsapp_number' => ltrim($whatsapp, '+'),
-            'whatsapp_message' => trim((string) $validated['whatsapp_message']),
             'home_title' => trim((string) $validated['home_title']),
             'home_text' => trim((string) $validated['home_text']),
         ]]);

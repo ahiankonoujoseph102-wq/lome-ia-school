@@ -5,11 +5,11 @@ namespace App\Support;
 class WhatsApp
 {
     /**
-     * Lien wa.me qui ouvre une conversation avec un message prérempli (numéro du site par défaut).
+     * Lien wa.me qui ouvre une conversation avec un message prérempli.
      */
-    public static function url(?string $message = null, ?string $number = null): string
+    public static function url(?string $message = null): string
     {
-        $number = preg_replace('/\D/', '', $number ?: (string) config('site.whatsapp.number'));
+        $number = (string) config('site.whatsapp.number');
         $message ??= (string) config('site.whatsapp.message');
 
         return 'https://wa.me/'.$number.'?text='.rawurlencode($message);

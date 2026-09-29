@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ConsultationAttendance;
+use App\Enums\ConsultationRequesterType;
 use App\Enums\ConsultationStatus;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -37,6 +38,8 @@ use Illuminate\Support\Str;
  * @property Carbon|null $recommendation_sent_at
  * @property Carbon|null $day_reminder_sent_at
  * @property Carbon|null $hour_reminder_sent_at
+ * @property ConsultationRequesterType $requester_type
+ * @property string|null $organization_name
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User|null $user
@@ -45,9 +48,22 @@ use Illuminate\Support\Str;
  */
 class Consultation extends Model
 {
-    protected $fillable = ['user_id', 'name', 'phone', 'email', 'topic', 'formation_id', 'starts_at', 'ends_at', 'status'];
+    protected $fillable = ['user_id', 'name', 'phone', 'email', 'requester_type', 'organization_name', 'topic', 'formation_id', 'starts_at', 'ends_at', 'status'];
 
     protected $hidden = ['manage_token', 'manage_token_hash'];
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = ['requester_type' => 'individual'];
+
+    /**
+     * Profil lisible pour l'admin et l'e-mail : « Entreprise : Nom », « Particulier ».
+     */
+    public function requesterSummary(): string
+    {
+        return $this->requester_type->label().($this->requester_type->isOrganization() && filled($this->organization_name) ? ' : '.$this->organization_name : '');
+    }
 
     /**
      * @return array<string, string>
@@ -58,6 +74,7 @@ class Consultation extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'status' => ConsultationStatus::class,
+            'requester_type' => ConsultationRequesterType::class,
             'attendance' => ConsultationAttendance::class,
             'cancelled_at' => 'datetime',
             'recommendation_sent_at' => 'datetime',

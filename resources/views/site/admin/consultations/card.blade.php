@@ -16,6 +16,7 @@
                 <p class="text-xs text-slate-400">{{ ConsultationTime::day($consultation) }}</p>
             @endif
             <p class="mt-1 font-semibold text-white">{{ $consultation->name }}</p>
+            <p class="text-sm font-semibold text-gold-200" data-test="consultation-requester">{{ $consultation->requesterSummary() }}</p>
             <p class="text-sm text-slate-300">{{ $consultation->email }}</p>
             <p class="text-xs text-slate-500">{{ PhoneNumber::format($consultation->phone) }} · réservé le {{ $consultation->created_at?->translatedFormat('j F à H\hi') }}</p>
         </div>
@@ -33,6 +34,10 @@
     </div>
 
     <dl class="mt-3 space-y-1.5 text-sm">
+        <div><dt class="inline text-slate-400">Profil :</dt> <dd class="inline text-slate-100">{{ $consultation->requester_type->label() }}</dd></div>
+        @if ($consultation->requester_type->isOrganization() && filled($consultation->organization_name))
+            <div><dt class="inline text-slate-400">Structure :</dt> <dd class="inline text-slate-100">{{ $consultation->organization_name }}</dd></div>
+        @endif
         <div><dt class="inline text-slate-400">Besoin :</dt> <dd class="inline text-slate-100">{{ $consultation->topic }}</dd></div>
         @if ($consultation->formation)
             <div><dt class="inline text-slate-400">Formation qui l'intéresse :</dt> <dd class="inline text-slate-100">{{ $consultation->formation->title }}</dd></div>

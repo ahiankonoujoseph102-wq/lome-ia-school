@@ -39,33 +39,44 @@ class BusinessPageTest extends TestCase
 
         return array_replace([
             'video_url' => '',
-            'transcript' => '',
             'title' => $business['title'],
             'intro' => $business['intro'],
             'services' => $business['services'],
-            'whatsapp_number' => '+228 72 24 02 31',
-            'whatsapp_message' => $business['whatsapp_message'],
             'home_title' => $business['home_title'],
             'home_text' => $business['home_text'],
         ], $overrides);
     }
 
-    public function test_page_lists_the_services_and_the_whatsapp_button_without_video_by_default(): void
+    public function test_page_lists_the_services_and_the_booking_button_without_video_by_default(): void
     {
         $response = $this->get(route('business'))->assertOk()
             ->assertSee('Entreprises et centres de formation')
             ->assertSee('Afrique de l&#039;Ouest', false)
             ->assertDontSee('data-test="business-video"', false)
-            ->assertDontSee('Lire la transcription')
             ->assertDontSee('youtube');
 
         foreach (self::SERVICES as $service) {
             $response->assertSee($service);
         }
 
-        $message = rawurlencode('Bonjour, je représente un centre de formation / une entreprise et je souhaite discuter d\'un accompagnement en IA.');
-        $response->assertSee('https://wa.me/22872240231?text='.$message, false)
-            ->assertSee('+228 72 24 02 31');
+        $response->assertSee('Réserver un appel gratuit')
+            ->assertSee('data-test="business-booking"', false)
+            ->assertSee(route('consultation', ['profil' => 'entreprise']).'#reserver', false);
+    }
+
+    public function test_page_has_no_whatsapp_button_nor_transcript(): void
+    {
+        $html = (string) $this->get(route('business'))->assertOk()->getContent();
+
+        // Seul le bouton WhatsApp habituel de l'en-tête (et le bouton flottant sur grand écran) reste, avec le message du site.
+        $this->assertStringNotContainsString('je représente un centre de formation', $html);
+        $this->assertStringNotContainsString('Écrire sur WhatsApp', $html);
+        $this->assertStringNotContainsString('Lire la transcription', $html);
+        $this->assertStringNotContainsString('btn-whatsapp', $html);
+        $this->assertSame(substr_count((string) $this->get(route('about'))->getContent(), 'https://wa.me/'), substr_count($html, 'https://wa.me/'));
+
+        $home = (string) $this->get(route('home'))->getContent();
+        $this->assertStringNotContainsString('je représente un centre de formation', $home);
     }
 
     public function test_page_has_no_invented_figure_or_company_name_in_its_intro(): void
@@ -86,15 +97,18 @@ class BusinessPageTest extends TestCase
         $this->get(route('sitemap'))->assertSee(route('business'));
     }
 
-    public function test_video_and_transcript_are_set_in_the_admin(): void
+    public function test_video_is_set_in_the_admin(): void
     {
         $admin = User::factory()->admin()->create();
 
-        $this->actingAs($admin)->get(route('admin.settings.edit', 'entreprises'))->assertOk()->assertSee('Lien de la vidéo YouTube');
+        $this->actingAs($admin)->get(route('admin.settings.edit', 'entreprises'))->assertOk()
+            ->assertSee('Lien de la vidéo YouTube')
+            ->assertDontSee('name="transcript"', false)
+            ->assertDontSee('name="whatsapp_number"', false)
+            ->assertDontSee('name="whatsapp_message"', false);
 
         $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form([
             'video_url' => 'https://youtu.be/dQw4w9WgXcQ',
-            'transcript' => "Bonjour et bienvenue.\r\nDeuxième ligne.\r\n\r\nNouveau <b>paragraphe</b>.",
         ]))->assertSessionHasNoErrors();
 
         $this->assertTrue(AdminActivity::query()->where('action', AdminAction::SettingsUpdated)->exists());
@@ -102,38 +116,31 @@ class BusinessPageTest extends TestCase
 
         $this->get(route('business'))->assertOk()
             ->assertSee('data-test="business-video"', false)
-            ->assertSee('https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', false)
-            ->assertSee('Lire la transcription')
-            ->assertSee('Bonjour et bienvenue.<br />', false)
-            ->assertSee('<p>Nouveau &lt;b&gt;paragraphe&lt;/b&gt;.</p>', false);
+            ->assertSee('https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', false);
 
-        // Lien vidé : bloc vidéo (et transcription) masqués.
-        $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form(['transcript' => 'Texte']))->assertSessionHasNoErrors();
-        $this->get(route('business'))->assertDontSee('data-test="business-video"', false)->assertDontSee('Lire la transcription');
+        // Lien vidé : bloc vidéo masqué.
+        $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form())->assertSessionHasNoErrors();
+        $this->get(route('business'))->assertDontSee('data-test="business-video"', false);
     }
 
-    public function test_invalid_video_link_and_number_are_refused(): void
+    public function test_invalid_video_link_and_empty_services_are_refused(): void
     {
         $admin = User::factory()->admin()->create();
 
         $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form(['video_url' => 'https://vimeo.com/123']))->assertSessionHasErrors('video_url');
-        $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form(['whatsapp_number' => '12']))->assertSessionHasErrors('whatsapp_number');
         $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form(['services' => ['', ' ']]))->assertSessionHasErrors('services');
     }
 
-    public function test_texts_whatsapp_and_home_block_are_editable(): void
+    public function test_texts_and_home_block_are_editable(): void
     {
         $admin = User::factory()->admin()->create();
 
         $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form([
-            'whatsapp_number' => '+229 01 97 00 00 01',
-            'whatsapp_message' => 'Bonjour, message modifié.',
             'services' => ['Service A', '', 'Service B'],
             'home_title' => 'Titre du bloc modifié',
         ]))->assertSessionHasNoErrors();
 
         $this->get(route('business'))
-            ->assertSee('https://wa.me/2290197000001?text='.rawurlencode('Bonjour, message modifié.'), false)
             ->assertSee('Service A')
             ->assertSee('Service B')
             ->assertDontSee('Le copywriting');
