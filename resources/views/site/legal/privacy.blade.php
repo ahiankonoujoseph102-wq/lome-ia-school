@@ -14,6 +14,7 @@
             <h2>Données collectées</h2>
             <ul>
                 <li>Les informations de votre compte : nom, numéro WhatsApp, adresse e-mail et, si vous en ajoutez une, votre photo de profil.</li>
+                <li>La confirmation de votre adresse e-mail : la date à laquelle elle a été confirmée et, le temps de la confirmation, une empreinte chiffrée du code et du lien qui vous ont été envoyés (jamais le code lui-même).</li>
                 <li>Votre choix concernant l'information sur les nouvelles formations (oui ou non).</li>
                 <li>Les informations liées à vos achats : formations achetées, montants, dates et, le cas échéant, le code promo utilisé.</li>
                 <li>Vos preuves de paiement : moyen de paiement utilisé, numéro qui a payé, nom de l'expéditeur, identifiant de la transaction et capture d'écran du paiement.</li>
@@ -25,6 +26,13 @@
                 <li>Si vous arrivez sur le site par le lien d'un affilié : le code de ce lien et la date du clic, puis, si vous vous inscrivez ou achetez, le fait que votre inscription ou votre achat vient de ce lien.</li>
             </ul>
             <p>Les captures d'écran de paiement sont stockées dans un espace privé : elles ne sont jamais publiques et ne sont visibles que par vous et par l'équipe qui vérifie les paiements. Nous ne vous demandons jamais vos codes Mobile Money. Au Burkina Faso et au Bénin, les informations de votre paiement peuvent être communiquées à notre représentant local, uniquement pour vérifier sa réception.</p>
+
+            <h2>Confirmation de l'adresse e-mail</h2>
+            <ul>
+                <li>À l'inscription, et si vous changez d'adresse, nous envoyons un code à 6 chiffres et un bouton de confirmation, valables {{ \App\Accounts\EmailConfirmation::LIFETIME_MINUTES }} minutes et utilisables une seule fois. Ils nous permettent de vérifier que l'adresse vous appartient, avant de vous y envoyer vos reçus et les informations sur vos formations.</li>
+                <li>Le code n'est jamais enregistré en clair : seule une empreinte est conservée, puis supprimée dès que l'adresse est confirmée. Le nombre d'essais et de nouveaux codes est limité pour protéger votre compte.</li>
+                <li>Si vous n'arrivez pas à confirmer votre adresse, notre équipe peut la confirmer pour vous après avoir vérifié avec vous qu'elle est correcte ; cette action est enregistrée.</li>
+            </ul>
 
             <h2>Consultation gratuite</h2>
             <ul>
@@ -59,6 +67,7 @@
             <h2>Utilisation des données</h2>
             <ul>
                 <li>Créer et gérer votre compte et vos accès aux formations ;</li>
+                <li>Vérifier que votre adresse e-mail vous appartient (code de confirmation) avant tout paiement ou retrait ;</li>
                 <li>Vérifier vos paiements, prévenir la fraude (par exemple une capture ou un identifiant de transaction déjà utilisé) et établir vos reçus ;</li>
                 <li>Compter les clics sur les liens d'affiliation, attribuer les achats au bon affilié, calculer et payer les commissions, et prévenir la fraude à l'affiliation ;</li>
                 <li>Vous accompagner et répondre à vos questions, notamment dans les groupes de discussion ;</li>

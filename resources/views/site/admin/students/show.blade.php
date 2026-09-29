@@ -22,12 +22,20 @@
                 </p>
                 <p class="text-sm text-slate-300">WhatsApp : <span class="font-semibold text-white">{{ PhoneNumber::format($student->phone) }}</span></p>
                 <p class="text-sm break-all text-slate-300">E-mail : <span class="font-semibold text-white">{{ $student->email }}</span></p>
+                @if ($student->hasConfirmedEmail())
+                    <p class="flex items-center gap-1.5 text-sm text-emerald-300" data-test="email-status"><flux:icon.check-badge class="size-4 shrink-0" /> E-mail confirmé le {{ $student->email_verified_at?->translatedFormat('j F Y') }}</p>
+                @else
+                    <p class="flex items-center gap-1.5 text-sm text-gold-200" data-test="email-status"><flux:icon.exclamation-circle class="size-4 shrink-0" /> E-mail non confirmé : paiements et retraits impossibles</p>
+                @endif
                 <p class="text-sm text-slate-400">Inscrit le {{ $student->created_at?->translatedFormat('j F Y') }}</p>
             </div>
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="https://wa.me/{{ ltrim((string) $student->phone, '+') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-[#25D366] ring-1 ring-[#25D366]/50 hover:bg-[#25D366]/10"><x-site.whatsapp-icon class="size-4" /> WhatsApp</a>
             <a href="mailto:{{ $student->email }}" class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-slate-200 ring-1 ring-veil/20 hover:bg-veil/10"><flux:icon.envelope class="size-4" /> E-mail</a>
+            @unless ($student->hasConfirmedEmail())
+                <form method="POST" action="{{ route('admin.students.confirm-email', $student) }}" onsubmit="return confirm('Confirmer manuellement l\'adresse e-mail de cet élève ? Vérifiez-la d\'abord avec l\'élève (par exemple sur WhatsApp). Cette action est notée dans le journal d\'activité.')">@csrf<button class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-gold-200 ring-1 ring-gold-400/60 hover:bg-gold-400/10" data-test="confirm-email"><flux:icon.check-badge class="size-4" /> Confirmer l'email manuellement</button></form>
+            @endunless
             @unless ($student->isAdmin())
                 @if ($student->isBlocked())
                     <form method="POST" action="{{ route('admin.users.unblock', $student) }}">@csrf<button class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-emerald-200 ring-1 ring-emerald-400/50 hover:bg-emerald-400/10">Débloquer le compte</button></form>

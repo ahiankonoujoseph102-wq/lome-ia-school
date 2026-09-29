@@ -44,7 +44,7 @@ class StudentRegistrationTest extends TestCase
 
         $this->post(route('register.store'), $this->payload())
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('email-confirmation.show', absolute: false));
 
         $user = User::where('email', 'afi@example.com')->firstOrFail();
         $this->assertSame('+22890123456', $user->phone);

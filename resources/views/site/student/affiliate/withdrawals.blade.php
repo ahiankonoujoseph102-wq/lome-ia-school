@@ -4,7 +4,9 @@
     use App\Support\PhoneNumber;
 
     $minimum = AffiliateAccount::minimumWithdrawal();
+    $emailConfirmed = auth()->user()->hasConfirmedEmail();
     $blocker = match (true) {
+        ! $emailConfirmed => 'Confirmez d\'abord votre adresse e-mail pour demander un retrait.',
         $affiliate->isSuspended() => 'Les retraits ne sont pas possibles tant que votre compte affilié est suspendu.',
         $hasOpenWithdrawal => 'Vous avez déjà une demande de retrait en cours. Vous pourrez en faire une autre dès qu\'elle aura été traitée.',
         ! $affiliate->hasPayoutDetails() => 'Renseignez d\'abord vos coordonnées de retrait ci-dessous.',
@@ -42,6 +44,9 @@
             </form>
             @if ($blocker)
                 <p class="mt-2 text-sm text-slate-400" data-test="withdrawal-blocker">{{ $blocker }}</p>
+                @unless ($emailConfirmed)
+                    <a href="{{ route('email-confirmation.show', ['retour' => request()->getRequestUri()]) }}" class="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-gold-300 hover:text-gold-200">Confirmer mon adresse <flux:icon.arrow-right class="size-4" /></a>
+                @endunless
             @endif
         </section>
 

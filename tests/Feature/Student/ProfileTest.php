@@ -44,7 +44,8 @@ class ProfileTest extends TestCase
                 'phone' => '01 97 00 11 22',
             ])
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('student.profile'));
+            // Nouvelle adresse e-mail : elle doit être confirmée (code envoyé à la nouvelle adresse).
+            ->assertRedirect(route('email-confirmation.show'));
 
         $user->refresh();
         $this->assertSame('Kossi Mensah', $user->name);

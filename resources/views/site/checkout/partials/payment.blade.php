@@ -14,7 +14,10 @@
         : $unverifiedPurchase->formation_id === $formation->id && ! $unverifiedPurchase->isSessionSupplement());
 @endphp
 
-@if ($unverifiedPurchase)
+@if (! $user->hasConfirmedEmail())
+    {{-- Adresse e-mail pas encore confirmée : paiement impossible (reçus et accès envoyés à cette adresse) --}}
+    @include('site.partials.email-confirmation-required', ['action' => $liveSession ? 'payer ce supplément' : 'payer cette formation'])
+@elseif ($unverifiedPurchase)
     {{-- Un seul paiement non vérifié à la fois --}}
     <div class="card p-6">
         <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 {{ $unverifiedPurchase->status->badgeClasses() }}">

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\EnrollmentSource;
+use App\Mail\EmailConfirmationMail;
 use App\Models\Formation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,7 +53,24 @@ class CheckoutTest extends TestCase
             'phone_country' => '+228',
             'phone' => '91 22 33 44',
             'password' => 'motdepasse1',
-        ])->assertRedirect(route('checkout.show', $formation));
+        ])->assertRedirect(route('email-confirmation.show'));
+
+        // Adresse pas encore confirmée : pas de formulaire de paiement.
+        $this->get(route('checkout.show', $formation))
+            ->assertOk()
+            ->assertSee('Confirmez votre adresse e-mail pour payer cette formation')
+            ->assertDontSee('data-test="send-proof-button"', false);
+
+        $code = '';
+        Mail::assertSent(EmailConfirmationMail::class, function (EmailConfirmationMail $mail) use (&$code): bool {
+            $code = $mail->code;
+
+            return true;
+        });
+
+        // Une fois l'adresse confirmée, retour automatique au récapitulatif de commande.
+        $this->post(route('email-confirmation.confirm'), ['code' => $code])
+            ->assertRedirect(route('checkout.show', $formation));
 
         $this->get(route('checkout.show', $formation))
             ->assertOk()
