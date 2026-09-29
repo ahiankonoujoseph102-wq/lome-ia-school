@@ -299,7 +299,7 @@ php artisan migrate
 
 **En cours sur la branche `claude/inspiring-heisenberg-7kmmvq`** : format de la vidéo de la page Entreprises (horizontal / vertical téléphone, Shorts détectés automatiquement). Aperçu validé par Joseph. Pull request « Vidéo Entreprises au format vertical ».
 
-**En cours sur la branche `claude/sweet-dirac-n5db8u`** : vérification de l'adresse e-mail à l'inscription (voir « Confirmation de l'adresse e-mail »). Aperçu publié, en attente de la validation de Joseph avant la pull request.
+**En cours sur la branche `claude/sweet-dirac-n5db8u`** : vérification de l'adresse e-mail à l'inscription (voir « Confirmation de l'adresse e-mail »). Aperçu validé par Joseph, ainsi que l'exception à la règle des e-mails en file d'attente (l'e-mail du code part immédiatement, juste après la réponse). Pull request « Vérification de l'email à l'inscription ».
 
 **Prochaine étape** : fusion de la branche en cours ; Joseph colle le lien de sa vidéo et choisit son format (Réglages du site > Page Entreprises), saisit le contenu de ses formations (écran « Contenu des formations ») et son lien Google Meet (« Disponibilités »). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 
