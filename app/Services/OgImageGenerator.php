@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Formation;
+use App\Support\Brand;
 use GdImage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 /**
@@ -21,7 +23,7 @@ class OgImageGenerator
     /**
      * À incrémenter pour régénérer toutes les images après un changement de design.
      */
-    private const int VERSION = 4;
+    private const int VERSION = 5;
 
     private const int PADDING = 72;
 
@@ -41,6 +43,57 @@ class OgImageGenerator
         ));
     }
 
+    /**
+     * Image de la formation envoyée depuis l'admin, recadrée au centre en 1200 × 630 (JPEG),
+     * ou null si la formation n'a pas d'image lisible (le visuel généré est alors utilisé).
+     */
+    public function forFormationPhoto(Formation $formation): ?string
+    {
+        if (blank($formation->image)) {
+            return null;
+        }
+
+        $key = 'formation-photo-'.$formation->id.'-'.md5(self::VERSION.'|'.$formation->image);
+        $path = storage_path('framework/cache/og/'.$key.'.jpg');
+
+        if (File::exists($path)) {
+            return $path;
+        }
+
+        $bytes = $this->formationImageBytes((string) $formation->image);
+        $source = $bytes === null ? false : @imagecreatefromstring($bytes);
+
+        if (! $source instanceof GdImage) {
+            return null;
+        }
+
+        $canvas = imagecreatetruecolor(self::WIDTH, self::HEIGHT);
+
+        if ($canvas === false) {
+            throw new RuntimeException('Impossible de créer l\'image d\'aperçu.');
+        }
+
+        // Plus grande zone au format 1200 × 630, centrée.
+        $sourceWidth = imagesx($source);
+        $sourceHeight = imagesy($source);
+        $cropWidth = $sourceWidth;
+        $cropHeight = (int) round($sourceWidth * self::HEIGHT / self::WIDTH);
+
+        if ($cropHeight > $sourceHeight) {
+            $cropHeight = $sourceHeight;
+            $cropWidth = (int) round($sourceHeight * self::WIDTH / self::HEIGHT);
+        }
+
+        imagecopyresampled($canvas, $source, 0, 0, intdiv($sourceWidth - $cropWidth, 2), intdiv($sourceHeight - $cropHeight, 2), self::WIDTH, self::HEIGHT, $cropWidth, $cropHeight);
+        imagedestroy($source);
+
+        File::ensureDirectoryExists(dirname($path));
+        imagejpeg($canvas, $path, 85);
+        imagedestroy($canvas);
+
+        return $path;
+    }
+
     public function forSite(): string
     {
         $title = (string) config('site.hero.title');
@@ -51,6 +104,21 @@ class OgImageGenerator
             badge: 'Formations enregistrées',
             footer: 'Paiement Mobile Money · Accès à vie',
         ));
+    }
+
+    /**
+     * Contenu de l'image d'une formation : disque « public » (envoyée depuis l'admin, y compris sur un
+     * stockage objet) ou ancien fichier de public/images/formations.
+     */
+    private function formationImageBytes(string $image): ?string
+    {
+        if (str_contains($image, '/')) {
+            return Storage::disk('public')->get($image) ?: null;
+        }
+
+        $path = public_path('images/formations/'.basename($image));
+
+        return is_file($path) ? ((string) file_get_contents($path) ?: null) : null;
     }
 
     /**
@@ -93,9 +161,13 @@ class OgImageGenerator
         $gold = $this->color($image, '#FBBF24');
         $night = $this->color($image, '#0B1030');
 
-        // Marque
-        imagefilledrectangle($image, self::PADDING, 70, self::PADDING + 14, 104, $gold);
-        imagettftext($image, 26, 0, self::PADDING + 30, 100, $white, $bold, 'Lomé IA School');
+        // Marque : icône du site (jeu en place), sinon trait doré
+        if ($this->drawIcon($image, self::PADDING, 58, 56)) {
+            imagettftext($image, 26, 0, self::PADDING + 72, 97, $white, $bold, 'Lomé IA School');
+        } else {
+            imagefilledrectangle($image, self::PADDING, 70, self::PADDING + 14, 104, $gold);
+            imagettftext($image, 26, 0, self::PADDING + 30, 100, $white, $bold, 'Lomé IA School');
+        }
 
         // Catégorie
         imagettftext($image, 24, 0, self::PADDING, 190, $muted, $medium, mb_strtoupper($eyebrow));
@@ -124,6 +196,25 @@ class OgImageGenerator
         }
 
         return $image;
+    }
+
+    /**
+     * Dessine l'icône de Lomé IA School (jeu d'icônes en place), ou renvoie false si elle est introuvable.
+     */
+    private function drawIcon(GdImage $image, int $x, int $y, int $size): bool
+    {
+        $directory = trim((string) config('site.brand.icons', 'icons'), '/');
+        $path = Brand::path($directory.'/icon-192.png') ?? Brand::path('icons/icon-192.png');
+        $icon = $path === null ? false : @imagecreatefrompng($path);
+
+        if (! $icon instanceof GdImage) {
+            return false;
+        }
+
+        imagecopyresampled($image, $icon, $x, $y, 0, 0, $size, $size, imagesx($icon), imagesy($icon));
+        imagedestroy($icon);
+
+        return true;
     }
 
     /**

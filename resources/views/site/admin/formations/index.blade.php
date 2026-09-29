@@ -25,6 +25,15 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <form method="POST" action="{{ route('admin.formations.move', [$formation, 'up']) }}">@csrf<button class="grid size-9 place-items-center rounded-full text-slate-300 ring-1 ring-veil/15 hover:bg-veil/10 disabled:opacity-30" @disabled($loop->first) aria-label="Monter {{ $formation->title }}"><flux:icon.chevron-up class="size-4" /></button></form>
                     <form method="POST" action="{{ route('admin.formations.move', [$formation, 'down']) }}">@csrf<button class="grid size-9 place-items-center rounded-full text-slate-300 ring-1 ring-veil/15 hover:bg-veil/10 disabled:opacity-30" @disabled($loop->last) aria-label="Descendre {{ $formation->title }}"><flux:icon.chevron-down class="size-4" /></button></form>
+                    @if ($formation->is_active)
+                        <button type="button" x-data="copyText(@js(\App\Support\FormationShare::url($formation)))" @click="copy()" class="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-slate-200 ring-1 ring-veil/15 hover:bg-veil/10" aria-label="Copier le lien de {{ $formation->title }}" data-test="copy-formation-link">
+                            <flux:icon.link class="size-4 shrink-0" x-show="!copied" />
+                            <flux:icon.check class="size-4 shrink-0 text-emerald-300" x-show="copied" x-cloak />
+                            <span x-text="copied ? 'Lien copié' : 'Copier le lien'">Copier le lien</span>
+                        </button>
+                    @else
+                        <span class="rounded-full px-3 py-2 text-sm text-slate-400 ring-1 ring-veil/10" title="Une formation masquée n'est pas visible par les visiteurs">Lien inactif (masquée)</span>
+                    @endif
                     <a href="{{ route('admin.content.show', $formation) }}" class="rounded-full px-3 py-2 text-sm font-semibold text-slate-200 ring-1 ring-veil/15 hover:bg-veil/10">Contenu</a>
                     <a href="{{ route('admin.formations.edit', $formation) }}" class="rounded-full px-3 py-2 text-sm font-semibold text-electric-200 ring-1 ring-electric-400/40 hover:bg-electric-500/10">Modifier</a>
                 </div>

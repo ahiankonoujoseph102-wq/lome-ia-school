@@ -2,6 +2,7 @@
     'title' => null,
     'description' => null,
     'image' => null,
+    'imageType' => null,
     'type' => 'website',
     'jsonLd' => [],
     'stickyCta' => false,
@@ -14,8 +15,11 @@
     $siteName = config('app.name');
     $fullTitle = $title ? $title.' | '.$siteName : $siteName.' | Formations en intelligence artificielle à Lomé et en ligne';
     $description ??= 'Formations pratiques en intelligence artificielle, en français : ChatGPT, création visuelle et vidéo, sites web, automatisation, agents IA. Paiement par Mobile Money.';
-    $image ??= route('og.site');
+    // Aperçus de partage : adresses absolues fondées sur APP_URL (voir App\Support\AppUrl).
+    $imageType ??= $image === null ? \App\Support\Brand::shareImageType() : 'image/png';
+    $image = \App\Support\AppUrl::to($image ?? route('og.site'));
     $canonical = url()->current();
+    $shareUrl = \App\Support\AppUrl::to($canonical);
     // Assistante vocale : pages publiques choisies uniquement (jamais l'admin, l'espace élève ni le lecteur de cours).
     $voiceAssistant = $variant === 'marketing' && \App\Support\VoiceAssistant::shownOn(request()->route()?->getName());
 @endphp
@@ -63,9 +67,9 @@
         <meta property="og:type" content="{{ $type }}">
         <meta property="og:title" content="{{ $title ?? $fullTitle }}">
         <meta property="og:description" content="{{ $description }}">
-        <meta property="og:url" content="{{ $canonical }}">
+        <meta property="og:url" content="{{ $shareUrl }}">
         <meta property="og:image" content="{{ $image }}">
-        <meta property="og:image:type" content="{{ $image === route('og.site') ? \App\Support\Brand::shareImageType() : 'image/png' }}">
+        <meta property="og:image:type" content="{{ $imageType }}">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:image:alt" content="{{ $title ?? $siteName }}">

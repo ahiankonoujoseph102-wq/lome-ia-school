@@ -45,10 +45,24 @@ class OgImageController extends Controller
         return $this->respond($this->generator->forFormation($formation));
     }
 
-    private function respond(string $path): BinaryFileResponse
+    /**
+     * Image de la formation recadrée en 1200 × 630 ; sans image lisible, retour au visuel généré.
+     */
+    public function formationPhoto(Formation $formation): Response
+    {
+        abort_unless($formation->is_active, 404);
+
+        $path = $this->generator->forFormationPhoto($formation);
+
+        return $path === null
+            ? redirect()->route('og.formation', $formation)
+            : $this->respond($path, 'image/jpeg');
+    }
+
+    private function respond(string $path, string $type = 'image/png'): BinaryFileResponse
     {
         return response()->file($path, [
-            'Content-Type' => 'image/png',
+            'Content-Type' => $type,
             'Cache-Control' => 'public, max-age=604800',
         ]);
     }

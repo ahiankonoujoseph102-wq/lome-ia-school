@@ -71,6 +71,7 @@ Route::get('politique-de-confidentialite', [PageController::class, 'privacy'])->
 // Images de partage (Open Graph), plan du site et robots
 Route::get('og/site.png', [OgImageController::class, 'site'])->name('og.site');
 Route::get('og/formations/{formation}.png', [OgImageController::class, 'formation'])->name('og.formation');
+Route::get('og/formations/{formation}.jpg', [OgImageController::class, 'formationPhoto'])->name('og.formation.photo');
 Route::get('sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
 Route::get('robots.txt', [SitemapController::class, 'robots'])->name('robots');
 
