@@ -56,7 +56,10 @@
         @endif
         <p style="margin:18px 0 0;text-align:center;font-size:14px;">
             <a href="{{ $consultation->manageUrl() }}" style="color:#6d28d9;">Voir, déplacer ou annuler mon rendez-vous</a>
-            · <a href="{{ route('consultation.calendar', $consultation->manage_token) }}" style="color:#6d28d9;">Ajouter à mon agenda</a>
+        </p>
+        <p style="margin:8px 0 0;text-align:center;font-size:14px;">
+            <a href="{{ \App\Consultations\ConsultationCalendar::googleUrl($consultation, $meetUrl) }}" style="color:#6d28d9;">Ajouter à Google Agenda</a>
+            · <a href="{{ route('consultation.calendar', $consultation->manage_token) }}" style="color:#6d28d9;">Autre agenda (fichier .ics)</a>
         </p>
         <p style="margin:10px 0 0;text-align:center;font-size:12px;color:#7a8099;">Déplacement ou annulation possible jusqu'à {{ ConsultationSettings::current()->manage_deadline_hours }} heures avant le rendez-vous.</p>
     @elseif ($kind === 'cancelled')

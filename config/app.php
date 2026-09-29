@@ -140,13 +140,27 @@ return [
     | Bandeau « Version de test »
     |--------------------------------------------------------------------------
     |
-    | TEST_BANNER=true : bandeau en haut de toutes les pages et site non référencé par Google
-    | (mise en ligne temporaire pour tester avec l'équipe). false (ou absent) en production.
+    | TEST_BANNER=true : bandeau en haut de toutes les pages (mise en ligne temporaire pour tester
+    | avec l'équipe). N'a aucun effet sur Google : c'est NOINDEX qui décide (ci-dessous).
     |
     */
 
     'test_banner' => (bool) env('TEST_BANNER', false),
 
     'test_banner_text' => env('TEST_BANNER_TEXT') ?: 'Version de test : le site est en cours de préparation.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Blocage de Google (et des autres moteurs de recherche)
+    |--------------------------------------------------------------------------
+    |
+    | NOINDEX=true : aucune page référencée (balise « noindex », en-tête X-Robots-Tag et
+    | « Disallow: / » dans robots.txt), par exemple tant que le site est sur une adresse
+    | provisoire. false (ou absent) sur le site définitif. Hors production, le site n'est
+    | jamais référencé.
+    |
+    */
+
+    'noindex' => (bool) env('NOINDEX', false),
 
 ];

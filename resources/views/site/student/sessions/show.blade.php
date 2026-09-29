@@ -100,7 +100,11 @@
             @endif
 
             @unless ($session->isCancelled() || $session->isFinished())
-                <a href="{{ route('student.sessions.calendar', $session) }}" class="btn-ghost mt-4 w-full" data-test="calendar-button"><flux:icon.calendar-days class="size-5" /> Ajouter à mon agenda</a>
+                @include('site.partials.calendar-buttons', [
+                    'googleUrl' => \App\LiveSessions\CalendarFile::googleUrl($session),
+                    'icsUrl' => route('student.sessions.calendar', $session),
+                    'class' => 'mt-4',
+                ])
             @endunless
         </article>
 

@@ -61,6 +61,7 @@ Route::middleware(['no-store', 'throttle:60,1'])->prefix('consultation-gratuite/
 });
 Route::get('a-propos', [PageController::class, 'about'])->name('about');
 Route::get('contact', [PageController::class, 'contact'])->name('contact');
+Route::get('entreprises', [PageController::class, 'business'])->name('business');
 Route::get('devenir-affilie', [PageController::class, 'affiliate'])->name('affiliate.program');
 Route::get('mentions-legales', [PageController::class, 'legalNotice'])->name('legal.notice');
 Route::get('conditions-generales-de-vente', [PageController::class, 'terms'])->name('legal.terms');

@@ -76,6 +76,9 @@
             </ul>
             <p>Aucun cookie publicitaire ni de mesure d'audience tiers n'est utilisé. Vous pouvez supprimer ces cookies à tout moment depuis les réglages de votre navigateur.</p>
 
+            <h2>Hébergement et lieu de stockage</h2>
+            <p>Le site et ses données (compte, achats, preuves de paiement, messages et fichiers des groupes) sont hébergés par {{ $legal['host'] }}@if (filled($legal['data_location'] ?? null)), dans la région suivante : {{ $legal['data_location'] }}@endif. Les fichiers privés restent dans un espace privé, accessible uniquement par le site.</p>
+
             <h2>Durée de conservation</h2>
             <p>{{ Placeholder::highlight($legal['data_retention']) }}</p>
 

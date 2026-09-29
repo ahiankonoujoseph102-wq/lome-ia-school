@@ -62,7 +62,11 @@
                         <p class="mt-1 text-sm text-slate-300">Le lien vous sera envoyé par e-mail avant le rendez-vous.</p>
                     @endif
                 </div>
-                <a href="{{ route('consultation.calendar', $token) }}" class="btn-ghost mt-3 w-full"><flux:icon.calendar-days class="size-5" /> Ajouter à mon agenda</a>
+                @include('site.partials.calendar-buttons', [
+                    'googleUrl' => \App\Consultations\ConsultationCalendar::googleUrl($consultation, $meetUrl),
+                    'icsUrl' => route('consultation.calendar', $token),
+                    'class' => 'mt-4',
+                ])
 
                 <div class="mt-5">
                     <p class="font-semibold text-white">Pour bien se préparer</p>

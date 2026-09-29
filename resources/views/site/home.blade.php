@@ -316,6 +316,18 @@
         </section>
     @endif
 
+    {{-- Entreprises et centres de formation --}}
+    <section class="section !pt-0" data-test="home-business">
+        <div class="card flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:p-8" data-reveal>
+            <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-electric-500/15 text-electric-200 ring-1 ring-electric-400/30"><flux:icon.building-office-2 class="size-6" /></span>
+            <div class="min-w-0 flex-1">
+                <h2 class="text-xl font-bold tracking-tight text-balance text-white sm:text-2xl">{{ config('site.business.home_title') }}</h2>
+                <p class="mt-2 text-slate-300">{{ config('site.business.home_text') }}</p>
+            </div>
+            <a href="{{ route('business') }}" class="btn-ghost w-full shrink-0 sm:w-auto">Découvrir l'accompagnement <flux:icon.arrow-right class="size-5" /></a>
+        </div>
+    </section>
+
     {{-- Affiliation --}}
     <section class="section !pt-0">
         <div class="relative overflow-hidden rounded-[2rem] border border-gold-400/20 bg-linear-to-br from-night-800 via-night-900 to-night-950 p-6 sm:p-10 lg:p-14" data-reveal>

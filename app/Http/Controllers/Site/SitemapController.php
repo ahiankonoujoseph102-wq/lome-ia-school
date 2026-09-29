@@ -15,6 +15,7 @@ class SitemapController extends Controller
             route('formations.index'),
             route('consultation'),
             route('affiliate.program'),
+            route('business'),
             route('about'),
             route('contact'),
         ])->map(fn (string $url): array => ['loc' => $url, 'lastmod' => null]);
@@ -31,8 +32,8 @@ class SitemapController extends Controller
 
     public function robots(): Response
     {
-        // Version de test (TEST_BANNER=true) : jamais référencée, même en production.
-        $lines = app()->isProduction() && ! config('app.test_banner')
+        // NOINDEX=true (adresse provisoire, par exemple) : jamais référencé, même en production.
+        $lines = app()->isProduction() && ! config('app.noindex')
             ? ['User-agent: *', 'Disallow: /dashboard', 'Disallow: /settings', '', 'Sitemap: '.route('sitemap')]
             : ['User-agent: *', 'Disallow: /'];
 

@@ -34,6 +34,7 @@
                 <li><a href="{{ route('formations.index') }}" class="text-slate-400 hover:text-white">Toutes les formations</a></li>
                 <li><a href="{{ route('consultation') }}" class="text-slate-400 hover:text-white">Consultation gratuite</a></li>
                 <li><a href="{{ route('affiliate.program') }}" class="text-slate-400 hover:text-white">Devenez affilié</a></li>
+                <li><a href="{{ route('business') }}" class="text-slate-400 hover:text-white">Entreprises et centres de formation</a></li>
                 <li><a href="{{ route('about') }}" class="text-slate-400 hover:text-white">À propos</a></li>
                 <li><a href="{{ route('contact') }}" class="text-slate-400 hover:text-white">Contact</a></li>
                 <li><a href="{{ route('register') }}" class="text-slate-400 hover:text-white">Créer un compte</a></li>

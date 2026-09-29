@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Push\NullPushSender;
 use App\Push\WebPushSender;
 use App\Settings\SiteSettings;
+use App\Support\BroadcastingConfig;
 use App\Support\FileStorage;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -28,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Fichiers envoyés : dossiers du serveur (Hostinger) ou stockage objet (Laravel Cloud), selon .env.
         FileStorage::configure();
+
+        // Temps réel : sans clés Pusher, diffuseur « null » (mise à jour régulière du chat), jamais de plantage.
+        BroadcastingConfig::configure();
 
         // Notifications sur téléphone : envoi réel seulement si les clés VAPID sont dans .env.
         $this->app->singleton(PushSender::class, function (): PushSender {

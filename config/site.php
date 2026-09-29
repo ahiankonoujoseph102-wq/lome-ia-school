@@ -382,6 +382,43 @@ return [
 
     /*
     |----------------------------------------------------------------------
+    | Page « Entreprises et centres de formation » (/entreprises)
+    |----------------------------------------------------------------------
+    | Tout se modifie dans l'admin (Réglages du site > Page Entreprises). Vidéo YouTube vide = bloc
+    | vidéo masqué ; transcription vide = bloc « Lire la transcription » masqué.
+    */
+
+    'business' => [
+        'video_url' => '',
+        'transcript' => '',
+        'title' => 'Intégrer l\'intelligence artificielle dans votre organisation',
+        'intro' => [
+            'L\'intelligence artificielle transforme le monde du travail, y compris en Afrique de l\'Ouest : de nouveaux outils apparaissent, les métiers évoluent et les compétences attendues changent.',
+            'J\'accompagne les centres de formation et les entreprises dans cette transition : comprendre ce que l\'IA peut apporter à votre activité, former vos équipes et mettre en place des solutions adaptées à vos besoins.',
+        ],
+        // Liste fournie par Joseph (ne pas modifier sans son accord).
+        'services' => [
+            'L\'entraînement et l\'amélioration des systèmes d\'IA',
+            'La création de contenu avec l\'intelligence artificielle',
+            'L\'automatisation des tâches et des processus',
+            'La création de sites web',
+            'Le développement d\'agents IA',
+            'Le copywriting',
+            'Le marketing digital',
+            'L\'intégration de l\'IA dans les entreprises',
+            'La formation des employés',
+            'L\'intégration de formations en IA dans les programmes des centres de formation',
+        ],
+        // Numéro au format international, sans « + » ni espaces.
+        'whatsapp_number' => '22872240231',
+        'whatsapp_message' => 'Bonjour, je représente un centre de formation / une entreprise et je souhaite discuter d\'un accompagnement en IA.',
+        // Petit bloc de l'accueil.
+        'home_title' => 'Vous êtes un centre de formation ou une entreprise ?',
+        'home_text' => 'Formation de vos équipes, automatisation, agents IA, intégration de l\'IA dans vos programmes : découvrez comment je vous accompagne.',
+    ],
+
+    /*
+    |----------------------------------------------------------------------
     | Informations légales (mentions légales, CGV, confidentialité)
     |----------------------------------------------------------------------
     */
@@ -395,8 +432,11 @@ return [
             'phone' => '+228 72 24 02 31',
             'email' => 'academyjoseph71@gmail.com',
         ],
-        'host' => 'Hostinger International Ltd., 61 Lordou Vironos Street, 6023 Larnaca, Chypre (https://www.hostinger.fr)',
-        'updated_at' => '24 septembre 2026',
+        // Hébergeur du site et lieu de stockage des données (mentions légales et politique de confidentialité).
+        // Modifiables dans l'admin (Réglages du site > Pages légales) : à changer lors du passage sur Hostinger.
+        'host' => 'Laravel Cloud (https://cloud.laravel.com)',
+        'data_location' => 'Europe (Londres, Royaume-Uni)',
+        'updated_at' => '29 septembre 2026',
         'access_duration' => 'L\'accès à la formation est accordé à vie, avec un accompagnement à vie dans le groupe privé de la formation, tant que la plateforme Lomé IA School est en activité.',
         'refund_policy' => 'Vous pouvez demander le remboursement d\'une formation dans les 48 heures qui suivent son achat, uniquement si elle n\'a pas été commencée, c\'est-à-dire si aucune leçon n\'a été consultée. La demande se fait par e-mail ou sur WhatsApp. Passé ce délai, ou dès qu\'une leçon a été consultée, aucun remboursement n\'est possible.',
         'data_retention' => 'Vos données personnelles, y compris les preuves de paiement (captures d\'écran, identifiants de transaction), sont conservées 3 ans après votre dernier achat, puis supprimées.',

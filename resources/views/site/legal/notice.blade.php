@@ -22,6 +22,9 @@
 
             <h2>Hébergement</h2>
             <p>{{ $legal['host'] }}</p>
+            @if (filled($legal['data_location'] ?? null))
+                <p>Lieu de stockage des données : {{ $legal['data_location'] }}.</p>
+            @endif
 
             <h2>Propriété intellectuelle</h2>
             <p>L'ensemble des contenus du site et des formations (textes, vidéos, images, supports) est la propriété de {{ $legal['company_name'] }} ou de ses partenaires. Toute reproduction, diffusion ou revente, totale ou partielle, sans autorisation écrite préalable est interdite. L'accès à une formation est personnel et ne peut pas être partagé.</p>
