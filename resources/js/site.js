@@ -443,6 +443,96 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 }
 
+/**
+ * Assistante vocale IA (agent ElevenLabs) : bouton flottant des pages publiques (partiel voice-assistant).
+ * Le script officiel du widget n'est chargé qu'au toucher du bouton ; l'élément <elevenlabs-convai> s'ouvre
+ * alors directement (default-expanded), en bas à gauche, et notre bouton disparaît.
+ * Si le widget ne s'affiche pas (réseau, adresse non autorisée chez ElevenLabs), un message clair le dit
+ * et le bouton revient.
+ */
+let voiceAssistantScript = null;
+
+const loadVoiceAssistantScript = (src) => {
+    voiceAssistantScript ??= new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.type = 'text/javascript';
+        script.onload = resolve;
+        script.onerror = () => {
+            script.remove();
+            voiceAssistantScript = null;
+            reject(new Error('script'));
+        };
+        document.head.appendChild(script);
+    });
+
+    return voiceAssistantScript;
+};
+
+const within = (promise, milliseconds) =>
+    Promise.race([promise, new Promise((resolve, reject) => setTimeout(() => reject(new Error('délai')), milliseconds))]);
+
+// Le widget a-t-il dessiné quelque chose (sa configuration a été reçue d'ElevenLabs) ?
+const widgetIsVisible = (widget) =>
+    [...(widget.shadowRoot?.querySelectorAll('*') ?? [])].some((node) => {
+        const box = node.getBoundingClientRect();
+
+        return box.width > 0 && box.height > 0;
+    });
+
+Alpine.data('voiceAssistant', ({ agentId, scriptUrl, texts }) => ({
+    loading: false,
+    opened: false,
+    error: '',
+
+    async open() {
+        if (this.loading || this.opened) {
+            return;
+        }
+
+        this.loading = true;
+        this.error = '';
+
+        const widget = document.createElement('elevenlabs-convai');
+        widget.setAttribute('agent-id', agentId);
+        widget.setAttribute('placement', 'bottom-left');
+        widget.setAttribute('default-expanded', 'true');
+        widget.setAttribute('text-contents', JSON.stringify(texts));
+
+        try {
+            await within(loadVoiceAssistantScript(scriptUrl), 20000);
+            document.body.appendChild(widget);
+            await within(customElements.whenDefined('elevenlabs-convai'), 10000);
+
+            const shown = await new Promise((resolve) => {
+                const started = Date.now();
+                const check = () => {
+                    if (widgetIsVisible(widget)) {
+                        resolve(true);
+                    } else if (Date.now() - started > 12000) {
+                        resolve(false);
+                    } else {
+                        setTimeout(check, 250);
+                    }
+                };
+                check();
+            });
+
+            if (!shown) {
+                throw new Error('affichage');
+            }
+
+            this.opened = true;
+        } catch {
+            widget.remove();
+            this.error = 'L\'assistante n\'est pas disponible pour le moment. Réessayez dans quelques instants.';
+        } finally {
+            this.loading = false;
+        }
+    },
+}));
+
 const startAlpine = () => {
     window.Alpine = Alpine;
     Alpine.start();
