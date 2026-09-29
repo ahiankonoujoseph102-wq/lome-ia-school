@@ -68,8 +68,11 @@
                         <input
                             id="video-{{ $key }}"
                             name="videos[{{ $key }}]"
-                            type="url"
+                            type="text"
                             inputmode="url"
+                            autocapitalize="none"
+                            autocorrect="off"
+                            spellcheck="false"
                             x-model="url"
                             value="{{ $videoLinks[$key] }}"
                             placeholder="{{ $key === 'drive' ? 'https://drive.google.com/file/d/…' : 'https://youtu.be/…' }}"
@@ -162,7 +165,7 @@
                         <p class="text-sm text-rose-300">{{ $message }}</p>
                     @enderror
                     <label for="link_url" class="sr-only">Lien Google Drive</label>
-                    <input id="link_url" name="link_url" type="url" inputmode="url" value="{{ old('link_url') }}" placeholder="https://drive.google.com/…" @class(['field-input', 'field-input-error' => $errors->has('link_url')])>
+                    <input id="link_url" name="link_url" type="text" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" value="{{ old('link_url') }}" placeholder="https://drive.google.com/…" @class(['field-input', 'field-input-error' => $errors->has('link_url')])>
                     @error('link_url')
                         <p class="text-sm text-rose-300">{{ $message }}</p>
                     @else

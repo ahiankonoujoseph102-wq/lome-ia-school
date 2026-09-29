@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\CourseModule;
 use App\Models\Lesson;
 use App\Support\GoogleDrive;
+use App\Support\PastedLink;
 use App\Video\VideoProviders;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,6 +26,14 @@ class LessonRequest extends FormRequest
     public function authorize(): bool
     {
         return (bool) $this->user()?->isAdmin();
+    }
+
+    /**
+     * Liens nettoyés avant la vérification (caractères invisibles, texte autour, https manquant).
+     */
+    protected function prepareForValidation(): void
+    {
+        PastedLink::cleanRequest($this, ['videos.*', 'link_url']);
     }
 
     /**
@@ -51,7 +60,7 @@ class LessonRequest extends FormRequest
             'link_name' => ['nullable', 'required_with:link_url', 'string', 'max:150'],
             'link_url' => ['nullable', 'required_with:link_name', 'string', 'max:500', function (string $attribute, mixed $value, Closure $fail): void {
                 if (is_string($value) && trim($value) !== '' && ! GoogleDrive::isGoogleUrl($value)) {
-                    $fail('Collez un lien Google Drive (drive.google.com ou docs.google.com), qui commence par https://.');
+                    $fail('Le lien Google Drive doit ressembler à https://drive.google.com/file/d/… ou https://docs.google.com/…. Dans Drive : « Partager », puis « Copier le lien ».');
                 }
             }],
         ];

@@ -241,4 +241,23 @@ class BusinessPageTest extends TestCase
         $this->get(route('legal.privacy'))->assertSee('Hostinger International Ltd.')->assertSee('Europe (Lituanie)');
         $this->assertTrue(AdminActivity::query()->where('description', 'like', '%Pages légales%')->exists());
     }
+
+    public function test_the_video_link_is_cleaned_before_being_checked(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        foreach (["\u{200B} https://youtu.be/dQw4w9WgXcQ\u{00A0}\n", 'Ma présentation : Https://youtu.be/dQw4w9WgXcQ', 'youtu.be/dQw4w9WgXcQ'] as $value) {
+            $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form(['video_url' => $value]))->assertSessionHasNoErrors();
+            $this->assertSame('https://youtu.be/dQw4w9WgXcQ', config('site.business.video_url'));
+        }
+
+        // Un lien Shorts collé avec du texte reste reconnu comme vertical.
+        $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form(['video_url' => "Regardez\u{00A0}: youtube.com/shorts/dQw4w9WgXcQ"]))->assertSessionHasNoErrors();
+        $this->assertSame('https://youtube.com/shorts/dQw4w9WgXcQ', config('site.business.video_url'));
+        $this->assertSame('vertical', YouTube::format(config('site.business.video_url'), config('site.business.video_format')));
+
+        $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form(['video_url' => 'https://www.youtube.com/@LomeIASchool']))
+            ->assertSessionHasErrors(['video_url' => 'Le lien YouTube doit ressembler à https://www.youtube.com/watch?v=abcdefghijk ou https://youtu.be/abcdefghijk. Sur YouTube : « Partager », puis « Copier le lien ». Un lien Shorts (https://www.youtube.com/shorts/…) fonctionne aussi.']);
+        $this->assertSame('https://youtube.com/shorts/dQw4w9WgXcQ', config('site.business.video_url'));
+    }
 }

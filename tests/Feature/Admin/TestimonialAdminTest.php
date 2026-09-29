@@ -62,4 +62,15 @@ class TestimonialAdminTest extends AdminTestCase
         $this->actingAs($this->admin)->delete(route('admin.testimonials.destroy', $second))->assertRedirect(route('admin.testimonials.index'));
         $this->assertModelMissing($second);
     }
+
+    public function test_the_testimonial_video_link_is_cleaned_before_being_checked(): void
+    {
+        $this->actingAs($this->admin)->post(route('admin.testimonials.store'), [
+            'type' => 'video', 'name' => 'Ama (Exemple)', 'youtube_url' => "Témoignage d'Ama :\u{00A0}youtu.be/dQw4w9WgXcQ\u{200B}", 'is_active' => '1',
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('https://youtu.be/dQw4w9WgXcQ', Testimonial::query()->value('youtube_url'));
+
+        $this->actingAs($this->admin)->post(route('admin.testimonials.store'), ['type' => 'video', 'youtube_url' => 'https://exemple.test/video'])
+            ->assertSessionHasErrors(['youtube_url' => 'Le lien YouTube doit ressembler à https://www.youtube.com/watch?v=abcdefghijk ou https://youtu.be/abcdefghijk. Sur YouTube : « Partager », puis « Copier le lien ».']);
+    }
 }

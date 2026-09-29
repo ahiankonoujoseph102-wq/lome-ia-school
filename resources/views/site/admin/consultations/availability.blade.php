@@ -35,7 +35,7 @@
             <h2 class="font-semibold text-white">Lien Google Meet et réglages</h2>
             <div class="space-y-1.5">
                 <label for="meet_url" class="field-label">Lien Google Meet fixe</label>
-                <input id="meet_url" name="meet_url" type="url" inputmode="url" value="{{ $settingsErrors->any() ? old('meet_url') : $settings->meet_url }}" placeholder="https://meet.google.com/abc-defg-hij" @class(['field-input font-mono', 'field-input-error' => $settingsErrors->has('meet_url')])>
+                <input id="meet_url" name="meet_url" type="text" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" value="{{ $settingsErrors->any() ? old('meet_url') : $settings->meet_url }}" placeholder="https://meet.google.com/abc-defg-hij" @class(['field-input font-mono', 'field-input-error' => $settingsErrors->has('meet_url')])>
                 @if ($settingsErrors->has('meet_url'))
                     <p class="text-sm text-rose-300">{{ $settingsErrors->first('meet_url') }}</p>
                 @else

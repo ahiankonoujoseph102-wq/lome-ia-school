@@ -7,6 +7,7 @@ use App\Enums\AdminAction;
 use App\Http\Controllers\Controller;
 use App\Models\Testimonial;
 use App\Services\ImageUploader;
+use App\Support\PastedLink;
 use App\Support\YouTube;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -94,6 +95,8 @@ class TestimonialController extends Controller
 
     private function fill(Testimonial $testimonial, Request $request, ImageUploader $images): void
     {
+        PastedLink::cleanRequest($request, ['youtube_url']);
+
         $validated = $request->validate([
             'type' => ['required', Rule::in(array_keys(Testimonial::TYPES))],
             'name' => [Rule::requiredIf($request->input('type') === 'text'), 'nullable', 'string', 'max:120'],
@@ -113,7 +116,7 @@ class TestimonialController extends Controller
         $type = (string) $validated['type'];
 
         if ($type === 'video' && YouTube::id($validated['youtube_url'] ?? null) === null) {
-            throw ValidationException::withMessages(['youtube_url' => 'Lien YouTube non reconnu. Exemple : https://www.youtube.com/watch?v=XXXXXXXXXXX']);
+            throw ValidationException::withMessages(['youtube_url' => YouTube::invalidMessage()]);
         }
 
         if ($type === 'screenshot' && ! $request->hasFile('image') && ($testimonial->type !== 'screenshot' || blank($testimonial->image_path))) {

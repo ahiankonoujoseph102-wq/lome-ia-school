@@ -41,10 +41,16 @@ class GoogleDriveTest extends TestCase
     {
         $this->assertNull(GoogleDrive::fileId('https://drive.google.com/drive/folders/'.self::ID));
         $this->assertNull(GoogleDrive::fileId('https://exemple.com/file/d/'.self::ID.'/view'));
-        $this->assertNull(GoogleDrive::fileId('http://drive.google.com/file/d/'.self::ID.'/view'));
         $this->assertNull(GoogleDrive::fileId('https://youtu.be/abcDEF12345'));
         $this->assertNull(GoogleDrive::fileId(''));
         $this->assertTrue(GoogleDrive::isFolder('https://drive.google.com/drive/u/0/folders/'.self::ID));
+    }
+
+    public function test_a_link_written_with_http_is_read_as_https(): void
+    {
+        // Drive ne sert que du https : « http:// » (ou rien) est réécrit par le nettoyage des liens collés.
+        $this->assertSame(self::ID, GoogleDrive::fileId('http://drive.google.com/file/d/'.self::ID.'/view'));
+        $this->assertTrue(GoogleDrive::isGoogleUrl('http://docs.google.com/document/d/'.self::ID.'/edit'));
     }
 
     public function test_it_builds_the_preview_player_url(): void

@@ -101,7 +101,7 @@
             <div class="card space-y-3 p-5 sm:p-6" x-show="format === 'online'" @if ($format !== 'online') style="display: none" @endif>
                 <div class="space-y-1.5">
                     <label for="meet_url" class="field-label">Lien Google Meet</label>
-                    <input id="meet_url" name="meet_url" type="url" inputmode="url" x-model="meet" value="{{ old('meet_url', $session->meet_url) }}" placeholder="https://meet.google.com/abc-defg-hij" @class(['field-input', 'field-input-error' => $errors->has('meet_url')])>
+                    <input id="meet_url" name="meet_url" type="text" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" x-model="meet" value="{{ old('meet_url', $session->meet_url) }}" placeholder="https://meet.google.com/abc-defg-hij" @class(['field-input', 'field-input-error' => $errors->has('meet_url')])>
                     @error('meet_url')
                         <p class="text-sm text-rose-300">{{ $message }}</p>
                     @enderror

@@ -6,6 +6,7 @@ use App\Enums\SessionFormat;
 use App\Enums\SessionPriceType;
 use App\Models\LiveSession;
 use App\Support\GoogleMeet;
+use App\Support\PastedLink;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -20,6 +21,14 @@ class LiveSessionRequest extends FormRequest
     public function authorize(): bool
     {
         return (bool) $this->user()?->isStaff();
+    }
+
+    /**
+     * Lien nettoyé avant la vérification (caractères invisibles, texte autour, https manquant).
+     */
+    protected function prepareForValidation(): void
+    {
+        PastedLink::cleanRequest($this, ['meet_url']);
     }
 
     /**
@@ -49,7 +58,7 @@ class LiveSessionRequest extends FormRequest
             'duration' => ['required', 'integer', 'min:15', 'max:720'],
             'meet_url' => [$onsite ? 'nullable' : 'required', 'string', 'max:255', function (string $attribute, mixed $value, Closure $fail) use ($onsite): void {
                 if (! $onsite && GoogleMeet::normalize(is_string($value) ? $value : null) === null) {
-                    $fail('Collez le lien de la réunion Google Meet, par exemple https://meet.google.com/abc-defg-hij.');
+                    $fail(GoogleMeet::invalidMessage(is_string($value) ? $value : null));
                 }
             }],
             'location' => [$onsite ? 'required' : 'nullable', 'string', 'max:255'],

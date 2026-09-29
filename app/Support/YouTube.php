@@ -16,7 +16,7 @@ class YouTube
      */
     public static function id(?string $value): ?string
     {
-        $value = trim((string) $value);
+        $value = PastedLink::clean($value);
 
         if (preg_match('/^[\w-]{11}$/', $value)) {
             return $value;
@@ -31,11 +31,19 @@ class YouTube
     }
 
     /**
+     * Message affiché sous le champ quand le lien YouTube n'est pas reconnu.
+     */
+    public static function invalidMessage(): string
+    {
+        return 'Le lien YouTube doit ressembler à https://www.youtube.com/watch?v=abcdefghijk ou https://youtu.be/abcdefghijk. Sur YouTube : « Partager », puis « Copier le lien ».';
+    }
+
+    /**
      * Lien YouTube Shorts (youtube.com/shorts/…) : vidéo verticale, filmée au téléphone.
      */
     public static function isShorts(?string $value): bool
     {
-        return (bool) preg_match('~youtube\.com/shorts/[\w-]{11}~i', (string) $value);
+        return (bool) preg_match('~youtube\.com/shorts/[\w-]{11}~i', PastedLink::clean($value));
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Models\ConsultationBlock;
 use App\Models\ConsultationHour;
 use App\Models\ConsultationSettings;
 use App\Support\GoogleMeet;
+use App\Support\PastedLink;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +33,8 @@ class ConsultationAvailabilityController extends Controller
 
     public function updateSettings(Request $request): RedirectResponse
     {
+        PastedLink::cleanRequest($request, ['meet_url']);
+
         $validated = $request->validateWithBag('settings', [
             'meet_url' => ['nullable', 'string', 'max:255'],
             'duration_minutes' => ['required', 'integer', 'min:10', 'max:180'],
@@ -45,7 +48,7 @@ class ConsultationAvailabilityController extends Controller
         $meetUrl = GoogleMeet::normalize($validated['meet_url'] ?? null);
 
         if (filled($validated['meet_url'] ?? null) && $meetUrl === null) {
-            throw ValidationException::withMessages(['meet_url' => 'Collez un lien de réunion Google Meet, par exemple https://meet.google.com/abc-defg-hij.'])->errorBag('settings');
+            throw ValidationException::withMessages(['meet_url' => GoogleMeet::invalidMessage($validated['meet_url'])])->errorBag('settings');
         }
 
         ConsultationSettings::current()->update([...$validated, 'meet_url' => $meetUrl]);

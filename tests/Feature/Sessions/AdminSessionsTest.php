@@ -205,4 +205,26 @@ class AdminSessionsTest extends SessionTestCase
             ->assertOk()
             ->assertSee('Replay : Atelier automatisation du '.$session->starts_at->translatedFormat('j F Y'));
     }
+
+    public function test_the_session_meet_link_is_cleaned_before_being_checked(): void
+    {
+        $admin = $this->admin();
+        $pasted = [
+            "  https://meet.google.com/abc-defg-hij\n",
+            "\u{FEFF}https://meet.google.com/abc-defg-hij\u{200B}",
+            'HTTPS://meet.google.com/ABC-DEFG-HIJ',
+            "Réunion Lomé IA School\nRejoindre avec Google Meet : https://meet.google.com/abc-defg-hij",
+            'meet.google.com/abc-defg-hij',
+        ];
+
+        foreach ($pasted as $value) {
+            $this->actingAs($admin)->post(route('admin.sessions.store'), $this->onlineForm(['meet_url' => $value]))->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(['https://meet.google.com/abc-defg-hij'], LiveSession::query()->pluck('meet_url')->unique()->values()->all());
+
+        $this->actingAs($admin)->post(route('admin.sessions.store'), $this->onlineForm(['meet_url' => 'https://zoom.us/j/123']))
+            ->assertSessionHasErrors(['meet_url' => 'Le lien Google Meet doit ressembler à https://meet.google.com/abc-defg-hij. Dans Google Meet, touchez « Partager les informations de connexion » ou « Copier le lien ».']);
+        $this->assertSame(5, LiveSession::query()->count());
+    }
 }
