@@ -441,6 +441,7 @@ class SiteSettingsController extends Controller
     {
         $validated = $request->validate([
             'video_url' => ['nullable', 'string', 'max:500'],
+            'video_format' => ['nullable', Rule::in(YouTube::FORMATS)],
             'title' => ['required', 'string', 'max:160'],
             'intro' => ['array', 'max:6'],
             'intro.*' => ['nullable', 'string', 'max:1500'],
@@ -464,6 +465,8 @@ class SiteSettingsController extends Controller
 
         SiteSettings::save(['site.business' => [
             'video_url' => $video,
+            // Sans choix, le format reste automatique (vertical pour un lien Shorts).
+            'video_format' => (string) ($validated['video_format'] ?? ''),
             'title' => trim((string) $validated['title']),
             'intro' => self::lines($validated['intro'] ?? []),
             'services' => $services,
@@ -471,7 +474,7 @@ class SiteSettingsController extends Controller
             'home_text' => trim((string) $validated['home_text']),
         ]]);
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Page « Entreprises et centres de formation » modifiée'.($video === '' ? ' (sans vidéo).' : '.'));
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Page « Entreprises et centres de formation » modifiée'.($video === '' ? ' (sans vidéo).' : ' (vidéo au format '.YouTube::format($video, $validated['video_format'] ?? null).').'));
     }
 
     private function updateLegal(Request $request): void

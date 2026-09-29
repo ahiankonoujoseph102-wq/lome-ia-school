@@ -390,6 +390,9 @@ return [
 
     'business' => [
         'video_url' => '',
+        // Format de la vidéo : 'horizontal' (16:9) ou 'vertical' (9:16, filmée au téléphone).
+        // Vide = automatique : vertical pour un lien YouTube Shorts (/shorts/), horizontal sinon.
+        'video_format' => '',
         'title' => 'Intégrer l\'intelligence artificielle dans votre organisation',
         'intro' => [
             'L\'intelligence artificielle transforme le monde du travail, y compris en Afrique de l\'Ouest : de nouveaux outils apparaissent, les métiers évoluent et les compétences attendues changent.',

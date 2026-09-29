@@ -6,6 +6,8 @@ use App\Enums\AdminAction;
 use App\Enums\UserRole;
 use App\Models\AdminActivity;
 use App\Models\User;
+use App\Settings\SiteSettings;
+use App\Support\YouTube;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -121,6 +123,72 @@ class BusinessPageTest extends TestCase
         // Lien vidé : bloc vidéo masqué.
         $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form())->assertSessionHasNoErrors();
         $this->get(route('business'))->assertDontSee('data-test="business-video"', false);
+    }
+
+    public function test_shorts_links_are_detected_as_vertical(): void
+    {
+        $this->assertTrue(YouTube::isShorts('https://www.youtube.com/shorts/dQw4w9WgXcQ'));
+        $this->assertTrue(YouTube::isShorts('https://youtube.com/shorts/dQw4w9WgXcQ?si=abc'));
+        $this->assertFalse(YouTube::isShorts('https://youtu.be/dQw4w9WgXcQ'));
+        $this->assertFalse(YouTube::isShorts('https://www.youtube.com/watch?v=dQw4w9WgXcQ'));
+
+        // Sans choix : automatique.
+        $this->assertSame('vertical', YouTube::format('https://www.youtube.com/shorts/dQw4w9WgXcQ'));
+        $this->assertSame('horizontal', YouTube::format('https://youtu.be/dQw4w9WgXcQ', ''));
+        // Le choix de l'admin l'emporte toujours.
+        $this->assertSame('horizontal', YouTube::format('https://www.youtube.com/shorts/dQw4w9WgXcQ', 'horizontal'));
+        $this->assertSame('vertical', YouTube::format('https://youtu.be/dQw4w9WgXcQ', 'vertical'));
+    }
+
+    public function test_vertical_video_is_shown_in_a_9_16_frame_without_black_bars(): void
+    {
+        SiteSettings::save(['site.business' => [...(array) config('site.business'), 'video_url' => 'https://www.youtube.com/shorts/dQw4w9WgXcQ', 'video_format' => '']]);
+
+        $this->get(route('business'))->assertOk()
+            ->assertSee('data-format="vertical"', false)
+            ->assertSee('aspect-[9/16]', false)
+            ->assertSee('max-w-[400px]', false)
+            ->assertDontSee('aspect-video', false)
+            // Chargement au clic : miniature d'abord, lecteur seulement après le clic.
+            ->assertSee('https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', false)
+            ->assertSee('<template x-if="playing">', false)
+            ->assertSee('youtube-nocookie.com/embed/dQw4w9WgXcQ', false);
+    }
+
+    public function test_horizontal_video_keeps_the_16_9_frame(): void
+    {
+        SiteSettings::save(['site.business' => [...(array) config('site.business'), 'video_url' => 'https://youtu.be/dQw4w9WgXcQ', 'video_format' => '']]);
+
+        $this->get(route('business'))->assertOk()
+            ->assertSee('data-format="horizontal"', false)
+            ->assertSee('aspect-video', false)
+            ->assertDontSee('aspect-[9/16]', false);
+    }
+
+    public function test_the_format_is_chosen_in_the_admin(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        // Lien Shorts : « Vertical » présélectionné.
+        SiteSettings::save(['site.business' => [...(array) config('site.business'), 'video_url' => 'https://www.youtube.com/shorts/dQw4w9WgXcQ', 'video_format' => '']]);
+        $this->actingAs($admin)->get(route('admin.settings.edit', 'entreprises'))->assertOk()
+            ->assertSee('Format de la vidéo')
+            ->assertSee('Vertical (téléphone)')
+            ->assertSee('value="vertical" x-model="format" class="sr-only" checked', false);
+
+        // Vidéo verticale publiée avec un lien classique : le choix de l'admin l'emporte.
+        $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form([
+            'video_url' => 'https://youtu.be/dQw4w9WgXcQ',
+            'video_format' => 'vertical',
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertSame('vertical', config('site.business.video_format'));
+        $this->get(route('business'))->assertSee('data-format="vertical"', false);
+
+        $this->actingAs($admin)->put(route('admin.settings.update', 'entreprises'), $this->form([
+            'video_url' => 'https://youtu.be/dQw4w9WgXcQ',
+            'video_format' => 'carre',
+        ]))->assertSessionHasErrors('video_format');
     }
 
     public function test_invalid_video_link_and_empty_services_are_refused(): void

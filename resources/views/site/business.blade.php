@@ -3,6 +3,7 @@
 
     $business = (array) config('site.business');
     $videoId = YouTube::id($business['video_url'] ?? null);
+    $vertical = YouTube::format($business['video_url'] ?? null, $business['video_format'] ?? null) === 'vertical';
     // Même réservation que la consultation gratuite, avec « Une entreprise » présélectionné (modifiable).
     $bookingUrl = route('consultation', ['profil' => 'entreprise']).'#reserver';
     $bookingNote = 'Appel vidéo gratuit de '.config('site.consultation.duration').' sur Google Meet, au créneau de votre choix.';
@@ -20,8 +21,18 @@
     <section class="mx-auto max-w-4xl px-4 sm:px-6" data-test="business-page">
         @if ($videoId)
             {{-- Vidéo : le lecteur YouTube n'est chargé qu'au clic (page légère, aucun cookie avant). --}}
-            <div class="card overflow-hidden p-0" data-test="business-video" data-reveal>
-                <div class="aspect-video bg-night-950" x-data="{ playing: false }">
+            {{-- Vertical (filmée au téléphone) : cadre 9:16 sans bandes noires, pleine largeur sur téléphone sans
+                 dépasser la hauteur de l'écran (en-tête compris), centré et limité à 400 px sur ordinateur. --}}
+            <div
+                @class([
+                    'card overflow-hidden p-0',
+                    'mx-auto w-[min(100%,calc((100svh-7rem)*9/16))] max-w-[400px]' => $vertical,
+                ])
+                data-test="business-video"
+                data-format="{{ $vertical ? 'vertical' : 'horizontal' }}"
+                data-reveal
+            >
+                <div @class(['bg-night-950', 'aspect-[9/16]' => $vertical, 'aspect-video' => ! $vertical]) x-data="{ playing: false }">
                     <template x-if="playing">
                         <iframe
                             src="{{ YouTube::embedUrl($videoId) }}"

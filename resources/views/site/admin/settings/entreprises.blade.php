@@ -1,7 +1,10 @@
 @php
     use App\Settings\SiteSettings;
+    use App\Support\YouTube;
 
     $business = (array) SiteSettings::get('site.business');
+    $videoFormat = old('video_format', YouTube::format($business['video_url'] ?? null, $business['video_format'] ?? null));
+    $formats = ['horizontal' => ['Horizontal', 'Filmée à l\'horizontale (16:9)'], 'vertical' => ['Vertical (téléphone)', 'Filmée au téléphone, tenu droit (9:16)']];
 @endphp
 
 <x-admin.page :title="$section['title']" :back="route('admin.settings.index')" back-label="Réglages du site">
@@ -18,9 +21,30 @@
         @csrf
         @method('PUT')
 
-        <section class="card space-y-4 p-5 sm:p-6">
+        {{-- Un lien Shorts (/shorts/) choisit tout seul « Vertical » ; le choix reste modifiable. --}}
+        <section class="card space-y-4 p-5 sm:p-6" x-data="{ format: @js($videoFormat) }">
             <h2 class="font-semibold text-white">Vidéo de présentation</h2>
-            <x-admin.field name="video_url" label="Lien de la vidéo YouTube" type="url" :value="$business['video_url'] ?? ''" placeholder="https://www.youtube.com/watch?v=…" hint="Laissez vide pour masquer le bloc vidéo. Vidéo publique ou non répertoriée." />
+            <x-admin.field name="video_url" label="Lien de la vidéo YouTube" type="url" :value="$business['video_url'] ?? ''" placeholder="https://www.youtube.com/watch?v=…" hint="Laissez vide pour masquer le bloc vidéo. Vidéo publique ou non répertoriée." x-on:input="format = /youtube\.com\/shorts\//i.test($event.target.value) ? 'vertical' : 'horizontal'" />
+
+            <fieldset class="space-y-2" data-test="video-format">
+                <legend class="field-label">Format de la vidéo</legend>
+                <div class="grid gap-2 sm:grid-cols-2">
+                    @foreach ($formats as $value => [$label, $hint])
+                        <label class="group flex cursor-pointer items-center gap-3 rounded-2xl bg-veil/5 px-4 py-3 ring-1 ring-veil/15 transition hover:bg-veil/10 has-[:checked]:bg-gold-400/10 has-[:checked]:ring-2 has-[:checked]:ring-gold-400 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold-300">
+                            <input type="radio" name="video_format" value="{{ $value }}" x-model="format" class="sr-only" @checked($videoFormat === $value)>
+                            <span @class(['grid shrink-0 place-items-center rounded-md ring-1 ring-veil/30 group-has-[:checked]:ring-gold-400', 'h-5 w-8' => $value === 'horizontal', 'h-8 w-5' => $value === 'vertical'])>
+                                <flux:icon.play class="size-3 text-slate-400 group-has-[:checked]:text-gold-300" variant="solid" />
+                            </span>
+                            <span class="min-w-0">
+                                <span class="block text-sm font-semibold text-slate-100">{{ $label }}</span>
+                                <span class="block text-xs text-slate-400">{{ $hint }}</span>
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+                <p class="text-xs text-slate-500">Un lien YouTube Shorts (…/shorts/…) choisit automatiquement « Vertical ».</p>
+                @error('video_format') <p class="text-sm text-rose-300">{{ $message }}</p> @enderror
+            </fieldset>
         </section>
 
         <section class="card space-y-4 p-5 sm:p-6">
