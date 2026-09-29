@@ -10,6 +10,7 @@ use App\Services\ImageUploader;
 use App\Settings\SiteSettings;
 use App\Support\PastedLink;
 use App\Support\PhoneNumber;
+use App\Support\VoiceAssistant;
 use App\Support\YouTube;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,7 @@ class SiteSettingsController extends Controller
         'affiliation' => ['title' => 'Affiliation', 'text' => 'Taux de commission, durée des liens, délai de disponibilité, retrait minimum.', 'icon' => 'share', 'sensitive' => true],
         'textes' => ['title' => 'Textes du site', 'text' => 'Accroche de l\'accueil, présentation du formateur, questions fréquentes.', 'icon' => 'document-text'],
         'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
+        'assistante' => ['title' => 'Assistante vocale', 'text' => 'Bouton « Parler avec notre assistante » (agent ElevenLabs) : activation et identifiant de l\'agent.', 'icon' => 'microphone'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
     ];
 
@@ -75,6 +77,7 @@ class SiteSettingsController extends Controller
             'affiliation' => $this->updateAffiliate($request),
             'textes' => $this->updateTexts($request),
             'entreprises' => $this->updateBusiness($request),
+            'assistante' => $this->updateVoiceAssistant($request),
             'legal' => $this->updateLegal($request),
         };
 
@@ -482,6 +485,30 @@ class SiteSettingsController extends Controller
         ]]);
 
         ActivityLog::record(AdminAction::SettingsUpdated, 'Page « Entreprises et centres de formation » modifiée'.($video === '' ? ' (sans vidéo).' : ' (vidéo au format '.YouTube::format($video, $validated['video_format'] ?? null).').'));
+    }
+
+    private function updateVoiceAssistant(Request $request): void
+    {
+        $request->merge(['agent_id' => VoiceAssistant::cleanAgentId(is_string($request->input('agent_id')) ? $request->input('agent_id') : null)]);
+
+        $validated = $request->validate([
+            'enabled' => ['nullable', 'boolean'],
+            'agent_id' => ['required', 'string', 'max:80'],
+        ], [
+            'agent_id.required' => 'Indiquez l\'identifiant de l\'agent ElevenLabs. Exemple : '.VoiceAssistant::EXAMPLE_ID.'.',
+        ]);
+
+        $agentId = (string) $validated['agent_id'];
+
+        if (! VoiceAssistant::isValidAgentId($agentId)) {
+            throw ValidationException::withMessages(['agent_id' => VoiceAssistant::invalidMessage($agentId)]);
+        }
+
+        $enabled = (bool) ($validated['enabled'] ?? false);
+
+        SiteSettings::save(['site.voice_assistant' => ['enabled' => $enabled, 'agent_id' => $agentId]]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante vocale '.($enabled ? 'activée' : 'désactivée').' (agent '.$agentId.').');
     }
 
     private function updateLegal(Request $request): void

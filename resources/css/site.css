@@ -536,3 +536,20 @@ body {
 @utility chat-dialog {
     @apply fixed inset-x-4 top-1/2 z-[55] mx-auto max-w-md -translate-y-1/2 rounded-3xl border border-veil/10 bg-night-900 p-6 shadow-2xl shadow-black/60;
 }
+
+/*
+ * Assistante vocale (partiel voice-assistant) : sur téléphone et tablette, la page d'une formation a une
+ * barre d'achat fixée en bas (body.has-sticky-cta) ; le bouton et le widget ElevenLabs passent au-dessus,
+ * pour ne jamais cacher « Acheter maintenant ». L'élément <elevenlabs-convai> est lui-même un cadre fixe
+ * couvrant l'écran (position: fixed; inset: 0) : en remonter le bas suffit, sans toucher à l'intérieur du
+ * widget (une règle de la page l'emporte sur son propre style « :host »).
+ */
+@media (width < 64rem) {
+    .has-sticky-cta .voice-assistant {
+        bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    }
+
+    .has-sticky-cta elevenlabs-convai {
+        bottom: calc(5rem + env(safe-area-inset-bottom));
+    }
+}

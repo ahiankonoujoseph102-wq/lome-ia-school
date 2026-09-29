@@ -64,6 +64,9 @@
                 <li>Vous pouvez désactiver chaque type de notification, ou couper un groupe précis, à tout moment dans « Mon profil » puis « Notifications ».</li>
             </ul>
 
+            <h2>Assistante vocale</h2>
+            <p data-test="privacy-voice-assistant">Le bouton « Parler avec notre assistante » vous permet de discuter avec Ama, notre assistante vocale. <strong>Ama est une intelligence artificielle.</strong> Vos conversations avec elle sont traitées par le service ElevenLabs. L'audio et la transcription de chaque conversation sont conservés 90 jours.</p>
+
             <h2>Utilisation des données</h2>
             <ul>
                 <li>Créer et gérer votre compte et vos accès aux formations ;</li>

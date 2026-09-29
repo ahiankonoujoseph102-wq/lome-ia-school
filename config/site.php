@@ -422,6 +422,20 @@ return [
     |----------------------------------------------------------------------
     */
 
+    /*
+    |----------------------------------------------------------------------
+    | Assistante vocale IA « Ama » (agent ElevenLabs)
+    |----------------------------------------------------------------------
+    | Bouton flottant « Parler avec notre assistante » sur les pages publiques (App\Support\VoiceAssistant).
+    | Modifiable dans l'admin (Réglages du site > Assistante vocale). Désactivée par défaut.
+    | L'identifiant de l'agent est public (ce n'est pas un secret).
+    */
+
+    'voice_assistant' => [
+        'enabled' => false,
+        'agent_id' => 'agent_9901m3phrpdwedt88vsdqmnwk09z',
+    ],
+
     'legal' => [
         'company_name' => 'Lomé IA School',
         // Responsable du site (mentions légales).

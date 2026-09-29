@@ -16,6 +16,8 @@
     $description ??= 'Formations pratiques en intelligence artificielle, en français : ChatGPT, création visuelle et vidéo, sites web, automatisation, agents IA. Paiement par Mobile Money.';
     $image ??= route('og.site');
     $canonical = url()->current();
+    // Assistante vocale : pages publiques choisies uniquement (jamais l'admin, l'espace élève ni le lecteur de cours).
+    $voiceAssistant = $variant === 'marketing' && \App\Support\VoiceAssistant::shownOn(request()->route()?->getName());
 @endphp
 
 <!DOCTYPE html>
@@ -95,7 +97,11 @@
         'font-sans',
         'min-h-screen overflow-x-clip' => $variant !== 'chat',
         'flex h-dvh flex-col overflow-hidden' => $variant === 'chat',
-        'pb-24 lg:pb-0' => $stickyCta || $variant === 'student',
+        'pb-24 lg:pb-0' => ($stickyCta || $variant === 'student') && ! $voiceAssistant,
+        // Place laissée en bas de page pour le bouton de l'assistante (et la barre d'achat sur téléphone).
+        'pb-20' => $voiceAssistant && ! $stickyCta,
+        'pb-40 lg:pb-20' => $voiceAssistant && $stickyCta,
+        'has-sticky-cta' => $stickyCta,
     ])>
         @include('site.partials.test-banner')
 
@@ -130,6 +136,10 @@
             @endif
 
             @include('site.partials.whatsapp-button', ['whatsappMessage' => $whatsappMessage])
+
+            @if ($voiceAssistant)
+                @include('site.partials.voice-assistant')
+            @endif
 
             {{ $after ?? '' }}
         @endif
