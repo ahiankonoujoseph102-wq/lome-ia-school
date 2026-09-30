@@ -9,12 +9,14 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Réglages déjà enregistrés sur le site en ligne : l'école n'est plus présentée comme créée en 2023 ni comme
- * l'ex-Joseph Academy (migration 2026_10_06_100000_fix_school_founding_facts), sans toucher au reste.
+ * Réglages déjà enregistrés sur le site en ligne (migration 2026_10_06_100000_fix_school_founding_facts) : seuls les
+ * textes d'origine exacts sont corrigés, jamais un texte modifié à la main, et rien n'est effacé.
  */
 class SchoolFactsMigrationTest extends TestCase
 {
     use RefreshDatabase;
+
+    private const string OLD_DEFAULT_SCHOOL = "Lomé IA School est une école de formations en intelligence artificielle basée à Lomé, au Togo. Elle a été créée en 2023. Son ancien nom était Joseph Academy.\nFondateur et formateur principal : Joseph Ahiankonou.";
 
     private function migrate(): void
     {
@@ -22,33 +24,74 @@ class SchoolFactsMigrationTest extends TestCase
         SiteSettings::apply();
     }
 
-    public function test_saved_settings_are_corrected_without_touching_the_rest(): void
+    /**
+     * @return array<string, string>
+     */
+    private function rows(): array
     {
-        $oldSchool = "Lomé IA School est une école de formations en intelligence artificielle basée à Lomé, au Togo. Elle a été créée en 2023. Son ancien nom était Joseph Academy.\nTexte ajouté par Joseph.";
+        return DB::table('site_settings')->orderBy('key')->get(['key', 'value', 'updated_at'])
+            ->mapWithKeys(fn (object $row): array => [$row->key => $row->value.'|'.$row->updated_at])->all();
+    }
 
+    /**
+     * Cas de Joseph : base de connaissances déjà corrigée à la main dans l'admin (phrases retirées, « Autres
+     * informations » ajoutées) : la ligne n'est pas réécrite, son texte reste exactement le même.
+     */
+    public function test_a_knowledge_base_corrected_by_hand_is_left_exactly_as_it_is(): void
+    {
         SiteSettings::save([
+            'site.assistant_knowledge' => [
+                'school' => "Lomé IA School est une école de formations en intelligence artificielle basée à Lomé, au Togo.\nTexte corrigé par Joseph : l'école a été créée récemment.",
+                'faq' => [['question' => 'Question de Joseph ?', 'answer' => 'Réponse de Joseph.']],
+                'other' => 'Informations ajoutées par Joseph.',
+            ],
+            // Texte modifié à la main, qui contient encore une partie seulement de l'ancienne phrase : pas touché non plus.
+            'site.stats' => [['value' => '1 000+', 'label' => 'personnes formées'], ['value' => '2023', 'label' => 'année de création (modifiée)']],
+            'site.about' => ['mission' => 'Mission de Joseph.', 'founded' => '2023'],
+        ]);
+        $this->travel(5)->minutes();
+        $before = $this->rows();
+
+        $this->migrate();
+
+        $this->assertSame($before, $this->rows());
+        $this->assertSame('Informations ajoutées par Joseph.', config('site.assistant_knowledge.other'));
+        $this->assertSame([['question' => 'Question de Joseph ?', 'answer' => 'Réponse de Joseph.']], AmaKnowledge::faq());
+    }
+
+    public function test_only_the_exact_original_sentence_is_replaced_in_place(): void
+    {
+        SiteSettings::save([
+            'site.assistant_knowledge' => ['school' => self::OLD_DEFAULT_SCHOOL."\nAjout de Joseph.", 'faq' => [], 'other' => 'Autre information.'],
             'site.stats' => [['value' => '1 200+', 'label' => 'personnes formées'], ['value' => '2023', 'label' => 'année de création de l\'école'], ['value' => 'À vie', 'label' => 'accès et accompagnement']],
-            'site.assistant_knowledge' => ['school' => $oldSchool, 'faq' => [['question' => 'Q ?', 'answer' => 'R.']], 'other' => 'Autre.'],
-            'site.about' => ['mission' => 'Mission de Joseph.', 'values' => [], 'founded' => '2023'],
+            'site.about' => ['mission' => 'Mission de Joseph.', 'founded' => '2023'],
         ]);
 
         $this->migrate();
 
+        $this->assertSame(
+            "Lomé IA School est une école de formations en intelligence artificielle basée à Lomé, au Togo. C'est une école récente. Joseph Academy est une autre activité de Joseph (écriture de livres pour des clients), distincte de Lomé IA School : ce n'est pas l'ancien nom de l'école.\nFondateur et formateur principal : Joseph Ahiankonou.\nAjout de Joseph.",
+            config('site.assistant_knowledge.school'),
+        );
+        $this->assertSame('Autre information.', config('site.assistant_knowledge.other'));
         $this->assertSame([['value' => '1 200+', 'label' => 'personnes formées'], ['value' => '2023', 'label' => 'année où Joseph a commencé à former'], ['value' => 'À vie', 'label' => 'accès et accompagnement']], config('site.stats'));
-        $school = (string) config('site.assistant_knowledge.school');
-        $this->assertStringNotContainsString('créée en 2023', $school);
-        $this->assertStringNotContainsString('ancien nom', mb_strtolower(str_replace('Joseph Academy est une autre activité de Joseph (écriture de livres pour des clients), distincte de Lomé IA School : ce n\'est pas l\'ancien nom de l\'école.', '', $school)));
-        $this->assertStringContainsString('C\'est une école récente.', $school);
-        $this->assertStringContainsString('Joseph Academy est une autre activité de Joseph', $school);
-        $this->assertStringContainsString('Texte ajouté par Joseph.', $school);
-        $this->assertSame([['question' => 'Q ?', 'answer' => 'R.']], AmaKnowledge::faq());
-        $this->assertSame('Mission de Joseph.', config('site.about.mission'));
-        $this->assertArrayNotHasKey('founded', (array) config('site.about'));
+        // Rien n'est effacé ailleurs.
+        $this->assertSame(['mission' => 'Mission de Joseph.', 'founded' => '2023'], json_decode((string) DB::table('site_settings')->where('key', 'site.about')->value('value'), true));
 
-        // Relancée : rien ne change (pas de doublon).
-        $before = DB::table('site_settings')->orderBy('key')->pluck('value', 'key')->all();
+        // Relancée : rien ne change.
+        $before = $this->rows();
+        $this->travel(5)->minutes();
         $this->migrate();
-        $this->assertSame($before, DB::table('site_settings')->orderBy('key')->pluck('value', 'key')->all());
+        $this->assertSame($before, $this->rows());
+    }
+
+    public function test_a_key_figure_with_another_year_is_left_untouched(): void
+    {
+        SiteSettings::save(['site.stats' => [['value' => '1 000+', 'label' => 'personnes formées'], ['value' => '2026', 'label' => 'année de création de l\'école']]]);
+
+        $this->migrate();
+
+        $this->assertSame('année de création de l\'école', config('site.stats.1.label'));
     }
 
     public function test_nothing_happens_without_saved_settings(): void
@@ -57,6 +100,6 @@ class SchoolFactsMigrationTest extends TestCase
 
         $this->assertSame(0, DB::table('site_settings')->count());
         $this->assertSame('année où Joseph a commencé à former', config('site.stats.1.label'));
-        $this->assertStringNotContainsString('Joseph Academy.', AmaKnowledge::DEFAULT_SCHOOL);
+        $this->assertStringNotContainsString('Son ancien nom était Joseph Academy', AmaKnowledge::DEFAULT_SCHOOL);
     }
 }

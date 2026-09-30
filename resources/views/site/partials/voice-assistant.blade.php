@@ -289,7 +289,6 @@
                             <flux:icon.paper-airplane class="size-5" />
                         </button>
                     </form>
-                    <p class="mt-2 text-center text-[11px] leading-snug text-slate-400">Ama est une IA et peut se tromper. Ne partagez jamais de code secret ni de mot de passe.</p>
                 </footer>
             </section>
         </div>

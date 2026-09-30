@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Site;
 
+use App\Assistant\AmaPrompt;
 use App\Enums\AssistantIncidentType;
 use App\Models\AssistantConversation;
 use App\Models\AssistantIncident;
@@ -194,6 +195,23 @@ class AmaCallTest extends TestCase
         $this->assertStringContainsString('x-show="canCall"', $html);
         $this->assertStringNotContainsString('canListen && ! canCall', $html);
         $this->assertStringNotContainsString(self::KEY, $html);
+    }
+
+    /**
+     * L'avertissement sous le champ est retiré, mais le comportement d'Ama ne change pas : à l'écrit comme en
+     * appel, elle dit qu'elle est une IA quand on le lui demande et refuse les codes (Mobile Money, mot de passe…).
+     */
+    public function test_ama_still_says_she_is_an_ai_and_refuses_codes_without_the_warning_line(): void
+    {
+        foreach ([false, true] as $call) {
+            $prompt = AmaPrompt::build([], call: $call);
+
+            $this->assertStringContainsString('Si on te demande si tu es un humain ou une IA, tu dis clairement que tu es une assistante IA.', $prompt);
+            $this->assertStringContainsString('Tu ne demandes jamais de code secret, de mot de passe, de code Mobile Money', $prompt);
+            $this->assertStringContainsString('tu lui dis de ne jamais le partager, même avec l\'école', $prompt);
+        }
+
+        $this->get(route('home'))->assertOk()->assertDontSee('Ama est une IA et peut se tromper');
     }
 
     public function test_the_call_mode_is_absent_with_the_elevenlabs_agent(): void
