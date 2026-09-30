@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AffiliateController as AdminAffiliateController;
 use App\Http\Controllers\Admin\AssistantConversationController;
+use App\Http\Controllers\Admin\AssistantHandoffController;
 use App\Http\Controllers\Admin\ChatGroupController as AdminChatGroupController;
 use App\Http\Controllers\Admin\ConsultationAvailabilityController;
 use App\Http\Controllers\Admin\ConsultationController as AdminConsultationController;
@@ -65,6 +66,8 @@ Route::middleware(['no-store', 'throttle:60,1'])->prefix('consultation-gratuite/
 // Assistante « Ama » (Gemini) : message du visiteur, réponse d'Ama (limites dans App\Assistant\AmaChat).
 Route::post('assistante/message', [AssistantController::class, 'message'])->middleware('throttle:30,1')->name('assistant.message');
 Route::post('assistante/appel', [AssistantController::class, 'call'])->middleware('throttle:30,1')->name('assistant.call');
+// « Transmettre au fondateur » : question transmise à Coach Joseph, au toucher de « Envoyer » (App\Assistant\FounderHandoff).
+Route::post('assistante/transmettre', [AssistantController::class, 'handoff'])->middleware('throttle:10,1')->name('assistant.handoff');
 Route::get('a-propos', [PageController::class, 'about'])->name('about');
 Route::get('contact', [PageController::class, 'contact'])->name('contact');
 Route::get('entreprises', [PageController::class, 'business'])->name('business');
@@ -263,6 +266,8 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     // Assistante Ama (Gemini) : conversations, demandes du jour et incidents
     Route::get('assistante/conversations', [AssistantConversationController::class, 'index'])->middleware('no-store')->name('assistant.index');
     Route::get('assistante/conversations/{conversation}', [AssistantConversationController::class, 'show'])->middleware('no-store')->name('assistant.show');
+    Route::get('assistante/demandes', [AssistantHandoffController::class, 'index'])->middleware('no-store')->name('assistant.handoffs.index');
+    Route::post('assistante/demandes/{handoff}/statut', [AssistantHandoffController::class, 'toggle'])->name('assistant.handoffs.toggle');
     Route::get('reglages', [SiteSettingsController::class, 'index'])->name('settings.index');
     Route::get('reglages/{section}', [SiteSettingsController::class, 'edit'])->name('settings.edit');
     Route::put('reglages/{section}', [SiteSettingsController::class, 'update'])->name('settings.update');

@@ -193,15 +193,28 @@ class GeminiModel implements AssistantModel
         $text = str_replace(['`', '*'], '', $text);
         $text = trim((string) preg_replace("/\n{3,}/u", "\n\n", $text));
 
-        return mb_strlen($text) > self::MAX_REPLY_LENGTH ? rtrim(mb_substr($text, 0, self::MAX_REPLY_LENGTH - 1)).'…' : $text;
+        // Ligne technique « [TRANSMETTRE] {…} » (carte de confirmation, App\Assistant\FounderHandoff) : gardée entière,
+        // seule la réponse visible est raccourcie si besoin.
+        $marker = '';
+
+        if (preg_match('/\[\s*TRANSMETTRE\b/iu', $text, $match, PREG_OFFSET_CAPTURE) === 1) {
+            $marker = "\n".substr($text, (int) $match[0][1]);
+            $text = rtrim(substr($text, 0, (int) $match[0][1]));
+        }
+
+        $text = mb_strlen($text) > self::MAX_REPLY_LENGTH ? rtrim(mb_substr($text, 0, self::MAX_REPLY_LENGTH - 1)).'…' : $text;
+
+        return trim($text.$marker);
     }
 
     /**
-     * Texte montré et lu pendant la réponse en continu : mise en forme et repère [INCONNU] retirés.
+     * Texte montré et lu pendant la réponse en continu : mise en forme, repère [INCONNU] et ligne [TRANSMETTRE] retirés.
      */
     private static function spoken(string $raw): string
     {
         $text = (string) preg_replace('/\s*\[\s*INCONNU\s*\]\s*/iu', ' ', self::clean($raw));
+        // La ligne technique « [TRANSMETTRE] {…} » et tout ce qui la suit ne sont jamais lus à voix haute.
+        $text = (string) preg_replace('/\s*\[\s*TRANSMETTRE\b.*$/isu', '', $text);
 
         return ltrim($text);
     }

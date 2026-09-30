@@ -53,6 +53,7 @@ class DashboardController extends Controller
                 ['label' => 'Messages signalés', 'count' => AdminTodo::openReports(), 'route' => route('moderation.reports.index'), 'icon' => 'flag'],
                 ['label' => 'Consultations du jour', 'count' => AdminTodo::consultationsToday(), 'route' => route('admin.consultations.index'), 'icon' => 'video-camera'],
                 ['label' => 'Suppléments à rembourser', 'count' => AdminTodo::refundsDue(), 'route' => route('admin.sessions.index'), 'icon' => 'receipt-refund'],
+                ['label' => 'Questions transmises par Ama', 'count' => AdminTodo::handoffsToAnswer(), 'route' => route('admin.assistant.handoffs.index'), 'icon' => 'inbox-arrow-down'],
             ],
         ]);
     }

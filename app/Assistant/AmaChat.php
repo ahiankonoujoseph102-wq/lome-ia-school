@@ -45,7 +45,7 @@ class AmaChat
     /**
      * @param  array<array-key, mixed>  $context
      * @param  (callable(string): void)|null  $onText  mode appel : reçoit chaque morceau de la réponse
-     * @return array{reply: string, fallback: bool, conversation: string|null, whatsapp: string|null}
+     * @return array{reply: string, fallback: bool, conversation: string|null, whatsapp: string|null, handoff: array{first_name: string, channel: string, contact: string, question: string}|null}
      */
     public function handle(string $message, ?string $conversationId, array $context, bool $voice, string $visitorHash, string $ipHash, ?callable $onText = null): array
     {
@@ -70,6 +70,8 @@ class AmaChat
             'voice_used' => $conversation->voice_used || $voice || $onText !== null,
         ]);
         $this->store($conversation, AssistantMessage::VISITOR, $text);
+        // « Transmettre au fondateur » : l'adresse e-mail ou le numéro écrit reste sur le serveur (jamais chez Google).
+        FounderHandoff::rememberContacts($conversation->public_id, $message);
 
         try {
             $reply = $onText !== null
@@ -85,10 +87,20 @@ class AmaChat
             return $this->fallback(AssistantIncidentType::GeminiError, $conversation, $exception::class);
         }
 
+        // Récapitulatif « Transmettre au fondateur » : carte de confirmation, ou Ama redemande poliment ce qui manque
+        // (prénom, moyen de réponse, coordonnée au bon format). La demande ne part qu'au toucher de « Envoyer ».
+        ['text' => $reply, 'draft' => $draft] = FounderHandoff::extract($reply);
+        $handoff = null;
+
+        if ($draft !== null) {
+            ['card' => $handoff, 'problem' => $problem] = FounderHandoff::proposal($draft, $conversation->public_id, $onText !== null);
+            $reply = $problem ?? $reply;
+        }
+
         ['text' => $reply, 'unanswered' => $unanswered] = UnansweredReply::inspect($reply);
         $this->store($conversation, AssistantMessage::AMA, $reply, $unanswered);
 
-        return ['reply' => $reply, 'fallback' => false, 'conversation' => $conversation->public_id, 'whatsapp' => null];
+        return ['reply' => $reply, 'fallback' => false, 'conversation' => $conversation->public_id, 'whatsapp' => null, 'handoff' => $handoff];
     }
 
     /**
@@ -175,7 +187,7 @@ class AmaChat
     /**
      * Relève : message clair et bouton « Écrivez-nous sur WhatsApp ». L'incident est noté pour l'admin.
      *
-     * @return array{reply: string, fallback: bool, conversation: string|null, whatsapp: string|null}
+     * @return array{reply: string, fallback: bool, conversation: string|null, whatsapp: string|null, handoff: null}
      */
     private function fallback(AssistantIncidentType $type, ?AssistantConversation $conversation, string $detail = ''): array
     {
@@ -194,6 +206,7 @@ class AmaChat
             'fallback' => true,
             'conversation' => $conversation?->public_id,
             'whatsapp' => WhatsApp::url(),
+            'handoff' => null,
         ];
     }
 }

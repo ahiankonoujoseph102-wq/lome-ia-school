@@ -33,6 +33,8 @@ enum AdminAction: string
     case SessionCancelled = 'session_cancelled';
     case ConsultationCancelled = 'consultation_cancelled';
     case Export = 'export';
+    case HandoffHandled = 'handoff_handled';
+    case HandoffReopened = 'handoff_reopened';
 
     public function label(): string
     {
@@ -63,6 +65,8 @@ enum AdminAction: string
             self::SessionCancelled => 'Session annulée',
             self::ConsultationCancelled => 'Consultation annulée',
             self::Export => 'Export CSV',
+            self::HandoffHandled => 'Demande transmise traitée',
+            self::HandoffReopened => 'Demande transmise remise à traiter',
         };
     }
 

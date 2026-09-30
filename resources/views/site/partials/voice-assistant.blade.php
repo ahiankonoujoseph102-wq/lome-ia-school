@@ -6,6 +6,8 @@
       du navigateur s'il les gère). Les messages passent par le serveur du site, qui seul appelle Gemini.
       Mode appel « Parler avec Ama » (si le navigateur sait écouter et lire à voix haute) : écran d'appel avec un grand
       cercle (« Ama vous écoute… », « Ama réfléchit… », « Ama parle… ») et le bouton rouge « Raccrocher ».
+      « Transmettre au fondateur » : carte de confirmation « Envoyer à Coach Joseph » / « Corriger » (partiel
+      ama-handoff-card), aussi en formulaire de relève (limite atteinte, panne) et à la fin d'un appel.
     - Agent ElevenLabs (au choix dans l'admin) : aucun script d'ElevenLabs dans la page, il n'est chargé qu'au toucher du
       bouton, puis l'élément officiel <elevenlabs-convai> s'ouvre à la place du bouton.
     Style stable face au mode sombre forcé de Chrome : fonds foncés ou translucides, textes clairs, contours en ombre (ring).
@@ -180,6 +182,15 @@
                         <x-site.whatsapp-icon class="size-5" />
                         Écrivez-nous sur WhatsApp
                     </a>
+                    <button
+                        type="button"
+                        @click="handoffAfterCall()"
+                        class="flex w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-night-800 px-5 py-3.5 font-semibold text-slate-100 ring-1 ring-gold-500/70 transition hover:bg-night-700"
+                        data-test="ama-call-handoff"
+                    >
+                        <flux:icon.paper-airplane class="size-5 text-gold-200" />
+                        Transmettre ma question à Coach Joseph
+                    </button>
                     <button type="button" @click="closeCallEnd()" class="text-sm font-semibold text-slate-300 underline underline-offset-4 hover:text-white">Revenir à la discussion</button>
                 </div>
 
@@ -207,6 +218,8 @@
                             </div>
                         </div>
                     </template>
+
+                    @include('site.partials.ama-handoff-card')
 
                     <div x-show="sending" class="flex justify-start" role="status">
                         <div class="flex items-center gap-2 rounded-2xl rounded-bl-md bg-night-800 px-3.5 py-3 text-sm text-slate-300 ring-1 ring-night-600">

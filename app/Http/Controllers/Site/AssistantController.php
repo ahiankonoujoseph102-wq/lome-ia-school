@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Site;
 
 use App\Assistant\AmaChat;
+use App\Assistant\FounderHandoff;
 use App\Http\Controllers\Controller;
 use App\Support\VoiceAssistant;
 use App\Support\WhatsApp;
@@ -62,6 +63,34 @@ class AssistantController extends Controller
             // Demande aux serveurs intermédiaires (Nginx) de transmettre chaque morceau sans attendre.
             'X-Accel-Buffering' => 'no',
         ]);
+    }
+
+    /**
+     * « Transmettre au fondateur » : envoi de la demande, seulement au toucher de « Envoyer à Coach Joseph » (carte de
+     * confirmation) ou du bouton du formulaire de relève. Format de la coordonnée vérifié ici ; 3 demandes au plus par
+     * visiteur et par jour ; champ piège « website » contre les robots (réponse neutre, rien d'enregistré).
+     */
+    public function handoff(Request $request, FounderHandoff $handoff): JsonResponse
+    {
+        $visitor = $this->visitor();
+
+        if (! VoiceAssistant::enabled() || ! VoiceAssistant::usesGemini()) {
+            return $this->json(['ok' => false, 'reply' => 'Ama n\'est pas disponible pour le moment. Notre équipe vous répond sur WhatsApp.', 'whatsapp' => WhatsApp::url()]);
+        }
+
+        // Robot : le champ piège, invisible pour les visiteurs, est rempli.
+        if (filled($request->input('website'))) {
+            return $this->json(['ok' => true, 'reply' => FounderHandoff::confirmation()]);
+        }
+
+        $context = $request->input('context');
+
+        return $this->json($handoff->submit(
+            $request->only(['first_name', 'channel', 'contact', 'question', 'conversation', 'source']),
+            is_array($context) ? $context : [],
+            hash_hmac('sha256', $visitor, (string) config('app.key')),
+            hash_hmac('sha256', (string) $request->ip(), (string) config('app.key')),
+        ));
     }
 
     /**
