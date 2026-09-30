@@ -77,10 +77,17 @@ class AmaPrompt
 
     /**
      * @param  array<array-key, mixed>  $context
+     * @param  bool  $call  mode appel : Ama répond comme au téléphone (réponses courtes, faites pour l'oral)
      */
-    public static function build(array $context): string
+    public static function build(array $context, bool $call = false): string
     {
-        return implode("\n\n", array_filter(self::sections($context)));
+        $sections = self::sections($context);
+
+        if ($call) {
+            $sections['Instructions'] .= self::callRules();
+        }
+
+        return implode("\n\n", array_filter($sections));
     }
 
     /**
@@ -161,6 +168,14 @@ class AmaPrompt
     private static function technicalRules(): string
     {
         return "\n\nRègle technique : quand ta réponse dit que tu n'as pas l'information, commence-la par le repère ".self::UNKNOWN_MARKER.' (il est retiré avant que la personne ne la lise). Ne l\'écris jamais dans les autres réponses.';
+    }
+
+    /**
+     * Règle technique du mode appel (ajoutée par le code, hors du texte modifiable).
+     */
+    public static function callRules(): string
+    {
+        return "\n\nMode appel : la personne te parle à voix haute, comme au téléphone, et ta réponse est lue par une voix. Réponds en une à trois phrases courtes, naturelles, comme à l'oral : ni liste, ni lien, ni adresse e-mail, ni numéro à dicter ; dis plutôt où le trouver sur le site. Termine si besoin par une question courte pour continuer la conversation.";
     }
 
     public static function instructions(): string

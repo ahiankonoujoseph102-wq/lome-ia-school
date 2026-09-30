@@ -112,7 +112,10 @@ class AmaGeminiTest extends TestCase
             ->assertSee('Parler avec notre assistante')
             ->assertSee('Lire les réponses à voix haute')
             ->assertSee('Écrivez-nous sur WhatsApp')
-            ->assertSee('Ne partagez jamais de code secret ni de mot de passe.')
+            // Aucune phrase d'avertissement sous le champ (retirée à la demande de Joseph) : c'est Ama elle-même
+            // qui refuse les codes et dit qu'elle est une IA (instructions, voir le test suivant).
+            ->assertDontSee('peut se tromper')
+            ->assertDontSee('Ne partagez jamais de code secret ni de mot de passe.')
             ->getContent();
 
         // Aucun script d'ElevenLabs, aucune adresse de Google, jamais la clé.

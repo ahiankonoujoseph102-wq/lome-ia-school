@@ -64,6 +64,7 @@ Route::middleware(['no-store', 'throttle:60,1'])->prefix('consultation-gratuite/
 });
 // Assistante « Ama » (Gemini) : message du visiteur, réponse d'Ama (limites dans App\Assistant\AmaChat).
 Route::post('assistante/message', [AssistantController::class, 'message'])->middleware('throttle:30,1')->name('assistant.message');
+Route::post('assistante/appel', [AssistantController::class, 'call'])->middleware('throttle:30,1')->name('assistant.call');
 Route::get('a-propos', [PageController::class, 'about'])->name('about');
 Route::get('contact', [PageController::class, 'contact'])->name('contact');
 Route::get('entreprises', [PageController::class, 'business'])->name('business');

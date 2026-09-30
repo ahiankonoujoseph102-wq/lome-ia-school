@@ -201,14 +201,57 @@ export function speechSupport(win) {
 }
 
 /**
- * Voix française du navigateur : fr-FR de préférence, sinon une autre voix française, sinon aucune
+ * Débit de lecture d'Ama : légèrement plus lent que la normale, plus facile à suivre au téléphone.
+ */
+export const SPEECH_RATE = 0.92;
+
+// Voix plus naturelles (voix « en ligne » ou « neuronales » de Microsoft, Google, Apple…).
+const NATURAL_VOICE = /natural|neural|online|premium|enhanced|am[ée]lior|wavenet|studio/i;
+// Voix féminines françaises connues (Windows, macOS, iPhone, Android : fr-fr-x-fra, frc, vlf).
+const FEMALE_VOICE = /am[ée]lie|audrey|aur[ée]lie|marie|julie|denise|hortense|c[ée]line|\bl[ée]a\b|virginie|chantal|fran[çc]oise|sylvie|elsa|[ée]lo[ïi]se|vivienne|brigitte|jos[ée]phine|charline|coralie|jacqueline|yvette|ariane|oc[ée]ane|female|femme|fr-fr-x-(fra|frc|vlf)/i;
+const MALE_VOICE = /thomas|daniel|nicolas|\bpaul\b|henri|claude|mathieu|jacques|antoine|\bjean\b|guillaume|r[ée]mi|alain|g[ée]rard|fabrice|s[ée]bastien|olivier|\byves\b|\bluc\b|\bmale\b|homme|fr-fr-x-(frb|frd)/i;
+
+/**
+ * Note d'une voix pour Ama : française (fr-FR avant les autres), naturelle, féminine de préférence.
+ * Une voix non française vaut -1 (jamais choisie).
+ */
+export function scoreVoice(voice) {
+    const lang = String(voice?.lang ?? '');
+
+    if (!/^fr([-_]|$)/i.test(lang)) {
+        return -1;
+    }
+
+    const name = `${voice?.name ?? ''} ${voice?.voiceURI ?? ''}`;
+    let score = /^fr[-_]FR$/i.test(lang) ? 40 : 20;
+    score += NATURAL_VOICE.test(name) ? 30 : 0;
+    score += /google/i.test(name) ? 15 : 0;
+    score += FEMALE_VOICE.test(name) ? 20 : MALE_VOICE.test(name) ? -25 : 0;
+    score += voice?.default ? 2 : 0;
+    score += voice?.localService ? 1 : 0;
+
+    return score;
+}
+
+/**
+ * Meilleure voix française du téléphone ou de l'ordinateur (voir scoreVoice), sinon aucune
  * (le navigateur choisit alors lui-même avec la langue « fr-FR »).
  */
 export function pickFrenchVoice(voices) {
     const list = Array.isArray(voices) ? voices : [];
-    const french = list.filter((voice) => /^fr([-_]|$)/i.test(String(voice?.lang ?? '')));
+    let best = null;
+    let bestScore = -1;
 
-    return french.find((voice) => /^fr[-_]FR$/i.test(voice.lang) && voice.localService) ?? french.find((voice) => /^fr[-_]FR$/i.test(voice.lang)) ?? french[0] ?? null;
+    for (const voice of list) {
+        const score = scoreVoice(voice);
+
+        if (score > bestScore) {
+            best = voice;
+            bestScore = score;
+        }
+    }
+
+    return best;
 }
 
 /**
@@ -254,4 +297,92 @@ export function saveConversation(storage, id, messages) {
     } catch {
         // Stockage refusé : la conversation reste seulement sur cette page.
     }
+}
+
+/**
+ * Découpe une réponse reçue en continu en phrases à lire une par une : la première phrase est lue dès qu'elle
+ * est complète, sans attendre la fin de la réponse. push(morceau) renvoie les phrases terminées ; flush() le reste.
+ */
+export function createSentenceSplitter({ maxLength = 220 } = {}) {
+    let buffer = '';
+    const boundary = /[.!?…:;]+[»")\]]*(?=\s)|\n+/u;
+
+    const take = () => {
+        const sentences = [];
+
+        for (;;) {
+            const match = boundary.exec(buffer);
+
+            if (match) {
+                const end = match.index + match[0].length;
+                const sentence = buffer.slice(0, end).trim();
+                buffer = buffer.slice(end).replace(/^\s+/u, '');
+
+                if (sentence.replace(/[\s.!?…:;•-]/gu, '') !== '') {
+                    sentences.push(sentence);
+                }
+
+                continue;
+            }
+
+            if (buffer.length > maxLength) {
+                // Phrase très longue sans ponctuation : coupée après une virgule ou un espace.
+                const cut = Math.max(buffer.lastIndexOf(', ', maxLength), buffer.lastIndexOf(' ', maxLength));
+                const end = cut > 20 ? cut + 1 : maxLength;
+                sentences.push(buffer.slice(0, end).trim());
+                buffer = buffer.slice(end).replace(/^\s+/u, '');
+
+                continue;
+            }
+
+            return sentences;
+        }
+    };
+
+    return {
+        push(text) {
+            buffer += String(text ?? '');
+
+            return take();
+        },
+        flush() {
+            const rest = buffer.trim();
+            buffer = '';
+
+            return rest.replace(/[\s.!?…:;•-]/gu, '') !== '' ? [rest] : [];
+        },
+    };
+}
+
+/**
+ * Lecture d'une réponse du serveur envoyée ligne par ligne (une ligne JSON par événement : « text » puis « done »).
+ * Les lignes coupées entre deux morceaux sont recollées ; une ligne illisible est ignorée.
+ */
+export function createLineReader(onEvent) {
+    let buffer = '';
+
+    const emit = (line) => {
+        if (line.trim() === '') {
+            return;
+        }
+
+        try {
+            onEvent(JSON.parse(line));
+        } catch {
+            // Ligne illisible (coupure du réseau) : ignorée.
+        }
+    };
+
+    return {
+        push(chunk) {
+            buffer += chunk;
+            const lines = buffer.split('\n');
+            buffer = lines.pop() ?? '';
+            lines.forEach(emit);
+        },
+        end() {
+            emit(buffer);
+            buffer = '';
+        },
+    };
 }

@@ -26,6 +26,10 @@ use Throwable;
  * 4. demandes du site par minute, puis par jour (journée de Google), sous le quota gratuit de Google ;
  * 5. réponse de Gemini (erreur, quota, délai dépassé, réponse vide → relève WhatsApp).
  *
+ * Mode appel ($onText fourni) : la réponse de Gemini arrive en continu et chaque morceau est transmis tout de suite
+ * au navigateur, qui la lit phrase par phrase ; Ama reçoit aussi la consigne de répondre comme au téléphone.
+ * Chaque phrase dite par le visiteur compte comme un message, avec les mêmes limites.
+ *
  * Aucune donnée personnelle : le texte du visiteur est nettoyé (PersonalData) avant l'envoi et
  * l'enregistrement, et le contexte de la page est réduit à la liste fermée de VoiceAssistant::FIELDS.
  */
@@ -40,9 +44,10 @@ class AmaChat
 
     /**
      * @param  array<array-key, mixed>  $context
+     * @param  (callable(string): void)|null  $onText  mode appel : reçoit chaque morceau de la réponse
      * @return array{reply: string, fallback: bool, conversation: string|null, whatsapp: string|null}
      */
-    public function handle(string $message, ?string $conversationId, array $context, bool $voice, string $visitorHash, string $ipHash): array
+    public function handle(string $message, ?string $conversationId, array $context, bool $voice, string $visitorHash, string $ipHash, ?callable $onText = null): array
     {
         $context = VoiceAssistant::pickContext($context);
         $conversation = $this->conversation($conversationId, $visitorHash);
@@ -62,12 +67,14 @@ class AmaChat
         $conversation->fill([
             'page' => $context['page'] ?: null,
             'formation' => $context['formation'] ?: null,
-            'voice_used' => $conversation->voice_used || $voice,
+            'voice_used' => $conversation->voice_used || $voice || $onText !== null,
         ]);
         $this->store($conversation, AssistantMessage::VISITOR, $text);
 
         try {
-            $reply = $this->model->reply(AmaPrompt::build($context), $this->history($conversation));
+            $reply = $onText !== null
+                ? $this->model->stream(AmaPrompt::build($context, call: true), $this->history($conversation), $onText)
+                : $this->model->reply(AmaPrompt::build($context), $this->history($conversation));
         } catch (AssistantFailure $failure) {
             AssistantUsage::query()->where('day', AssistantUsage::today())->increment('failures');
 

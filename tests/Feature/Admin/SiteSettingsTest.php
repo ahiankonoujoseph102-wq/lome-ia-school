@@ -65,12 +65,14 @@ class SiteSettingsTest extends AdminTestCase
             'consultation_message' => 'Bonjour, consultation',
             'social' => ['facebook' => 'https://www.facebook.com/lomeiaschool', 'tiktok' => '', 'youtube' => ''],
             'trained' => '1 200+',
-            'founded' => '2023',
+            'trainer_since' => '2023',
         ])->assertSessionHasNoErrors();
 
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('1 200+')
+            ->assertSee('année où Joseph a commencé à former')
+            ->assertDontSee('année de création')
             ->assertSee('https://www.facebook.com/lomeiaschool')
             ->assertSee('wa.me/22890000001', false);
         $this->get(route('contact'))->assertOk()->assertSee('Du lundi au vendredi, de 9 h à 18 h')->assertSee('contact@exemple.test');
@@ -254,7 +256,7 @@ class SiteSettingsTest extends AdminTestCase
             'whatsapp_message' => 'Bonjour',
             'consultation_message' => 'Bonjour, consultation',
             'trained' => '1 000+',
-            'founded' => '2023',
+            'trainer_since' => '2023',
         ];
 
         $this->actingAs($this->admin)->put(route('admin.settings.update', 'coordonnees'), [...$form,

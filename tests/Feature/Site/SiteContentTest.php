@@ -19,12 +19,28 @@ class SiteContentTest extends TestCase
             ->assertOk()
             ->assertSee('1 000+')
             ->assertSee('2023')
+            ->assertSee('année où Joseph a commencé à former')
             ->assertSee('Accès à vie')
             ->assertSee('Accompagnement à vie')
             ->assertSee(config('site.trainer.short_bio'))
             ->assertSee('images/formateur.jpg')
             ->assertSee('alt="'.e(config('site.trainer.photo_alt')).'"', false)
             ->assertDontSee('placeholder-text');
+    }
+
+    /**
+     * Lomé IA School est une école récente, distincte de Joseph Academy (autre activité de Joseph : écriture de
+     * livres). 2023 est l'année où Joseph a commencé à former, jamais la création de l'école.
+     */
+    public function test_the_school_is_never_presented_as_created_in_2023_or_as_joseph_academy(): void
+    {
+        foreach (['home', 'about', 'formations.index', 'business', 'contact', 'affiliate.program', 'consultation', 'legal.notice', 'legal.privacy', 'legal.terms'] as $route) {
+            $html = (string) $this->get(route($route))->assertOk()->getContent();
+
+            foreach (['année de création', 'Création de l\'école', 'créée en 2023', 'fondée en 2023', 'Joseph Academy'] as $forbidden) {
+                $this->assertStringNotContainsStringIgnoringCase($forbidden, $html, $route.' : '.$forbidden);
+            }
+        }
     }
 
     public function test_formation_page_highlights_lifetime_access_and_support(): void

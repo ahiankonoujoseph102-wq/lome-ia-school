@@ -41,7 +41,7 @@
             <p class="text-sm text-slate-400">Affichés sur l'accueil et la page À propos. Uniquement des chiffres réels.</p>
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-admin.field name="trained" label="Personnes formées" :value="$stats[0]['value'] ?? ''" hint="Exemple : 1 000+" />
-                <x-admin.field name="founded" label="Année de création" type="number" :value="$stats[1]['value'] ?? ''" />
+                <x-admin.field name="trainer_since" label="Année où Joseph a commencé à former" type="number" :value="$stats[1]['value'] ?? ''" />
             </div>
         </section>
 
