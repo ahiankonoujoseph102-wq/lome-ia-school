@@ -271,11 +271,13 @@ class FormationSeeder extends Seeder
                 'category' => FormationCategory::Automation,
                 'is_featured' => true,
                 'outcomes' => [
-                    'Comprendre ce qu\'est un agent IA et ce qu\'il peut accomplir',
-                    'Concevoir un agent adapté à un besoin précis',
-                    'Donner des connaissances et des instructions fiables à votre agent',
-                    'Connecter votre agent à des outils (WhatsApp, e-mail, documents)',
-                    'Proposer la création d\'agents IA comme service aux entreprises',
+                    'Comprendre ce qu\'est un agent IA et choisir votre projet d\'agent',
+                    'Écrire les instructions d\'un agent : rôle, ton, règles et limites',
+                    'Créer un agent avec Gemini (Gems) et lui donner des documents',
+                    'Créer un agent avec Claude (Projets), le tester et le corriger',
+                    'Créer un agent qui répond aux clients sur WhatsApp Business',
+                    'Proposer vos services d\'agents IA : trouver des clients et fixer vos prix',
+                    'Réaliser un projet final et présenter votre agent',
                 ],
                 'audience' => [
                     'Les entrepreneurs qui veulent automatiser leur relation client',
