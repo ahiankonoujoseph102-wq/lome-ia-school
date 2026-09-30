@@ -1,5 +1,7 @@
 <?php
 
+use App\Assistant\AmaPrompt;
+
 /*
 |==========================================================================
 | TEXTES MODIFIABLES DU SITE VITRINE
@@ -420,7 +422,7 @@ return [
 
     /*
     |----------------------------------------------------------------------
-    | Assistante vocale IA « Ama » (agent ElevenLabs)
+    | Assistante IA « Ama » (Gemini, ou l'agent ElevenLabs)
     |----------------------------------------------------------------------
     | Bouton flottant « Parler avec notre assistante » sur les pages publiques (App\Support\VoiceAssistant).
     | Modifiable dans l'admin (Réglages du site > Assistante vocale). Désactivée par défaut.
@@ -429,6 +431,17 @@ return [
 
     'voice_assistant' => [
         'enabled' => false,
+        // « gemini » : notre propre assistante Ama (API Gemini de Google, clé GEMINI_API_KEY dans .env), par défaut ;
+        // « elevenlabs » : l'ancien agent ElevenLabs (code gardé, à choisir dans l'admin).
+        'provider' => 'gemini',
+        // Instructions d'Ama (Gemini), modifiables dans l'admin ; vide = texte d'origine (App\Assistant\AmaPrompt).
+        'instructions' => AmaPrompt::DEFAULT_INSTRUCTIONS,
+        // Limites d'Ama (Gemini), sous le quota gratuit de Google (voir App\Support\VoiceAssistant::LIMITS).
+        'visitor_daily_limit' => 30,
+        'max_length' => 500,
+        'daily_limit' => 400,
+        'visitor_minute_limit' => 5,
+        'minute_limit' => 10,
         'agent_id' => 'agent_9901m3phrpdwedt88vsdqmnwk09z',
         // Bouton aussi dans le lecteur de cours (désactivé par défaut).
         'lessons' => false,

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\AffiliateController as AdminAffiliateController;
+use App\Http\Controllers\Admin\AssistantConversationController;
 use App\Http\Controllers\Admin\ChatGroupController as AdminChatGroupController;
 use App\Http\Controllers\Admin\ConsultationAvailabilityController;
 use App\Http\Controllers\Admin\ConsultationController as AdminConsultationController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Chat\ModerationController;
 use App\Http\Controllers\Chat\ReportController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\PurchaseProofController;
+use App\Http\Controllers\Site\AssistantController;
 use App\Http\Controllers\Site\CheckoutController;
 use App\Http\Controllers\Site\ConsultationController;
 use App\Http\Controllers\Site\FormationController;
@@ -60,6 +62,8 @@ Route::middleware(['no-store', 'throttle:60,1'])->prefix('consultation-gratuite/
     Route::delete('/', [ConsultationController::class, 'cancel'])->name('cancel');
     Route::get('agenda.ics', [ConsultationController::class, 'calendar'])->name('calendar');
 });
+// Assistante « Ama » (Gemini) : message du visiteur, réponse d'Ama (limites dans App\Assistant\AmaChat).
+Route::post('assistante/message', [AssistantController::class, 'message'])->middleware('throttle:30,1')->name('assistant.message');
 Route::get('a-propos', [PageController::class, 'about'])->name('about');
 Route::get('contact', [PageController::class, 'contact'])->name('contact');
 Route::get('entreprises', [PageController::class, 'business'])->name('business');
@@ -255,6 +259,9 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::post('affiliation/affilies/{affiliate}/reactiver', [AdminAffiliateController::class, 'unsuspend'])->name('affiliates.unsuspend');
 
     // Réglages du site, témoignages et journal d'activité (étape 10)
+    // Assistante Ama (Gemini) : conversations, demandes du jour et incidents
+    Route::get('assistante/conversations', [AssistantConversationController::class, 'index'])->middleware('no-store')->name('assistant.index');
+    Route::get('assistante/conversations/{conversation}', [AssistantConversationController::class, 'show'])->middleware('no-store')->name('assistant.show');
     Route::get('reglages', [SiteSettingsController::class, 'index'])->name('settings.index');
     Route::get('reglages/{section}', [SiteSettingsController::class, 'edit'])->name('settings.edit');
     Route::put('reglages/{section}', [SiteSettingsController::class, 'update'])->name('settings.update');

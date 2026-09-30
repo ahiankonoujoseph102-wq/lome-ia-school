@@ -32,7 +32,7 @@ class VoiceAssistantContextTest extends TestCase
     {
         parent::setUp();
 
-        SiteSettings::save(['site.voice_assistant' => ['enabled' => true, 'agent_id' => 'agent_9901m3phrpdwedt88vsdqmnwk09z', 'proactive' => true, 'help_delay' => 90]]);
+        SiteSettings::save(['site.voice_assistant' => ['enabled' => true, 'provider' => 'elevenlabs', 'agent_id' => 'agent_9901m3phrpdwedt88vsdqmnwk09z', 'proactive' => true, 'help_delay' => 90]]);
     }
 
     private function student(): User
@@ -159,7 +159,7 @@ class VoiceAssistantContextTest extends TestCase
 
     public function test_the_help_bubble_is_opt_out_and_its_delay_is_set_in_the_admin(): void
     {
-        SiteSettings::save(['site.voice_assistant' => ['enabled' => true, 'agent_id' => 'agent_9901m3phrpdwedt88vsdqmnwk09z', 'proactive' => false, 'help_delay' => 45]]);
+        SiteSettings::save(['site.voice_assistant' => ['enabled' => true, 'provider' => 'elevenlabs', 'agent_id' => 'agent_9901m3phrpdwedt88vsdqmnwk09z', 'proactive' => false, 'help_delay' => 45]]);
 
         $config = $this->config($this->get(route('home'))->assertOk());
         $this->assertFalse($config['proactive']);

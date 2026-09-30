@@ -64,8 +64,18 @@
                 <li>Vous pouvez désactiver chaque type de notification, ou couper un groupe précis, à tout moment dans « Mon profil » puis « Notifications ».</li>
             </ul>
 
-            <h2>Assistante vocale</h2>
-            <p data-test="privacy-voice-assistant">Le bouton « Parler avec notre assistante » vous permet de discuter avec Ama, notre assistante vocale. <strong>Ama est une intelligence artificielle.</strong> Vos conversations avec elle sont traitées par le service ElevenLabs. L'audio et la transcription de chaque conversation sont conservés 90 jours. Pour fonctionner, le widget d'ElevenLabs enregistre dans votre navigateur un identifiant technique de visiteur. Pour vous guider, l'assistante reçoit des informations sur la page que vous consultez (par exemple la formation, le montant à payer ou l'étape du paiement) et sur les éventuelles erreurs affichées à l'écran, sans aucune donnée personnelle : ni nom, ni adresse e-mail, ni numéro de téléphone, ni mot de passe, ni code, ni capture de paiement.</p>
+            <h2>Assistante Ama</h2>
+            @if (\App\Support\VoiceAssistant::usesGemini())
+                <div data-test="privacy-voice-assistant">
+                    <p>Le bouton « Parler avec notre assistante » vous permet de discuter avec Ama, notre assistante, par écrit ou à la voix. <strong>Ama est une intelligence artificielle.</strong> Ses réponses sont produites par Gemini, un service d'intelligence artificielle de Google : vos messages lui sont transmis pour obtenir la réponse.</p>
+                    <p data-test="privacy-gemini">Nous utilisons l'offre gratuite de Gemini. Sur cette offre, Google peut utiliser les échanges pour améliorer ses services. C'est pourquoi aucune donnée personnelle n'est transmise : les numéros de téléphone, adresses e-mail et codes que vous écririez sont retirés de vos messages avant l'envoi. N'écrivez jamais de mot de passe ni de code secret dans la conversation.</p>
+                    <p>Pour vous guider, l'assistante reçoit des informations sur la page que vous consultez (par exemple la formation, le montant à payer ou l'étape du paiement) et sur les éventuelles erreurs affichées à l'écran, sans aucune donnée personnelle : ni nom, ni adresse e-mail, ni numéro de téléphone, ni mot de passe, ni code, ni capture de paiement.</p>
+                    <p>Si vous utilisez le micro, votre voix est transformée en texte par votre navigateur (par exemple par Google sur Chrome ou par Apple sur Safari) : seul le texte nous parvient. La lecture des réponses à voix haute est faite par votre navigateur. Le micro ne s'ouvre jamais sans que vous touchiez son bouton.</p>
+                    <p>Les conversations (messages nettoyés et page consultée) sont conservées 90 jours sur notre site, puis effacées automatiquement. Elles ne sont liées ni à votre nom ni à votre compte : un identifiant aléatoire, enregistré dans un cookie de votre navigateur, sert seulement à limiter le nombre de messages par jour. La conversation en cours est aussi gardée dans votre navigateur tant que l'onglet reste ouvert.</p>
+                </div>
+            @else
+                <p data-test="privacy-voice-assistant">Le bouton « Parler avec notre assistante » vous permet de discuter avec Ama, notre assistante vocale. <strong>Ama est une intelligence artificielle.</strong> Vos conversations avec elle sont traitées par le service ElevenLabs. L'audio et la transcription de chaque conversation sont conservés 90 jours. Pour fonctionner, le widget d'ElevenLabs enregistre dans votre navigateur un identifiant technique de visiteur. Pour vous guider, l'assistante reçoit des informations sur la page que vous consultez (par exemple la formation, le montant à payer ou l'étape du paiement) et sur les éventuelles erreurs affichées à l'écran, sans aucune donnée personnelle : ni nom, ni adresse e-mail, ni numéro de téléphone, ni mot de passe, ni code, ni capture de paiement.</p>
+            @endif
 
             <h2>Utilisation des données</h2>
             <ul>

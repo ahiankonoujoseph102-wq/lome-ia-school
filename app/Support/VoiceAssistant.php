@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Contracts\AssistantModel;
 use App\Models\Formation;
 use App\Models\LiveSession;
 use App\Models\User;
@@ -114,6 +115,17 @@ class VoiceAssistant
     public const string DEFAULT_GREETING = 'Bonjour, je suis Ama, l\'assistante de Lomé IA School. Comment puis-je vous aider ?';
 
     /**
+     * Questions proposées dans la fenêtre d'Ama tant que le visiteur n'a rien écrit.
+     *
+     * @var list<string>
+     */
+    public const array SUGGESTIONS = [
+        'Quelle formation me conseillez-vous ?',
+        'Comment payer par Mobile Money ?',
+        'Comment réserver la consultation gratuite ?',
+    ];
+
+    /**
      * Délai par défaut (secondes) sur une étape du paiement avant de proposer l'aide, et ses limites.
      */
     public const int DEFAULT_HELP_DELAY = 90;
@@ -192,9 +204,53 @@ class VoiceAssistant
         'rich_content_unavailable' => 'Ce contenu ne peut pas être affiché',
     ];
 
+    /**
+     * Assistante utilisée : Ama (Gemini, par défaut) ou l'agent ElevenLabs (gardé, désactivé par défaut).
+     */
+    public const string GEMINI = 'gemini';
+
+    public const string ELEVENLABS = 'elevenlabs';
+
+    /**
+     * Limites d'Ama (Gemini), réglables dans l'admin : valeur par défaut, minimum, maximum.
+     * La limite quotidienne du site reste sous le quota gratuit de Google (voir CLAUDE.md).
+     *
+     * @var array<string, array{0: int, 1: int, 2: int}>
+     */
+    public const array LIMITS = [
+        'visitor_daily_limit' => [30, 1, 500],
+        'max_length' => [500, 50, 2000],
+        'daily_limit' => [400, 1, 100000],
+        'visitor_minute_limit' => [5, 1, 60],
+        'minute_limit' => [10, 1, 1000],
+    ];
+
     public static function enabled(): bool
     {
-        return (bool) config('site.voice_assistant.enabled', false) && self::isValidAgentId(self::agentId());
+        if (! (bool) config('site.voice_assistant.enabled', false)) {
+            return false;
+        }
+
+        // Ama (Gemini) : bouton masqué tant que la clé GEMINI_API_KEY n'est pas sur le serveur.
+        return self::usesGemini() ? app(AssistantModel::class)->isConfigured() : self::isValidAgentId(self::agentId());
+    }
+
+    public static function provider(): string
+    {
+        return config('site.voice_assistant.provider') === self::ELEVENLABS ? self::ELEVENLABS : self::GEMINI;
+    }
+
+    public static function usesGemini(): bool
+    {
+        return self::provider() === self::GEMINI;
+    }
+
+    public static function limit(string $key): int
+    {
+        [$default, $min, $max] = self::LIMITS[$key];
+        $value = config('site.voice_assistant.'.$key);
+
+        return is_numeric($value) ? max($min, min($max, (int) $value)) : $default;
     }
 
     public static function agentId(): string
@@ -304,6 +360,80 @@ class VoiceAssistant
     }
 
     /**
+     * Champs du contexte, dans l'ordre où Ama les lit (même liste que FIELDS dans ama.js). Tout autre champ est ignoré.
+     *
+     * @var list<string>
+     */
+    public const array FIELDS = ['page', 'role_page', 'etape', 'formation', 'prix_formation', 'montant_a_payer', 'pays', 'operateur', 'connecte', 'email_confirme', 'erreur', 'difficulte'];
+
+    /**
+     * Contexte envoyé par le navigateur, réduit aux champs autorisés (même règle que pick() dans ama.js) :
+     * valeurs simples, 200 caractères au plus, texte de l'erreur nettoyé, difficulté connue seulement.
+     *
+     * @param  array<array-key, mixed>  $context
+     * @return array<string, mixed>
+     */
+    public static function pickContext(array $context): array
+    {
+        $result = [];
+
+        foreach (self::FIELDS as $field) {
+            $value = $context[$field] ?? null;
+
+            if ($field === 'erreur') {
+                $text = is_array($value) && is_scalar($value['texte'] ?? null) ? self::clean((string) $value['texte']) : '';
+                $result['erreur'] = $text !== '' ? ['cle' => mb_substr(is_scalar($value['cle'] ?? null) ? (string) $value['cle'] : '', 0, 60), 'texte' => $text] : null;
+            } elseif ($field === 'difficulte') {
+                $result['difficulte'] = is_string($value) && isset(self::DIFFICULTIES[$value]) ? $value : null;
+            } elseif (is_bool($value) || $value === null) {
+                $result[$field] = $value;
+            } elseif (is_scalar($value)) {
+                $text = trim((string) preg_replace('/\s+/u', ' ', (string) $value));
+                $result[$field] = mb_strlen($text) > 200 ? rtrim(mb_substr($text, 0, 199)).'…' : $text;
+            } else {
+                $result[$field] = null;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Contexte de la page en une information par ligne (même texte que la variable « contexte » de ama.js).
+     *
+     * @param  array<array-key, mixed>  $context
+     */
+    public static function contextText(array $context): string
+    {
+        $context = self::pickContext($context);
+        $yesNo = fn (mixed $value): string => $value === true ? 'oui' : ($value === false ? 'non' : 'sans objet');
+        $difficulty = $context['difficulte'] !== null ? self::DIFFICULTIES[$context['difficulte']] : null;
+
+        $lines = [
+            'Page : '.($context['page'] ?: 'page du site').($context['role_page'] ? ' ('.$context['role_page'].')' : '').'.',
+            $context['etape'] ? 'Étape : '.$context['etape'].'.' : null,
+            $context['formation'] ? 'Formation : '.$context['formation'].($context['prix_formation'] ? ', prix '.$context['prix_formation'] : '').'.' : null,
+            $context['montant_a_payer'] ? 'Montant à payer : '.$context['montant_a_payer'].'.' : null,
+            $context['pays'] ? 'Pays choisi : '.$context['pays'].'.' : null,
+            $context['operateur'] ? 'Opérateur choisi : '.$context['operateur'].'.' : null,
+            'Client connecté : '.$yesNo($context['connecte']).'.',
+            $context['connecte'] ? 'Adresse e-mail confirmée : '.$yesNo($context['email_confirme']).'.' : null,
+            $context['erreur'] ? 'Dernière erreur affichée : « '.$context['erreur']['texte'].' ».' : null,
+            $difficulty ? 'Difficulté repérée par le site : '.$difficulty[0] : null,
+        ];
+
+        return implode("\n", array_filter($lines));
+    }
+
+    /**
+     * Premier message d'Ama : celui de la difficulté repérée, sinon le message d'accueil.
+     */
+    public static function greeting(?string $difficulty): string
+    {
+        return $difficulty !== null && isset(self::DIFFICULTIES[$difficulty]) ? self::DIFFICULTIES[$difficulty][1] : self::DEFAULT_GREETING;
+    }
+
+    /**
      * Ajoute au contexte de la page en cours (appelé par un contrôleur).
      *
      * @param  array<string, mixed>  $values
@@ -334,10 +464,18 @@ class VoiceAssistant
      */
     public static function browserConfig(Request $request): array
     {
+        $gemini = self::usesGemini();
+
         return [
-            'agentId' => self::agentId(),
-            'scriptUrl' => self::SCRIPT_URL,
-            'texts' => self::TEXTS,
+            'provider' => self::provider(),
+            // Ama (Gemini) : adresse du serveur du site (jamais celle de Google : la clé reste sur le serveur).
+            'endpoint' => $gemini ? route('assistant.message') : null,
+            'maxLength' => self::limit('max_length'),
+            'suggestions' => $gemini ? self::SUGGESTIONS : [],
+            // Agent ElevenLabs : seulement s'il est choisi dans l'admin.
+            'agentId' => $gemini ? null : self::agentId(),
+            'scriptUrl' => $gemini ? null : self::SCRIPT_URL,
+            'texts' => $gemini ? [] : self::TEXTS,
             'context' => self::context($request),
             'pageKey' => $request->route()?->getName() ?? '',
             'proactive' => self::proactiveHelp(),

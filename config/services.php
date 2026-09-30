@@ -42,4 +42,14 @@ return [
         'subject' => env('WEBPUSH_SUBJECT', 'mailto:academyjoseph71@gmail.com'),
     ],
 
+    // Assistante « Ama » : API Gemini de Google, appelée uniquement par le serveur (App\Assistant\GeminiModel).
+    // Clé dans .env (jamais dans le code). Modèle modifiable sans toucher au code (voir CLAUDE.md).
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
+        'endpoint' => env('GEMINI_ENDPOINT', 'https://generativelanguage.googleapis.com/v1beta'),
+        // Secondes d'attente au maximum pour une réponse (le visiteur voit ensuite le bouton WhatsApp).
+        'timeout' => (int) env('GEMINI_TIMEOUT', 20),
+    ],
+
 ];

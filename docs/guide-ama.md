@@ -1,8 +1,8 @@
 # Guide du site Lomé IA School pour Ama
 
-Ce document décrit le site tel qu'il fonctionne vraiment. Il est destiné à la base de connaissances d'Ama, l'assistante vocale, chez ElevenLabs.
+Ce document décrit le site tel qu'il fonctionne vraiment. Il est destiné à Ama, l'assistante IA du site : il est envoyé automatiquement à Gemini avec chaque question (et, si l'agent ElevenLabs est choisi dans l'admin, il se charge dans sa base de connaissances).
 
-Mis à jour le 30 septembre 2026. À recharger chez ElevenLabs à chaque changement d'un parcours.
+Mis à jour le 30 septembre 2026. Avec Ama (Gemini), une modification de ce fichier est prise en compte dès sa mise en ligne ; avec l'agent ElevenLabs, il faut le recharger chez ElevenLabs.
 
 ## Règles pour Ama
 

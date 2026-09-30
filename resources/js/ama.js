@@ -1,5 +1,6 @@
 /**
- * Assistante vocale « Ama » : contexte transmis à l'agent ElevenLabs et repérage des difficultés, sans IA.
+ * Assistante « Ama » : contexte transmis à l'IA (Gemini ou agent ElevenLabs), repérage des difficultés sans IA,
+ * voix du navigateur et conversation gardée dans l'onglet.
  * Fonctions pures (aucune dépendance), testées avec Node.js (tests/Feature/Site/VoiceAssistantContextTest.php).
  *
  * Aucune donnée personnelle n'est transmise : la liste des champs est fermée (FIELDS), ses valeurs viennent
@@ -181,4 +182,76 @@ export function createHelpTracker({ storage = null, pageKey = '', enabled = true
             return offered;
         },
     };
+}
+
+/**
+ * Ama (Gemini) : ce que le navigateur sait faire avec la voix, sans rien demander ni ouvrir.
+ * - listen : reconnaissance vocale du navigateur (gratuite ; Chrome sur Android, Safari récent…) ;
+ * - speak : synthèse vocale du navigateur (lecture des réponses à voix haute).
+ * Sans l'une ou l'autre, le bouton correspondant n'est pas affiché : l'écrit reste disponible, sans message d'erreur.
+ */
+export function speechSupport(win) {
+    const recognition = win?.SpeechRecognition ?? win?.webkitSpeechRecognition ?? null;
+
+    return {
+        listen: typeof recognition === 'function' && win?.isSecureContext !== false,
+        speak: typeof win?.speechSynthesis?.speak === 'function' && typeof win?.SpeechSynthesisUtterance === 'function',
+        Recognition: typeof recognition === 'function' ? recognition : null,
+    };
+}
+
+/**
+ * Voix française du navigateur : fr-FR de préférence, sinon une autre voix française, sinon aucune
+ * (le navigateur choisit alors lui-même avec la langue « fr-FR »).
+ */
+export function pickFrenchVoice(voices) {
+    const list = Array.isArray(voices) ? voices : [];
+    const french = list.filter((voice) => /^fr([-_]|$)/i.test(String(voice?.lang ?? '')));
+
+    return french.find((voice) => /^fr[-_]FR$/i.test(voice.lang) && voice.localService) ?? french.find((voice) => /^fr[-_]FR$/i.test(voice.lang)) ?? french[0] ?? null;
+}
+
+/**
+ * Texte d'une réponse préparé pour la lecture à voix haute (puces et symboles retirés).
+ */
+export function speakable(text) {
+    return String(text ?? '')
+        .replace(/[•*#_`]/gu, ' ')
+        .replace(/\s+/gu, ' ')
+        .trim();
+}
+
+export const CONVERSATION_KEY = 'ama-conversation';
+
+export const MAX_STORED_MESSAGES = 40;
+
+/**
+ * Conversation en cours gardée dans l'onglet (sessionStorage) : elle se retrouve en changeant de page.
+ * Stockage refusé (navigation privée) : conversation vide, sans erreur.
+ */
+export function loadConversation(storage) {
+    try {
+        const data = JSON.parse(storage?.getItem(CONVERSATION_KEY) ?? 'null');
+
+        if (!data || !Array.isArray(data.messages)) {
+            return { id: null, messages: [] };
+        }
+
+        const messages = data.messages
+            .filter((message) => message && ['ama', 'visitor'].includes(message.from) && typeof message.text === 'string')
+            .map((message) => ({ from: message.from, text: message.text, fallback: message.fallback === true }))
+            .slice(-MAX_STORED_MESSAGES);
+
+        return { id: typeof data.id === 'string' ? data.id : null, messages };
+    } catch {
+        return { id: null, messages: [] };
+    }
+}
+
+export function saveConversation(storage, id, messages) {
+    try {
+        storage?.setItem(CONVERSATION_KEY, JSON.stringify({ id, messages: messages.slice(-MAX_STORED_MESSAGES).map(({ from, text, fallback }) => ({ from, text, fallback: fallback === true })) }));
+    } catch {
+        // Stockage refusé : la conversation reste seulement sur cette page.
+    }
 }

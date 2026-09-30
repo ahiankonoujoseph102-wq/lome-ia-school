@@ -538,7 +538,7 @@ body {
 }
 
 /*
- * Assistante vocale (partiel voice-assistant) : sur téléphone et tablette, la page d'une formation a une
+ * Assistante Ama (partiel voice-assistant) : sur téléphone et tablette, la page d'une formation a une
  * barre d'achat fixée en bas (body.has-sticky-cta) et l'espace élève une barre de navigation (body.has-bottom-nav) ;
  * le bouton et le widget ElevenLabs passent au-dessus, pour ne jamais cacher « Acheter maintenant » ni le menu. L'élément <elevenlabs-convai> est lui-même un cadre fixe
  * couvrant l'écran (position: fixed; inset: 0) : en remonter le bas suffit, sans toucher à l'intérieur du
@@ -567,5 +567,10 @@ body {
 
     .has-bottom-nav elevenlabs-convai {
         bottom: calc(4.5rem + env(safe-area-inset-bottom));
+    }
+
+    /* Fenêtre d'Ama (Gemini) ouverte : la page derrière ne défile plus (la fenêtre couvre le bas de l'écran). */
+    .ama-open body {
+        overflow: hidden;
     }
 }
