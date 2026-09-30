@@ -1,5 +1,6 @@
 <?php
 
+use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
 
 /*
@@ -449,6 +450,21 @@ return [
         'proactive' => true,
         // Secondes sur une même étape du paiement avant de proposer l'aide.
         'help_delay' => 90,
+    ],
+
+    /*
+    |----------------------------------------------------------------------
+    | Base de connaissances d'Ama
+    |----------------------------------------------------------------------
+    | Modifiable dans l'admin (Réglages du site > Assistante Ama) : l'école et son fondateur (texte de départ),
+    | questions fréquentes et autres informations (vides au départ). Envoyée à Ama avec chaque message
+    | (App\Assistant\AmaKnowledge). Rien à inventer : ne saisir que des informations exactes.
+    */
+
+    'assistant_knowledge' => [
+        'school' => AmaKnowledge::DEFAULT_SCHOOL,
+        'faq' => [],
+        'other' => '',
     ],
 
     'legal' => [

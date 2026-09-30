@@ -9,6 +9,7 @@ use App\Models\AssistantIncident;
 use App\Models\AssistantUsage;
 use App\Support\VoiceAssistant;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 
 /**
  * « Conversations d'Ama » (admin uniquement) : demandes envoyées à Google aujourd'hui, incidents (limites
@@ -17,8 +18,11 @@ use Illuminate\Contracts\View\View;
  */
 class AssistantConversationController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $unansweredOnly = $request->query('filtre') === 'sans-reponse';
+        $unansweredQuery = fn ($query) => $query->where('unanswered', true);
+
         $incidentsToday = AssistantIncident::query()->where('created_at', '>=', now()->startOfDay());
 
         return view('site.admin.assistant.index', [
@@ -32,7 +36,13 @@ class AssistantConversationController extends Controller
                 ->mapWithKeys(fn (int|string $total, string $type): array => [AssistantIncidentType::from($type)->label() => (int) $total])
                 ->all(),
             'incidents' => AssistantIncident::query()->with('conversation:id,public_id')->latest('id')->limit(30)->get(),
-            'conversations' => AssistantConversation::query()->latest('last_message_at')->latest('id')->paginate(30),
+            'unansweredOnly' => $unansweredOnly,
+            'unansweredCount' => AssistantConversation::query()->whereHas('messages', $unansweredQuery)->count(),
+            'conversations' => AssistantConversation::query()
+                ->withExists(['messages as has_unanswered' => $unansweredQuery])
+                ->when($unansweredOnly, fn ($query) => $query->whereHas('messages', $unansweredQuery)->with(['messages' => fn ($messages) => $messages->orderBy('id')]))
+                ->latest('last_message_at')->latest('id')
+                ->paginate(30)->withQueryString(),
             'retentionDays' => AssistantConversation::RETENTION_DAYS,
         ]);
     }

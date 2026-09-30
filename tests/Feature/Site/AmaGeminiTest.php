@@ -162,7 +162,7 @@ class AmaGeminiTest extends TestCase
         $body = $this->lastGeminiBody();
         $instructions = (string) data_get($body, 'system_instruction.parts.0.text');
         $this->assertStringContainsString('Tu es Ama, l\'assistante IA de Lomé IA School', $instructions);
-        $this->assertStringContainsString('Formation Exemple ChatGPT : 25'."\u{00A0}".'000'."\u{00A0}".'FCFA', $instructions);
+        $this->assertStringContainsString('Prix : 25'."\u{00A0}".'000'."\u{00A0}".'FCFA', $instructions);
         $this->assertStringContainsString('## 6. Payer par Mobile Money', $instructions);
         $this->assertStringContainsString('Étape : étape 3 sur 4 : envoyer l\'argent.', $instructions);
         $this->assertStringContainsString('Montant à payer : 25 000 FCFA.', $instructions);
@@ -187,7 +187,7 @@ class AmaGeminiTest extends TestCase
 
         $this->ask('Et maintenant ?')->assertOk();
         $instructions = (string) data_get($this->lastGeminiBody(), 'system_instruction.parts.0.text');
-        $this->assertStringContainsString('Formation Exemple Prix : 30'."\u{00A0}".'000'."\u{00A0}".'FCFA', $instructions);
+        $this->assertStringContainsString("### Formation Exemple Prix\nPrix : 30"."\u{00A0}".'000'."\u{00A0}".'FCFA', $instructions);
         $this->assertStringNotContainsString('25'."\u{00A0}".'000', $instructions);
 
         // Formation masquée : Ama ne la propose plus.
