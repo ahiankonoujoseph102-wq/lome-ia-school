@@ -51,6 +51,8 @@
                         <dt class="text-slate-400">Page d'origine</dt>
                         <dd class="text-slate-200">{{ $handoff->page }}@if ($handoff->formation) · {{ $handoff->formation }}@endif</dd>
                     @endif
+                    <dt class="text-slate-400">Envoyée depuis</dt>
+                    <dd class="text-slate-200">{{ $handoff->sourceLabel() }}</dd>
                     @unless ($handoff->isPending())
                         <dt class="text-slate-400">Traitée</dt>
                         <dd class="text-slate-200">{{ $handoff->handled_at?->translatedFormat('j M Y à H\hi') }}@if ($handoff->handler) par {{ $handoff->handler->name }}@endif</dd>

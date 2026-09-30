@@ -16,6 +16,7 @@ Page d'origine : {{ $handoff->page }}
 @if ($handoff->formation)
 Formation : {{ $handoff->formation }}
 @endif
+Envoyée depuis : {{ $handoff->sourceLabel() }}
 Reçue le : {{ $handoff->created_at?->translatedFormat('l j F Y à H \h i') }} (heure de Lomé)
 
 @if ($whatsappUrl)

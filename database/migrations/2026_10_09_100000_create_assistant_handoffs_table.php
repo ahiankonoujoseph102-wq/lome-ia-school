@@ -30,7 +30,8 @@ return new class extends Migration
             $table->string('formation', 200)->nullable();
             // Court extrait de la conversation (textes déjà nettoyés des données personnelles).
             $table->text('excerpt')->nullable();
-            // « chat » (carte de confirmation), « call » (fin d'un appel) ou « form » (formulaire de relève).
+            // « chat » (carte de confirmation), « call » (fin d'un appel), « form » (formulaire de relève) ou « link »
+            // (lien permanent « Poser ma question à Coach Joseph »).
             $table->string('source', 10);
             // « pending » (à traiter) ou « done » (traitée).
             $table->string('status', 10)->default('pending')->index();

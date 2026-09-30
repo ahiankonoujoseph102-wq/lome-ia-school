@@ -74,7 +74,8 @@ class AssistantController extends Controller
     {
         $visitor = $this->visitor();
 
-        if (! VoiceAssistant::enabled() || ! VoiceAssistant::usesGemini()) {
+        // Ne dépend pas de Gemini (clé absente, panne, limite) : seulement d'Ama activée dans l'admin.
+        if (! (bool) config('site.voice_assistant.enabled', false) || ! VoiceAssistant::usesGemini()) {
             return $this->json(['ok' => false, 'reply' => 'Ama n\'est pas disponible pour le moment. Notre équipe vous répond sur WhatsApp.', 'whatsapp' => WhatsApp::url()]);
         }
 

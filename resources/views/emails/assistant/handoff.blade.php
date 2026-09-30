@@ -7,6 +7,7 @@
         'Réponse souhaitée' => $handoff->channel === AssistantHandoff::EMAIL ? 'Par e-mail' : 'Sur WhatsApp',
         $handoff->channel === AssistantHandoff::EMAIL ? 'E-mail' : 'WhatsApp' => $handoff->channel === AssistantHandoff::EMAIL ? $handoff->email : PhoneNumber::format($handoff->phone),
         'Page d\'origine' => $handoff->page,
+        'Envoyée depuis' => $handoff->sourceLabel(),
         'Formation' => $handoff->formation,
         'Reçue le' => $handoff->created_at?->translatedFormat('l j F Y à H \h i').' (heure de Lomé)',
     ]);

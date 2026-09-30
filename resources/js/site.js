@@ -1201,6 +1201,27 @@ Alpine.data('voiceAssistant', (config) => ({
         this.scrollDown();
     },
 
+    // Lien permanent « Poser ma question à Coach Joseph » : carte vide, sans passer par Gemini (fonctionne même si
+    // Ama oublie la ligne technique, est en panne ou a atteint sa limite). Une carte déjà ouverte reste telle quelle.
+    askJoseph() {
+        if (!this.handoff) {
+            this.handoff = { ...handoffFromDraft({}, { source: 'link' }), editing: true, sending: false, errors: {}, website: '' };
+        } else {
+            this.handoff.editing = true;
+        }
+        // Haut de la carte en vue (le prénom est le premier champ à remplir).
+        this.$nextTick(() => {
+            const card = this.$el.querySelector('[data-test=ama-handoff]');
+            const list = this.$refs.messages;
+            if (card && list) {
+                list.scrollTop += card.getBoundingClientRect().top - list.getBoundingClientRect().top - 12;
+            }
+            if (window.matchMedia('(pointer: fine)').matches) {
+                this.$el.querySelector('#ama-handoff-name')?.focus({ preventScroll: true });
+            }
+        });
+    },
+
     correctHandoff() {
         if (this.handoff) {
             this.handoff.editing = true;

@@ -235,7 +235,7 @@
                     {{-- Mode appel proposé dès l'ouverture, puis questions proposées tant que le visiteur n'a rien écrit. --}}
                     <button
                         type="button"
-                        x-show="canCall && ! visitorHasWritten && ! sending"
+                        x-show="canCall && ! visitorHasWritten && ! sending && ! handoff"
                         @click="startCall()"
                         class="flex w-full items-center gap-3 rounded-2xl bg-electric-500/15 px-4 py-3 text-left ring-1 ring-electric-300/50 transition hover:bg-electric-500/25"
                         data-test="ama-call-offer"
@@ -246,7 +246,7 @@
                             <span class="block text-sm text-slate-300">Posez vos questions à voix haute, comme au téléphone.</span>
                         </span>
                     </button>
-                    <div x-show="! visitorHasWritten && ! sending" class="flex flex-wrap gap-2 pt-1">
+                    <div x-show="! visitorHasWritten && ! sending && ! handoff" class="flex flex-wrap gap-2 pt-1">
                         <template x-for="suggestion in suggestions" :key="suggestion">
                             <button type="button" @click="send(suggestion)" x-text="suggestion" class="rounded-full bg-electric-500/10 px-3.5 py-2 text-left text-sm text-electric-100 ring-1 ring-electric-300/40 transition hover:bg-electric-500/20"></button>
                         </template>
@@ -302,6 +302,18 @@
                             <flux:icon.paper-airplane class="size-5" />
                         </button>
                     </form>
+                    {{-- Toujours visible : ouvre la carte de transmission vide, sans passer par Gemini (fonctionne même si
+                         Ama est en panne, a atteint sa limite ou oublie de proposer la carte). --}}
+                    <button
+                        type="button"
+                        @click="askJoseph()"
+                        class="mx-auto mt-2 flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold text-slate-300 transition hover:text-white"
+                        data-test="ama-ask-joseph"
+                    >
+                        <flux:icon.paper-airplane class="size-3.5 text-gold-200" />
+                        {{-- Soulignement en ombre : Chrome assombrit un soulignement classique en mode sombre forcé. --}}
+                        <span class="pb-0.5 shadow-[inset_0_-1px_0_0_var(--color-slate-500)]">Poser ma question à Coach Joseph</span>
+                    </button>
                 </footer>
             </section>
         </div>

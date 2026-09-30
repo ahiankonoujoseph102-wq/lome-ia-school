@@ -405,7 +405,7 @@ export function handoffFromDraft(draft = {}, { source = 'chat', question = '' } 
         channel,
         contact: text(draft?.contact),
         question: (text(draft?.question) || text(question)).slice(0, HANDOFF_MAX_QUESTION),
-        source: ['chat', 'call', 'form'].includes(source) ? source : 'form',
+        source: ['chat', 'call', 'form', 'link'].includes(source) ? source : 'form',
     };
 }
 

@@ -41,6 +41,14 @@ class AssistantHandoff extends Model
 
     public const string WHATSAPP = 'whatsapp';
 
+    /**
+     * D'où vient la demande : carte proposée par Ama, fin d'un appel, formulaire de relève (Ama indisponible) ou
+     * lien permanent « Poser ma question à Coach Joseph » de la fenêtre d'Ama.
+     *
+     * @var list<string>
+     */
+    public const array SOURCES = ['chat', 'call', 'form', 'link'];
+
     public const string PENDING = 'pending';
 
     public const string DONE = 'done';
@@ -85,6 +93,16 @@ class AssistantHandoff extends Model
     public function channelLabel(): string
     {
         return $this->channel === self::EMAIL ? 'E-mail' : 'WhatsApp';
+    }
+
+    public function sourceLabel(): string
+    {
+        return match ($this->source) {
+            'chat' => 'Carte proposée par Ama',
+            'call' => 'Fin d\'un appel avec Ama',
+            'link' => 'Lien « Poser ma question à Coach Joseph »',
+            default => 'Formulaire (Ama indisponible)',
+        };
     }
 
     /**

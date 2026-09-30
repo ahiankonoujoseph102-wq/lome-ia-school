@@ -20,6 +20,7 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
@@ -410,6 +411,69 @@ class AmaHandoffTest extends TestCase
             ->assertSee('handoffEndpoint', false);
     }
 
+    public function test_the_ask_joseph_link_is_always_in_the_ama_window(): void
+    {
+        $html = (string) $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-test="ama-ask-joseph"', $html);
+        $this->assertStringContainsString('Poser ma question à Coach Joseph', $html);
+        $this->assertStringContainsString('@click="askJoseph()"', $html);
+        // Dans le pied de la fenêtre (sous le champ), pas dans une réponse d'Ama : il reste visible quoi qu'il arrive.
+        $footer = substr($html, (int) strpos($html, '<footer x-show="! call && ! callEnd"'));
+        $this->assertStringContainsString('data-test="ama-ask-joseph"', substr($footer, 0, (int) strpos($footer, '</footer>')));
+    }
+
+    /**
+     * Le lien ouvre une carte vide envoyée directement au serveur du site : Gemini n'est jamais appelé.
+     *
+     * @return array<string, array{0: callable(self): void}>
+     */
+    public static function geminiStates(): array
+    {
+        return [
+            'Gemini fonctionne' => [fn (self $test) => null],
+            'clé Gemini absente' => [fn (self $test) => config(['services.gemini.key' => ''])],
+            'limite du site atteinte' => [fn (self $test) => AssistantUsage::query()->create(['day' => AssistantUsage::today(), 'requests' => 400, 'failures' => 0])],
+        ];
+    }
+
+    #[DataProvider('geminiStates')]
+    public function test_the_ask_joseph_link_works_whatever_happens_to_gemini(callable $state): void
+    {
+        $state($this);
+
+        $this->submit(['source' => 'link', 'first_name' => 'Yao', 'channel' => 'whatsapp', 'contact' => '00229 01 94 55 59 14', 'question' => 'Puis-je payer en deux fois ?'])
+            ->assertOk()
+            ->assertJsonPath('ok', true);
+
+        Http::assertNothingSent();
+        $handoff = AssistantHandoff::query()->sole();
+        $this->assertSame('link', $handoff->source);
+        $this->assertSame('+2290194555914', $handoff->phone);
+        $this->assertSame('Lien « Poser ma question à Coach Joseph »', $handoff->sourceLabel());
+        Mail::assertSent(FounderHandoffMail::class, fn (FounderHandoffMail $mail): bool => str_contains($mail->render(), 'Lien « Poser ma question à Coach Joseph »'));
+    }
+
+    public function test_the_ask_joseph_link_keeps_the_same_protections(): void
+    {
+        // Format vérifié.
+        $this->submit(['source' => 'link', 'contact' => 'yao@'])->assertJson(['ok' => false, 'reply' => FounderHandoff::invalidMessage('email')]);
+        // Robots ignorés.
+        $this->submit(['source' => 'link', 'website' => 'robot'])->assertJsonPath('ok', true);
+        $this->assertSame(0, AssistantHandoff::query()->count());
+
+        // 3 par jour, toutes sources confondues.
+        $this->submit(['source' => 'chat']);
+        $this->submit(['source' => 'form']);
+        $this->submit(['source' => 'link'])->assertJsonPath('ok', true);
+        $this->submit(['source' => 'link'])->assertJson(['ok' => false, 'limit' => true]);
+        $this->assertSame(3, AssistantHandoff::query()->count());
+
+        // Source inconnue : enregistrée comme formulaire.
+        $this->submit(['source' => 'autre'], str_repeat('f', 40))->assertJsonPath('ok', true);
+        $this->assertSame('form', AssistantHandoff::query()->latest('id')->value('source'));
+    }
+
     public function test_the_privacy_policy_explains_the_handoff(): void
     {
         $this->get(route('legal.privacy'))
@@ -438,7 +502,8 @@ class AmaHandoffTest extends TestCase
             ->assertSee('Sur WhatsApp : +228 91 23 45 67')
             ->assertSee('https://wa.me/22891234567?text=', false)
             ->assertSee('Répondre par e-mail')
-            ->assertSee('Marquer comme traitée');
+            ->assertSee('Marquer comme traitée')
+            ->assertSee('Envoyée depuis');
 
         $kofi = AssistantHandoff::query()->where('first_name', 'Kofi')->sole();
         $this->actingAs($admin)->post(route('admin.assistant.handoffs.toggle', $kofi))->assertRedirect()->assertSessionHas('status', 'Demande de Kofi marquée comme traitée.');
@@ -501,11 +566,12 @@ class AmaHandoffTest extends TestCase
             const ready = handoffFromDraft({ first_name: 'Awa', channel: 'email', contact: 'awa@example.com', question: 'Question ?' }, { source: 'chat' });
             const call = handoffFromDraft({ first_name: 'Awa', channel: 'whatsapp', contact: '', question: '' }, { source: 'call', question: lastVisitorQuestion(messages) });
             const form = handoffFromDraft({}, { source: 'autre', question: lastVisitorQuestion(messages) });
+            const link = handoffFromDraft({}, { source: 'link' });
             console.log(JSON.stringify({
                 last: lastVisitorQuestion(messages),
                 ready: handoffIsReady(ready),
                 call, callErrors: handoffErrors(call), callReady: handoffIsReady(call),
-                form,
+                form, link, linkErrors: Object.keys(handoffErrors(link)),
                 emailWrong: handoffErrors({ ...ready, contact: 'awa@gmail' }),
                 phoneLocal: handoffErrors({ ...ready, channel: 'whatsapp', contact: '91 23 45 67' }),
                 phoneOk: handoffErrors({ ...ready, channel: 'whatsapp', contact: '+228 91 23 45 67' }),
@@ -525,6 +591,9 @@ class AmaHandoffTest extends TestCase
         $this->assertFalse($out['callReady']);
         $this->assertSame('form', $out['form']['source']);
         $this->assertSame('Avez-vous une formation le samedi ?', $out['form']['question']);
+        // Lien « Poser ma question à Coach Joseph » : carte entièrement vide, à remplir.
+        $this->assertSame(['first_name' => '', 'channel' => '', 'contact' => '', 'question' => '', 'source' => 'link'], $out['link']);
+        $this->assertSame(['first_name', 'channel', 'question'], $out['linkErrors']);
         $this->assertSame(['contact' => 'Cette adresse e-mail n\'est pas complète. Exemple : prenom@gmail.com.'], $out['emailWrong']);
         $this->assertSame(['contact' => 'Ce numéro WhatsApp n\'est pas complet : ajoutez l\'indicatif du pays. Exemple : +228 91 23 45 67.'], $out['phoneLocal']);
         $this->assertSame([], $out['phoneOk']);

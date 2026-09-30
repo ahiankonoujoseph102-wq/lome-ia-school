@@ -270,7 +270,7 @@ class FounderHandoff
         $channel = in_array($input['channel'] ?? null, [AssistantHandoff::EMAIL, AssistantHandoff::WHATSAPP], true) ? (string) $input['channel'] : '';
         $contact = is_string($input['contact'] ?? null) ? $input['contact'] : '';
         $question = trim(is_string($input['question'] ?? null) ? str_replace("\r\n", "\n", $input['question']) : '');
-        $source = in_array($input['source'] ?? null, ['chat', 'call', 'form'], true) ? (string) $input['source'] : 'form';
+        $source = in_array($input['source'] ?? null, AssistantHandoff::SOURCES, true) ? (string) $input['source'] : 'form';
 
         $errors = [];
 
