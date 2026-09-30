@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Formation;
 use App\Support\Brand;
+use App\Support\LiveOffer;
 use GdImage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -29,17 +30,22 @@ class OgImageGenerator
 
     public function forFormation(Formation $formation): string
     {
+        // Formation proposée en direct : dates et horaires à la place de la catégorie, Google Meet à côté du prix.
+        $liveOffer = LiveOffer::for($formation);
+
         $key = sprintf(
             'formation-%d-%s',
             $formation->id,
-            md5(implode('|', [self::VERSION, $formation->title, $formation->price, (int) $formation->needsPaymentVerification(), $formation->category->value, $formation->updated_at?->timestamp]))
+            md5(implode('|', [self::VERSION, $formation->title, $formation->price, (int) $formation->needsPaymentVerification(), $formation->category->value, $formation->updated_at?->timestamp, $liveOffer?->fingerprint()]))
         );
 
         return $this->cached($key, fn (): GdImage => $this->render(
-            eyebrow: $formation->category->label(),
+            eyebrow: $liveOffer ? str_replace("\u{00A0}", ' ', 'En direct · '.$liveOffer->shortPeriod().' · '.$liveOffer->hours()) : $formation->category->label(),
             title: $formation->title,
             badge: str_replace("\u{00A0}", ' ', $formation->formatted_price),
-            footer: $formation->needsPaymentVerification() ? 'Accès après vérification du paiement · Mobile Money' : 'Accès immédiat · Paiement Mobile Money',
+            footer: $liveOffer
+                ? 'Sur Google Meet · heure de Lomé (GMT)'
+                : ($formation->needsPaymentVerification() ? 'Accès après vérification du paiement · Mobile Money' : 'Accès immédiat · Paiement Mobile Money'),
         ));
     }
 

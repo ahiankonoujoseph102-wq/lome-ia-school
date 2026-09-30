@@ -169,6 +169,15 @@ Certaines sessions en présentiel demandent un supplément. Le paiement se fait 
 
 L'accès aux formations est à vie.
 
+### Suivre une séance en direct (Google Meet)
+
+1. Le lien Google Meet n'est donné qu'aux élèves de la formation, après le paiement. Il ne se trouve jamais sur les pages publiques.
+2. Ouvrez « Mon espace », puis « Sessions ». Touchez la séance : la page montre la date, l'heure de Lomé et le lien Google Meet.
+3. Le bouton « Rejoindre la session » s'active 15 minutes avant le début.
+4. Le lien se trouve aussi dans l'annonce épinglée en haut du groupe de la formation.
+5. Un rappel est envoyé par e-mail la veille et 1 heure avant la séance.
+6. Téléphone ou ordinateur : l'un ou l'autre suffit.
+
 ## 8. Réserver la consultation gratuite
 
 La consultation gratuite dure 30 minutes. Elle se fait en direct, en ligne, par appel vidéo. Aucun compte n'est nécessaire.

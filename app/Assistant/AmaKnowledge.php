@@ -4,6 +4,7 @@ namespace App\Assistant;
 
 use App\Models\CourseModule;
 use App\Models\Formation;
+use App\Support\LiveOffer;
 use App\Support\Money;
 use Illuminate\Support\Str;
 
@@ -163,7 +164,16 @@ class AmaKnowledge
                 ->filter(fn (CourseModule $module): bool => $module->lessons->isNotEmpty())
                 ->values();
 
-            if ($modules->isEmpty()) {
+            // Formation proposée en direct (config/live_offers.php) : dates, programme des séances et questions fréquentes.
+            $liveOffer = LiveOffer::for($formation);
+
+            if ($liveOffer !== null) {
+                $lines[] = $liveOffer->assistantText();
+            }
+
+            if ($modules->isEmpty() && $liveOffer !== null) {
+                $lines[] = 'Leçons enregistrées : aucune n\'est encore publiée sur le site ; le programme à présenter est celui des séances en direct ci-dessus.';
+            } elseif ($modules->isEmpty()) {
                 $lines[] = 'Programme : aucun module ni aucune leçon n\'est encore publié pour cette formation. Ne décris aucun programme, aucun module ni aucune leçon : dis simplement que le contenu détaillé n\'est pas encore affiché sur le site.';
             } else {
                 $lines[] = 'Programme (titres des modules et des leçons publiées) :';

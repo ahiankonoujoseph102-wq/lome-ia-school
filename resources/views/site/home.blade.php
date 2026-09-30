@@ -25,6 +25,9 @@
 @endphp
 
 <x-layouts::site :json-ld="[$organization]">
+    {{-- Formation proposée en direct : bandeau qui disparaît après la dernière séance --}}
+    @include('site.partials.live-offer-banner')
+
     {{-- Accroche --}}
     <section class="relative isolate overflow-hidden">
         <div class="glow pointer-events-none absolute inset-0 -z-10"></div>
