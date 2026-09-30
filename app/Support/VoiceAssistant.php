@@ -470,6 +470,8 @@ class VoiceAssistant
             'provider' => self::provider(),
             // Ama (Gemini) : adresse du serveur du site (jamais celle de Google : la clé reste sur le serveur).
             'endpoint' => $gemini ? route('assistant.message') : null,
+            // Mode appel : même serveur, réponse envoyée en continu (lue phrase par phrase).
+            'callEndpoint' => $gemini ? route('assistant.call') : null,
             'maxLength' => self::limit('max_length'),
             'suggestions' => $gemini ? self::SUGGESTIONS : [],
             // Agent ElevenLabs : seulement s'il est choisi dans l'admin.

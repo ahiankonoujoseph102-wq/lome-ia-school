@@ -23,4 +23,15 @@ interface AssistantModel
      * @throws AssistantFailure
      */
     public function reply(string $instructions, array $messages): string;
+
+    /**
+     * Même réponse, reçue en continu : onText(morceau) est appelé dès qu'un morceau de texte propre à afficher et
+     * à lire arrive (repère [INCONNU] et mise en forme déjà retirés). Renvoie la réponse complète, comme reply().
+     *
+     * @param  list<array{role: string, text: string}>  $messages
+     * @param  callable(string): void  $onText
+     *
+     * @throws AssistantFailure
+     */
+    public function stream(string $instructions, array $messages, callable $onText): string;
 }

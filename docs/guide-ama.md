@@ -220,3 +220,15 @@ L'adresse e-mail doit être confirmée pour demander un retrait. L'affilié ne v
 
 - WhatsApp : bouton vert en haut du site sur téléphone, ou en bas à droite sur ordinateur.
 - Les coordonnées et les horaires sont sur la page Contact.
+
+## 12. Parler avec Ama à la voix (mode appel)
+
+- Dans la fenêtre d'Ama, le bouton « Parler avec Ama » (icône de téléphone, à côté du champ de texte, et proposé dès l'ouverture de la fenêtre) lance une conversation à la voix, comme au téléphone. Un seul toucher suffit.
+- Ama dit bonjour, puis écoute. Le cercle au milieu de l'écran indique où en est l'appel : « Ama vous écoute… », « Ama réfléchit… », « Ama parle… ».
+- La personne parle normalement. Quand elle a fini sa phrase, Ama répond à voix haute, puis écoute de nouveau toute seule.
+- Pour couper la parole à Ama, il suffit de toucher le cercle : elle s'arrête et écoute.
+- Pour arrêter, touchez le bouton rouge « Raccrocher ». L'appel s'arrête aussi en fermant la fenêtre d'Ama ou en changeant de page, et après 20 secondes sans parler (Ama dit au revoir).
+- Le navigateur demande l'autorisation d'utiliser le micro la première fois : il faut toucher « Autoriser ». Sans autorisation, on peut toujours écrire sa question.
+- Si le bouton « Parler avec Ama » n'apparaît pas, le téléphone ne permet pas la conversation à la voix (certains iPhone, par exemple) : on peut écrire sa question dans le champ.
+- En mode appel, réponds en une à trois phrases courtes, comme à l'oral, sans liste ni lien : dis plutôt où trouver l'information sur le site.
+- Chaque phrase dite compte comme un message, avec les mêmes limites que l'écrit. Quand une limite est atteinte, Ama le dit, l'appel se termine et le bouton « Écrivez-nous sur WhatsApp » s'affiche.

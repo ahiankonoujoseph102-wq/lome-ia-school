@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
-import { buildVariables, createHelpTracker, loadConversation, pick, pickFrenchVoice, saveConversation, speakable, speechSupport } from './ama.js';
+import { CALL_GREETING, createVoiceCall } from './ama-call.js';
+import { buildVariables, createHelpTracker, createLineReader, loadConversation, pick, pickFrenchVoice, saveConversation, speakable, SPEECH_RATE, speechSupport } from './ama.js';
 
 /**
  * Apparition douce des éléments marqués data-reveal, uniquement pour ceux encore sous l'écran.
@@ -591,6 +592,9 @@ const widgetIsVisible = (widget) =>
  * vocale du navigateur) et « Lire les réponses à voix haute » (synthèse vocale du navigateur) seulement si le
  * navigateur les gère ; le micro ne s'ouvre qu'au toucher de son bouton. Sans réponse du serveur : message clair et
  * bouton « Écrivez-nous sur WhatsApp », jamais d'erreur technique.
+ * Mode appel (« Parler avec Ama », si le navigateur sait écouter ET lire à voix haute) : conversation à la voix
+ * comme au téléphone, voir resources/js/ama-call.js. Il ne démarre qu'au toucher du bouton ; le micro se coupe
+ * toujours en raccrochant, en fermant la fenêtre ou en quittant la page.
  *
  * Agent ElevenLabs :
  * - Contexte de la page (sans donnée personnelle, voir ama.js) envoyé à l'agent en variables dynamiques :
@@ -628,6 +632,11 @@ Alpine.data('voiceAssistant', (config) => ({
     usedVoice: false,
     speakReplies: false,
     suggestions: config.suggestions ?? [],
+    // Mode appel.
+    canCall: false,
+    call: null,
+    callState: 'idle',
+    callEnd: null,
 
     init() {
         let storage = null;
@@ -644,6 +653,16 @@ Alpine.data('voiceAssistant', (config) => ({
         const speech = speechSupport(window);
         this.canListen = speech.listen;
         this.canSpeak = speech.speak;
+        // Mode appel : il faut les deux (sinon le bouton n'apparaît pas et l'écrit reste disponible).
+        this.canCall = speech.listen && speech.speak && Boolean(config.callEndpoint);
+
+        // Le micro se coupe toujours en quittant la page ou en passant à une autre application.
+        window.addEventListener('pagehide', () => this.hangUp());
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                this.hangUp();
+            }
+        });
         try {
             this.speakReplies = this.canSpeak && storage?.getItem('ama-voix') === '1';
         } catch {
@@ -854,6 +873,8 @@ Alpine.data('voiceAssistant', (config) => ({
     },
 
     closeChat() {
+        this.hangUp();
+        this.callEnd = null;
         this.recognition?.abort();
         this.listening = false;
         if (this.canSpeak) {
@@ -1030,11 +1051,162 @@ Alpine.data('voiceAssistant', (config) => ({
         synth.cancel();
         const utterance = new window.SpeechSynthesisUtterance(speakable(text));
         utterance.lang = 'fr-FR';
+        utterance.rate = SPEECH_RATE;
         const voice = pickFrenchVoice(synth.getVoices());
         if (voice) {
             utterance.voice = voice;
         }
         synth.speak(utterance);
+    },
+
+    // Mode appel : seulement au toucher du bouton « Parler avec Ama » (jamais tout seul).
+    startCall() {
+        if (!this.canCall || this.call || this.sending) {
+            return;
+        }
+
+        const { Recognition } = speechSupport(window);
+        this.recognition?.abort();
+        this.listening = false;
+        this.notice = '';
+        this.callEnd = null;
+        this.usedVoice = true;
+        let amaIndex = null;
+
+        this.call = createVoiceCall({
+            Recognition,
+            synth: window.speechSynthesis,
+            Utterance: window.SpeechSynthesisUtterance,
+            ask: (text, options) => this.askAloud(text, options),
+            onState: (state) => {
+                this.callState = state;
+            },
+            onVisitor: (text) => {
+                this.messages.push({ from: 'visitor', text, fallback: false });
+                amaIndex = null;
+                this.persist();
+                this.scrollDown();
+            },
+            onAmaText: (text, final = false, fallback = false) => {
+                if (amaIndex === null) {
+                    this.messages.push({ from: 'ama', text, fallback });
+                    amaIndex = this.messages.length - 1;
+                } else {
+                    this.messages[amaIndex] = { from: 'ama', text, fallback };
+                }
+                if (final) {
+                    this.persist();
+                }
+                this.scrollDown();
+            },
+            onEnd: (reason) => {
+                this.call = null;
+                this.callState = 'idle';
+                this.persist();
+                this.scrollDown();
+                if (reason === 'limit' || reason === 'error') {
+                    // Limite atteinte ou Ama indisponible : l'écran d'appel reste, avec le bouton WhatsApp.
+                    this.callEnd = { reason };
+                } else if (reason === 'denied') {
+                    this.notice = 'Le micro n\'est pas autorisé sur ce navigateur. Vous pouvez écrire votre question.';
+                }
+            },
+        });
+        if (this.messages.at(-1)?.text !== CALL_GREETING) {
+            this.messages.push({ from: 'ama', text: CALL_GREETING, fallback: false });
+        }
+        this.call.start();
+    },
+
+    get callLabel() {
+        return { listening: 'Ama vous écoute…', thinking: 'Ama réfléchit…', speaking: 'Ama parle…' }[this.callState] ?? 'Appel en cours…';
+    },
+
+    get callHint() {
+        return {
+            listening: 'Parlez quand vous voulez.',
+            thinking: 'Un instant, s\'il vous plaît.',
+            speaking: 'Touchez le cercle pour lui couper la parole.',
+        }[this.callState] ?? '';
+    },
+
+    // Toucher le cercle : Ama s'arrête de parler et le micro s'ouvre (pendant l'écoute : la phrase part tout de suite).
+    touchCircle() {
+        this.call?.touch();
+    },
+
+    hangUp() {
+        this.call?.hangUp();
+    },
+
+    closeCallEnd() {
+        this.callEnd = null;
+    },
+
+    // Dernières phrases de l'appel, affichées discrètement sous le cercle.
+    get callTranscript() {
+        return this.messages.slice(-2);
+    },
+
+    // Message dit pendant l'appel : envoyé au serveur, réponse reçue en continu (une ligne JSON par morceau).
+    async askAloud(message, { onText, signal } = {}) {
+        let result = null;
+        const timeout = new AbortController();
+        const timer = setTimeout(() => timeout.abort(), 45000);
+        signal?.addEventListener('abort', () => timeout.abort());
+
+        try {
+            const response = await fetch(config.callEndpoint, {
+                method: 'POST',
+                credentials: 'same-origin',
+                signal: timeout.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/x-ndjson, application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                },
+                body: JSON.stringify({ message, conversation: this.conversation, context: pick(this.context), voice: true }),
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const reader = createLineReader((event) => {
+                if (event?.type === 'text' && typeof event.text === 'string') {
+                    onText?.(event.text);
+                } else if (event?.type === 'done') {
+                    result = event;
+                }
+            });
+
+            if (response.body?.getReader) {
+                const stream = response.body.getReader();
+                const decoder = new TextDecoder();
+                for (;;) {
+                    const { value, done } = await stream.read();
+                    if (done) {
+                        break;
+                    }
+                    reader.push(decoder.decode(value, { stream: true }));
+                }
+                reader.push(decoder.decode());
+            } else {
+                reader.push(await response.text());
+            }
+            reader.end();
+        } catch {
+            result = null;
+        } finally {
+            clearTimeout(timer);
+        }
+
+        if (result?.conversation) {
+            this.conversation = result.conversation;
+        }
+
+        return result;
     },
 }));
 

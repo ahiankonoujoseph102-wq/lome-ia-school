@@ -4,6 +4,8 @@
     visite) : voir le composant « voiceAssistant » de site.js et resources/js/ama.js.
     - Ama (Gemini, par défaut) : fenêtre de discussion de la page (écrit par défaut, micro et lecture à voix haute
       du navigateur s'il les gère). Les messages passent par le serveur du site, qui seul appelle Gemini.
+      Mode appel « Parler avec Ama » (si le navigateur sait écouter et lire à voix haute) : écran d'appel avec un grand
+      cercle (« Ama vous écoute… », « Ama réfléchit… », « Ama parle… ») et le bouton rouge « Raccrocher ».
     - Agent ElevenLabs (au choix dans l'admin) : aucun script d'ElevenLabs dans la page, il n'est chargé qu'au toucher du
       bouton, puis l'élément officiel <elevenlabs-convai> s'ouvre à la place du bouton.
     Style stable face au mode sombre forcé de Chrome : fonds foncés ou translucides, textes clairs, contours en ombre (ring).
@@ -88,7 +90,7 @@
                      activée automatiquement quand le visiteur utilise le micro. --}}
                 <button
                     type="button"
-                    x-show="canSpeak"
+                    x-show="canSpeak && ! call && ! callEnd"
                     @click="setSpeak(! speakReplies)"
                     role="switch"
                     :aria-checked="speakReplies.toString()"
@@ -103,7 +105,85 @@
                     </span>
                 </button>
 
-                <div x-ref="messages" class="flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4" aria-live="polite">
+                {{-- Mode appel : la voix passe en premier ; le texte de la conversation reste discret sous le cercle.
+                     Toucher le cercle pendant qu'Ama parle : elle s'arrête et le micro s'ouvre. --}}
+                <div x-show="call" x-cloak class="flex flex-1 flex-col items-center overflow-hidden px-5 pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]" data-test="ama-call">
+                    <div class="flex flex-1 flex-col items-center justify-center gap-6">
+                        <div class="relative grid size-56 place-items-center">
+                            <span x-show="callState === 'listening'" class="ama-call-wave absolute inset-6 rounded-full ring-2 ring-electric-400/70" aria-hidden="true"></span>
+                            <span x-show="callState === 'listening'" class="ama-call-wave ama-call-wave-late absolute inset-6 rounded-full ring-2 ring-electric-400/70" aria-hidden="true"></span>
+                            <span x-show="callState === 'speaking'" class="ama-call-wave absolute inset-6 rounded-full ring-2 ring-gold-500/70" aria-hidden="true"></span>
+                            <button
+                                type="button"
+                                @click="touchCircle()"
+                                :aria-label="callState === 'speaking' ? 'Couper la parole à Ama et parler' : (callState === 'listening' ? 'J\'ai fini de parler' : 'Ama réfléchit')"
+                                :class="{
+                                    'bg-electric-500/25 ring-electric-400 text-electric-100': callState === 'listening',
+                                    'bg-night-800 ring-slate-500 text-slate-200': callState === 'thinking',
+                                    'bg-gold-500/15 ring-gold-500 text-gold-200': callState === 'speaking',
+                                }"
+                                class="relative grid size-40 place-items-center rounded-full shadow-2xl ring-4 shadow-black/50 transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold-300"
+                                data-test="ama-call-circle"
+                            >
+                                <flux:icon.microphone x-show="callState === 'listening'" class="size-14" />
+                                <svg x-show="callState === 'thinking'" class="size-14 motion-safe:animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".25" stroke-width="2.5" /><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" /></svg>
+                                <span x-show="callState === 'speaking'" class="ama-call-bars flex h-14 items-center gap-1.5" aria-hidden="true">
+                                    <span class="h-6 w-2 rounded-full bg-gold-500"></span>
+                                    <span class="h-12 w-2 rounded-full bg-gold-500"></span>
+                                    <span class="h-9 w-2 rounded-full bg-gold-500"></span>
+                                    <span class="h-12 w-2 rounded-full bg-gold-500"></span>
+                                    <span class="h-6 w-2 rounded-full bg-gold-500"></span>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="text-center" role="status" aria-live="polite">
+                            <p x-text="callLabel" class="font-display text-2xl font-bold text-white" data-test="ama-call-state"></p>
+                            <p x-text="callHint" class="mt-1.5 text-sm text-slate-300"></p>
+                        </div>
+                    </div>
+
+                    <div class="w-full max-w-sm space-y-1.5 py-4 text-sm leading-snug" aria-hidden="true">
+                        <template x-for="(line, index) in callTranscript" :key="index">
+                            <p class="line-clamp-2" :class="line.from === 'visitor' ? 'text-slate-400' : 'text-slate-300'">
+                                <span class="font-semibold" x-text="line.from === 'visitor' ? 'Vous : ' : 'Ama : '"></span><span x-text="line.text"></span>
+                            </p>
+                        </template>
+                    </div>
+
+                    <button
+                        type="button"
+                        @click="hangUp()"
+                        class="flex items-center gap-2.5 rounded-full bg-rose-600 px-8 py-4 text-base font-bold text-white shadow-xl shadow-rose-950/50 transition hover:bg-rose-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
+                        data-test="ama-hang-up"
+                    >
+                        <flux:icon.phone-x-mark class="size-6" />
+                        Raccrocher
+                    </button>
+                </div>
+
+                {{-- Appel terminé par une limite atteinte ou une panne : le message a été lu, le bouton WhatsApp s'affiche. --}}
+                <div x-show="callEnd" x-cloak class="flex flex-1 flex-col items-center justify-center gap-5 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-center" data-test="ama-call-ended">
+                    <span class="grid size-20 place-items-center rounded-full bg-night-800 text-slate-300 ring-2 ring-slate-600" aria-hidden="true">
+                        <flux:icon.phone-x-mark class="size-9" />
+                    </span>
+                    <div>
+                        <p class="font-display text-xl font-bold text-white">Appel terminé</p>
+                        <p x-text="messages.at(-1)?.text" class="mt-2 text-[15px] leading-relaxed text-slate-300"></p>
+                    </div>
+                    <a
+                        href="{{ \App\Support\WhatsApp::url() }}"
+                        target="_blank"
+                        rel="noopener"
+                        class="flex w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-emerald-500/15 px-5 py-3.5 font-semibold text-emerald-100 ring-1 ring-emerald-400/60 transition hover:bg-emerald-500/25"
+                        data-test="ama-call-whatsapp"
+                    >
+                        <x-site.whatsapp-icon class="size-5" />
+                        Écrivez-nous sur WhatsApp
+                    </a>
+                    <button type="button" @click="closeCallEnd()" class="text-sm font-semibold text-slate-300 underline underline-offset-4 hover:text-white">Revenir à la discussion</button>
+                </div>
+
+                <div x-show="! call && ! callEnd" x-ref="messages" class="flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4" aria-live="polite">
                     <template x-for="(message, index) in messages" :key="index">
                         <div :class="message.from === 'visitor' ? 'flex justify-end' : 'flex justify-start'">
                             <div
@@ -139,7 +219,20 @@
                         </div>
                     </div>
 
-                    {{-- Questions proposées tant que le visiteur n'a rien écrit. --}}
+                    {{-- Mode appel proposé dès l'ouverture, puis questions proposées tant que le visiteur n'a rien écrit. --}}
+                    <button
+                        type="button"
+                        x-show="canCall && ! visitorHasWritten && ! sending"
+                        @click="startCall()"
+                        class="flex w-full items-center gap-3 rounded-2xl bg-electric-500/15 px-4 py-3 text-left ring-1 ring-electric-300/50 transition hover:bg-electric-500/25"
+                        data-test="ama-call-offer"
+                    >
+                        <span class="grid size-10 shrink-0 place-items-center rounded-full bg-electric-600 text-white" aria-hidden="true"><flux:icon.phone class="size-5" /></span>
+                        <span class="min-w-0">
+                            <span class="block font-semibold text-white">Parler avec Ama</span>
+                            <span class="block text-sm text-slate-300">Posez vos questions à voix haute, comme au téléphone.</span>
+                        </span>
+                    </button>
                     <div x-show="! visitorHasWritten && ! sending" class="flex flex-wrap gap-2 pt-1">
                         <template x-for="suggestion in suggestions" :key="suggestion">
                             <button type="button" @click="send(suggestion)" x-text="suggestion" class="rounded-full bg-electric-500/10 px-3.5 py-2 text-left text-sm text-electric-100 ring-1 ring-electric-300/40 transition hover:bg-electric-500/20"></button>
@@ -147,7 +240,7 @@
                     </div>
                 </div>
 
-                <footer class="px-3 shadow-[inset_0_1px_0_0_var(--color-night-700)] pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                <footer x-show="! call && ! callEnd" class="px-3 shadow-[inset_0_1px_0_0_var(--color-night-700)] pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                     <p x-show="notice" x-text="notice" role="alert" class="mb-2 rounded-xl bg-amber-500/10 px-3 py-2 text-sm text-amber-100 ring-1 ring-amber-400/40"></p>
                     <form @submit.prevent="send()" class="flex items-end gap-2">
                         <label for="ama-input" class="sr-only">Votre message pour Ama</label>
@@ -161,9 +254,21 @@
                             :placeholder="listening ? 'Je vous écoute…' : 'Écrivez votre question…'"
                             class="field-sizing-content max-h-32 min-h-11 min-w-0 flex-1 resize-none rounded-2xl bg-night-950 px-4 py-2.5 text-[16px] text-white ring-1 ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-electric-400 focus:outline-none"
                         ></textarea>
+                        {{-- Mode appel (le navigateur sait écouter et lire à voix haute) ; sinon, simple dictée au micro. --}}
                         <button
                             type="button"
-                            x-show="canListen"
+                            x-show="canCall"
+                            @click="startCall()"
+                            aria-label="Parler avec Ama"
+                            title="Parler avec Ama"
+                            class="grid size-11 shrink-0 place-items-center rounded-full bg-electric-500/20 text-electric-100 ring-1 ring-electric-300/60 transition hover:bg-electric-500/30"
+                            data-test="ama-call-button"
+                        >
+                            <flux:icon.phone class="size-5" />
+                        </button>
+                        <button
+                            type="button"
+                            x-show="canListen && ! canCall"
                             @click="listen()"
                             :aria-pressed="listening.toString()"
                             :aria-label="listening ? 'Arrêter le micro' : 'Parler au micro'"
