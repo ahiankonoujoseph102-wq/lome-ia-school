@@ -105,7 +105,7 @@ class SiteSettingsController extends Controller
             'social.tiktok' => ['nullable', 'url:https', 'max:255'],
             'social.youtube' => ['nullable', 'url:https', 'max:255'],
             'trained' => ['required', 'string', 'max:20'],
-            'founded' => ['required', 'integer', 'between:2000,2100'],
+            'trainer_since' => ['required', 'integer', 'between:2000,2100'],
         ], [
             'map_url.url' => 'Le lien de la carte doit ressembler à https://maps.app.goo.gl/… (dans Google Maps : « Partager », puis « Copier le lien »).',
             'social.facebook.url' => 'Le lien Facebook doit ressembler à https://www.facebook.com/votre-page.',
@@ -122,9 +122,8 @@ class SiteSettingsController extends Controller
         $contact = (array) SiteSettings::get('site.contact');
         $stats = (array) SiteSettings::get('site.stats');
         $stats[0] = ['value' => trim((string) $validated['trained']), 'label' => (string) ($stats[0]['label'] ?? 'personnes formées')];
-        $stats[1] = ['value' => (string) $validated['founded'], 'label' => (string) ($stats[1]['label'] ?? 'année de création de l\'école')];
-        $about = (array) SiteSettings::get('site.about');
-        $about['founded'] = (string) $validated['founded'];
+        // Deuxième chiffre clé : l'année où Joseph a commencé à former (pas la création de l'école, qui est récente).
+        $stats[1] = ['value' => (string) $validated['trainer_since'], 'label' => 'année où Joseph a commencé à former'];
 
         SiteSettings::save([
             'site.contact' => [
@@ -146,7 +145,6 @@ class SiteSettingsController extends Controller
                 'youtube' => (string) ($validated['social']['youtube'] ?? ''),
             ],
             'site.stats' => array_values($stats),
-            'site.about' => $about,
         ]);
 
         ActivityLog::record(AdminAction::SettingsUpdated, 'Coordonnées et chiffres clés modifiés.');

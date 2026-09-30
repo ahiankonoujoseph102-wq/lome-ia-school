@@ -242,7 +242,7 @@
 
                 <footer x-show="! call && ! callEnd" class="px-3 shadow-[inset_0_1px_0_0_var(--color-night-700)] pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                     <p x-show="notice" x-text="notice" role="alert" class="mb-2 rounded-xl bg-amber-500/10 px-3 py-2 text-sm text-amber-100 ring-1 ring-amber-400/40"></p>
-                    <form @submit.prevent="send()" class="flex items-end gap-2">
+                    <form @submit.prevent="send()" class="flex items-end gap-1.5 min-[360px]:gap-2">
                         <label for="ama-input" class="sr-only">Votre message pour Ama</label>
                         <textarea
                             id="ama-input"
@@ -251,10 +251,24 @@
                             @keydown.enter="enter($event)"
                             rows="1"
                             maxlength="{{ VoiceAssistant::limit('max_length') }}"
-                            :placeholder="listening ? 'Je vous écoute…' : 'Écrivez votre question…'"
-                            class="field-sizing-content max-h-32 min-h-11 min-w-0 flex-1 resize-none rounded-2xl bg-night-950 px-4 py-2.5 text-[16px] text-white ring-1 ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-electric-400 focus:outline-none"
+                            :placeholder="listening ? 'Je vous écoute…' : 'Votre question…'"
+                            class="field-sizing-content max-h-32 min-h-11 min-w-0 flex-1 resize-none rounded-2xl bg-night-950 px-3 py-2.5 text-[16px] min-[360px]:px-4 text-white ring-1 ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-electric-400 focus:outline-none"
                         ></textarea>
-                        {{-- Mode appel (le navigateur sait écouter et lire à voix haute) ; sinon, simple dictée au micro. --}}
+                        {{-- Deux boutons à côté du champ : le micro (dictée dans le champ, s'il sait écouter) et le téléphone
+                             (mode appel, s'il sait écouter ET lire à voix haute). 44 px chacun, faciles à toucher, même à 320 px. --}}
+                        <button
+                            type="button"
+                            x-show="canListen"
+                            @click="listen()"
+                            :aria-pressed="listening.toString()"
+                            :aria-label="listening ? 'Arrêter le micro' : 'Parler au micro'"
+                            :class="listening ? 'bg-rose-500/20 text-rose-100 ring-rose-400 animate-pulse' : 'bg-night-800 text-slate-200 ring-slate-600 hover:bg-night-700'"
+                            class="grid size-11 shrink-0 place-items-center rounded-full ring-1 transition"
+                            data-test="ama-microphone"
+                        >
+                            <flux:icon.microphone x-show="! listening" class="size-5" />
+                            <flux:icon.stop x-show="listening" class="size-5" />
+                        </button>
                         <button
                             type="button"
                             x-show="canCall"
@@ -265,19 +279,6 @@
                             data-test="ama-call-button"
                         >
                             <flux:icon.phone class="size-5" />
-                        </button>
-                        <button
-                            type="button"
-                            x-show="canListen && ! canCall"
-                            @click="listen()"
-                            :aria-pressed="listening.toString()"
-                            :aria-label="listening ? 'Arrêter le micro' : 'Parler au micro'"
-                            :class="listening ? 'bg-rose-500/20 text-rose-100 ring-rose-400 animate-pulse' : 'bg-night-800 text-slate-200 ring-slate-600 hover:bg-night-700'"
-                            class="grid size-11 shrink-0 place-items-center rounded-full ring-1 transition"
-                            data-test="ama-microphone"
-                        >
-                            <flux:icon.microphone x-show="! listening" class="size-5" />
-                            <flux:icon.stop x-show="listening" class="size-5" />
                         </button>
                         <button
                             type="submit"

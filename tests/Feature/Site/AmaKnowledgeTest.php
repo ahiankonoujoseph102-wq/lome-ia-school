@@ -84,7 +84,12 @@ class AmaKnowledgeTest extends TestCase
 
         // Fondateur et école : faits du projet, pas de témoignage ni de chiffre inventé.
         $this->assertStringContainsString('Joseph Ahiankonou, surnommé « Coach Joseph »', $prompt);
-        $this->assertStringContainsString('Joseph Academy', $prompt);
+        // Lomé IA School est une école récente, distincte de Joseph Academy (écriture de livres) : jamais « ancien nom ».
+        $this->assertStringContainsString('C\'est une école récente.', $prompt);
+        $this->assertStringContainsString('Joseph Academy est une autre activité de Joseph', $prompt);
+        $this->assertStringNotContainsString('Son ancien nom était Joseph Academy', $prompt);
+        $this->assertStringNotContainsString('créée en 2023', $prompt);
+        $this->assertStringContainsString('2023 année où Joseph a commencé à former', $prompt);
         $this->assertStringContainsString('plus de 1 000 personnes', $prompt);
         $this->assertStringContainsString('Adidogomé, Lycée moderne 2, Lomé, Togo', $prompt);
         $this->assertStringNotContainsString('{adresse}', $prompt);

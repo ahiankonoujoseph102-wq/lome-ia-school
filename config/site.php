@@ -102,7 +102,8 @@ return [
     // Le nombre de formations est calculé automatiquement.
     'stats' => [
         ['value' => '1 000+', 'label' => 'personnes formées'],
-        ['value' => '2023', 'label' => 'année de création de l\'école'],
+        // Année où Joseph a commencé à former (l'école, elle, est récente : aucune date de création n'est affichée).
+        ['value' => '2023', 'label' => 'année où Joseph a commencé à former'],
         ['value' => 'À vie', 'label' => 'accès et accompagnement'],
     ],
 
@@ -241,7 +242,6 @@ return [
             ['title' => 'Pratique avant tout', 'text' => 'Chaque formation est tournée vers des réalisations concrètes et des résultats mesurables.'],
             ['title' => 'Accompagnement', 'text' => 'Personne n\'apprend seul : chaque formation a son groupe privé pour poser ses questions.'],
         ],
-        'founded' => '2023',
     ],
 
     /*

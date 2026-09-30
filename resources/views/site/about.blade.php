@@ -61,7 +61,6 @@
                     <span class="eyebrow">Lomé IA School</span>
                     <h2 class="mt-4 text-3xl font-bold text-white sm:text-4xl">Notre mission</h2>
                     <p class="mt-4 text-lg leading-relaxed text-slate-300">{{ $about['mission'] }}</p>
-                    <p class="mt-4 text-sm text-slate-400">Création de l'école : {{ Placeholder::highlight($about['founded']) }}</p>
                 </div>
                 <dl class="grid grid-cols-2 gap-4" data-reveal>
                     <div class="card flex flex-col-reverse p-5">

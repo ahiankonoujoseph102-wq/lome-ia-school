@@ -24,8 +24,9 @@ class AmaKnowledge
      * {horaires} sont remplacés à l'envoi par les coordonnées des Réglages du site.
      */
     public const string DEFAULT_SCHOOL = <<<'TXT'
-        Lomé IA School est une école de formations en intelligence artificielle basée à Lomé, au Togo. Elle a été créée en 2023. Son ancien nom était Joseph Academy.
+        Lomé IA School est une école de formations en intelligence artificielle basée à Lomé, au Togo. C'est une école récente.
         Fondateur et formateur principal : Joseph Ahiankonou, surnommé « Coach Joseph ». Expert et consultant en intelligence artificielle, il forme depuis 2023 et a formé plus de 1 000 personnes.
+        Joseph Academy est une autre activité de Joseph (écriture de livres pour des clients), distincte de Lomé IA School : ce n'est pas l'ancien nom de l'école.
         Accroche du site : « Maîtrisez l'IA et transformez vos compétences en opportunités ».
         Adresse : {adresse}.
         Horaires : {horaires}.

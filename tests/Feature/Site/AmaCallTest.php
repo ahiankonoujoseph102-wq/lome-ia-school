@@ -184,6 +184,15 @@ class AmaCallTest extends TestCase
             ->getContent();
 
         $this->assertMatchesRegularExpression('#localhost:8000\\\\*/assistante\\\\*/appel#', $html);
+
+        // Deux boutons à côté du champ : le micro (dictée, s'il sait écouter) puis le téléphone (s'il sait aussi lire).
+        $microphone = (int) strpos($html, 'data-test="ama-microphone"');
+        $phone = (int) strpos($html, 'data-test="ama-call-button"');
+        $this->assertGreaterThan(0, $microphone);
+        $this->assertGreaterThan($microphone, $phone);
+        $this->assertStringContainsString('x-show="canListen"', $html);
+        $this->assertStringContainsString('x-show="canCall"', $html);
+        $this->assertStringNotContainsString('canListen && ! canCall', $html);
         $this->assertStringNotContainsString(self::KEY, $html);
     }
 
