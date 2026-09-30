@@ -7,6 +7,11 @@ namespace App\Payments;
  */
 final readonly class PaymentMethod
 {
+    /**
+     * Repères utilisables dans le code USSD de transfert (réglé dans l'admin).
+     */
+    public const array USSD_TOKENS = ['{numero}', '{montant}'];
+
     public function __construct(
         public string $key,
         public string $country,
@@ -14,7 +19,55 @@ final readonly class PaymentMethod
         public string $number,
         public string $beneficiary,
         public string $color,
+        public string $ussd = '',
     ) {}
+
+    /**
+     * Code USSD de transfert à composer, repères {numero} et {montant} remplacés ; null si aucun code n'est réglé.
+     * Jamais de code secret : l'élève le tape lui-même dans le menu de son opérateur.
+     */
+    public function ussdCode(int $amount): ?string
+    {
+        if ($this->ussd === '') {
+            return null;
+        }
+
+        return strtr($this->ussd, ['{numero}' => $this->localNumber(), '{montant}' => (string) $amount]);
+    }
+
+    /**
+     * Lien « tel: » qui ouvre le clavier du téléphone avec le code déjà tapé. Chaque « # » est encodé
+     * en %23 (sinon le navigateur le prend pour une ancre et coupe le code) ; les « * » restent tels quels.
+     */
+    public function ussdTelUrl(int $amount): ?string
+    {
+        $code = $this->ussdCode($amount);
+
+        return $code === null ? null : 'tel:'.str_replace('#', '%23', $code);
+    }
+
+    /**
+     * Paiement par l'application de l'opérateur, sans code USSD (Wave).
+     */
+    public function usesApp(): bool
+    {
+        return $this->ussd === '' && str_contains(mb_strtolower($this->name), 'wave');
+    }
+
+    /**
+     * Numéro sans l'indicatif du pays, tel qu'on le saisit dans le menu de transfert (ex. « 72240231 »).
+     */
+    public function localNumber(): string
+    {
+        $digits = (string) preg_replace('/\D+/', '', $this->number);
+        $dialCode = (string) preg_replace('/\D+/', '', (string) config("site.payments.countries.{$this->country}.dial_code", ''));
+
+        if ($dialCode !== '' && str_starts_with($this->number, '+') && str_starts_with($digits, $dialCode)) {
+            return substr($digits, strlen($dialCode));
+        }
+
+        return $digits;
+    }
 
     public function countryName(): string
     {
@@ -93,6 +146,7 @@ final readonly class PaymentMethod
             'inverse_color' => $this->inverseColor(),
             'initials' => $this->initials(),
             'note' => $this->representativeNote(),
+            'ussd' => $this->ussd,
         ];
     }
 }

@@ -100,14 +100,14 @@
                                         <dd class="text-xs text-slate-500">Inscrit le {{ $user->created_at?->translatedFormat('j F Y à H\hi') }}</dd>
                                     @endif
                                 </div>
-                                @foreach ([
+                                @foreach (array_filter([
                                     $purchase->itemHeading() => $purchase->item_label,
                                     'Moyen de paiement' => $purchase->payment_method_name.' · '.$purchase->payment_number,
                                     'Bénéficiaire' => $purchase->payment_beneficiary,
                                     'Pays' => $purchase->paymentMethod()?->countryName() ?? strtoupper((string) $purchase->country),
                                     'Numéro qui a payé' => $purchase->payer_phone,
                                     'Nom de l\'expéditeur' => $purchase->payer_name,
-                                ] as $label => $value)
+                                ]) as $label => $value)
                                     <div class="flex flex-wrap justify-between gap-x-4 gap-y-0.5 py-2.5">
                                         <dt class="text-slate-400">{{ $label }}</dt>
                                         <dd class="font-medium text-white">{{ $value }}</dd>
@@ -124,10 +124,17 @@
                                         <dd class="font-medium text-white">{{ $startedAt[$purchase->id] ? 'Oui, 1re leçon le '.$startedAt[$purchase->id]->translatedFormat('j F à H\hi') : 'Non, aucune leçon consultée' }}</dd>
                                     </div>
                                 @endif
-                                <div class="py-2.5">
-                                    <dt class="text-slate-400">Identifiant de transaction</dt>
-                                    <dd class="mt-1 rounded-xl bg-veil/5 px-3 py-2 font-mono text-base font-bold break-all text-white ring-1 ring-veil/10">{{ $purchase->transaction_id }}</dd>
-                                </div>
+                                @if ($purchase->transaction_id)
+                                    <div class="py-2.5">
+                                        <dt class="text-slate-400">Identifiant de transaction</dt>
+                                        <dd class="mt-1 rounded-xl bg-veil/5 px-3 py-2 font-mono text-base font-bold break-all text-white ring-1 ring-veil/10">{{ $purchase->transaction_id }}</dd>
+                                    </div>
+                                @else
+                                    <div class="py-2.5">
+                                        <dt class="text-slate-400">À lire sur la capture</dt>
+                                        <dd class="mt-1 text-slate-300">Numéro qui a payé, nom de l'expéditeur, montant et identifiant de la transaction : l'élève n'envoie que la capture.</dd>
+                                    </div>
+                                @endif
                             </dl>
                         </div>
 

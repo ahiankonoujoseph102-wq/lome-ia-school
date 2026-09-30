@@ -6,7 +6,7 @@
         ->map(fn ($country, $code) => ['code' => (string) $code, 'name' => $country['name'] ?? '', 'flag' => $country['flag'] ?? '', 'dial_code' => $country['dial_code'] ?? '', 'note' => $country['note'] ?? ''])
         ->values()->all();
     $methods = collect((array) SiteSettings::get('site.payments.methods'))
-        ->map(fn ($method, $key) => ['key' => (string) $key, 'country' => $method['country'] ?? '', 'name' => $method['name'] ?? '', 'number' => $method['number'] ?? '', 'beneficiary' => $method['beneficiary'] ?? '', 'color' => $method['color'] ?? '#8b5cf6', 'enabled' => (bool) ($method['enabled'] ?? true)])
+        ->map(fn ($method, $key) => ['key' => (string) $key, 'country' => $method['country'] ?? '', 'name' => $method['name'] ?? '', 'number' => $method['number'] ?? '', 'beneficiary' => $method['beneficiary'] ?? '', 'color' => $method['color'] ?? '#8b5cf6', 'ussd' => $method['ussd'] ?? '', 'enabled' => (bool) ($method['enabled'] ?? true)])
         ->values()->all();
     $countries = old('countries', $countries);
     $methods = collect(old('methods', $methods))->map(fn ($method) => [...$method, 'enabled' => (bool) ($method['enabled'] ?? false)])->all();
@@ -21,7 +21,7 @@
         countries: @js(array_values($countries)),
         methods: @js(array_values($methods)),
         palette: @js(SiteSettingsController::palette()),
-        addMethod() { this.methods.push({ key: '', country: this.countries[0]?.code ?? '', name: '', number: '', beneficiary: '', color: this.palette[this.methods.length % this.palette.length], enabled: true }); },
+        addMethod() { this.methods.push({ key: '', country: this.countries[0]?.code ?? '', name: '', number: '', beneficiary: '', color: this.palette[this.methods.length % this.palette.length], ussd: '', enabled: true }); },
         addCountry() { this.countries.push({ code: '', name: '', flag: '', dial_code: '+', note: '' }); },
     }">
         @csrf
@@ -39,6 +39,7 @@
                             <p class="truncate font-semibold text-white" x-text="method.name || 'Nouveau moyen de paiement'"></p>
                             <p class="truncate font-mono text-sm text-slate-300" x-text="method.number"></p>
                             <p class="truncate text-xs text-slate-400" x-text="method.beneficiary"></p>
+                            <p class="truncate text-xs text-slate-400">Code USSD : <span class="font-mono text-slate-200" x-text="method.ussd || 'aucun (pas de bouton « Payer maintenant »)'"></span></p>
                         </div>
                         <label class="inline-flex shrink-0 items-center gap-2 text-sm text-slate-200">
                             <input type="checkbox" value="1" class="size-5 accent-gold-400" :name="`methods[${index}][enabled]`" x-model="method.enabled"> Actif
@@ -59,6 +60,10 @@
                         </label>
                         <label class="space-y-1.5"><span class="field-label">Nom exact du bénéficiaire</span>
                             <input type="text" class="field-input" :name="`methods[${index}][beneficiary]`" x-model="method.beneficiary" required>
+                        </label>
+                        <label class="space-y-1.5 sm:col-span-2"><span class="field-label">Code USSD de transfert (facultatif)</span>
+                            <input type="text" inputmode="tel" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60" class="field-input font-mono" :name="`methods[${index}][ussd]`" x-model="method.ussd" placeholder="Ex. : *145*1#">
+                            <span class="block text-xs text-slate-400">Code qui ouvre le menu de transfert de l'opérateur (bouton « Payer maintenant » de la page de paiement). Repères facultatifs : <span class="font-mono text-slate-200">{numero}</span> (ce numéro, sans l'indicatif) et <span class="font-mono text-slate-200">{montant}</span> (montant à payer). Vide : pas de bouton (ex. Wave, paiement par l'application). N'écrivez jamais de code secret.</span>
                         </label>
                         <label class="flex items-center gap-3"><span class="field-label">Couleur de la pastille</span>
                             <input type="color" class="h-10 w-16 rounded-lg bg-transparent" :name="`methods[${index}][color]`" x-model="method.color">

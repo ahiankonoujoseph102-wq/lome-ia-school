@@ -17,7 +17,7 @@
                 <li>La confirmation de votre adresse e-mail : la date à laquelle elle a été confirmée et, le temps de la confirmation, une empreinte chiffrée du code et du lien qui vous ont été envoyés (jamais le code lui-même).</li>
                 <li>Votre choix concernant l'information sur les nouvelles formations (oui ou non).</li>
                 <li>Les informations liées à vos achats : formations achetées, montants, dates et, le cas échéant, le code promo utilisé.</li>
-                <li>Vos preuves de paiement : moyen de paiement utilisé, numéro qui a payé, nom de l'expéditeur, identifiant de la transaction et capture d'écran du paiement.</li>
+                <li>Vos preuves de paiement : moyen de paiement utilisé et capture d'écran du paiement (sur laquelle figurent notamment le numéro qui a payé, le nom de l'expéditeur et l'identifiant de la transaction).</li>
                 <li>Les messages et fichiers que vous publiez dans les groupes de discussion des formations (textes, images, captures d'écran, notes vocales, vidéos, documents), ainsi que les signalements que vous faites.</li>
                 <li>Vos réglages de notifications et, si vous activez les notifications sur votre téléphone, l'adresse technique d'envoi fournie par votre navigateur.</li>
                 <li>Si vous devenez affilié : la date d'acceptation des conditions, vos coordonnées de retrait (pays, opérateur Mobile Money, numéro et nom du titulaire, ainsi que la date de leurs modifications), vos commissions et vos retraits (montants, frais d'envoi, identifiants de transaction).</li>
@@ -71,7 +71,7 @@
             <ul>
                 <li>Créer et gérer votre compte et vos accès aux formations ;</li>
                 <li>Vérifier que votre adresse e-mail vous appartient (code de confirmation) avant tout paiement ou retrait ;</li>
-                <li>Vérifier vos paiements, prévenir la fraude (par exemple une capture ou un identifiant de transaction déjà utilisé) et établir vos reçus ;</li>
+                <li>Vérifier vos paiements, prévenir la fraude (par exemple une capture ou un paiement déjà utilisé) et établir vos reçus ;</li>
                 <li>Compter les clics sur les liens d'affiliation, attribuer les achats au bon affilié, calculer et payer les commissions, et prévenir la fraude à l'affiliation ;</li>
                 <li>Vous accompagner et répondre à vos questions, notamment dans les groupes de discussion ;</li>
                 <li>Organiser votre consultation gratuite (confirmation, rappels, lien de l'appel vidéo) et, si vous le souhaitez, vous recommander une formation ;</li>

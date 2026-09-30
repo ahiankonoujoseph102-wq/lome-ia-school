@@ -304,7 +304,7 @@ return [
 
     'faq' => [
         'home' => [
-            ['question' => 'Comment se passe le paiement ?', 'answer' => 'Par Mobile Money : vous envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso ou Bénin), puis vous déposez sur le site l\'identifiant de la transaction et une capture d\'écran du paiement. Les frais de transfert sont à la charge de l\'expéditeur.'],
+            ['question' => 'Comment se passe le paiement ?', 'answer' => 'Par Mobile Money : vous envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso ou Bénin) depuis votre téléphone, puis vous envoyez sur le site la capture d\'écran de votre paiement. Rien d\'autre à remplir. Les frais de transfert sont à la charge de l\'expéditeur.'],
             ['question' => 'Quand est-ce que j\'accède à ma formation ?', 'answer' => 'Pour les formations de moins de {seuil} : immédiatement après l\'envoi de votre preuve de paiement (accès provisoire, puis vérification par notre équipe). À partir de {seuil} : dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
             ['question' => 'Je suis débutant, puis-je suivre les formations ?', 'answer' => 'Oui. Les formations sont expliquées pas à pas, en français simple. Si vous partez de zéro, nous vous conseillons de commencer par la formation ChatGPT & Claude.'],
             ['question' => 'Puis-je suivre les formations sur mon téléphone ?', 'answer' => 'Oui, le site et les vidéos sont pensés pour le téléphone. Pour certaines formations pratiques (sites web, applications), un ordinateur rend l\'exercice plus confortable.'],
@@ -330,8 +330,8 @@ return [
     |----------------------------------------------------------------------
     | Paiement Mobile Money (manuel, avec preuve de paiement)
     |----------------------------------------------------------------------
-    | L'élève envoie le montant sur l'un de nos numéros, puis dépose la preuve
-    | (identifiant de transaction + capture d'écran) sur le site.
+    | L'élève envoie le montant sur l'un de nos numéros, puis envoie seulement la
+    | capture d'écran de son paiement sur le site (page de paiement en 4 étapes).
     |
     | - « verification_threshold » : en dessous de ce prix, l'accès est ouvert
     |   aussitôt à titre provisoire ; à partir de ce prix, il n'est ouvert
@@ -355,23 +355,19 @@ return [
             'bj' => ['name' => 'Bénin', 'flag' => '🇧🇯', 'dial_code' => '+229', 'note' => 'Paiement reçu par notre représentant au Bénin'],
         ],
 
+        // « ussd » : code USSD officiel qui ouvre le menu de transfert de l'opérateur (bouton « Payer
+        // maintenant » de la page de paiement). Repères facultatifs : {numero} (notre numéro sans
+        // l'indicatif) et {montant}. Vide : pas de bouton (Wave : paiement par l'application).
+        // Codes relevés en septembre 2026 : à revérifier régulièrement auprès des opérateurs.
+        // Jamais de code secret dans ce champ.
         'methods' => [
-            'tg-mixx' => ['country' => 'tg', 'name' => 'Mixx by Yas', 'number' => '+228 72 24 02 31', 'beneficiary' => 'Ahiankonou Kokou Joseph', 'color' => '#facc15', 'enabled' => true],
-            'tg-flooz' => ['country' => 'tg', 'name' => 'Flooz / Moov Money', 'number' => '+228 79 16 23 90', 'beneficiary' => 'Ahiankonou Kokou Joseph', 'color' => '#3b82f6', 'enabled' => true],
-            'bf-orange' => ['country' => 'bf', 'name' => 'Orange Money', 'number' => '+226 07 27 63 81', 'beneficiary' => 'Anderson Passoule Oyo', 'color' => '#f97316', 'enabled' => true],
-            'bf-wave' => ['country' => 'bf', 'name' => 'Wave', 'number' => '+226 03 53 21 76', 'beneficiary' => 'Anderson Passoule Oyo', 'color' => '#38bdf8', 'enabled' => true],
-            'bj-mtn' => ['country' => 'bj', 'name' => 'MTN', 'number' => '+229 01 51 53 39 35', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#eab308', 'enabled' => true],
-            'bj-moov' => ['country' => 'bj', 'name' => 'Moov', 'number' => '+229 01 94 55 59 14', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#2563eb', 'enabled' => true],
-            'bj-celtiis' => ['country' => 'bj', 'name' => 'Celtiis', 'number' => '+229 01 40 28 57 61', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#a855f7', 'enabled' => true],
-        ],
-
-        // Étapes affichées sous le moyen de paiement choisi.
-        'steps' => [
-            'Ouvrez votre application ou votre menu Mobile Money.',
-            'Envoyez le montant exact au numéro indiqué ci-dessus.',
-            'Vérifiez que le nom du bénéficiaire affiché correspond bien à celui indiqué ici avant de confirmer.',
-            'Gardez le SMS de confirmation et faites une capture d\'écran du paiement.',
-            'Remplissez le formulaire ci-dessous avec l\'identifiant de la transaction et la capture.',
+            'tg-mixx' => ['country' => 'tg', 'name' => 'Mixx by Yas', 'number' => '+228 72 24 02 31', 'beneficiary' => 'Ahiankonou Kokou Joseph', 'color' => '#facc15', 'ussd' => '*145*1#', 'enabled' => true],
+            'tg-flooz' => ['country' => 'tg', 'name' => 'Flooz / Moov Money', 'number' => '+228 79 16 23 90', 'beneficiary' => 'Ahiankonou Kokou Joseph', 'color' => '#3b82f6', 'ussd' => '*155*1#', 'enabled' => true],
+            'bf-orange' => ['country' => 'bf', 'name' => 'Orange Money', 'number' => '+226 07 27 63 81', 'beneficiary' => 'Anderson Passoule Oyo', 'color' => '#f97316', 'ussd' => '*144*2#', 'enabled' => true],
+            'bf-wave' => ['country' => 'bf', 'name' => 'Wave', 'number' => '+226 03 53 21 76', 'beneficiary' => 'Anderson Passoule Oyo', 'color' => '#38bdf8', 'ussd' => '', 'enabled' => true],
+            'bj-mtn' => ['country' => 'bj', 'name' => 'MTN', 'number' => '+229 01 51 53 39 35', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#eab308', 'ussd' => '*880#', 'enabled' => true],
+            'bj-moov' => ['country' => 'bj', 'name' => 'Moov', 'number' => '+229 01 94 55 59 14', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#2563eb', 'ussd' => '*855*1#', 'enabled' => true],
+            'bj-celtiis' => ['country' => 'bj', 'name' => 'Celtiis', 'number' => '+229 01 40 28 57 61', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#a855f7', 'ussd' => '*889#', 'enabled' => true],
         ],
 
         'fees_notice' => 'Les frais de transfert sont à la charge de l\'expéditeur.',

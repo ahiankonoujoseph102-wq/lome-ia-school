@@ -30,7 +30,7 @@
 
             <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
                 @if ($status->grantsAccess())
-                    <a href="{{ $purchase->isSessionSupplement() && $purchase->liveSession ? route('student.sessions.show', $purchase->liveSession) : route('student.formations.show', $purchase->formation) }}" class="btn-gold">{{ $purchase->isSessionSupplement() ? 'Voir la session' : 'Ouvrir la formation' }} <flux:icon.arrow-right class="size-5" /></a>
+                    <a href="{{ $purchase->isSessionSupplement() && $purchase->liveSession ? route('student.sessions.show', $purchase->liveSession) : route('student.formations.show', $purchase->formation) }}" class="btn-gold" data-test="open-access">{{ $purchase->isSessionSupplement() ? 'Voir la session' : ($status === PurchaseStatus::Provisional ? 'Commencer la formation' : 'Ouvrir la formation') }} <flux:icon.arrow-right class="size-5" /></a>
                 @endif
                 @if ($status === PurchaseStatus::Validated)
                     <a href="{{ route('student.purchases.receipt', $purchase) }}" class="btn-ghost"><flux:icon.document-text class="size-5" /> Voir mon reçu</a>

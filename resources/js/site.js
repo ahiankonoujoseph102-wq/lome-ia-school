@@ -101,68 +101,88 @@ Alpine.data('catalogue', (items) => ({
 }));
 
 /**
- * Page de paiement : choix du pays puis du moyen de paiement, copie du numéro, aperçu de la capture.
+ * Page de paiement en 4 étapes (pays, opérateur, paiement, capture), une étape à la fois.
+ * La capture est envoyée dès qu'elle est choisie (un seul bouton), après un contrôle du type et de la
+ * taille dans le navigateur (le serveur revérifie tout).
  */
-Alpine.data('mobileMoneyPayment', ({ methods, initialMethod }) => ({
+Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxBytes, maxMb, labels }) => ({
     methods,
+    labels,
+    step: initialStep,
     country: '',
     method: '',
-    copied: false,
+    copied: null,
     preview: null,
+    fileError: '',
+    sending: false,
+    // Lien « tel: » avec * et # : inutilisable sur iPhone et iPad (y compris un iPad qui se présente comme un Mac).
+    canDial: !(/iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)),
 
     init() {
         const initial = this.methods.find((item) => item.key === initialMethod);
-        this.country = initial ? initial.country : (this.methods[0]?.country ?? '');
+        this.country = initial ? initial.country : '';
         this.method = initial ? initial.key : '';
     },
 
-    get countryMethods() {
-        return this.methods.filter((item) => item.country === this.country);
-    },
-
-    get selected() {
-        return this.methods.find((item) => item.key === this.method) ?? null;
+    goTo(step) {
+        this.step = step;
+        this.$nextTick(() => {
+            const top = this.$refs.payment?.getBoundingClientRect().top ?? 0;
+            if (top < 0) {
+                this.$refs.payment.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
     },
 
     chooseCountry(code) {
         this.country = code;
-        if (this.selected?.country !== code) {
-            this.method = this.countryMethods.length === 1 ? this.countryMethods[0].key : '';
+        if (this.methods.find((item) => item.key === this.method)?.country !== code) {
+            this.method = '';
         }
+        this.goTo(2);
     },
 
     chooseMethod(key) {
         this.method = key;
-        this.$nextTick(() => this.$refs.details?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+        this.goTo(3);
     },
 
-    syncCountry() {
-        if (this.selected) {
-            this.country = this.selected.country;
-        }
+    async copy(text, id) {
+        await copyToClipboard(text);
+        this.copied = id;
+        setTimeout(() => {
+            if (this.copied === id) {
+                this.copied = null;
+            }
+        }, 2000);
     },
 
-    async copyNumber() {
-        if (!this.selected) {
+    sendProof(event) {
+        const file = event.target.files[0];
+        this.fileError = '';
+        this.preview = null;
+
+        if (!file) {
             return;
         }
 
-        try {
-            await navigator.clipboard.writeText(this.selected.raw_number);
-        } catch {
-            const range = document.createRange();
-            range.selectNodeContents(this.$refs.number);
-            window.getSelection()?.removeAllRanges();
-            window.getSelection()?.addRange(range);
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            this.fileError = 'La capture doit être une image JPG, PNG ou WebP.';
+            event.target.value = '';
+
+            return;
         }
 
-        this.copied = true;
-        setTimeout(() => (this.copied = false), 2000);
-    },
+        if (file.size > maxBytes) {
+            this.fileError = `La capture ne doit pas dépasser ${maxMb} Mo.`;
+            event.target.value = '';
 
-    previewProof(event) {
-        const file = event.target.files[0];
-        this.preview = file && file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
+            return;
+        }
+
+        this.preview = URL.createObjectURL(file);
+        this.sending = true;
+        this.$refs.proofForm.requestSubmit();
     },
 }));
 

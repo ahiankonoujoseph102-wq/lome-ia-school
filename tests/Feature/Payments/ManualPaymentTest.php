@@ -41,9 +41,6 @@ class ManualPaymentTest extends TestCase
     {
         return array_merge([
             'payment_method' => 'tg-mixx',
-            'payer_phone' => '90 12 34 56',
-            'payer_name' => 'Afi Dossou',
-            'transaction_id' => 'MP240925.1001.A12345',
             'proof' => UploadedFile::fake()->image('capture.png', $width, $height),
         ], $overrides);
     }
@@ -66,8 +63,10 @@ class ManualPaymentTest extends TestCase
 
         $this->assertSame(PurchaseStatus::Provisional, $purchase->status);
         $this->assertSame(5500, $purchase->amount);
-        $this->assertSame('+22890123456', $purchase->payer_phone);
-        $this->assertSame('MP240925.1001.A12345', $purchase->transaction_id);
+        // Seule la capture est envoyée : numéro, nom et identifiant se lisent dessus.
+        $this->assertNull($purchase->payer_phone);
+        $this->assertNull($purchase->payer_name);
+        $this->assertNull($purchase->transaction_id);
         $this->assertSame('Mixx by Yas', $purchase->payment_method_name);
         $this->assertTrue($student->isEnrolledIn($formation));
         $this->assertSame($purchase->id, $student->enrollments()->first()?->purchase_id);
@@ -101,20 +100,29 @@ class ManualPaymentTest extends TestCase
         $this->actingAs($student)->get(route('student.formations.show', $formation))->assertForbidden();
     }
 
-    public function test_transaction_id_already_used_is_refused(): void
+    public function test_only_the_capture_is_needed_and_old_fields_are_ignored(): void
     {
-        Purchase::factory()->create(['transaction_id' => 'MP240925.1001.A12345', 'status' => PurchaseStatus::Validated]);
         $student = User::factory()->create();
         $formation = Formation::factory()->create(['price' => 5500]);
 
-        // Même identifiant, saisi avec des espaces et en minuscules.
         $this->actingAs($student)
-            ->post(route('checkout.pay', $formation), $this->proof(['transaction_id' => 'mp240925.1001 .a12345']))
-            ->assertSessionHasErrors(['transaction_id' => 'Cet identifiant de transaction a déjà été utilisé. Vérifiez-le sur votre SMS de confirmation.']);
+            ->post(route('checkout.pay', $formation), $this->proof([
+                'payer_phone' => '90 12 34 56',
+                'payer_name' => 'Afi Dossou',
+                'transaction_id' => 'MP240925.1001.A12345',
+            ]))
+            ->assertSessionHasNoErrors();
 
-        $this->assertSame(1, Purchase::count());
-        $this->assertFalse($student->isEnrolledIn($formation));
-        $this->assertSame([], Storage::disk('payment_proofs')->allFiles());
+        $purchase = Purchase::firstOrFail();
+        $this->assertNull($purchase->payer_phone);
+        $this->assertNull($purchase->transaction_id);
+
+        // Deux paiements sans identifiant de transaction ne se gênent pas (index unique sur une valeur vide).
+        $other = User::factory()->create();
+        $this->actingAs($other)
+            ->post(route('checkout.pay', $formation), $this->proof([], 700, 1300))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(2, Purchase::count());
     }
 
     public function test_capture_already_sent_is_refused(): void
@@ -125,9 +133,9 @@ class ManualPaymentTest extends TestCase
 
         $this->actingAs($first)->post(route('checkout.pay', $formation), $this->proof())->assertSessionHasNoErrors();
 
-        // Même image (mêmes octets), autre identifiant de transaction.
+        // Même image (mêmes octets), envoyée par un autre élève.
         $this->actingAs($second)
-            ->post(route('checkout.pay', $formation), $this->proof(['transaction_id' => 'AUTRE-9999']))
+            ->post(route('checkout.pay', $formation), $this->proof())
             ->assertSessionHasErrors(['proof' => 'Cette capture d\'écran a déjà été envoyée. Envoyez la capture de votre propre paiement.']);
 
         $this->assertFalse($second->isEnrolledIn($formation));
@@ -142,7 +150,7 @@ class ManualPaymentTest extends TestCase
         $this->actingAs($student)->post(route('checkout.pay', $first), $this->proof())->assertSessionHasNoErrors();
 
         $this->actingAs($student)
-            ->post(route('checkout.pay', $second), $this->proof(['transaction_id' => 'AUTRE-2'], 700, 1300))
+            ->post(route('checkout.pay', $second), $this->proof([], 700, 1300))
             ->assertSessionHasErrors('formation');
 
         $this->assertFalse($student->isEnrolledIn($second));
@@ -151,7 +159,7 @@ class ManualPaymentTest extends TestCase
         $this->actingAs($student)->get(route('checkout.show', $second))
             ->assertOk()
             ->assertSee('Un paiement est déjà en cours de vérification')
-            ->assertDontSee('Envoyer ma preuve de paiement');
+            ->assertDontSee('Envoyer la capture de mon paiement');
     }
 
     public function test_formation_already_owned_cannot_be_bought_again(): void
@@ -192,7 +200,6 @@ class ManualPaymentTest extends TestCase
             ->assertOk()
             ->assertSee('Reçu de paiement')
             ->assertSee($purchase->receipt_number)
-            ->assertSee('MP240925.1001.A12345')
             ->assertSee('Adidogomé, Lycée moderne 2, Lomé, Togo')
             ->assertDontSee('RCCM');
 
@@ -310,17 +317,17 @@ class ManualPaymentTest extends TestCase
             ->assertDontSee('AUTRE-ELEVE');
     }
 
-    public function test_proof_must_be_an_image_and_transaction_id_is_required(): void
+    public function test_proof_must_be_an_image(): void
     {
         $student = User::factory()->create();
         $formation = Formation::factory()->create(['price' => 5500]);
 
         $this->actingAs($student)
             ->post(route('checkout.pay', $formation), $this->proof([
-                'transaction_id' => '',
                 'proof' => UploadedFile::fake()->create('releve.pdf', 100, 'application/pdf'),
             ]))
-            ->assertSessionHasErrors(['transaction_id', 'proof']);
+            ->assertSessionHasErrors('proof')
+            ->assertSessionDoesntHaveErrors(['transaction_id', 'payer_phone', 'payer_name']);
 
         $this->assertSame(0, Purchase::count());
     }
@@ -346,7 +353,7 @@ class ManualPaymentTest extends TestCase
 
         $this->actingAs(User::factory()->create())->get(route('checkout.show', $formation))
             ->assertOk()
-            ->assertSee('Votre accès sera ouvert dès que votre paiement aura été vérifié');
+            ->assertSee('Votre accès sera ouvert dès que votre paiement aura été vérifié et validé');
     }
 
     public function test_disabled_payment_method_is_neither_shown_nor_accepted(): void

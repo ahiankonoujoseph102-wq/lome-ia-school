@@ -92,7 +92,7 @@
                         <li class="flex flex-wrap items-center gap-3 py-3">
                             <span class="min-w-0 flex-1">
                                 <span class="block font-medium text-white">{{ $purchase->user?->name }}</span>
-                                <span class="block text-xs text-slate-400">{{ $purchase->formatted_amount }} · payé depuis le {{ $purchase->payer_phone }} ({{ $purchase->payment_method_name }})</span>
+                                <span class="block text-xs text-slate-400">{{ $purchase->formatted_amount }} · {{ $purchase->payer_phone ? 'payé depuis le '.$purchase->payer_phone.' ('.$purchase->payment_method_name.')' : 'payé par '.$purchase->payment_method_name }}</span>
                                 <span class="block text-xs text-gold-200" data-test="refund-reason">{{ $purchase->refundReason() }}</span>
                             </span>
                             @can('access-admin')

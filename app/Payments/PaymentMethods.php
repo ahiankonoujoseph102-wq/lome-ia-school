@@ -40,6 +40,7 @@ class PaymentMethods
                 number: (string) ($method['number'] ?? ''),
                 beneficiary: (string) ($method['beneficiary'] ?? ''),
                 color: (string) ($method['color'] ?? '#8b5cf6'),
+                ussd: (string) ($method['ussd'] ?? ''),
             );
         }
 
