@@ -91,13 +91,7 @@
                             <div>
                                 <p class="text-xs font-semibold text-electric-300">{{ $formation->category->label() }}</p>
                                 <h2 class="mt-1 text-lg leading-snug font-semibold text-white">{{ $formation->title }}</h2>
-                                <div class="mt-2 flex flex-wrap gap-1.5">
-                                    @foreach ($formation->formats as $format)
-                                        <span class="inline-flex items-center gap-1 rounded-full bg-veil/5 px-2.5 py-1 text-xs text-slate-300 ring-1 ring-veil/10">
-                                            <flux:icon :icon="$format->icon()" class="size-3.5" /> {{ $format->shortLabel() }}
-                                        </span>
-                                    @endforeach
-                                </div>
+                                <x-site.formation-formats :formation="$formation" class="mt-2" />
                             </div>
 
                             <div @class(['hidden lg:block' => $paying])>
@@ -111,7 +105,14 @@
                                     @if ($moduleCount > 0)
                                         <li class="flex gap-2"><flux:icon.play-circle class="size-4 shrink-0 text-gold-400" /> Programme : {{ $moduleCount }} {{ $moduleCount > 1 ? 'modules' : 'module' }}, {{ $lessonCount }} {{ $lessonCount > 1 ? 'leçons' : 'leçon' }}</li>
                                     @endif
-                                    <li class="flex gap-2"><flux:icon.chat-bubble-left-right class="size-4 shrink-0 text-gold-400" /> Groupe privé d'accompagnement</li>
+                                    @if ($liveOffer = \App\Support\LiveOffer::for($formation))
+                                        <li class="flex gap-2" data-test="checkout-live-offer"><flux:icon.video-camera class="size-4 shrink-0 text-gold-400" /> En direct sur Google Meet : {{ \Illuminate\Support\Str::lcfirst($liveOffer->period()) }}, {{ \Illuminate\Support\Str::lcfirst($liveOffer->schedule()) }}</li>
+                                        @foreach ($liveOffer->included() as $item)
+                                            <li class="flex gap-2"><flux:icon.check-circle class="size-4 shrink-0 text-gold-400" /> {{ $item }}</li>
+                                        @endforeach
+                                    @else
+                                        <li class="flex gap-2"><flux:icon.chat-bubble-left-right class="size-4 shrink-0 text-gold-400" /> Groupe privé d'accompagnement</li>
+                                    @endif
                                     @foreach ($formation->bonuses as $bonus)
                                         <li class="flex gap-2"><flux:icon.gift class="size-4 shrink-0 text-gold-400" /> {{ $bonus }}</li>
                                     @endforeach

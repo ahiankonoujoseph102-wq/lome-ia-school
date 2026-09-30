@@ -5,6 +5,7 @@ namespace Tests\Feature\Site;
 use App\Enums\FormationCategory;
 use App\Models\Formation;
 use App\Support\Money;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -28,6 +29,9 @@ class FormationPagesTest extends TestCase
 
     public function test_formation_page_shows_sales_content_and_buy_button(): void
     {
+        // Après la formation en direct d'octobre 2026 (config/live_offers.php) : page habituelle, sans ancien programme inventé.
+        $this->travelTo(CarbonImmutable::parse('2026-10-08 08:00', 'Africa/Lome'));
+
         $formation = Formation::factory()->create([
             'title' => 'Création d\'agents IA',
             'slug' => 'creation-agents-ia',

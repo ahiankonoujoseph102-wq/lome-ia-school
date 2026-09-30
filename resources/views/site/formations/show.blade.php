@@ -1,5 +1,6 @@
 @php
     use App\Support\FormationShare;
+    use App\Support\LiveOffer;
     use App\Support\Placeholder;
     use App\Support\Testimonials;
     use App\Support\WhatsApp;
@@ -10,6 +11,9 @@
     $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur la formation « '.$formation->title.' ».';
     $trainer = config('site.trainer');
     $testimonials = Testimonials::all();
+
+    // Formation proposée en direct pendant une période limitée (config/live_offers.php), sinon null.
+    $liveOffer = LiveOffer::for($formation);
 
     $course = [
         '@context' => 'https://schema.org',
@@ -29,11 +33,21 @@
             'url' => route('formations.show', $formation),
         ],
     ];
+
+    if ($liveOffer) {
+        $course['hasCourseInstance'] = [
+            '@type' => 'CourseInstance',
+            'courseMode' => 'online',
+            'location' => ['@type' => 'VirtualLocation', 'name' => 'Google Meet'],
+            'startDate' => $liveOffer->startsAt()->toIso8601String(),
+            'endDate' => $liveOffer->endsAt()->toIso8601String(),
+        ];
+    }
 @endphp
 
 <x-layouts::site
     :title="$formation->title"
-    :description="Str::limit($formation->subtitle ?: $formation->description, 155)"
+    :description="$liveOffer ? $liveOffer->shareDescription() : Str::limit($formation->subtitle ?: $formation->description, 155)"
     :image="FormationShare::imageUrl($formation)"
     :image-type="FormationShare::imageType($formation)"
     type="product"
@@ -69,13 +83,28 @@
                         <p class="mt-4 text-lg text-pretty text-slate-300" data-reveal style="--reveal-delay: 120ms">{{ $formation->subtitle }}</p>
                     @endif
 
-                    <div class="mt-5 flex flex-wrap gap-2" data-reveal style="--reveal-delay: 160ms">
-                        @foreach ($formation->formats as $format)
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-veil/5 px-3 py-1.5 text-sm text-slate-200 ring-1 ring-veil/10">
-                                <flux:icon :icon="$format->icon()" class="size-4 text-electric-300" /> {{ $format->label() }}
+                    @if ($liveOffer)
+                        {{-- Formation en direct : dates et horaires dès le haut de la page, lien vers l'encadré --}}
+                        <a href="#formation-en-direct" class="mt-5 flex items-start gap-3 rounded-2xl bg-night-900 p-4 ring-1 ring-gold-500/50 hover:bg-night-800" data-reveal style="--reveal-delay: 160ms" data-test="live-offer-summary">
+                            <span class="relative mt-1.5 flex size-2.5 shrink-0">
+                                <span class="absolute inline-flex size-full animate-ping rounded-full bg-rose-400 opacity-75 motion-reduce:hidden"></span>
+                                <span class="relative inline-flex size-2.5 rounded-full bg-rose-500"></span>
                             </span>
-                        @endforeach
-                    </div>
+                            <span class="min-w-0 flex-1">
+                                <span class="block font-semibold text-white">Formation en direct sur Google Meet</span>
+                                <span class="block text-sm text-slate-300">{{ $liveOffer->period() }} · {{ $liveOffer->sessionCount() }} séances, {{ Str::lcfirst($liveOffer->schedule()) }}</span>
+                                <span class="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-gold-300">Dates, programme et questions <flux:icon.arrow-down class="size-4" /></span>
+                            </span>
+                        </a>
+                    @else
+                        <div class="mt-5 flex flex-wrap gap-2" data-reveal style="--reveal-delay: 160ms">
+                            @foreach ($formation->formats as $format)
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-veil/5 px-3 py-1.5 text-sm text-slate-200 ring-1 ring-veil/10">
+                                    <flux:icon :icon="$format->icon()" class="size-4 text-electric-300" /> {{ $format->label() }}
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
 
                     <ul class="mt-6 flex flex-wrap gap-2" data-reveal style="--reveal-delay: 180ms">
                         @foreach (config('site.lifetime.items') as $item)
@@ -128,6 +157,11 @@
 
     <div class="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_340px] lg:py-20">
         <div class="min-w-0 space-y-16">
+            {{-- Formation en direct : dates, horaires, déroulement, programme --}}
+            @if ($liveOffer)
+                <x-site.live-offer :offer="$liveOffer" :has-access="$hasAccess" />
+            @endif
+
             {{-- Présentation --}}
             <section data-reveal>
                 <h2 class="text-2xl font-bold text-white sm:text-3xl">Présentation</h2>
@@ -135,7 +169,7 @@
             </section>
 
             {{-- Prochaine session ponctuelle : sans lien Google Meet, réservée aux élèves de la formation --}}
-            @if ($nextSession)
+            @if ($nextSession && ! $liveOffer)
                 <section id="prochaine-session" class="scroll-mt-24" data-test="next-session">
                     <h2 class="text-2xl font-bold text-white sm:text-3xl">Prochaine session</h2>
                     <div class="card mt-5 p-5 sm:p-6">
@@ -241,7 +275,7 @@
                     <flux:icon.check-badge class="size-7 text-gold-300" /> Inclus avec la formation
                 </h2>
                 <ul class="mt-5 space-y-3">
-                    @foreach (config('site.included') as $item)
+                    @foreach ($liveOffer ? $liveOffer->included() : config('site.included') as $item)
                         <li class="flex items-start gap-3 text-slate-200">
                             <flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-300" /> {{ $item }}
                         </li>
@@ -292,7 +326,7 @@
             {{-- FAQ --}}
             <section>
                 <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Questions fréquentes</h2>
-                <x-site.faq :items="config('site.faq.formation')" class="mt-6" />
+                <x-site.faq :items="$liveOffer ? $liveOffer->faq() : config('site.faq.formation')" class="mt-6" data-test="formation-faq" />
             </section>
         </div>
 

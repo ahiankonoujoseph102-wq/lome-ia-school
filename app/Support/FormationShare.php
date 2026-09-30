@@ -43,7 +43,10 @@ class FormationShare
     {
         $route = filled($formation->image) ? 'og.formation.photo' : 'og.formation';
 
-        return AppUrl::to(route($route, $formation)).'?v='.$formation->updated_at?->timestamp;
+        // L'offre en direct change le visuel généré : sa présence change aussi la version.
+        $live = ! filled($formation->image) ? LiveOffer::for($formation)?->fingerprint() : null;
+
+        return AppUrl::to(route($route, $formation)).'?v='.$formation->updated_at?->timestamp.($live !== null ? '-'.$live : '');
     }
 
     public static function imageType(Formation $formation): string
