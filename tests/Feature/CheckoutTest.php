@@ -116,8 +116,8 @@ class CheckoutTest extends TestCase
             ->assertSee('Bénin')
             ->assertSee('+228 72 24 02 31')
             ->assertSee('Ahiankonou Kokou Joseph')
-            ->assertSee('Les frais de transfert sont à la charge de l&#039;expéditeur.', false)
-            ->assertSee('Envoyer ma preuve de paiement')
+            ->assertSee('Le paiement se fait par transfert Mobile Money depuis votre téléphone. Les frais de transfert sont à votre charge.')
+            ->assertSee('Envoyer la capture de mon paiement')
             ->assertSee(route('checkout.pay', $formation), false)
             ->assertDontSee('FedaPay');
     }

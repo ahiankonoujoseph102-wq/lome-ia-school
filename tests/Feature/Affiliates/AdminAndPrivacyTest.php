@@ -39,7 +39,7 @@ class AdminAndPrivacyTest extends AffiliateTestCase
     {
         $affiliate = $this->affiliate();
         $buyer = User::factory()->create(['name' => 'Acheteur Secret', 'email' => 'secret@example.com', 'phone' => '+22893334455']);
-        $this->validatePayment($this->buy($buyer, $this->click($affiliate), payerPhone: '93 33 44 55'));
+        $this->validatePayment($this->buy($buyer, $this->click($affiliate), payerPhone: '+22893334455'));
 
         foreach (['student.affiliate.index', 'student.affiliate.commissions', 'student.affiliate.withdrawals'] as $route) {
             $response = $this->actingAs($affiliate->user)->get(route($route))->assertOk();
@@ -99,7 +99,7 @@ class AdminAndPrivacyTest extends AffiliateTestCase
     {
         $affiliate = $this->affiliate(['name' => 'Yao Affilié', 'phone' => '+22890111111']);
         // Un autre compte, mais payé depuis le numéro WhatsApp de l'affilié.
-        $this->buy(User::factory()->create(), $this->click($affiliate), payerPhone: '90 11 11 11');
+        $this->buy(User::factory()->create(), $this->click($affiliate), payerPhone: '+22890111111');
 
         $this->actingAs($this->admin())->get(route('admin.payments.index'))
             ->assertOk()
@@ -129,7 +129,7 @@ class AdminAndPrivacyTest extends AffiliateTestCase
     {
         $affiliate = $this->affiliate();
         app(AffiliateManager::class)->updatePayout($affiliate, ['payout_country' => 'tg', 'payout_method' => 'tg-mixx', 'payout_phone' => '+22891000001', 'payout_name' => 'Awa Mensah']);
-        $this->validatePayment($this->buy(User::factory()->create(), $this->click($affiliate), payerPhone: '91 00 00 01'));
+        $this->validatePayment($this->buy(User::factory()->create(), $this->click($affiliate), payerPhone: '+22891000001'));
 
         $alerts = collect(app(AffiliateAlerts::class)->forAffiliate($affiliate->refresh()))->pluck('text')->implode(' | ');
 

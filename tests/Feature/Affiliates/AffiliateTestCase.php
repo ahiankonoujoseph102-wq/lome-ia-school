@@ -61,34 +61,38 @@ abstract class AffiliateTestCase extends TestCase
     }
 
     /**
-     * Preuve de paiement Mobile Money (capture et identifiant différents à chaque appel).
+     * Preuve de paiement Mobile Money : la capture seule (différente à chaque appel).
      *
      * @return array<string, mixed>
      */
-    protected function proof(string $payerPhone = '90 12 34 56'): array
+    protected function proof(): array
     {
         $this->proofs++;
 
         return [
             'payment_method' => 'tg-mixx',
-            'payer_phone' => $payerPhone,
-            'payer_name' => 'Afi Dossou',
-            'transaction_id' => 'MP261001.1001.A'.str_pad((string) $this->proofs, 5, '0', STR_PAD_LEFT),
             'proof' => UploadedFile::fake()->image('capture.png', 600, 1000 + $this->proofs),
         ];
     }
 
     /**
      * Achat d'une formation, avec le cookie du dernier lien cliqué s'il y en a un.
+     * $payerPhone : numéro payeur d'un ancien paiement (saisi par l'élève avant la page de paiement simplifiée).
      */
-    protected function buy(User $buyer, ?string $referral, ?Formation $formation = null, string $payerPhone = '90 12 34 56'): Purchase
+    protected function buy(User $buyer, ?string $referral, ?Formation $formation = null, ?string $payerPhone = null): Purchase
     {
         $this->withReferral($referral)
             ->actingAs($buyer)
-            ->post(route('checkout.pay', $formation ?? $this->formation), $this->proof($payerPhone))
+            ->post(route('checkout.pay', $formation ?? $this->formation), $this->proof())
             ->assertRedirect();
 
-        return Purchase::query()->where('user_id', $buyer->id)->latest('id')->firstOrFail();
+        $purchase = Purchase::query()->where('user_id', $buyer->id)->latest('id')->firstOrFail();
+
+        if ($payerPhone !== null) {
+            $purchase->forceFill(['payer_phone' => $payerPhone])->save();
+        }
+
+        return $purchase;
     }
 
     protected function withReferral(?string $referral): static

@@ -6,7 +6,7 @@
         {{ $purchase->isSessionSupplement() ? 'Votre place pour la session est confirmée.' : 'Votre formation est ouverte.' }} Votre paiement sera vérifié sous peu.
         @break
     @case(PurchaseStatus::Pending)
-        {{ $purchase->isSessionSupplement() ? 'Votre place est réservée : elle sera confirmée' : 'Votre accès sera ouvert' }} dès que votre paiement aura été vérifié, {{ config('site.payments.verification_hours') }}. Vous serez prévenu par e-mail.
+        {{ $purchase->isSessionSupplement() ? 'Votre place est réservée : elle sera confirmée' : 'Votre accès à la formation sera ouvert' }} dès que votre paiement aura été vérifié et validé, {{ config('site.payments.verification_hours') }}. Vous serez prévenu par e-mail.
         @break
     @case(PurchaseStatus::Validated)
         Paiement confirmé le {{ $purchase->verified_at?->translatedFormat('j F Y') }}. {{ $purchase->isSessionSupplement() ? 'Votre place est confirmée.' : 'Votre accès est définitif.' }}

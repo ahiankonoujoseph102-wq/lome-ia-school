@@ -119,14 +119,11 @@ class LiveSessionController extends Controller
 
         $purchase = $submit->handle($user, $session->formation, [
             'payment_method' => $request->string('payment_method')->toString(),
-            'payer_phone' => $request->string('payer_phone')->toString(),
-            'payer_name' => $request->string('payer_name')->toString(),
-            'transaction_id' => $request->string('transaction_id')->toString(),
         ], $proof, $session);
 
         return to_route('student.purchases.show', $purchase)->with('status', $purchase->status === PurchaseStatus::Provisional
-            ? 'Merci ! Votre preuve de paiement est bien reçue et votre place est confirmée.'
-            : 'Merci ! Votre preuve de paiement est bien reçue : votre place reste réservée pendant la vérification.');
+            ? 'Merci ! Votre capture de paiement est bien reçue et votre place est confirmée.'
+            : 'Merci ! Votre capture de paiement est bien reçue : votre place reste réservée pendant la vérification.');
     }
 
     /**

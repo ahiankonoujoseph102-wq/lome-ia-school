@@ -41,7 +41,8 @@ class PaymentAlerts
             $alerts[] = ['level' => 'danger', 'text' => $rejected.' paiement'.($rejected > 1 ? 's' : '').' déjà refusé'.($rejected > 1 ? 's' : '').' pour cet élève.'];
         }
 
-        $samePhoneElsewhere = Purchase::query()
+        // Numéro payeur : seulement sur les anciens paiements (l'élève n'envoie plus que la capture).
+        $samePhoneElsewhere = filled($purchase->payer_phone) && Purchase::query()
             ->where('payer_phone', $purchase->payer_phone)
             ->where('user_id', '!=', $user->id)
             ->exists();

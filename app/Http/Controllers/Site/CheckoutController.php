@@ -62,6 +62,7 @@ class CheckoutController extends Controller
             'promoCode' => $code,
             'promoError' => $promoError,
             'payAmount' => Money::fcfa($amount),
+            'amountValue' => $amount,
         ]);
     }
 
@@ -76,14 +77,11 @@ class CheckoutController extends Controller
 
         $purchase = $submit->handle($user, $formation, [
             'payment_method' => $request->string('payment_method')->toString(),
-            'payer_phone' => $request->string('payer_phone')->toString(),
-            'payer_name' => $request->string('payer_name')->toString(),
-            'transaction_id' => $request->string('transaction_id')->toString(),
             'promo_code' => $request->string('promo_code')->toString(),
         ], $proof);
 
         return to_route('student.purchases.show', $purchase)->with('status', $purchase->status === PurchaseStatus::Provisional
-            ? 'Merci ! Votre preuve de paiement est bien reçue et votre formation est ouverte.'
-            : 'Merci ! Votre preuve de paiement est bien reçue.');
+            ? 'Merci ! Votre capture de paiement est bien reçue et votre formation est ouverte.'
+            : 'Merci ! Votre capture de paiement est bien reçue.');
     }
 }

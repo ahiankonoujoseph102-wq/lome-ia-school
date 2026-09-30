@@ -254,6 +254,7 @@ class SiteSettingsController extends Controller
             'methods.*.number' => ['required', 'string', 'max:30'],
             'methods.*.beneficiary' => ['required', 'string', 'max:120'],
             'methods.*.color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'methods.*.ussd' => ['nullable', 'string', 'max:60'],
             'methods.*.enabled' => ['nullable', 'boolean'],
         ], [
             'countries.*.code.regex' => 'Code pays : deux lettres minuscules (ex. tg).',
@@ -292,12 +293,19 @@ class SiteSettingsController extends Controller
             // Un moyen existant garde sa clé (elle est enregistrée dans les anciens achats) ; un nouveau en reçoit une.
             $key = filled($method['key'] ?? null) && isset($previous[$method['key']]) ? (string) $method['key'] : self::newMethodKey((string) $method['country'], (string) $method['name'], [...array_keys($previous), ...array_keys($methods)]);
 
+            $ussd = self::cleanUssd((string) ($method['ussd'] ?? ''));
+
+            if ($ussd !== '' && ! self::isValidUssd($ussd)) {
+                throw ValidationException::withMessages(["methods.{$index}.ussd" => 'Code USSD : uniquement des chiffres, * et #, commençant par * et finissant par # (ex. *145*1#). Repères autorisés : {numero} et {montant}.']);
+            }
+
             $methods[$key] = [
                 'country' => (string) $method['country'],
                 'name' => trim((string) $method['name']),
                 'number' => trim((string) $method['number']),
                 'beneficiary' => trim((string) $method['beneficiary']),
                 'color' => strtolower((string) $method['color']),
+                'ussd' => $ussd,
                 'enabled' => (bool) ($method['enabled'] ?? false),
             ];
         }
@@ -588,7 +596,7 @@ class SiteSettingsController extends Controller
     private static function describeMethodChanges(array $before, array $after): array
     {
         $changes = [];
-        $labels = ['number' => 'numéro', 'beneficiary' => 'bénéficiaire', 'name' => 'nom', 'country' => 'pays'];
+        $labels = ['number' => 'numéro', 'beneficiary' => 'bénéficiaire', 'name' => 'nom', 'country' => 'pays', 'ussd' => 'code USSD'];
 
         foreach ($after as $key => $method) {
             $old = is_array($before[$key] ?? null) ? $before[$key] : null;
@@ -611,6 +619,25 @@ class SiteSettingsController extends Controller
         }
 
         return $changes;
+    }
+
+    /**
+     * Code USSD collé : espaces et caractères invisibles retirés, repères en minuscules.
+     */
+    public static function cleanUssd(string $value): string
+    {
+        $value = (string) preg_replace('/[\s\x{00A0}\x{200B}-\x{200D}\x{2060}\x{FEFF}]+/u', '', $value);
+
+        return str_ireplace(['{numéro}', '{numero}', '{montant}'], ['{numero}', '{numero}', '{montant}'], $value);
+    }
+
+    /**
+     * Code USSD de transfert : chiffres, * et #, commence par * et finit par #, repères {numero} et {montant}.
+     * Aucun autre texte (et donc jamais de code secret en toutes lettres).
+     */
+    public static function isValidUssd(string $value): bool
+    {
+        return preg_match('/^\*(?:[0-9*#]|\{numero\}|\{montant\})*#$/', $value) === 1;
     }
 
     /**

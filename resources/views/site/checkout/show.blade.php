@@ -4,6 +4,7 @@
     $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur le paiement de la formation « '.$formation->title.' ».';
     $moduleCount = $formation->publicCurriculum()->count();
     $lessonCount = $formation->orderedPublishedLessons()->count();
+    $paying = $user && ! $alreadyEnrolled;
 @endphp
 
 <x-layouts::site title="Récapitulatif de commande" :whatsapp-message="$whatsappMessage" noindex>
@@ -15,9 +16,10 @@
                 <flux:icon.arrow-left class="size-4" /> Retour à la formation
             </a>
 
-            <h1 class="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl">Récapitulatif de commande</h1>
+            <h1 class="mt-4 text-2xl font-bold tracking-tight text-white sm:text-4xl">Récapitulatif de commande</h1>
 
-            {{-- Étapes du parcours --}}
+            {{-- Étapes du parcours (le paiement a ensuite ses propres étapes numérotées) --}}
+            @guest
             <ol class="mt-6 flex items-center gap-2 text-xs font-semibold sm:text-sm" aria-label="Étapes de la commande">
                 @foreach (['Mon compte', 'Paiement', 'Accès à la formation'] as $step)
                     @php $done = $loop->first && $user; $current = ($loop->first && ! $user) || ($loop->index === 1 && $user); @endphp
@@ -41,8 +43,9 @@
                     </li>
                 @endforeach
             </ol>
+            @endguest
 
-            <div class="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_380px]">
+            <div class="mt-6 grid sm:mt-8 items-start gap-6 lg:grid-cols-[1fr_380px]">
                 {{-- Colonne principale --}}
                 <div class="order-2 space-y-6 lg:order-1">
                     @if ($alreadyEnrolled)
@@ -82,7 +85,8 @@
                 {{-- Résumé de la commande --}}
                 <aside class="order-1 lg:sticky lg:top-24 lg:order-2">
                     <div class="card overflow-hidden">
-                        <x-site.formation-cover :formation="$formation" class="aspect-[16/7]" eager />
+                        {{-- Sur téléphone, pendant le paiement, le résumé reste court : titre, code promo et total --}}
+                        <x-site.formation-cover :formation="$formation" :class="\Illuminate\Support\Arr::toCssClasses(['aspect-[16/7]', 'hidden lg:block' => $paying])" eager />
                         <div class="space-y-5 p-5">
                             <div>
                                 <p class="text-xs font-semibold text-electric-300">{{ $formation->category->label() }}</p>
@@ -96,7 +100,7 @@
                                 </div>
                             </div>
 
-                            <div>
+                            <div @class(['hidden lg:block' => $paying])>
                                 <p class="text-sm font-semibold text-white">Ce qui est inclus</p>
                                 <ul class="mt-3 space-y-2.5 text-sm text-slate-300">
                                     @if ($needsVerification)
