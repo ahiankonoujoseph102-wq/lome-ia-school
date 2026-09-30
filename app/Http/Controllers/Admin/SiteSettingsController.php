@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Admin\ActivityLog;
+use App\Assistant\AmaPrompt;
 use App\Branding\BrandAssets;
 use App\Enums\AdminAction;
 use App\Http\Controllers\Controller;
@@ -39,7 +40,7 @@ class SiteSettingsController extends Controller
         'affiliation' => ['title' => 'Affiliation', 'text' => 'Taux de commission, durée des liens, délai de disponibilité, retrait minimum.', 'icon' => 'share', 'sensitive' => true],
         'textes' => ['title' => 'Textes du site', 'text' => 'Accroche de l\'accueil, présentation du formateur, questions fréquentes.', 'icon' => 'document-text'],
         'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
-        'assistante' => ['title' => 'Assistante vocale', 'text' => 'Bouton « Parler avec notre assistante » (agent ElevenLabs) : activation, identifiant de l\'agent, lecteur de cours et aide proactive.', 'icon' => 'microphone'],
+        'assistante' => ['title' => 'Assistante Ama', 'text' => 'Bouton « Parler avec notre assistante » : activation, Ama (Gemini) ou ElevenLabs, instructions, limites, lecteur de cours et aide proactive.', 'icon' => 'chat-bubble-oval-left-ellipsis'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
     ];
 
@@ -499,33 +500,78 @@ class SiteSettingsController extends Controller
     {
         $request->merge(['agent_id' => VoiceAssistant::cleanAgentId(is_string($request->input('agent_id')) ? $request->input('agent_id') : null)]);
 
-        $validated = $request->validate([
+        $rules = [
             'enabled' => ['nullable', 'boolean'],
-            'agent_id' => ['required', 'string', 'max:80'],
+            'provider' => ['nullable', Rule::in([VoiceAssistant::GEMINI, VoiceAssistant::ELEVENLABS])],
+            'instructions' => ['nullable', 'string', 'max:12000'],
+            'agent_id' => ['nullable', 'string', 'max:80'],
             'lessons' => ['nullable', 'boolean'],
             'proactive' => ['nullable', 'boolean'],
             'help_delay' => ['nullable', 'integer', 'min:'.VoiceAssistant::MIN_HELP_DELAY, 'max:'.VoiceAssistant::MAX_HELP_DELAY],
-        ], [
-            'agent_id.required' => 'Indiquez l\'identifiant de l\'agent ElevenLabs. Exemple : '.VoiceAssistant::EXAMPLE_ID.'.',
+        ];
+        $messages = [
+            'instructions.max' => 'Les instructions sont trop longues (12 000 caractères au maximum).',
             'help_delay.integer' => 'Le délai s\'écrit en secondes, sans virgule (par exemple 90).',
             'help_delay.min' => 'Le délai doit être d\'au moins '.VoiceAssistant::MIN_HELP_DELAY.' secondes.',
             'help_delay.max' => 'Le délai ne peut pas dépasser '.VoiceAssistant::MAX_HELP_DELAY.' secondes.',
-        ]);
+        ];
 
-        $agentId = (string) $validated['agent_id'];
+        foreach (VoiceAssistant::LIMITS as $name => [, $min, $max]) {
+            $rules[$name] = ['nullable', 'integer', 'min:'.$min, 'max:'.$max];
+            $messages[$name.'.integer'] = 'Écrivez un nombre entier, sans espace ni virgule.';
+            $messages[$name.'.min'] = 'Le nombre doit être d\'au moins '.$min.'.';
+            $messages[$name.'.max'] = 'Le nombre ne peut pas dépasser '.$max.'.';
+        }
 
-        if (! VoiceAssistant::isValidAgentId($agentId)) {
-            throw ValidationException::withMessages(['agent_id' => VoiceAssistant::invalidMessage($agentId)]);
+        $validated = $request->validate($rules, $messages);
+
+        $provider = (string) ($validated['provider'] ?? VoiceAssistant::GEMINI);
+        $agentId = (string) ($validated['agent_id'] ?? '');
+        $previous = (array) SiteSettings::get('site.voice_assistant');
+
+        if ($provider === VoiceAssistant::ELEVENLABS) {
+            if ($agentId === '') {
+                throw ValidationException::withMessages(['agent_id' => 'Indiquez l\'identifiant de l\'agent ElevenLabs. Exemple : '.VoiceAssistant::EXAMPLE_ID.'.']);
+            }
+
+            if (! VoiceAssistant::isValidAgentId($agentId)) {
+                throw ValidationException::withMessages(['agent_id' => VoiceAssistant::invalidMessage($agentId)]);
+            }
+        } elseif (! VoiceAssistant::isValidAgentId($agentId)) {
+            // Ama (Gemini) choisie : l'identifiant de l'agent ElevenLabs n'est pas utilisé, l'ancien est gardé.
+            $agentId = (string) ($previous['agent_id'] ?? VoiceAssistant::EXAMPLE_ID);
         }
 
         $enabled = (bool) ($validated['enabled'] ?? false);
         $lessons = (bool) ($validated['lessons'] ?? false);
         $proactive = (bool) ($validated['proactive'] ?? false);
         $delay = (int) ($validated['help_delay'] ?? VoiceAssistant::DEFAULT_HELP_DELAY);
+        // Instructions vidées : retour au texte d'origine.
+        $instructions = trim(str_replace("\r\n", "\n", (string) ($validated['instructions'] ?? '')));
+        $instructions = $instructions !== '' ? $instructions : AmaPrompt::DEFAULT_INSTRUCTIONS;
 
-        SiteSettings::save(['site.voice_assistant' => ['enabled' => $enabled, 'agent_id' => $agentId, 'lessons' => $lessons, 'proactive' => $proactive, 'help_delay' => $delay]]);
+        /** @var array<string, int> $limits */
+        $limits = [];
+        foreach (VoiceAssistant::LIMITS as $name => [$default]) {
+            $limits[$name] = (int) ($validated[$name] ?? $default);
+        }
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante vocale '.($enabled ? 'activée' : 'désactivée').' (agent '.$agentId.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').').');
+        SiteSettings::save(['site.voice_assistant' => [
+            'enabled' => $enabled,
+            'provider' => $provider,
+            'instructions' => $instructions,
+            ...$limits,
+            'agent_id' => $agentId,
+            'lessons' => $lessons,
+            'proactive' => $proactive,
+            'help_delay' => $delay,
+        ]]);
+
+        $summary = $provider === VoiceAssistant::GEMINI
+            ? 'Ama (Gemini), '.$limits['visitor_daily_limit'].' messages par visiteur et par jour, '.$limits['daily_limit'].' demandes par jour pour le site'.($instructions !== (string) ($previous['instructions'] ?? AmaPrompt::DEFAULT_INSTRUCTIONS) ? ', instructions modifiées' : '')
+            : 'agent ElevenLabs '.$agentId;
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').').');
     }
 
     private function updateLegal(Request $request): void

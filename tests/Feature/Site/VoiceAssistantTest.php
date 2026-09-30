@@ -17,8 +17,9 @@ use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
- * Assistante vocale IA (agent ElevenLabs) : interrupteur et identifiant dans l'admin, bouton flottant
- * sur les pages publiques choisies seulement, aucun script chargé tant qu'elle est désactivée.
+ * Assistante (mode agent ElevenLabs, gardé au choix dans l'admin) : interrupteur et identifiant dans l'admin,
+ * bouton flottant sur les pages publiques choisies seulement, aucun script chargé tant qu'elle est désactivée.
+ * Ama (Gemini, par défaut) : tests/Feature/Site/AmaGeminiTest.php.
  */
 class VoiceAssistantTest extends TestCase
 {
@@ -28,7 +29,7 @@ class VoiceAssistantTest extends TestCase
 
     private function enable(bool $enabled = true, string $agentId = self::AGENT): void
     {
-        SiteSettings::save(['site.voice_assistant' => ['enabled' => $enabled, 'agent_id' => $agentId]]);
+        SiteSettings::save(['site.voice_assistant' => ['enabled' => $enabled, 'provider' => 'elevenlabs', 'agent_id' => $agentId]]);
     }
 
     private function assertWidgetAbsent(TestResponse $response): void
@@ -69,6 +70,8 @@ class VoiceAssistantTest extends TestCase
     public function test_it_is_disabled_by_default_and_prefilled_with_the_agent_id(): void
     {
         $this->assertFalse(config('site.voice_assistant.enabled'));
+        // Ama (Gemini) est l'assistante par défaut ; l'agent ElevenLabs reste disponible dans l'admin.
+        $this->assertSame(VoiceAssistant::GEMINI, VoiceAssistant::provider());
         $this->assertSame(self::AGENT, config('site.voice_assistant.agent_id'));
         $this->assertFalse(VoiceAssistant::enabled());
     }
@@ -130,7 +133,7 @@ class VoiceAssistantTest extends TestCase
 
     public function test_the_course_player_shows_it_only_when_the_admin_chooses_it(): void
     {
-        SiteSettings::save(['site.voice_assistant' => ['enabled' => true, 'agent_id' => self::AGENT, 'lessons' => true]]);
+        SiteSettings::save(['site.voice_assistant' => ['enabled' => true, 'provider' => 'elevenlabs', 'agent_id' => self::AGENT, 'lessons' => true]]);
         $lesson = Lesson::factory()->preview()->create();
 
         $this->assertWidgetPresent($this->get(route('lessons.show', [$lesson->formation(), $lesson])));
@@ -185,23 +188,23 @@ class VoiceAssistantTest extends TestCase
     {
         $admin = User::factory()->create(['role' => UserRole::Admin]);
 
-        $this->actingAs($admin)->get(route('admin.settings.index'))->assertOk()->assertSee('Assistante vocale');
+        $this->actingAs($admin)->get(route('admin.settings.index'))->assertOk()->assertSee('Assistante Ama');
         $this->actingAs($admin)->get(route('admin.settings.edit', 'assistante'))
             ->assertOk()
-            ->assertSee('Assistante vocale activée')
+            ->assertSee('Assistante activée')
             ->assertSee('Identifiant de l\'agent ElevenLabs')
             ->assertSee('value="'.self::AGENT.'"', false)
             ->assertDontSee('type="url"', false);
 
-        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['enabled' => '1', 'agent_id' => self::AGENT])
+        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['provider' => 'elevenlabs', 'enabled' => '1', 'agent_id' => self::AGENT])
             ->assertRedirect(route('admin.settings.edit', 'assistante'))
             ->assertSessionHasNoErrors();
 
         $this->assertTrue(VoiceAssistant::enabled());
         $this->assertWidgetPresent($this->get(route('home')));
-        $this->assertTrue(AdminActivity::query()->where('action', AdminAction::SettingsUpdated)->where('description', 'like', '%Assistante vocale activée%')->exists());
+        $this->assertTrue(AdminActivity::query()->where('action', AdminAction::SettingsUpdated)->where('description', 'like', '%Assistante activée (agent ElevenLabs%')->exists());
 
-        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['enabled' => '0', 'agent_id' => self::AGENT])
+        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['provider' => 'elevenlabs', 'enabled' => '0', 'agent_id' => self::AGENT])
             ->assertSessionHasNoErrors();
 
         $this->assertFalse(VoiceAssistant::enabled());
@@ -222,7 +225,7 @@ class VoiceAssistantTest extends TestCase
             ->assertSee('{{contexte}}', false)
             ->assertSee('{{message_accueil}}', false);
 
-        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['enabled' => '1', 'agent_id' => self::AGENT, 'lessons' => '1', 'proactive' => '0', 'help_delay' => '120'])
+        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['provider' => 'elevenlabs', 'enabled' => '1', 'agent_id' => self::AGENT, 'lessons' => '1', 'proactive' => '0', 'help_delay' => '120'])
             ->assertSessionHasNoErrors();
 
         $this->assertTrue(VoiceAssistant::showInLessons());
@@ -230,7 +233,7 @@ class VoiceAssistantTest extends TestCase
         $this->assertSame(120, VoiceAssistant::helpDelay());
         $this->assertTrue(AdminActivity::query()->where('description', 'like', '%lecteur de cours : oui, aide proactive : non%')->exists());
 
-        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['enabled' => '1', 'agent_id' => self::AGENT, 'help_delay' => '5'])
+        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['provider' => 'elevenlabs', 'enabled' => '1', 'agent_id' => self::AGENT, 'help_delay' => '5'])
             ->assertSessionHasErrors(['help_delay' => 'Le délai doit être d\'au moins 30 secondes.']);
     }
 
@@ -240,6 +243,7 @@ class VoiceAssistantTest extends TestCase
 
         // Espaces insécables, caractère de largeur nulle, retour à la ligne, majuscule du clavier.
         $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), [
+            'provider' => 'elevenlabs',
             'enabled' => '1',
             'agent_id' => "\u{00A0}\u{200B}Agent_9901m3phrpdwedt88vsdqmnwk09z \n",
         ])->assertSessionHasNoErrors();
@@ -252,17 +256,17 @@ class VoiceAssistantTest extends TestCase
         $admin = User::factory()->create(['role' => UserRole::Admin]);
         $this->enable(false, 'agent_ancienidentifiant1');
 
-        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['enabled' => '1', 'agent_id' => '9901m3phrpdwedt88vsdqmnwk09z'])
+        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['provider' => 'elevenlabs', 'enabled' => '1', 'agent_id' => '9901m3phrpdwedt88vsdqmnwk09z'])
             ->assertSessionHasErrors(['agent_id' => VoiceAssistant::invalidMessage('9901m3phrpdwedt88vsdqmnwk09z')]);
 
-        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['enabled' => '1', 'agent_id' => 'agent_abc-def!ghijkl'])
+        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['provider' => 'elevenlabs', 'enabled' => '1', 'agent_id' => 'agent_abc-def!ghijkl'])
             ->assertSessionHasErrors('agent_id');
 
-        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['enabled' => '1', 'agent_id' => ''])
+        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['provider' => 'elevenlabs', 'enabled' => '1', 'agent_id' => ''])
             ->assertSessionHasErrors('agent_id');
 
         // Rien n'a été enregistré.
-        $this->assertSame(['enabled' => false, 'agent_id' => 'agent_ancienidentifiant1'], SiteSettings::get('site.voice_assistant'));
+        $this->assertSame(['enabled' => false, 'provider' => 'elevenlabs', 'agent_id' => 'agent_ancienidentifiant1'], SiteSettings::get('site.voice_assistant'));
         $this->assertStringContainsString('doit commencer par « agent_ »', VoiceAssistant::invalidMessage('9901m3phrpdwedt88vsdqmnwk09z'));
     }
 
@@ -271,7 +275,7 @@ class VoiceAssistantTest extends TestCase
         $moderator = User::factory()->create(['role' => UserRole::Moderator]);
 
         $this->actingAs($moderator)->get(route('admin.settings.edit', 'assistante'))->assertForbidden();
-        $this->actingAs($moderator)->put(route('admin.settings.update', 'assistante'), ['enabled' => '1', 'agent_id' => self::AGENT])->assertForbidden();
+        $this->actingAs($moderator)->put(route('admin.settings.update', 'assistante'), ['provider' => 'elevenlabs', 'enabled' => '1', 'agent_id' => self::AGENT])->assertForbidden();
 
         $this->assertFalse(VoiceAssistant::enabled());
     }
@@ -292,6 +296,8 @@ class VoiceAssistantTest extends TestCase
 
     public function test_the_privacy_policy_mentions_the_assistant(): void
     {
+        $this->enable(false);
+
         $this->get(route('legal.privacy'))
             ->assertOk()
             ->assertSee('Ama est une intelligence artificielle.')

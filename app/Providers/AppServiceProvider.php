@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Assistant\GeminiModel;
+use App\Contracts\AssistantModel;
 use App\Contracts\PushSender;
 use App\Models\User;
 use App\Push\NullPushSender;
@@ -41,6 +43,9 @@ class AppServiceProvider extends ServiceProvider
 
             return $sender->isConfigured() ? $sender : new NullPushSender;
         });
+
+        // Assistante « Ama » : API Gemini de Google, appelée uniquement par le serveur.
+        $this->app->bind(AssistantModel::class, GeminiModel::class);
     }
 
     /**

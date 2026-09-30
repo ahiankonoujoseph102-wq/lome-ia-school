@@ -1,5 +1,5 @@
 import Alpine from 'alpinejs';
-import { buildVariables, createHelpTracker, pick } from './ama.js';
+import { buildVariables, createHelpTracker, loadConversation, pick, pickFrenchVoice, saveConversation, speakable, speechSupport } from './ama.js';
 
 /**
  * Apparition douce des éléments marqués data-reveal, uniquement pour ceux encore sous l'écran.
@@ -584,8 +584,15 @@ const widgetIsVisible = (widget) =>
     });
 
 /**
- * Bouton « Parler avec notre assistante » (Ama, agent ElevenLabs).
+ * Bouton « Parler avec notre assistante » : Ama (Gemini, par défaut) ou l'agent ElevenLabs (config.provider).
  *
+ * Ama (Gemini) : fenêtre de discussion de la page. L'écrit par défaut ; chaque message part au serveur du site
+ * (route assistant.message), qui seul appelle Gemini : la clé n'est jamais dans le navigateur. Micro (reconnaissance
+ * vocale du navigateur) et « Lire les réponses à voix haute » (synthèse vocale du navigateur) seulement si le
+ * navigateur les gère ; le micro ne s'ouvre qu'au toucher de son bouton. Sans réponse du serveur : message clair et
+ * bouton « Écrivez-nous sur WhatsApp », jamais d'erreur technique.
+ *
+ * Agent ElevenLabs :
  * - Contexte de la page (sans donnée personnelle, voir ama.js) envoyé à l'agent en variables dynamiques :
  *   attribut « dynamic-variables » du widget, remis à jour au démarrage de chaque appel par l'événement
  *   officiel « elevenlabs-convai:call » (detail.config.dynamicVariables).
@@ -606,6 +613,21 @@ Alpine.data('voiceAssistant', (config) => ({
     widget: null,
     tracker: null,
     stepTimer: null,
+    // Ama (Gemini) : fenêtre de discussion.
+    provider: config.provider,
+    messages: [],
+    draft: '',
+    notice: '',
+    sending: false,
+    conversation: null,
+    storage: null,
+    canListen: false,
+    canSpeak: false,
+    listening: false,
+    recognition: null,
+    usedVoice: false,
+    speakReplies: false,
+    suggestions: config.suggestions ?? [],
 
     init() {
         let storage = null;
@@ -616,6 +638,17 @@ Alpine.data('voiceAssistant', (config) => ({
         }
 
         this.tracker = createHelpTracker({ storage, pageKey: config.pageKey, enabled: config.proactive });
+        this.storage = storage;
+
+        // Voix : seulement ce que le navigateur sait faire (rien n'est demandé ni ouvert ici).
+        const speech = speechSupport(window);
+        this.canListen = speech.listen;
+        this.canSpeak = speech.speak;
+        try {
+            this.speakReplies = this.canSpeak && storage?.getItem('ama-voix') === '1';
+        } catch {
+            this.speakReplies = false;
+        }
 
         if (this.context.difficulte) {
             this.difficulty(this.context.difficulte);
@@ -737,6 +770,13 @@ Alpine.data('voiceAssistant', (config) => ({
         }
 
         this.showBubble(false);
+
+        if (this.provider === 'gemini') {
+            this.openChat();
+
+            return;
+        }
+
         this.loading = true;
         this.error = '';
 
@@ -787,6 +827,214 @@ Alpine.data('voiceAssistant', (config) => ({
         } finally {
             this.loading = false;
         }
+    },
+
+    // Ama (Gemini) : ouvre la fenêtre, avec la conversation de l'onglet et un message d'accueil adapté
+    // à la difficulté repérée (affiché sans appel à l'IA).
+    openChat() {
+        const stored = loadConversation(this.storage);
+        this.conversation = stored.id;
+        this.messages = stored.messages;
+
+        const difficulty = this.context.difficulte && config.difficulties[this.context.difficulte];
+        const greeting = difficulty ? difficulty[1] : config.greeting;
+
+        if (this.messages.length === 0 || (difficulty && this.messages.at(-1)?.text !== greeting)) {
+            this.messages.push({ from: 'ama', text: greeting, fallback: false });
+        }
+
+        this.opened = true;
+        document.documentElement.classList.add('ama-open');
+        this.scrollDown();
+        this.$nextTick(() => {
+            if (window.matchMedia('(pointer: fine)').matches) {
+                this.$refs.input?.focus();
+            }
+        });
+    },
+
+    closeChat() {
+        this.recognition?.abort();
+        this.listening = false;
+        if (this.canSpeak) {
+            window.speechSynthesis.cancel();
+        }
+        this.opened = false;
+        document.documentElement.classList.remove('ama-open');
+        this.persist();
+    },
+
+    persist() {
+        saveConversation(this.storage, this.conversation, this.messages);
+    },
+
+    scrollDown() {
+        this.$nextTick(() => {
+            const list = this.$refs.messages;
+            if (list) {
+                list.scrollTop = list.scrollHeight;
+            }
+        });
+    },
+
+    get visitorHasWritten() {
+        return this.messages.some((message) => message.from === 'visitor');
+    },
+
+    // Entrée envoie le message sur ordinateur ; sur téléphone, elle passe à la ligne (bouton « Envoyer »).
+    enter(event) {
+        if (!event.shiftKey && !event.isComposing && window.matchMedia('(pointer: fine)').matches) {
+            event.preventDefault();
+            this.send();
+        }
+    },
+
+    async send(text = this.draft, voice = false) {
+        const message = String(text ?? '').trim();
+
+        if (message === '' || this.sending) {
+            return;
+        }
+
+        if (message.length > config.maxLength) {
+            this.notice = `Votre message est trop long : ${config.maxLength} caractères au maximum. Raccourcissez-le un peu.`;
+
+            return;
+        }
+
+        this.notice = '';
+        this.draft = '';
+        this.messages.push({ from: 'visitor', text: message, fallback: false });
+        this.sending = true;
+        this.persist();
+        this.scrollDown();
+
+        let data = null;
+        try {
+            const response = await within(
+                fetch(config.endpoint, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                    },
+                    body: JSON.stringify({ message, conversation: this.conversation, context: pick(this.context), voice: voice || this.usedVoice }),
+                }),
+                45000,
+            );
+            data = response.ok ? await response.json() : null;
+        } catch {
+            data = null;
+        }
+
+        this.sending = false;
+
+        if (data?.notice) {
+            // Message refusé avant l'envoi à l'IA (trop long, vide) : le texte revient dans le champ.
+            this.messages.pop();
+            this.draft = message;
+            this.notice = data.notice;
+        } else if (data && typeof data.reply === 'string' && data.reply !== '') {
+            this.conversation = data.conversation ?? this.conversation;
+            this.messages.push({ from: 'ama', text: data.reply, fallback: data.fallback === true });
+            this.speak(data.reply);
+        } else {
+            // Réseau coupé, session expirée, serveur indisponible : jamais d'erreur technique.
+            this.messages.push({ from: 'ama', text: 'Ama ne peut pas répondre pour le moment. Notre équipe vous répond sur WhatsApp.', fallback: true });
+        }
+
+        this.persist();
+        this.scrollDown();
+    },
+
+    // Micro : seulement au toucher de son bouton. Refusé, ou rien entendu : l'écrit reste disponible, sans message d'erreur.
+    listen() {
+        if (this.listening) {
+            this.recognition?.stop();
+
+            return;
+        }
+
+        const { Recognition } = speechSupport(window);
+
+        if (!Recognition || this.sending) {
+            return;
+        }
+
+        if (this.canSpeak) {
+            window.speechSynthesis.cancel();
+        }
+
+        const recognition = new Recognition();
+        recognition.lang = 'fr-FR';
+        recognition.interimResults = true;
+        recognition.continuous = false;
+        recognition.maxAlternatives = 1;
+
+        let heard = '';
+        recognition.onresult = (event) => {
+            let interim = '';
+            for (let index = event.resultIndex; index < event.results.length; index += 1) {
+                const result = event.results[index];
+                if (result.isFinal) {
+                    heard += result[0].transcript;
+                } else {
+                    interim += result[0].transcript;
+                }
+            }
+            this.draft = `${heard}${interim}`.trim();
+        };
+        recognition.onerror = () => {};
+        recognition.onend = () => {
+            this.listening = false;
+            this.recognition = null;
+
+            if (heard.trim() !== '') {
+                // Le visiteur a parlé : les réponses sont lues à voix haute (il peut l'arrêter).
+                this.usedVoice = true;
+                this.setSpeak(this.canSpeak);
+                this.send(heard, true);
+            }
+        };
+
+        try {
+            recognition.start();
+            this.recognition = recognition;
+            this.listening = true;
+        } catch {
+            this.listening = false;
+        }
+    },
+
+    setSpeak(on) {
+        this.speakReplies = on && this.canSpeak;
+        if (!this.speakReplies && this.canSpeak) {
+            window.speechSynthesis.cancel();
+        }
+        try {
+            this.storage?.setItem('ama-voix', this.speakReplies ? '1' : '0');
+        } catch {
+            // Stockage refusé : le choix vaut pour cette page.
+        }
+    },
+
+    speak(text) {
+        if (!this.speakReplies || !this.canSpeak) {
+            return;
+        }
+
+        const synth = window.speechSynthesis;
+        synth.cancel();
+        const utterance = new window.SpeechSynthesisUtterance(speakable(text));
+        utterance.lang = 'fr-FR';
+        const voice = pickFrenchVoice(synth.getVoices());
+        if (voice) {
+            utterance.voice = voice;
+        }
+        synth.speak(utterance);
     },
 }));
 
