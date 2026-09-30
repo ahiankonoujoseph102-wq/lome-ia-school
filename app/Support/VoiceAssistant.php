@@ -472,6 +472,8 @@ class VoiceAssistant
             'endpoint' => $gemini ? route('assistant.message') : null,
             // Mode appel : même serveur, réponse envoyée en continu (lue phrase par phrase).
             'callEndpoint' => $gemini ? route('assistant.call') : null,
+            // « Transmettre au fondateur » : envoi de la question à Coach Joseph (seulement au toucher de « Envoyer »).
+            'handoffEndpoint' => $gemini ? route('assistant.handoff') : null,
             'maxLength' => self::limit('max_length'),
             'suggestions' => $gemini ? self::SUGGESTIONS : [],
             // Agent ElevenLabs : seulement s'il est choisi dans l'admin.

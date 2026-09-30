@@ -386,3 +386,70 @@ export function createLineReader(onEvent) {
         },
     };
 }
+
+/**
+ * « Transmettre au fondateur » : fiche de la carte de confirmation (prénom, moyen de réponse, coordonnée, question).
+ * Le serveur vérifie toujours le format ; ces vérifications évitent seulement un aller-retour inutile.
+ */
+export const HANDOFF_CHANNELS = ['email', 'whatsapp'];
+
+export const HANDOFF_MAX_QUESTION = 1000;
+
+const text = (value) => (typeof value === 'string' ? value.trim() : '');
+
+export function handoffFromDraft(draft = {}, { source = 'chat', question = '' } = {}) {
+    const channel = HANDOFF_CHANNELS.includes(draft?.channel) ? draft.channel : '';
+
+    return {
+        first_name: text(draft?.first_name).slice(0, 60),
+        channel,
+        contact: text(draft?.contact),
+        question: (text(draft?.question) || text(question)).slice(0, HANDOFF_MAX_QUESTION),
+        source: ['chat', 'call', 'form', 'link'].includes(source) ? source : 'form',
+    };
+}
+
+// Dernière question écrite ou dite par le visiteur (pour préremplir le formulaire de relève).
+export function lastVisitorQuestion(messages = []) {
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+        if (messages[index]?.from === 'visitor' && text(messages[index].text) !== '') {
+            return text(messages[index].text);
+        }
+    }
+
+    return '';
+}
+
+export function handoffErrors(handoff) {
+    const errors = {};
+    const contact = text(handoff?.contact).replace(/[ ​-‍⁠﻿]/gu, ' ');
+
+    if (text(handoff?.first_name) === '' || /\d|@/u.test(handoff.first_name)) {
+        errors.first_name = 'Écrivez votre prénom, par exemple : Awa.';
+    }
+
+    if (!HANDOFF_CHANNELS.includes(handoff?.channel)) {
+        errors.channel = 'Choisissez comment recevoir la réponse : par e-mail ou sur WhatsApp.';
+    } else if (handoff.channel === 'email' && !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/iu.test(contact.replace(/\s/gu, ''))) {
+        errors.contact = contact === ''
+            ? 'Écrivez votre adresse e-mail, par exemple : prenom@gmail.com.'
+            : 'Cette adresse e-mail n\'est pas complète. Exemple : prenom@gmail.com.';
+    } else if (handoff.channel === 'whatsapp' && !(/^\s*\(?(\+|00)/u.test(contact) && contact.replace(/\D/gu, '').length >= 8 && !/[^\d\s+().-]/u.test(contact))) {
+        errors.contact = contact === ''
+            ? 'Écrivez votre numéro WhatsApp avec l\'indicatif du pays, par exemple : +228 91 23 45 67.'
+            : 'Ce numéro WhatsApp n\'est pas complet : ajoutez l\'indicatif du pays. Exemple : +228 91 23 45 67.';
+    }
+
+    if (text(handoff?.question).length < 3) {
+        errors.question = 'Écrivez la question à transmettre à Coach Joseph.';
+    } else if (text(handoff.question).length > HANDOFF_MAX_QUESTION) {
+        errors.question = `Votre question est trop longue : ${HANDOFF_MAX_QUESTION} caractères au maximum.`;
+    }
+
+    return errors;
+}
+
+// Carte prête à être envoyée telle quelle (sinon elle s'ouvre directement en mode « Corriger »).
+export function handoffIsReady(handoff) {
+    return Object.keys(handoffErrors(handoff)).length === 0;
+}

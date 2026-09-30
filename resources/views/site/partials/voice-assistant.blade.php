@@ -6,6 +6,8 @@
       du navigateur s'il les gère). Les messages passent par le serveur du site, qui seul appelle Gemini.
       Mode appel « Parler avec Ama » (si le navigateur sait écouter et lire à voix haute) : écran d'appel avec un grand
       cercle (« Ama vous écoute… », « Ama réfléchit… », « Ama parle… ») et le bouton rouge « Raccrocher ».
+      « Transmettre au fondateur » : carte de confirmation « Envoyer à Coach Joseph » / « Corriger » (partiel
+      ama-handoff-card), aussi en formulaire de relève (limite atteinte, panne) et à la fin d'un appel.
     - Agent ElevenLabs (au choix dans l'admin) : aucun script d'ElevenLabs dans la page, il n'est chargé qu'au toucher du
       bouton, puis l'élément officiel <elevenlabs-convai> s'ouvre à la place du bouton.
     Style stable face au mode sombre forcé de Chrome : fonds foncés ou translucides, textes clairs, contours en ombre (ring).
@@ -180,6 +182,15 @@
                         <x-site.whatsapp-icon class="size-5" />
                         Écrivez-nous sur WhatsApp
                     </a>
+                    <button
+                        type="button"
+                        @click="handoffAfterCall()"
+                        class="flex w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-night-800 px-5 py-3.5 font-semibold text-slate-100 ring-1 ring-gold-500/70 transition hover:bg-night-700"
+                        data-test="ama-call-handoff"
+                    >
+                        <flux:icon.paper-airplane class="size-5 text-gold-200" />
+                        Transmettre ma question à Coach Joseph
+                    </button>
                     <button type="button" @click="closeCallEnd()" class="text-sm font-semibold text-slate-300 underline underline-offset-4 hover:text-white">Revenir à la discussion</button>
                 </div>
 
@@ -208,6 +219,8 @@
                         </div>
                     </template>
 
+                    @include('site.partials.ama-handoff-card')
+
                     <div x-show="sending" class="flex justify-start" role="status">
                         <div class="flex items-center gap-2 rounded-2xl rounded-bl-md bg-night-800 px-3.5 py-3 text-sm text-slate-300 ring-1 ring-night-600">
                             <span class="flex gap-1" aria-hidden="true">
@@ -222,7 +235,7 @@
                     {{-- Mode appel proposé dès l'ouverture, puis questions proposées tant que le visiteur n'a rien écrit. --}}
                     <button
                         type="button"
-                        x-show="canCall && ! visitorHasWritten && ! sending"
+                        x-show="canCall && ! visitorHasWritten && ! sending && ! handoff"
                         @click="startCall()"
                         class="flex w-full items-center gap-3 rounded-2xl bg-electric-500/15 px-4 py-3 text-left ring-1 ring-electric-300/50 transition hover:bg-electric-500/25"
                         data-test="ama-call-offer"
@@ -233,7 +246,7 @@
                             <span class="block text-sm text-slate-300">Posez vos questions à voix haute, comme au téléphone.</span>
                         </span>
                     </button>
-                    <div x-show="! visitorHasWritten && ! sending" class="flex flex-wrap gap-2 pt-1">
+                    <div x-show="! visitorHasWritten && ! sending && ! handoff" class="flex flex-wrap gap-2 pt-1">
                         <template x-for="suggestion in suggestions" :key="suggestion">
                             <button type="button" @click="send(suggestion)" x-text="suggestion" class="rounded-full bg-electric-500/10 px-3.5 py-2 text-left text-sm text-electric-100 ring-1 ring-electric-300/40 transition hover:bg-electric-500/20"></button>
                         </template>
@@ -289,6 +302,18 @@
                             <flux:icon.paper-airplane class="size-5" />
                         </button>
                     </form>
+                    {{-- Toujours visible : ouvre la carte de transmission vide, sans passer par Gemini (fonctionne même si
+                         Ama est en panne, a atteint sa limite ou oublie de proposer la carte). --}}
+                    <button
+                        type="button"
+                        @click="askJoseph()"
+                        class="mx-auto mt-2 flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold text-slate-300 transition hover:text-white"
+                        data-test="ama-ask-joseph"
+                    >
+                        <flux:icon.paper-airplane class="size-3.5 text-gold-200" />
+                        {{-- Soulignement en ombre : Chrome assombrit un soulignement classique en mode sombre forcé. --}}
+                        <span class="pb-0.5 shadow-[inset_0_-1px_0_0_var(--color-slate-500)]">Poser ma question à Coach Joseph</span>
+                    </button>
                 </footer>
             </section>
         </div>

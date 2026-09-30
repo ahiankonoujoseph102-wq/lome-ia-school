@@ -1,6 +1,21 @@
 import Alpine from 'alpinejs';
 import { CALL_GREETING, createVoiceCall } from './ama-call.js';
-import { buildVariables, createHelpTracker, createLineReader, loadConversation, pick, pickFrenchVoice, saveConversation, speakable, SPEECH_RATE, speechSupport } from './ama.js';
+import {
+    buildVariables,
+    createHelpTracker,
+    createLineReader,
+    handoffErrors,
+    handoffFromDraft,
+    handoffIsReady,
+    lastVisitorQuestion,
+    loadConversation,
+    pick,
+    pickFrenchVoice,
+    saveConversation,
+    speakable,
+    SPEECH_RATE,
+    speechSupport,
+} from './ama.js';
 
 /**
  * Apparition douce des éléments marqués data-reveal, uniquement pour ceux encore sous l'écran.
@@ -637,6 +652,9 @@ Alpine.data('voiceAssistant', (config) => ({
     call: null,
     callState: 'idle',
     callEnd: null,
+    // « Transmettre au fondateur » : carte de confirmation (ou formulaire de relève) et fiche proposée pendant un appel.
+    handoff: null,
+    callHandoff: null,
 
     init() {
         let storage = null;
@@ -962,9 +980,16 @@ Alpine.data('voiceAssistant', (config) => ({
             this.conversation = data.conversation ?? this.conversation;
             this.messages.push({ from: 'ama', text: data.reply, fallback: data.fallback === true });
             this.speak(data.reply);
+            if (data.handoff) {
+                // Récapitulatif d'Ama : carte « Envoyer à Coach Joseph » / « Corriger » (rien ne part sans le bouton).
+                this.showHandoff(data.handoff, 'chat');
+            } else if (data.fallback === true) {
+                this.openHandoffForm();
+            }
         } else {
             // Réseau coupé, session expirée, serveur indisponible : jamais d'erreur technique.
             this.messages.push({ from: 'ama', text: 'Ama ne peut pas répondre pour le moment. Notre équipe vous répond sur WhatsApp.', fallback: true });
+            this.openHandoffForm();
         }
 
         this.persist();
@@ -1102,6 +1127,12 @@ Alpine.data('voiceAssistant', (config) => ({
             onEnd: (reason) => {
                 this.call = null;
                 this.callState = 'idle';
+                // Ama a proposé de transmettre la question pendant l'appel : la fiche s'affiche maintenant, pour écrire
+                // la coordonnée (jamais dictée à voix haute).
+                if (this.callHandoff) {
+                    this.showHandoff(this.callHandoff, 'call', true);
+                    this.callHandoff = null;
+                }
                 this.persist();
                 this.scrollDown();
                 if (reason === 'limit' || reason === 'error') {
@@ -1141,6 +1172,137 @@ Alpine.data('voiceAssistant', (config) => ({
 
     closeCallEnd() {
         this.callEnd = null;
+        this.scrollDown();
+    },
+
+    // Appel terminé par une limite ou une panne : « Transmettre ma question à Coach Joseph ».
+    handoffAfterCall() {
+        this.closeCallEnd();
+        if (!this.handoff) {
+            this.openHandoffForm('call');
+        }
+        this.scrollDown();
+    },
+
+    // Carte de confirmation (prête : lecture seule avec « Envoyer » et « Corriger » ; incomplète : champs à remplir).
+    showHandoff(draft, source, editing = false) {
+        const handoff = handoffFromDraft(draft, { source, question: lastVisitorQuestion(this.messages) });
+        this.handoff = { ...handoff, editing: editing || !handoffIsReady(handoff), sending: false, errors: {}, website: '' };
+        this.scrollDown();
+    },
+
+    // Formulaire de relève (limite atteinte ou panne) : mêmes champs, à côté du bouton WhatsApp.
+    openHandoffForm(source = 'form') {
+        if (this.handoff) {
+            return;
+        }
+
+        this.handoff = { ...handoffFromDraft({}, { source, question: lastVisitorQuestion(this.messages) }), editing: true, sending: false, errors: {}, website: '' };
+        this.scrollDown();
+    },
+
+    // Lien permanent « Poser ma question à Coach Joseph » : carte vide, sans passer par Gemini (fonctionne même si
+    // Ama oublie la ligne technique, est en panne ou a atteint sa limite). Une carte déjà ouverte reste telle quelle.
+    askJoseph() {
+        if (!this.handoff) {
+            this.handoff = { ...handoffFromDraft({}, { source: 'link' }), editing: true, sending: false, errors: {}, website: '' };
+        } else {
+            this.handoff.editing = true;
+        }
+        // Haut de la carte en vue (le prénom est le premier champ à remplir).
+        this.$nextTick(() => {
+            const card = this.$el.querySelector('[data-test=ama-handoff]');
+            const list = this.$refs.messages;
+            if (card && list) {
+                list.scrollTop += card.getBoundingClientRect().top - list.getBoundingClientRect().top - 12;
+            }
+            if (window.matchMedia('(pointer: fine)').matches) {
+                this.$el.querySelector('#ama-handoff-name')?.focus({ preventScroll: true });
+            }
+        });
+    },
+
+    correctHandoff() {
+        if (this.handoff) {
+            this.handoff.editing = true;
+            this.handoff.errors = {};
+        }
+    },
+
+    cancelHandoff() {
+        this.handoff = null;
+    },
+
+    // Envoi : seulement au toucher de « Envoyer à Coach Joseph ». Format faux : Ama le redemande poliment.
+    async sendHandoff() {
+        const handoff = this.handoff;
+
+        if (!handoff || handoff.sending) {
+            return;
+        }
+
+        const errors = handoffErrors(handoff);
+        if (Object.keys(errors).length > 0) {
+            handoff.editing = true;
+            handoff.errors = errors;
+
+            return;
+        }
+
+        handoff.sending = true;
+        handoff.errors = {};
+
+        let data = null;
+        try {
+            const response = await within(
+                fetch(config.handoffEndpoint, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                    },
+                    body: JSON.stringify({
+                        first_name: handoff.first_name,
+                        channel: handoff.channel,
+                        contact: handoff.contact,
+                        question: handoff.question,
+                        source: handoff.source,
+                        conversation: this.conversation,
+                        context: pick(this.context),
+                        website: handoff.website,
+                    }),
+                }),
+                30000,
+            );
+            data = response.ok ? await response.json() : null;
+        } catch {
+            data = null;
+        }
+
+        handoff.sending = false;
+
+        if (data?.ok) {
+            this.handoff = null;
+            this.messages.push({ from: 'ama', text: data.reply, fallback: false });
+            this.speak(data.reply);
+        } else if (data?.limit) {
+            this.handoff = null;
+            this.messages.push({ from: 'ama', text: data.reply, fallback: true });
+        } else if (data?.errors) {
+            handoff.editing = true;
+            handoff.errors = data.errors;
+            if (data.reply) {
+                this.messages.push({ from: 'ama', text: data.reply, fallback: false });
+            }
+        } else {
+            handoff.errors = { form: 'L\'envoi n\'a pas abouti. Vérifiez votre connexion et réessayez, ou écrivez-nous sur WhatsApp.' };
+        }
+
+        this.persist();
+        this.scrollDown();
     },
 
     // Dernières phrases de l'appel, affichées discrètement sous le cercle.
@@ -1178,6 +1340,10 @@ Alpine.data('voiceAssistant', (config) => ({
                     onText?.(event.text);
                 } else if (event?.type === 'done') {
                     result = event;
+                    // Ama propose de transmettre la question : la fiche s'affichera à la fin de l'appel.
+                    if (event.handoff) {
+                        this.callHandoff = event.handoff;
+                    }
                 }
             });
 
