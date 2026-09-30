@@ -322,7 +322,7 @@ php artisan migrate
 
 **En cours sur la branche `claude/jolly-galileo-235nfd`** : page de paiement simplifiée (4 étapes, capture seule, bouton « Payer maintenant » par code USSD, « Besoin d'aide pour payer ? ») ; voir « Paiements ». Aperçu validé par Joseph. Pull request « Page de paiement simplifiée ».
 
-**En cours sur la branche `claude/jolly-galileo-235nfd`** : Ama sur tout le site, avec le contexte de la page, l'aide proactive et le guide `docs/guide-ama.md` (voir « Assistante vocale IA »). Aperçu à valider par Joseph avant la pull request.
+**En cours sur la branche `claude/jolly-galileo-235nfd`** : Ama sur tout le site, avec le contexte de la page, l'aide proactive et le guide `docs/guide-ama.md` (voir « Assistante vocale IA »). Aperçu validé par Joseph ; vérifié que le bouton rond d'Ama ne chevauche jamais le bouton WhatsApp flottant (de 320 à 1 280 px, test `test_it_never_sits_on_the_floating_whatsapp_button`). Pull request « Ama sur tout le site ».
 
 **Prochaine étape** : fusion de la branche en cours ; Joseph colle le lien de sa vidéo et choisit son format (Réglages du site > Page Entreprises), saisit le contenu de ses formations (écran « Contenu des formations ») et son lien Google Meet (« Disponibilités »). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 

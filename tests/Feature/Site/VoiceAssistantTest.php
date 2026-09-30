@@ -160,6 +160,17 @@ class VoiceAssistantTest extends TestCase
         $this->actingAs($student)->get(route('dashboard'))->assertSee('has-bottom-nav', false)->assertSee('pb-40', false);
     }
 
+    public function test_it_never_sits_on_the_floating_whatsapp_button(): void
+    {
+        $this->enable();
+        $html = (string) $this->get(route('home'))->assertOk()->getContent();
+
+        // Bouton WhatsApp flottant : seulement sur ordinateur (lg), en bas à droite ; sur téléphone il est dans l'en-tête.
+        $this->assertSame(1, preg_match('/class="group fixed right-6 bottom-6 z-40 hidden [^"]*lg:flex/', $html));
+        // Ama : en bas à droite sur téléphone et tablette, en bas à gauche à partir de lg.
+        $this->assertSame(1, preg_match('/class="voice-assistant fixed right-4 [^"]*lg:right-auto [^"]*lg:left-6/', $html));
+    }
+
     public function test_the_formation_page_keeps_room_for_the_buy_bar(): void
     {
         $this->enable();
