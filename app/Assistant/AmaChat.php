@@ -78,7 +78,8 @@ class AmaChat
             return $this->fallback(AssistantIncidentType::GeminiError, $conversation, $exception::class);
         }
 
-        $this->store($conversation, AssistantMessage::AMA, $reply);
+        ['text' => $reply, 'unanswered' => $unanswered] = UnansweredReply::inspect($reply);
+        $this->store($conversation, AssistantMessage::AMA, $reply, $unanswered);
 
         return ['reply' => $reply, 'fallback' => false, 'conversation' => $conversation->public_id, 'whatsapp' => null];
     }
@@ -141,9 +142,9 @@ class AmaChat
             ->update(['requests' => DB::raw('requests + 1'), 'updated_at' => now()]) === 1;
     }
 
-    private function store(AssistantConversation $conversation, string $role, string $content): void
+    private function store(AssistantConversation $conversation, string $role, string $content, bool $unanswered = false): void
     {
-        $conversation->messages()->create(['role' => $role, 'content' => $content]);
+        $conversation->messages()->create(['role' => $role, 'content' => $content, 'unanswered' => $unanswered]);
         $conversation->messages_count++;
         $conversation->last_message_at = now();
         $conversation->save();

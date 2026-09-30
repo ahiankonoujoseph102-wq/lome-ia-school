@@ -52,6 +52,13 @@
     <section class="space-y-2" data-test="assistant-conversations">
         <h2 class="font-semibold text-white">Conversations</h2>
         <p class="text-sm text-slate-400">Les numéros, adresses e-mail et codes écrits par les visiteurs sont retirés avant l'enregistrement. Conversations effacées automatiquement après {{ $retentionDays }} jours.</p>
+        <nav class="flex flex-wrap gap-2 text-sm" aria-label="Filtrer les conversations" data-test="assistant-filters">
+            <a href="{{ route('admin.assistant.index') }}" @class(['rounded-full px-3 py-1.5 ring-1', 'bg-gold-400/10 text-gold-200 ring-gold-400' => ! $unansweredOnly, 'text-slate-300 ring-veil/15 hover:bg-veil/10' => $unansweredOnly]) @if (! $unansweredOnly) aria-current="page" @endif>Toutes</a>
+            <a href="{{ route('admin.assistant.index', ['filtre' => 'sans-reponse']) }}" @class(['rounded-full px-3 py-1.5 ring-1', 'bg-gold-400/10 text-gold-200 ring-gold-400' => $unansweredOnly, 'text-slate-300 ring-veil/15 hover:bg-veil/10' => ! $unansweredOnly]) @if ($unansweredOnly) aria-current="page" @endif data-test="assistant-filter-unanswered">Questions sans réponse ({{ $unansweredCount }})</a>
+        </nav>
+        @if ($unansweredOnly)
+            <p class="text-sm text-slate-400">Conversations où Ama a dit qu'elle n'avait pas l'information. Complétez la base de connaissances (<a href="{{ route('admin.settings.edit', 'assistante') }}" class="text-electric-300 underline underline-offset-4">Réglages d'Ama</a>) avec la bonne réponse, puis Ama saura répondre la prochaine fois.</p>
+        @endif
         <ol class="space-y-2">
             @forelse ($conversations as $conversation)
                 <li>
@@ -62,10 +69,22 @@
                         @if ($conversation->voice_used)
                             <span class="rounded-full px-2 py-0.5 text-xs text-electric-200 ring-1 ring-electric-400/40">Micro utilisé</span>
                         @endif
+                        @if ($conversation->has_unanswered)
+                            <span class="rounded-full px-2 py-0.5 text-xs text-amber-100 ring-1 ring-amber-400/50">Sans réponse</span>
+                        @endif
                         @if ($conversation->fallback_shown)
                             <span class="rounded-full px-2 py-0.5 text-xs text-emerald-200 ring-1 ring-emerald-400/50">Relève WhatsApp</span>
                         @endif
                     </a>
+                    @if ($unansweredOnly)
+                        <ul class="mt-1 space-y-1 px-4 pb-1 text-sm" data-test="assistant-unanswered-questions">
+                            @foreach ($conversation->messages as $index => $message)
+                                @if ($message->unanswered && $index > 0)
+                                    <li class="text-slate-300"><span class="text-slate-500">Question :</span> « {{ $conversation->messages[$index - 1]->content }} »</li>
+                                @endif
+                            @endforeach
+                        </ul>
+                    @endif
                 </li>
             @empty
                 <li class="card p-6 text-center text-slate-400">Aucune conversation pour le moment.</li>

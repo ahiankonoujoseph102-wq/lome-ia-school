@@ -1,4 +1,5 @@
 @php
+    use App\Assistant\AmaKnowledge;
     use App\Assistant\AmaPrompt;
     use App\Contracts\AssistantModel;
     use App\Models\AssistantUsage;
@@ -7,6 +8,9 @@
 
     $assistant = (array) SiteSettings::get('site.voice_assistant');
     $provider = old('provider', ($assistant['provider'] ?? VoiceAssistant::GEMINI) === VoiceAssistant::ELEVENLABS ? VoiceAssistant::ELEVENLABS : VoiceAssistant::GEMINI);
+    $knowledge = (array) SiteSettings::get('site.assistant_knowledge');
+    $size = AmaPrompt::stats();
+    $sizeLimit = AmaPrompt::GOOGLE_TOKENS_PER_MINUTE;
     $keyPresent = app(AssistantModel::class)->isConfigured();
     $providers = [
         VoiceAssistant::GEMINI => ['Ama (Gemini)', 'Notre propre assistante : discussion écrite, micro et lecture à voix haute du navigateur. Réponses de l\'IA Gemini de Google (offre gratuite).'],
@@ -88,11 +92,36 @@
 
             <section class="card space-y-4 p-5 sm:p-6">
                 <h2 class="font-semibold text-white">Instructions d'Ama</h2>
-                <x-admin.field name="instructions" label="Rôle, style et règles d'Ama" type="textarea" rows="16" :value="$assistant['instructions'] ?? AmaPrompt::DEFAULT_INSTRUCTIONS" hint="Videz le champ puis enregistrez pour revenir au texte d'origine." class="text-sm leading-relaxed" />
-                <div class="space-y-1 rounded-2xl bg-veil/5 p-4 text-sm text-slate-400 ring-1 ring-veil/10">
-                    <p class="font-semibold text-slate-200">Ama reçoit aussi automatiquement, à chaque message :</p>
-                    <p>les coordonnées et horaires de l'école (Réglages du site), la liste des formations visibles avec leurs prix lus directement dans la base (un prix changé dans « Formations et prix » est connu d'Ama tout de suite), le guide des parcours du site (fichier docs/guide-ama.md) et le contexte de la page du visiteur.</p>
-                </div>
+                <x-admin.field name="instructions" label="Rôle, style et règles d'Ama" type="textarea" rows="16" :value="AmaPrompt::effectiveInstructions($assistant['instructions'] ?? '')" hint="Videz le champ puis enregistrez pour revenir au texte d'origine." class="text-sm leading-relaxed" />
+            </section>
+
+            <section class="card space-y-4 p-5 sm:p-6" data-test="assistant-knowledge">
+                <h2 class="font-semibold text-white">Base de connaissances d'Ama</h2>
+                <p class="text-sm text-slate-400">Ama répond seulement à partir de ce qui est écrit ici et de ce qu'elle reçoit du site (voir plus bas). N'écrivez que des informations exactes : elle les répétera telles quelles. Pas de chiffre, de témoignage ni de programme inventés. Quand la réponse n'est pas dans ces textes, elle dit qu'elle n'a pas l'information : complétez alors cette base grâce à la liste « Questions sans réponse » des conversations.</p>
+
+                <x-admin.field name="knowledge_school" label="L'école et son fondateur" type="textarea" rows="14" :value="$knowledge['school'] ?? AmaKnowledge::DEFAULT_SCHOOL" hint="Texte de départ : uniquement des faits déjà présents sur le site. {adresse} et {horaires} sont remplacés par les coordonnées des Réglages du site. Videz le champ puis enregistrez pour revenir au texte de départ." class="text-sm leading-relaxed" />
+
+                <x-admin.questions-editor name="knowledge_faq" label="Questions fréquentes (une question, sa réponse)" :items="$knowledge['faq'] ?? []" />
+
+                <x-admin.field name="knowledge_other" label="Autres informations" type="textarea" rows="8" :value="$knowledge['other'] ?? ''" hint="Tout ce qu'Ama doit savoir d'autre (partenaires, méthode de travail, précisions…). Vide au départ." class="text-sm leading-relaxed" />
+            </section>
+
+            <section class="card space-y-3 p-5 sm:p-6" data-test="assistant-size">
+                <h2 class="font-semibold text-white">Ce qu'Ama reçoit à chaque message</h2>
+                <p class="text-sm text-slate-400">Dans cet ordre, avec des titres clairs, lu directement dans la base et les réglages : (1) instructions, (2) informations de l'école, (3) base de connaissances ci-dessus, (4) formations visibles avec leur prix, leur description et les titres de leurs modules et leçons (une formation sans contenu est indiquée comme telle), (5) pages publiques et règles des conditions de vente, (6) guide des parcours du site (fichier docs/guide-ama.md), (7) contexte de la page du visiteur.</p>
+                <dl class="grid gap-1 text-sm sm:grid-cols-2">
+                    @foreach ($size['parts'] as $part => $tokens)
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">{{ $part }}</dt><dd class="text-slate-100">≈ {{ number_format($tokens, 0, ',', ' ') }} jetons</dd></div>
+                    @endforeach
+                </dl>
+                <p class="text-sm text-slate-200">Total : environ <span class="font-semibold" data-test="assistant-size-total">{{ number_format($size['total'], 0, ',', ' ') }}</span> jetons, soit environ <span class="font-semibold">{{ number_format($size['perRequest'], 0, ',', ' ') }}</span> jetons par demande avec la conversation. Au rythme maximum réglé ({{ VoiceAssistant::limit('minute_limit') }} demandes par minute) : environ {{ number_format($size['perMinute'], 0, ',', ' ') }} jetons par minute, pour {{ number_format($sizeLimit, 0, ',', ' ') }} autorisés par l'offre gratuite de Google (à vérifier dans Google AI Studio).</p>
+                @if ($size['perMinute'] > $sizeLimit)
+                    <x-site.alert type="error">Trop lourd pour la limite par minute de Google : raccourcissez les textes ci-dessus ou baissez « Demandes par minute pour tout le site ».</x-site.alert>
+                @elseif ($size['shortened'])
+                    <p class="text-sm text-amber-200">Les descriptions des formations sont raccourcies automatiquement (plus de {{ number_format(AmaKnowledge::TOKEN_BUDGET, 0, ',', ' ') }} jetons). Les titres des modules et des leçons sont toujours envoyés en entier.</p>
+                @else
+                    <p class="flex items-center gap-2 text-sm text-emerald-200"><flux:icon.check-circle class="size-5" /> Taille confortable. Estimation : la vraie mesure est faite par Google.</p>
+                @endif
             </section>
 
             <section class="card space-y-4 p-5 sm:p-6">

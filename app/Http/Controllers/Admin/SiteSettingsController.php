@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Admin\ActivityLog;
+use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
 use App\Branding\BrandAssets;
 use App\Enums\AdminAction;
@@ -504,6 +505,11 @@ class SiteSettingsController extends Controller
             'enabled' => ['nullable', 'boolean'],
             'provider' => ['nullable', Rule::in([VoiceAssistant::GEMINI, VoiceAssistant::ELEVENLABS])],
             'instructions' => ['nullable', 'string', 'max:12000'],
+            'knowledge_school' => ['nullable', 'string', 'max:'.AmaKnowledge::MAX_SCHOOL],
+            'knowledge_faq' => ['array', 'max:'.AmaKnowledge::MAX_QUESTIONS],
+            'knowledge_faq.*.question' => ['nullable', 'string', 'max:200'],
+            'knowledge_faq.*.answer' => ['nullable', 'string', 'max:'.AmaKnowledge::MAX_ANSWER],
+            'knowledge_other' => ['nullable', 'string', 'max:'.AmaKnowledge::MAX_OTHER],
             'agent_id' => ['nullable', 'string', 'max:80'],
             'lessons' => ['nullable', 'boolean'],
             'proactive' => ['nullable', 'boolean'],
@@ -511,6 +517,11 @@ class SiteSettingsController extends Controller
         ];
         $messages = [
             'instructions.max' => 'Les instructions sont trop longues (12 000 caractères au maximum).',
+            'knowledge_school.max' => 'Le texte « L\'école et son fondateur » est trop long ('.number_format(AmaKnowledge::MAX_SCHOOL, 0, ',', ' ').' caractères au maximum).',
+            'knowledge_faq.max' => 'Trop de questions (au maximum '.AmaKnowledge::MAX_QUESTIONS.').',
+            'knowledge_faq.*.question.max' => 'Une question est trop longue (200 caractères au maximum).',
+            'knowledge_faq.*.answer.max' => 'Une réponse est trop longue ('.number_format(AmaKnowledge::MAX_ANSWER, 0, ',', ' ').' caractères au maximum).',
+            'knowledge_other.max' => 'Le texte « Autres informations » est trop long ('.number_format(AmaKnowledge::MAX_OTHER, 0, ',', ' ').' caractères au maximum).',
             'help_delay.integer' => 'Le délai s\'écrit en secondes, sans virgule (par exemple 90).',
             'help_delay.min' => 'Le délai doit être d\'au moins '.VoiceAssistant::MIN_HELP_DELAY.' secondes.',
             'help_delay.max' => 'Le délai ne peut pas dépasser '.VoiceAssistant::MAX_HELP_DELAY.' secondes.',
@@ -547,8 +558,16 @@ class SiteSettingsController extends Controller
         $proactive = (bool) ($validated['proactive'] ?? false);
         $delay = (int) ($validated['help_delay'] ?? VoiceAssistant::DEFAULT_HELP_DELAY);
         // Instructions vidées : retour au texte d'origine.
-        $instructions = trim(str_replace("\r\n", "\n", (string) ($validated['instructions'] ?? '')));
-        $instructions = $instructions !== '' ? $instructions : AmaPrompt::DEFAULT_INSTRUCTIONS;
+        $instructions = AmaPrompt::effectiveInstructions($validated['instructions'] ?? '');
+
+        // Base de connaissances : « L'école et son fondateur » vidé = texte de départ.
+        $previousKnowledge = (array) SiteSettings::get('site.assistant_knowledge');
+        $school = trim(str_replace("\r\n", "\n", (string) ($validated['knowledge_school'] ?? '')));
+        $knowledge = [
+            'school' => $school !== '' ? $school : AmaKnowledge::DEFAULT_SCHOOL,
+            'faq' => self::questions($validated['knowledge_faq'] ?? []),
+            'other' => trim(str_replace("\r\n", "\n", (string) ($validated['knowledge_other'] ?? ''))),
+        ];
 
         /** @var array<string, int> $limits */
         $limits = [];
@@ -556,7 +575,7 @@ class SiteSettingsController extends Controller
             $limits[$name] = (int) ($validated[$name] ?? $default);
         }
 
-        SiteSettings::save(['site.voice_assistant' => [
+        SiteSettings::save(['site.assistant_knowledge' => $knowledge, 'site.voice_assistant' => [
             'enabled' => $enabled,
             'provider' => $provider,
             'instructions' => $instructions,
@@ -568,7 +587,7 @@ class SiteSettingsController extends Controller
         ]]);
 
         $summary = $provider === VoiceAssistant::GEMINI
-            ? 'Ama (Gemini), '.$limits['visitor_daily_limit'].' messages par visiteur et par jour, '.$limits['daily_limit'].' demandes par jour pour le site'.($instructions !== (string) ($previous['instructions'] ?? AmaPrompt::DEFAULT_INSTRUCTIONS) ? ', instructions modifiées' : '')
+            ? 'Ama (Gemini), '.$limits['visitor_daily_limit'].' messages par visiteur et par jour, '.$limits['daily_limit'].' demandes par jour pour le site'.($instructions !== (string) ($previous['instructions'] ?? AmaPrompt::DEFAULT_INSTRUCTIONS) ? ', instructions modifiées' : '').($knowledge !== ($previousKnowledge ?: ['school' => AmaKnowledge::DEFAULT_SCHOOL, 'faq' => [], 'other' => '']) ? ', base de connaissances modifiée' : '')
             : 'agent ElevenLabs '.$agentId;
 
         ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').').');
