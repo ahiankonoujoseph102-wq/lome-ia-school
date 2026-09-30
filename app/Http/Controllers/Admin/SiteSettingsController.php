@@ -39,7 +39,7 @@ class SiteSettingsController extends Controller
         'affiliation' => ['title' => 'Affiliation', 'text' => 'Taux de commission, durée des liens, délai de disponibilité, retrait minimum.', 'icon' => 'share', 'sensitive' => true],
         'textes' => ['title' => 'Textes du site', 'text' => 'Accroche de l\'accueil, présentation du formateur, questions fréquentes.', 'icon' => 'document-text'],
         'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
-        'assistante' => ['title' => 'Assistante vocale', 'text' => 'Bouton « Parler avec notre assistante » (agent ElevenLabs) : activation et identifiant de l\'agent.', 'icon' => 'microphone'],
+        'assistante' => ['title' => 'Assistante vocale', 'text' => 'Bouton « Parler avec notre assistante » (agent ElevenLabs) : activation, identifiant de l\'agent, lecteur de cours et aide proactive.', 'icon' => 'microphone'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
     ];
 
@@ -502,8 +502,14 @@ class SiteSettingsController extends Controller
         $validated = $request->validate([
             'enabled' => ['nullable', 'boolean'],
             'agent_id' => ['required', 'string', 'max:80'],
+            'lessons' => ['nullable', 'boolean'],
+            'proactive' => ['nullable', 'boolean'],
+            'help_delay' => ['nullable', 'integer', 'min:'.VoiceAssistant::MIN_HELP_DELAY, 'max:'.VoiceAssistant::MAX_HELP_DELAY],
         ], [
             'agent_id.required' => 'Indiquez l\'identifiant de l\'agent ElevenLabs. Exemple : '.VoiceAssistant::EXAMPLE_ID.'.',
+            'help_delay.integer' => 'Le délai s\'écrit en secondes, sans virgule (par exemple 90).',
+            'help_delay.min' => 'Le délai doit être d\'au moins '.VoiceAssistant::MIN_HELP_DELAY.' secondes.',
+            'help_delay.max' => 'Le délai ne peut pas dépasser '.VoiceAssistant::MAX_HELP_DELAY.' secondes.',
         ]);
 
         $agentId = (string) $validated['agent_id'];
@@ -513,10 +519,13 @@ class SiteSettingsController extends Controller
         }
 
         $enabled = (bool) ($validated['enabled'] ?? false);
+        $lessons = (bool) ($validated['lessons'] ?? false);
+        $proactive = (bool) ($validated['proactive'] ?? false);
+        $delay = (int) ($validated['help_delay'] ?? VoiceAssistant::DEFAULT_HELP_DELAY);
 
-        SiteSettings::save(['site.voice_assistant' => ['enabled' => $enabled, 'agent_id' => $agentId]]);
+        SiteSettings::save(['site.voice_assistant' => ['enabled' => $enabled, 'agent_id' => $agentId, 'lessons' => $lessons, 'proactive' => $proactive, 'help_delay' => $delay]]);
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante vocale '.($enabled ? 'activée' : 'désactivée').' (agent '.$agentId.').');
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante vocale '.($enabled ? 'activée' : 'désactivée').' (agent '.$agentId.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').').');
     }
 
     private function updateLegal(Request $request): void

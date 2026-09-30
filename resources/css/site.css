@@ -539,8 +539,8 @@ body {
 
 /*
  * Assistante vocale (partiel voice-assistant) : sur téléphone et tablette, la page d'une formation a une
- * barre d'achat fixée en bas (body.has-sticky-cta) ; le bouton et le widget ElevenLabs passent au-dessus,
- * pour ne jamais cacher « Acheter maintenant ». L'élément <elevenlabs-convai> est lui-même un cadre fixe
+ * barre d'achat fixée en bas (body.has-sticky-cta) et l'espace élève une barre de navigation (body.has-bottom-nav) ;
+ * le bouton et le widget ElevenLabs passent au-dessus, pour ne jamais cacher « Acheter maintenant » ni le menu. L'élément <elevenlabs-convai> est lui-même un cadre fixe
  * couvrant l'écran (position: fixed; inset: 0) : en remonter le bas suffit, sans toucher à l'intérieur du
  * widget (une règle de la page l'emporte sur son propre style « :host »).
  */
@@ -551,5 +551,21 @@ body {
 
     .has-sticky-cta elevenlabs-convai {
         bottom: calc(5rem + env(safe-area-inset-bottom));
+    }
+
+    /* Bulle « Vous semblez bloqué ? » affichée : place en plus en bas de page. */
+    .ama-help-shown::after {
+        content: '';
+        display: block;
+        height: 5.5rem;
+    }
+
+    /* Espace élève : barre de navigation fixée en bas sur téléphone et tablette. */
+    .has-bottom-nav .voice-assistant {
+        bottom: calc(5.25rem + env(safe-area-inset-bottom));
+    }
+
+    .has-bottom-nav elevenlabs-convai {
+        bottom: calc(4.5rem + env(safe-area-inset-bottom));
     }
 }

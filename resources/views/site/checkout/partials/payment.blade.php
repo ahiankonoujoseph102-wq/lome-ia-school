@@ -55,7 +55,7 @@
 @else
     <div
         x-data="mobileMoneyPayment({
-            methods: @js($paymentMethods->map(fn ($method) => ['key' => $method->key, 'country' => $method->country])->values()),
+            methods: @js($paymentMethods->map(fn ($method) => ['key' => $method->key, 'country' => $method->country, 'name' => $method->name, 'countryName' => $method->countryName()])->values()),
             initialMethod: @js($initialMethod),
             initialStep: @js($initialMethod ? ($errors->has('proof') ? 4 : 3) : 1),
             maxBytes: @js((int) $payments['proof_max_kb'] * 1024),

@@ -13,6 +13,7 @@ use App\Payments\PaymentMethod;
 use App\Payments\PaymentMethods;
 use App\Promotions\PromoCodes;
 use App\Support\Money;
+use App\Support\VoiceAssistant;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,6 +50,13 @@ class CheckoutController extends Controller
 
         $unverified = $user?->purchases()->awaitingVerification()->with('formation')->latest()->first();
         $amount = $quote?->amount() ?? $formation->price;
+
+        // Contexte transmis à l'assistante Ama (montant réellement à payer, code promo refusé).
+        VoiceAssistant::addContext($request, array_filter([
+            'montant_a_payer' => Money::fcfa($amount),
+            'erreur' => $promoError !== null ? ['cle' => 'promo_code', 'texte' => $promoError] : null,
+            'difficulte' => $promoError !== null ? 'promo_refuse' : null,
+        ]));
 
         return view('site.checkout.show', [
             'formation' => $formation,

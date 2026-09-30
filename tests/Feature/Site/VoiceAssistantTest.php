@@ -3,7 +3,9 @@
 namespace Tests\Feature\Site;
 
 use App\Enums\AdminAction;
+use App\Enums\EnrollmentSource;
 use App\Enums\UserRole;
+use App\Events\FormationAccessGranted;
 use App\Models\AdminActivity;
 use App\Models\Formation;
 use App\Models\Lesson;
@@ -104,24 +106,58 @@ class VoiceAssistantTest extends TestCase
         $response->assertDontSee('data-test="voice-assistant"', false)->assertDontSee('unpkg.com', false);
     }
 
-    public function test_it_is_absent_from_the_admin_the_course_player_and_other_pages(): void
+    public function test_it_is_absent_from_the_admin_the_group_conversation_and_by_default_the_course_player(): void
     {
         $this->enable();
 
         $admin = User::factory()->create(['role' => UserRole::Admin]);
         $this->assertWidgetAbsent($this->actingAs($admin)->get(route('admin.index')));
         $this->assertWidgetAbsent($this->actingAs($admin)->get(route('admin.settings.edit', 'coordonnees')));
+        $this->assertWidgetAbsent($this->actingAs($admin)->get(route('admin.payments.index')));
 
         $lesson = Lesson::factory()->preview()->create();
         $this->assertWidgetAbsent($this->actingAs($admin)->get(route('lessons.show', [$lesson->formation(), $lesson])));
 
+        $student = User::factory()->create();
+        $formation = Formation::factory()->create();
+        FormationAccessGranted::dispatch($student->enroll($formation, EnrollmentSource::Purchase));
+        $this->assertWidgetAbsent($this->actingAs($student)->get(route('chat.show', $formation)));
+        $this->assertWidgetAbsent($this->actingAs($student)->get(route('lessons.show', [$lesson->formation(), $lesson])));
+
         auth()->logout();
         $this->assertWidgetAbsent($this->get(route('lessons.show', [$lesson->formation(), $lesson])));
-        $this->assertWidgetAbsent($this->get(route('consultation')));
-        $this->assertWidgetAbsent($this->get(route('legal.privacy')));
+    }
+
+    public function test_the_course_player_shows_it_only_when_the_admin_chooses_it(): void
+    {
+        SiteSettings::save(['site.voice_assistant' => ['enabled' => true, 'agent_id' => self::AGENT, 'lessons' => true]]);
+        $lesson = Lesson::factory()->preview()->create();
+
+        $this->assertWidgetPresent($this->get(route('lessons.show', [$lesson->formation(), $lesson])));
+    }
+
+    public function test_it_is_on_account_payment_and_student_pages(): void
+    {
+        $this->enable();
+        $formation = Formation::factory()->create();
+
+        foreach (['register', 'login', 'password.request', 'consultation', 'legal.privacy', 'legal.terms', 'about', 'affiliate.program'] as $route) {
+            $this->assertWidgetPresent($this->get(route($route)));
+        }
+
+        $this->assertWidgetPresent($this->get(route('checkout.show', $formation)));
+
+        $unconfirmed = User::factory()->create(['email_verified_at' => null]);
+        $this->assertWidgetPresent($this->actingAs($unconfirmed)->get(route('email-confirmation.show')));
 
         $student = User::factory()->create();
-        $this->assertWidgetAbsent($this->actingAs($student)->get(route('dashboard')));
+        foreach (['dashboard', 'student.formations.index', 'student.purchases.index', 'student.affiliate.index', 'student.profile', 'student.sessions.index', 'chat.index'] as $route) {
+            $this->assertWidgetPresent($this->actingAs($student)->get(route($route)));
+        }
+
+        $this->assertWidgetPresent($this->actingAs($student)->get(route('checkout.show', $formation)));
+        // Espace élève : le bouton passe au-dessus de la barre de navigation du bas.
+        $this->actingAs($student)->get(route('dashboard'))->assertSee('has-bottom-nav', false)->assertSee('pb-40', false);
     }
 
     public function test_the_formation_page_keeps_room_for_the_buy_bar(): void
@@ -160,6 +196,31 @@ class VoiceAssistantTest extends TestCase
         $this->assertFalse(VoiceAssistant::enabled());
         auth()->logout();
         $this->assertWidgetAbsent($this->get(route('home')));
+    }
+
+    public function test_the_admin_sets_the_course_player_and_the_proactive_help(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::Admin]);
+
+        $this->actingAs($admin)->get(route('admin.settings.edit', 'assistante'))
+            ->assertOk()
+            ->assertSee('Afficher Ama dans le lecteur de cours')
+            ->assertSee('Aide proactive')
+            ->assertSee('name="help_delay"', false)
+            ->assertSee('value="90"', false)
+            ->assertSee('{{contexte}}', false)
+            ->assertSee('{{message_accueil}}', false);
+
+        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['enabled' => '1', 'agent_id' => self::AGENT, 'lessons' => '1', 'proactive' => '0', 'help_delay' => '120'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertTrue(VoiceAssistant::showInLessons());
+        $this->assertFalse(VoiceAssistant::proactiveHelp());
+        $this->assertSame(120, VoiceAssistant::helpDelay());
+        $this->assertTrue(AdminActivity::query()->where('description', 'like', '%lecteur de cours : oui, aide proactive : non%')->exists());
+
+        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['enabled' => '1', 'agent_id' => self::AGENT, 'help_delay' => '5'])
+            ->assertSessionHasErrors(['help_delay' => 'Le délai doit être d\'au moins 30 secondes.']);
     }
 
     public function test_the_agent_id_is_cleaned_before_validation(): void
@@ -225,7 +286,9 @@ class VoiceAssistantTest extends TestCase
             ->assertSee('Ama est une intelligence artificielle.')
             ->assertSee('traitées par le service ElevenLabs')
             ->assertSee('conservés 90 jours')
-            ->assertSee('enregistre dans votre navigateur un identifiant technique de visiteur');
+            ->assertSee('enregistre dans votre navigateur un identifiant technique de visiteur')
+            ->assertSee('Pour vous guider, l\'assistante reçoit des informations sur la page que vous consultez', false)
+            ->assertSee('sans aucune donnée personnelle');
     }
 
     public function test_the_widget_script_is_pinned_to_the_tested_version(): void

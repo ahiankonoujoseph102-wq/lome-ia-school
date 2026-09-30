@@ -13,6 +13,7 @@ use App\Models\LiveSession;
 use App\Models\User;
 use App\Payments\PaymentMethod;
 use App\Payments\PaymentMethods;
+use App\Support\VoiceAssistant;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -96,6 +97,8 @@ class LiveSessionController extends Controller
         if ($registration === null || ! $registration->awaitsPayment()) {
             return to_route('student.sessions.show', $session);
         }
+
+        VoiceAssistant::addContext($request, ['montant_a_payer' => $session->formattedSupplement()]);
 
         return view('site.student.sessions.payment', [
             'session' => $session->load('formation'),

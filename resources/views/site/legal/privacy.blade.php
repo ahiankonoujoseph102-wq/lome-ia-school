@@ -65,7 +65,7 @@
             </ul>
 
             <h2>Assistante vocale</h2>
-            <p data-test="privacy-voice-assistant">Le bouton « Parler avec notre assistante » vous permet de discuter avec Ama, notre assistante vocale. <strong>Ama est une intelligence artificielle.</strong> Vos conversations avec elle sont traitées par le service ElevenLabs. L'audio et la transcription de chaque conversation sont conservés 90 jours. Pour fonctionner, le widget d'ElevenLabs enregistre dans votre navigateur un identifiant technique de visiteur.</p>
+            <p data-test="privacy-voice-assistant">Le bouton « Parler avec notre assistante » vous permet de discuter avec Ama, notre assistante vocale. <strong>Ama est une intelligence artificielle.</strong> Vos conversations avec elle sont traitées par le service ElevenLabs. L'audio et la transcription de chaque conversation sont conservés 90 jours. Pour fonctionner, le widget d'ElevenLabs enregistre dans votre navigateur un identifiant technique de visiteur. Pour vous guider, l'assistante reçoit des informations sur la page que vous consultez (par exemple la formation, le montant à payer ou l'étape du paiement) et sur les éventuelles erreurs affichées à l'écran, sans aucune donnée personnelle : ni nom, ni adresse e-mail, ni numéro de téléphone, ni mot de passe, ni code, ni capture de paiement.</p>
 
             <h2>Utilisation des données</h2>
             <ul>
