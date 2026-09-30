@@ -430,6 +430,12 @@ return [
     'voice_assistant' => [
         'enabled' => false,
         'agent_id' => 'agent_9901m3phrpdwedt88vsdqmnwk09z',
+        // Bouton aussi dans le lecteur de cours (désactivé par défaut).
+        'lessons' => false,
+        // Aide proactive : bulle « Vous semblez bloqué ? » quand le site repère une difficulté.
+        'proactive' => true,
+        // Secondes sur une même étape du paiement avant de proposer l'aide.
+        'help_delay' => 90,
     ],
 
     'legal' => [

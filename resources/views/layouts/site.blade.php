@@ -20,8 +20,9 @@
     $image = \App\Support\AppUrl::to($image ?? route('og.site'));
     $canonical = url()->current();
     $shareUrl = \App\Support\AppUrl::to($canonical);
-    // Assistante vocale : pages publiques choisies uniquement (jamais l'admin, l'espace élève ni le lecteur de cours).
-    $voiceAssistant = $variant === 'marketing' && \App\Support\VoiceAssistant::shownOn(request()->route()?->getName());
+    // Assistante vocale : pages de VoiceAssistant::PAGES (jamais l'admin ni la conversation d'un groupe ; le lecteur de cours au choix de l'admin).
+    $voiceAssistant = \App\Support\VoiceAssistant::shownOn(request()->route()?->getName(), $variant);
+    $bottomNav = $variant === 'student';
 @endphp
 
 <!DOCTYPE html>
@@ -101,11 +102,12 @@
         'font-sans',
         'min-h-screen overflow-x-clip' => $variant !== 'chat',
         'flex h-dvh flex-col overflow-hidden' => $variant === 'chat',
-        'pb-24 lg:pb-0' => ($stickyCta || $variant === 'student') && ! $voiceAssistant,
-        // Place laissée en bas de page pour le bouton de l'assistante (et la barre d'achat sur téléphone).
-        'pb-20' => $voiceAssistant && ! $stickyCta,
-        'pb-40 lg:pb-20' => $voiceAssistant && $stickyCta,
+        'pb-24 lg:pb-0' => ($stickyCta || $bottomNav) && ! $voiceAssistant,
+        // Place laissée en bas de page pour le bouton de l'assistante (et la barre d'achat ou la barre de navigation sur téléphone).
+        'pb-20' => $voiceAssistant && ! $stickyCta && ! $bottomNav,
+        'pb-40 lg:pb-20' => $voiceAssistant && ($stickyCta || $bottomNav),
         'has-sticky-cta' => $stickyCta,
+        'has-bottom-nav' => $bottomNav,
     ])>
         @include('site.partials.test-banner')
 

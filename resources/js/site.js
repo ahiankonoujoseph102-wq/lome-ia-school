@@ -1,4 +1,5 @@
 import Alpine from 'alpinejs';
+import { buildVariables, createHelpTracker, pick } from './ama.js';
 
 /**
  * Apparition douce des éléments marqués data-reveal, uniquement pour ceux encore sous l'écran.
@@ -122,10 +123,26 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxByt
         const initial = this.methods.find((item) => item.key === initialMethod);
         this.country = initial ? initial.country : '';
         this.method = initial ? initial.key : '';
+        this.tellAssistant();
+    },
+
+    // Étape, pays et opérateur transmis à l'assistante Ama (aucune donnée personnelle).
+    tellAssistant() {
+        const countryName = this.methods.find((item) => item.country === this.country)?.countryName ?? null;
+        const operator = this.methods.find((item) => item.key === this.method)?.name ?? null;
+        const detail = {
+            numero_etape: this.step,
+            etape: `étape ${this.step} sur 4 : ${['choisir le pays', 'choisir l\'opérateur Mobile Money', 'envoyer l\'argent par Mobile Money au numéro affiché', 'envoyer la capture d\'écran du paiement'][this.step - 1]}`,
+            pays: countryName,
+            operateur: this.step >= 3 ? operator : null,
+        };
+        // Après l'initialisation des autres composants (le bouton d'Ama peut être plus bas dans la page).
+        queueMicrotask(() => window.dispatchEvent(new CustomEvent('ama-context', { detail })));
     },
 
     goTo(step) {
         this.step = step;
+        this.tellAssistant();
         this.$nextTick(() => {
             const top = this.$refs.payment?.getBoundingClientRect().top ?? 0;
             if (top < 0) {
@@ -168,14 +185,13 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxByt
 
         if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
             this.fileError = 'La capture doit être une image JPG, PNG ou WebP.';
-            event.target.value = '';
-
-            return;
+        } else if (file.size > maxBytes) {
+            this.fileError = `La capture ne doit pas dépasser ${maxMb} Mo.`;
         }
 
-        if (file.size > maxBytes) {
-            this.fileError = `La capture ne doit pas dépasser ${maxMb} Mo.`;
+        if (this.fileError) {
             event.target.value = '';
+            window.dispatchEvent(new CustomEvent('ama-error', { detail: { cle: 'proof', texte: this.fileError, difficulte: 'capture_echec' } }));
 
             return;
         }
@@ -567,27 +583,181 @@ const widgetIsVisible = (widget) =>
         return box.width > 0 && box.height > 0;
     });
 
-Alpine.data('voiceAssistant', ({ agentId, scriptUrl, texts }) => ({
+/**
+ * Bouton « Parler avec notre assistante » (Ama, agent ElevenLabs).
+ *
+ * - Contexte de la page (sans donnée personnelle, voir ama.js) envoyé à l'agent en variables dynamiques :
+ *   attribut « dynamic-variables » du widget, remis à jour au démarrage de chaque appel par l'événement
+ *   officiel « elevenlabs-convai:call » (detail.config.dynamicVariables).
+ * - Changements pendant l'appel (étape, pays, opérateur, erreur) : événement officiel
+ *   « elevenlabs-agent:contextual-update » (widget avec allow-events="true"), sans interrompre Ama.
+ * - Difficulté repérée (erreur répétée, code promo refusé, capture refusée, étape trop longue,
+ *   allers-retours) : petite bulle « Vous semblez bloqué ? », une fois par page et par visite. Elle ouvre
+ *   seulement le panneau d'Ama : l'appel et le micro ne démarrent jamais sans que le visiteur touche
+ *   lui-même « Démarrer l'appel » dans le widget.
+ */
+Alpine.data('voiceAssistant', (config) => ({
     loading: false,
     opened: false,
     error: '',
+    bubble: false,
+    covering: false,
+    context: pick(config.context),
+    widget: null,
+    tracker: null,
+    stepTimer: null,
+
+    init() {
+        let storage = null;
+        try {
+            storage = window.sessionStorage;
+        } catch {
+            storage = null;
+        }
+
+        this.tracker = createHelpTracker({ storage, pageKey: config.pageKey, enabled: config.proactive });
+
+        if (this.context.difficulte) {
+            this.difficulty(this.context.difficulte);
+        } else if (this.context.erreur) {
+            const found = this.tracker.errorShown(this.context.erreur);
+            if (found) {
+                this.difficulty(found);
+            }
+        }
+
+        // La bulle ne reste jamais au-dessus d'un bouton ou d'un champ : elle s'efface le temps qu'il passe dessous.
+        let frame = null;
+        const recheck = () => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => this.checkCovering());
+        };
+        window.addEventListener('scroll', recheck, { passive: true });
+        window.addEventListener('resize', recheck);
+
+        // Informations envoyées par les autres composants de la page (paiement : étape, pays, opérateur, erreurs).
+        window.addEventListener('ama-context', (event) => this.update(event.detail ?? {}));
+        window.addEventListener('ama-error', (event) => {
+            const detail = event.detail ?? {};
+            this.update({ erreur: { cle: detail.cle ?? '', texte: detail.texte ?? '' } });
+            if (detail.difficulte) {
+                this.difficulty(detail.difficulte);
+            }
+        });
+    },
+
+    variables() {
+        return buildVariables(this.context, { difficulties: config.difficulties, greeting: config.greeting });
+    },
+
+    update(values) {
+        const before = JSON.stringify(this.context);
+        this.context = pick({ ...this.context, ...values });
+
+        if (typeof values.numero_etape === 'number') {
+            this.watchStep(values.numero_etape);
+        }
+
+        if (JSON.stringify(this.context) !== before) {
+            this.sendToWidget();
+        }
+    },
+
+    // Étape du paiement : trop longue sans avancer, ou allers-retours entre deux étapes.
+    watchStep(step) {
+        clearTimeout(this.stepTimer);
+
+        const found = this.tracker.stepChanged(step);
+        if (found) {
+            this.difficulty(found);
+        }
+
+        this.stepTimer = setTimeout(() => this.difficulty('etape_longue'), config.helpDelay * 1000);
+    },
+
+    difficulty(key) {
+        if (this.opened) {
+            // Ama est déjà ouverte : elle est prévenue sans bulle.
+            this.update({ difficulte: key });
+
+            return;
+        }
+
+        if (this.tracker.offer()) {
+            this.context = pick({ ...this.context, difficulte: key });
+            this.showBubble(true);
+        }
+    },
+
+    // Place ajoutée en bas de page tant que la bulle est affichée (le bas de la page reste accessible).
+    showBubble(shown) {
+        this.bubble = shown;
+        document.body.classList.toggle('ama-help-shown', shown);
+        this.$nextTick(() => this.checkCovering());
+    },
+
+    checkCovering() {
+        const bubble = this.$refs.bubble;
+
+        if (!this.bubble || !bubble) {
+            this.covering = false;
+
+            return;
+        }
+
+        const box = bubble.getBoundingClientRect();
+        this.covering = [...document.querySelectorAll('a, button, input:not([type=hidden]), select, textarea, label[for]')].some((element) => {
+            if (this.$el.contains(element)) {
+                return false;
+            }
+
+            const rect = element.getBoundingClientRect();
+
+            return rect.width > 1 && rect.height > 1 && rect.left < box.right && box.left < rect.right && rect.top < box.bottom && box.top < rect.bottom;
+        });
+    },
+
+    closeBubble() {
+        this.showBubble(false);
+    },
+
+    sendToWidget() {
+        if (!this.widget) {
+            return;
+        }
+
+        const variables = this.variables();
+        this.widget.setAttribute('dynamic-variables', JSON.stringify(variables));
+        this.widget.dispatchEvent(new CustomEvent('elevenlabs-agent:contextual-update', { detail: { message: `Mise à jour du contexte de la page :\n${variables.contexte}` } }));
+    },
 
     async open() {
         if (this.loading || this.opened) {
             return;
         }
 
+        this.showBubble(false);
         this.loading = true;
         this.error = '';
 
         const widget = document.createElement('elevenlabs-convai');
-        widget.setAttribute('agent-id', agentId);
-        widget.setAttribute('placement', 'bottom-left');
+        widget.setAttribute('agent-id', config.agentId);
+        // Même côté que notre bouton : à droite sur téléphone et tablette, à gauche sur ordinateur.
+        widget.setAttribute('placement', window.matchMedia('(min-width: 64rem)').matches ? 'bottom-left' : 'bottom-right');
+        // Panneau ouvert, sans démarrer l'appel : le visiteur touche lui-même « Démarrer l'appel ».
         widget.setAttribute('default-expanded', 'true');
-        widget.setAttribute('text-contents', JSON.stringify(texts));
+        widget.setAttribute('allow-events', 'true');
+        widget.setAttribute('text-contents', JSON.stringify(config.texts));
+        widget.setAttribute('dynamic-variables', JSON.stringify(this.variables()));
+        // Au démarrage de chaque appel : contexte le plus récent.
+        widget.addEventListener('elevenlabs-convai:call', (event) => {
+            if (event.detail?.config) {
+                event.detail.config.dynamicVariables = this.variables();
+            }
+        });
 
         try {
-            await within(loadVoiceAssistantScript(scriptUrl), 20000);
+            await within(loadVoiceAssistantScript(config.scriptUrl), 20000);
             document.body.appendChild(widget);
             await within(customElements.whenDefined('elevenlabs-convai'), 10000);
 
@@ -609,6 +779,7 @@ Alpine.data('voiceAssistant', ({ agentId, scriptUrl, texts }) => ({
                 throw new Error('affichage');
             }
 
+            this.widget = widget;
             this.opened = true;
         } catch {
             widget.remove();
