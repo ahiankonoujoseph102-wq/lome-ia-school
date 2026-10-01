@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Petit robot assistant entouré de tâches">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#121a45"/><stop offset="0.55" stop-color="#0b1030"/><stop offset="1" stop-color="#050817"/></linearGradient>
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#7c3aed" stop-opacity="0.55"/><stop offset="0.6" stop-color="#4c1d95" stop-opacity="0.18"/><stop offset="1" stop-color="#4c1d95" stop-opacity="0"/></radialGradient>
+  <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#5b21b6"/></linearGradient>
+  <linearGradient id="violetDark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d28d9"/><stop offset="1" stop-color="#3b1a8a"/></linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="0.5" stop-color="#fbbf24"/><stop offset="1" stop-color="#f5a70b"/></linearGradient>
+  <filter id="blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="22"/></filter>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#000" flood-opacity="0.45"/></filter>
+</defs>
+<rect width="1600" height="1000" fill="url(#bg)"/>
+<ellipse cx="800" cy="500" rx="760" ry="560" fill="url(#glow)"/>
+<g fill="none" stroke="#a78bfa" stroke-opacity="0.10" stroke-width="3"><circle cx="800" cy="500" r="330"/><circle cx="800" cy="500" r="470"/><circle cx="800" cy="500" r="620"/></g>
+<g fill="#fde68a"><circle cx="150" cy="160" r="7" opacity=".7"/><circle cx="262" cy="250" r="5" opacity=".5"/><circle cx="1440" cy="190" r="7" opacity=".7"/><circle cx="1350" cy="120" r="4" opacity=".5"/><circle cx="130" cy="840" r="5" opacity=".5"/><circle cx="1470" cy="820" r="6" opacity=".6"/><circle cx="1180" cy="900" r="4" opacity=".5"/></g>
+<!-- liens robot / tâches -->
+<g fill="none" stroke="#c4b5fd" stroke-opacity="0.55" stroke-width="8" stroke-dasharray="4 22" stroke-linecap="round">
+  <path d="M470 360 C540 380 560 420 600 440"/><path d="M470 640 C540 620 560 600 620 580"/><path d="M1130 360 C1060 380 1040 420 1000 440"/><path d="M1130 640 C1060 620 1040 600 980 580"/>
+</g>
+<!-- cartes de tâches -->
+<g filter="url(#shadow)">
+  <rect x="190" y="280" width="290" height="170" rx="40" fill="#1b2560" stroke="#a78bfa" stroke-opacity="0.6" stroke-width="5"/>
+  <rect x="190" y="560" width="290" height="170" rx="40" fill="#1b2560" stroke="#a78bfa" stroke-opacity="0.6" stroke-width="5"/>
+  <rect x="1120" y="280" width="290" height="170" rx="40" fill="#1b2560" stroke="#a78bfa" stroke-opacity="0.6" stroke-width="5"/>
+  <rect x="1120" y="560" width="290" height="170" rx="40" fill="#1b2560" stroke="#a78bfa" stroke-opacity="0.6" stroke-width="5"/>
+</g>
+<!-- carte 1 : coche -->
+<circle cx="268" cy="365" r="34" fill="url(#gold)"/><path d="M251 366 l12 13 l22 -26" fill="none" stroke="#0b1030" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="326" y="342" width="110" height="16" rx="8" fill="#ddd6fe"/><rect x="326" y="374" width="70" height="16" rx="8" fill="#8b5cf6"/>
+<!-- carte 2 : message -->
+<path d="M240 620 h110 a24 24 0 0 1 24 24 v34 a24 24 0 0 1 -24 24 h-62 l-30 26 v-26 h-18 a24 24 0 0 1 -24 -24 v-34 a24 24 0 0 1 24 -24z" transform="translate(0 -10)" fill="url(#gold)"/>
+<rect x="396" y="618" width="50" height="16" rx="8" fill="#ddd6fe"/><rect x="396" y="650" width="34" height="16" rx="8" fill="#8b5cf6"/>
+<!-- carte 3 : engrenage simple -->
+<g transform="translate(1198 365)"><circle r="30" fill="none" stroke="url(#gold)" stroke-width="20"/>
+  <g fill="#fbbf24"><rect x="-8" y="-50" width="16" height="22" rx="4"/><rect x="-8" y="28" width="16" height="22" rx="4"/><rect x="-50" y="-8" width="22" height="16" rx="4"/><rect x="28" y="-8" width="22" height="16" rx="4"/></g></g>
+<rect x="1256" y="342" width="110" height="16" rx="8" fill="#ddd6fe"/><rect x="1256" y="374" width="70" height="16" rx="8" fill="#8b5cf6"/>
+<!-- carte 4 : éclair -->
+<path d="M1226 596 l-44 62 h34 l-14 54 l56 -72 h-36z" transform="translate(0 -6)" fill="url(#gold)"/>
+<rect x="1286" y="618" width="86" height="16" rx="8" fill="#ddd6fe"/><rect x="1286" y="650" width="56" height="16" rx="8" fill="#8b5cf6"/>
+<!-- robot -->
+<g filter="url(#shadow)">
+  <line x1="800" y1="262" x2="800" y2="318" stroke="#c4b5fd" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="800" cy="236" r="32" fill="url(#gold)"/>
+  <rect x="640" y="650" width="320" height="210" rx="80" fill="url(#violetDark)"/>
+  <rect x="520" y="425" width="48" height="130" rx="24" fill="url(#gold)"/><rect x="1032" y="425" width="48" height="130" rx="24" fill="url(#gold)"/>
+  <rect x="550" y="310" width="500" height="360" rx="120" fill="url(#violet)"/>
+</g>
+<rect x="602" y="362" width="396" height="256" rx="84" fill="#0b1030"/>
+<g><ellipse cx="710" cy="470" rx="46" ry="54" fill="#fbbf24" opacity=".35" filter="url(#blur)"/><ellipse cx="890" cy="470" rx="46" ry="54" fill="#fbbf24" opacity=".35" filter="url(#blur)"/>
+<rect x="672" y="418" width="76" height="104" rx="38" fill="url(#gold)"/><rect x="852" y="418" width="76" height="104" rx="38" fill="url(#gold)"/>
+<circle cx="696" cy="450" r="12" fill="#fff" opacity=".85"/><circle cx="876" cy="450" r="12" fill="#fff" opacity=".85"/></g>
+<path d="M740 570 Q800 612 860 570" fill="none" stroke="#fbbf24" stroke-width="16" stroke-linecap="round"/>
+<circle cx="800" cy="755" r="46" fill="none" stroke="url(#gold)" stroke-width="14"/><circle cx="800" cy="755" r="16" fill="#fde68a"/>
+</svg>
