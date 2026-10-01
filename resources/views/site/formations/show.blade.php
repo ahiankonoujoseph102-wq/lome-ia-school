@@ -376,7 +376,7 @@
 
     {{-- Barre d'achat fixée en bas de l'écran (mobile et tablette) --}}
     <x-slot:after>
-        <div class="fixed inset-x-0 bottom-0 z-40 border-t border-veil/10 bg-night-950/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
+        <div data-bottom-bar data-install-avoid class="fixed inset-x-0 bottom-0 z-40 border-t border-veil/10 bg-night-950/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
             <div class="mx-auto flex max-w-xl items-center gap-3">
                 <div class="min-w-0 flex-1">
                     <p class="truncate text-xs text-slate-400">{{ $formation->title }}</p>

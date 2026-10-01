@@ -30,6 +30,8 @@
     // Assistante vocale : pages de VoiceAssistant::PAGES (jamais l'admin ni la conversation d'un groupe ; le lecteur de cours au choix de l'admin).
     $voiceAssistant = \App\Support\VoiceAssistant::shownOn(request()->route()?->getName(), $variant);
     $bottomNav = $variant === 'student';
+    // Bannière « Installer l'application » : liste fermée de pages (jamais paiement, connexion, cours, admin).
+    $installBanner = \App\Support\InstallApp::bannerShownOn(request()->route()?->getName(), $variant);
 @endphp
 
 <!DOCTYPE html>
@@ -96,6 +98,15 @@
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="Lomé IA">
+        {{-- « Installer l'application » : l'offre d'installation du navigateur (Chrome, Android) est gardée dès maintenant,
+             avant le chargement de site.js, pour la bannière et le lien du pied de page (resources/js/install-app.js). --}}
+        <script>
+            addEventListener('beforeinstallprompt', (event) => {
+                event.preventDefault();
+                window.lisInstallPrompt = event;
+                dispatchEvent(new Event('lis-installable'));
+            });
+        </script>
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         @vite(['resources/css/site.css', 'resources/js/site.js'])
@@ -152,6 +163,10 @@
 
             @if ($voiceAssistant)
                 @include('site.partials.voice-assistant')
+            @endif
+
+            @if ($installBanner)
+                @include('site.partials.install-banner')
             @endif
 
             {{ $after ?? '' }}

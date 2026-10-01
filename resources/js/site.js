@@ -16,6 +16,7 @@ import {
     SPEECH_RATE,
     speechSupport,
 } from './ama.js';
+import { bottomOffset, createInstallState, isInstalled, isIos, overlaps } from './install-app.js';
 
 /**
  * Apparition douce des éléments marqués data-reveal, uniquement pour ceux encore sous l'écran.
@@ -560,6 +561,87 @@ Alpine.data('pushNotifications', ({ publicKey, subscribeUrl, unsubscribeUrl }) =
 if ('serviceWorker' in navigator && window.isSecureContext) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 }
+
+/**
+ * « Installer l'application » (voir resources/js/install-app.js) : état partagé par la bannière (partiel
+ * install-banner, pages de App\Support\InstallApp::BANNER_PAGES) et le lien du pied de page (partiel install-link).
+ * L'événement « beforeinstallprompt » est capté dès l'en-tête de la page (layout) : window.lisInstallPrompt.
+ */
+const storageOf = (name) => {
+    try {
+        return window[name];
+    } catch {
+        return null;
+    }
+};
+
+const installState = createInstallState({
+    ios: isIos({ userAgent: navigator.userAgent, platform: navigator.platform, maxTouchPoints: navigator.maxTouchPoints }),
+    installed: isInstalled({ standaloneDisplay: window.matchMedia?.('(display-mode: standalone)').matches, navigatorStandalone: navigator.standalone === true }),
+    touch: Boolean(window.matchMedia?.('(pointer: coarse)').matches),
+    storage: storageOf('localStorage'),
+    session: storageOf('sessionStorage'),
+    schedule: (callback, ms) => window.setTimeout(callback, ms),
+});
+
+Alpine.store('installApp', installState);
+Alpine.store('installApp').start();
+Alpine.store('installApp').installable(window.lisInstallPrompt);
+window.addEventListener('lis-installable', () => Alpine.store('installApp').installable(window.lisInstallPrompt));
+window.addEventListener('appinstalled', () => Alpine.store('installApp').markInstalled());
+
+/**
+ * Bannière en bas de l'écran : au-dessus des barres fixées en bas (barre de prix, barre de l'espace élève, repérées
+ * par data-bottom-bar), et invisible tant qu'elle passerait au-dessus d'un bouton principal (.btn-gold : « Je
+ * m'inscris », « Acheter maintenant »…) ou d'un élément marqué data-install-avoid. Place réservée en bas de page et
+ * bouton d'Ama remonté pendant qu'elle est affichée (classe install-banner-shown, site.css).
+ */
+Alpine.data('installBanner', () => ({
+    bottom: 12,
+    covering: false,
+    frame: null,
+
+    init() {
+        const update = () => {
+            if (this.frame === null) {
+                this.frame = window.requestAnimationFrame(() => {
+                    this.frame = null;
+                    this.place();
+                });
+            }
+        };
+
+        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        this.$watch('$store.installApp.bannerVisible', (shown) => this.toggle(shown));
+        this.toggle(this.$store.installApp.bannerVisible);
+    },
+
+    toggle(shown) {
+        document.body.classList.toggle('install-banner-shown', shown);
+        this.$nextTick(() => this.place());
+    },
+
+    place() {
+        if (!this.$store.installApp.bannerVisible) {
+            return;
+        }
+
+        const bars = [...document.querySelectorAll('[data-bottom-bar]')]
+            .map((bar) => bar.getBoundingClientRect())
+            .filter((rect) => rect.height > 1)
+            .map((rect) => rect.top);
+        this.bottom = bottomOffset(window.innerHeight, bars);
+
+        // Position calculée (et non lue) : le nouveau « bottom » n'est appliqué qu'au prochain rendu.
+        const rect = this.$el.getBoundingClientRect();
+        const box = { left: rect.left, right: rect.right, bottom: window.innerHeight - this.bottom, top: window.innerHeight - this.bottom - rect.height };
+        document.body.style.setProperty('--install-banner-space', `${Math.ceil(rect.height) + 12}px`);
+        this.covering = [...document.querySelectorAll('.btn-gold, [data-install-avoid]')].some(
+            (element) => !this.$el.contains(element) && overlaps(box, element.getBoundingClientRect()),
+        );
+    },
+}));
 
 /**
  * Assistante vocale IA (agent ElevenLabs) : bouton flottant des pages publiques (partiel voice-assistant).

@@ -36,7 +36,7 @@
 </nav>
 
 {{-- Téléphone : barre de navigation fixée en bas de l'écran --}}
-<nav class="fixed inset-x-0 bottom-0 z-40 border-t border-veil/10 bg-night-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" aria-label="Mon espace">
+<nav data-bottom-bar class="fixed inset-x-0 bottom-0 z-40 border-t border-veil/10 bg-night-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden" aria-label="Mon espace">
     <ul class="mx-auto grid max-w-lg grid-cols-6">
         @foreach (array_filter($items, fn ($item) => ! ($item['desktop'] ?? false)) as $item)
             @php $active = request()->routeIs(...(array) $item['active']); @endphp
