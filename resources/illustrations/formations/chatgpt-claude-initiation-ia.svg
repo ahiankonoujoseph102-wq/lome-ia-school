@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Deux bulles de discussion">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#121a45"/><stop offset="0.55" stop-color="#0b1030"/><stop offset="1" stop-color="#050817"/></linearGradient>
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#7c3aed" stop-opacity="0.55"/><stop offset="0.6" stop-color="#4c1d95" stop-opacity="0.18"/><stop offset="1" stop-color="#4c1d95" stop-opacity="0"/></radialGradient>
+  <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#5b21b6"/></linearGradient>
+  <linearGradient id="violetDark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6d28d9"/><stop offset="1" stop-color="#3b1a8a"/></linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="0.5" stop-color="#fbbf24"/><stop offset="1" stop-color="#f5a70b"/></linearGradient>
+  <filter id="blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="22"/></filter>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#000" flood-opacity="0.45"/></filter>
+</defs>
+<rect width="1600" height="1000" fill="url(#bg)"/>
+<ellipse cx="800" cy="500" rx="760" ry="560" fill="url(#glow)"/>
+<g fill="none" stroke="#a78bfa" stroke-opacity="0.10" stroke-width="3"><circle cx="800" cy="500" r="330"/><circle cx="800" cy="500" r="470"/><circle cx="800" cy="500" r="620"/></g>
+<g fill="#fde68a"><circle cx="150" cy="160" r="7" opacity=".7"/><circle cx="262" cy="250" r="5" opacity=".5"/><circle cx="1440" cy="190" r="7" opacity=".7"/><circle cx="1350" cy="120" r="4" opacity=".5"/><circle cx="130" cy="840" r="5" opacity=".5"/><circle cx="1470" cy="820" r="6" opacity=".6"/><circle cx="1180" cy="900" r="4" opacity=".5"/></g>
+<g transform="translate(0 -80)">
+<g filter="url(#shadow)">
+  <!-- bulle de la question -->
+  <path d="M390 250 h420 a110 110 0 0 1 110 110 v100 a110 110 0 0 1 -110 110 h-250 l-130 110 v-110 h-40 a110 110 0 0 1 -110 -110 v-100 a110 110 0 0 1 110 -110z" fill="url(#violet)"/>
+</g>
+<rect x="320" y="342" width="470" height="30" rx="15" fill="#fff" opacity=".92"/><rect x="320" y="404" width="340" height="30" rx="15" fill="#fff" opacity=".92"/><rect x="320" y="466" width="400" height="30" rx="15" fill="#fff" opacity=".55"/>
+<g filter="url(#shadow)">
+  <!-- bulle de la réponse -->
+  <path d="M810 480 h400 a110 110 0 0 1 110 110 v100 a110 110 0 0 1 -110 110 h-30 v118 l-140 -118 h-230 a110 110 0 0 1 -110 -110 v-100 a110 110 0 0 1 110 -110z" transform="translate(-20 20)" fill="url(#gold)"/>
+</g>
+<g fill="#0b1030"><circle cx="840" cy="690" r="40"/><circle cx="970" cy="690" r="40" opacity=".8"/><circle cx="1100" cy="690" r="40" opacity=".6"/></g>
+<!-- étincelles simples -->
+<g stroke="#fde68a" stroke-width="10" stroke-linecap="round"><path d="M1290 270 v70 M1255 305 h70"/><path d="M200 650 v44 M178 672 h44" opacity=".7"/></g>
+<g stroke="#c4b5fd" stroke-width="8" stroke-linecap="round" opacity=".8"><path d="M1380 450 v40 M1360 470 h40"/></g>
+</g>
+</svg>

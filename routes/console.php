@@ -25,6 +25,7 @@ Artisan::command('inspire', function () {
 | - Sessions : rappels (veille et 1 h avant), places réservées expirées, annonces désépinglées (toutes les 5 min).
 | - Affiliation : commissions devenues disponibles après le délai prévu (toutes les heures).
 | - Consultations gratuites : rappels (veille et 1 h avant) et suppression des anciens rendez-vous (toutes les 5 min).
+| - Illustration d'« Agents IA » : posée dès le 8 octobre 2026 (fin du direct), si la formation n'a pas d'image (chaque nuit).
 | - Assistante Ama : conversations, demandes transmises au fondateur, incidents et compteurs effacés après 90 jours (chaque nuit).
 |
 */
@@ -32,6 +33,11 @@ Artisan::command('inspire', function () {
 Schedule::command('queue:work --stop-when-empty --tries=3 --max-time=50')
     ->everyMinute()
     ->withoutOverlapping(5);
+
+Schedule::command('app:apply-formation-illustrations')
+    ->dailyAt('00:05')
+    ->timezone('Africa/Lome')
+    ->withoutOverlapping();
 
 Schedule::command('app:send-chat-digests')
     ->dailyAt((string) config('chat.digest_time', '18:00'))
