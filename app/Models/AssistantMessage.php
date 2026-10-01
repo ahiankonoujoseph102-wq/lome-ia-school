@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $role
  * @property string $content
  * @property bool $unanswered Ama a dit qu'elle n'avait pas l'information.
+ * @property bool $misheard phrase dite en appel mal entendue (Ama a demandé de répéter) : ne compte pas dans les messages du visiteur.
  * @property CarbonImmutable|null $created_at
  * @property-read AssistantConversation $conversation
  */
@@ -25,14 +26,14 @@ class AssistantMessage extends Model
 
     public const string AMA = 'model';
 
-    protected $fillable = ['assistant_conversation_id', 'role', 'content', 'unanswered'];
+    protected $fillable = ['assistant_conversation_id', 'role', 'content', 'unanswered', 'misheard'];
 
     /**
      * @return array<string, string>
      */
     protected function casts(): array
     {
-        return ['unanswered' => 'boolean'];
+        return ['unanswered' => 'boolean', 'misheard' => 'boolean'];
     }
 
     /**

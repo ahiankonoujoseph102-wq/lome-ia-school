@@ -17,6 +17,26 @@ enum AssistantIncidentType: string
     case GeminiError = 'gemini_error';
     case GeminiTimeout = 'gemini_timeout';
     case EmptyReply = 'empty_reply';
+    // Pas un problème : durées mesurées d'une réponse (affichées à part, « Durées de réponse »).
+    case ResponseTiming = 'response_timing';
+
+    /**
+     * Types qui sont de vrais incidents (limites, erreurs) ; la mesure des durées est affichée à part.
+     *
+     * @return list<self>
+     */
+    public static function problems(): array
+    {
+        $types = [];
+
+        foreach (self::cases() as $type) {
+            if ($type !== self::ResponseTiming) {
+                $types[] = $type;
+            }
+        }
+
+        return $types;
+    }
 
     public function label(): string
     {
@@ -30,6 +50,7 @@ enum AssistantIncidentType: string
             self::GeminiError => 'Erreur de Gemini',
             self::GeminiTimeout => 'Gemini n\'a pas répondu à temps',
             self::EmptyReply => 'Réponse vide ou bloquée par Gemini',
+            self::ResponseTiming => 'Mesure des durées de réponse',
         };
     }
 

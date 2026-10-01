@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Site;
 
 use App\Assistant\AmaChat;
+use App\Assistant\AmaPrompt;
 use App\Assistant\FounderHandoff;
+use App\Enums\AssistantIncidentType;
 use App\Http\Controllers\Controller;
+use App\Models\AssistantIncident;
 use App\Support\VoiceAssistant;
 use App\Support\WhatsApp;
 use Illuminate\Http\JsonResponse;
@@ -32,10 +35,12 @@ class AssistantController extends Controller
     }
 
     /**
-     * Mode appel : même message, mêmes contrôles et mêmes limites, mais la réponse est envoyée en continu, une ligne
-     * JSON par événement : {"type":"text","text":"…"} pour chaque morceau (lu à voix haute dès la première phrase),
-     * puis {"type":"done",…} avec la réponse complète (mêmes champs que message()).
-     * Hébergement qui retient la réponse jusqu'au bout : tout arrive d'un coup, l'appel fonctionne quand même.
+     * Mode appel : même message, mêmes contrôles et mêmes limites, mais la réponse est envoyée en continu, au format
+     * « text/event-stream » (celui que les serveurs intermédiaires, Nginx ou Cloudflare, transmettent sans attendre) :
+     * une ligne « data: {JSON} » par événement, {"type":"text","text":"…"} pour chaque morceau (lu à voix haute dès la
+     * première phrase), puis {"type":"done",…} avec la réponse complète (mêmes champs que message()). Une ligne de
+     * commentaire part tout de suite pour ouvrir la connexion. Hébergement qui retient la réponse jusqu'au bout : tout
+     * arrive d'un coup, l'appel fonctionne quand même.
      */
     public function call(Request $request, AmaChat $chat): StreamedResponse
     {
@@ -46,19 +51,21 @@ class AssistantController extends Controller
             // pour que la conversation reste complète.
             ignore_user_abort(true);
 
-            $emit = function (array $event): void {
-                echo json_encode($event, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n";
+            $flush = function (string $text): void {
+                echo $text;
 
                 if (ob_get_level() > 0) {
                     ob_flush();
                 }
                 flush();
             };
+            $emit = fn (array $event) => $flush('data: '.json_encode($event, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n\n");
+            $flush(": ama\n\n");
 
             $result = $this->answer($request, $chat, fn (string $text) => $emit(['type' => 'text', 'text' => $text]), $visitor);
             $emit(['type' => 'done', ...$result]);
         }, 200, [
-            'Content-Type' => 'application/x-ndjson; charset=UTF-8',
+            'Content-Type' => 'text/event-stream; charset=UTF-8',
             'Cache-Control' => 'no-store, private',
             // Demande aux serveurs intermédiaires (Nginx) de transmettre chaque morceau sans attendre.
             'X-Accel-Buffering' => 'no',
@@ -122,10 +129,14 @@ class AssistantController extends Controller
         $message = is_string($message) ? trim($message) : '';
         $max = VoiceAssistant::limit('max_length');
 
+        // Appel : phrase vide ou faite d'hésitations (mal entendue) : Ama demande de répéter, sans appeler Gemini et sans
+        // compter de message.
+        if ($onText !== null && AmaChat::isMisheard($message)) {
+            return ['reply' => '', 'fallback' => false, 'conversation' => null, 'whatsapp' => null, 'misheard' => true, 'notice' => AmaPrompt::MISHEARD_REPLY];
+        }
+
         if ($message === '') {
-            return ['reply' => '', 'fallback' => false, 'conversation' => null, 'whatsapp' => null, 'notice' => $onText !== null
-                ? 'Je ne vous ai pas entendu. Pouvez-vous répéter ?'
-                : 'Écrivez votre question, puis touchez « Envoyer ».'];
+            return ['reply' => '', 'fallback' => false, 'conversation' => null, 'whatsapp' => null, 'notice' => 'Écrivez votre question, puis touchez « Envoyer ».'];
         }
 
         if (mb_strlen($message) > $max) {
@@ -145,7 +156,42 @@ class AssistantController extends Controller
             hash_hmac('sha256', $visitor, (string) config('app.key')),
             hash_hmac('sha256', (string) $request->ip(), (string) config('app.key')),
             $onText,
+            $onText !== null && $request->boolean('interrupted'),
         );
+    }
+
+    /**
+     * Mode appel : durées mesurées par le navigateur pour une réponse (attente du silence, premier morceau reçu, début de
+     * la voix), en millisecondes, ajoutées à la mesure du serveur (incident « Mesure des durées de réponse »). Seulement
+     * pour une conversation de ce visiteur, dans les 10 minutes ; aucun texte n'est reçu ni enregistré.
+     */
+    public function timing(Request $request): JsonResponse
+    {
+        $visitorHash = hash_hmac('sha256', $this->visitor(), (string) config('app.key'));
+        $incident = AssistantIncident::query()
+            ->whereKey((int) $request->input('timing'))
+            ->where('type', AssistantIncidentType::ResponseTiming)
+            ->where('created_at', '>=', now()->subMinutes(10))
+            ->whereHas('conversation', fn ($query) => $query
+                ->where('public_id', (string) $request->input('conversation'))
+                ->where('visitor_hash', $visitorHash))
+            ->first();
+
+        if ($incident === null) {
+            return $this->json(['ok' => false]);
+        }
+
+        $client = [];
+        foreach (['pause' => 'client_pause', 'first' => 'client_first', 'voice' => 'client_voice'] as $field => $key) {
+            $value = $request->input($field);
+            if (is_numeric($value) && $value >= 0 && $value <= 120000) {
+                $client[$key] = (int) $value;
+            }
+        }
+
+        $incident->forceFill(['timings' => [...(array) $incident->timings, ...$client]])->save();
+
+        return $this->json(['ok' => true]);
     }
 
     /**

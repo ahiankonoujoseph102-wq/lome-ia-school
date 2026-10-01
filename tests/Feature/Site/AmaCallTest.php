@@ -54,21 +54,27 @@ class AmaCallTest extends TestCase
     }
 
     /**
+     * @param  array<string, mixed>  $extra
      * @return list<array<string, mixed>>
      */
-    private function speak(string $message, string $visitor = self::VISITOR): array
+    private function speak(string $message, string $visitor = self::VISITOR, array $extra = []): array
     {
         $response = $this->withCredentials()->withCookie('ama_visitor', $visitor)
-            ->post(route('assistant.call'), ['message' => $message], ['Accept' => 'application/x-ndjson']);
+            ->post(route('assistant.call'), ['message' => $message, ...$extra], ['Accept' => 'text/event-stream']);
 
+        // Format « text/event-stream » : transmis sans attente par Nginx et Cloudflare.
         $response->assertOk()->assertHeader('X-Accel-Buffering', 'no');
-        $this->assertStringContainsString('application/x-ndjson', (string) $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('text/event-stream', (string) $response->headers->get('Content-Type'));
         $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
 
         $content = $response->streamedContent();
         $this->assertStringNotContainsString(self::KEY, $content);
+        // Une ligne de commentaire ouvre la connexion tout de suite, avant la réponse de Gemini.
+        $this->assertStringStartsWith(": ama\n\n", $content);
 
-        return array_map(fn (string $line): array => json_decode($line, true), array_values(array_filter(explode("\n", $content))));
+        $lines = array_filter(explode("\n", $content), fn (string $line): bool => str_starts_with($line, 'data: '));
+
+        return array_map(fn (string $line): array => json_decode(substr($line, 6), true), array_values($lines));
     }
 
     /**
@@ -155,7 +161,7 @@ class AmaCallTest extends TestCase
     {
         Http::fake();
 
-        $this->assertSame('Je ne vous ai pas entendu. Pouvez-vous répéter ?', $this->speak('  ')[0]['notice']);
+        $this->assertSame(AmaPrompt::MISHEARD_REPLY, $this->speak('  ')[0]['notice']);
         $this->assertSame('Votre question est un peu longue. Pouvez-vous la dire en plus court ?', $this->speak(str_repeat('a', 501))[0]['notice']);
         Http::assertNothingSent();
     }
@@ -253,7 +259,7 @@ class AmaCallTest extends TestCase
 
         $module = json_encode('file://'.resource_path('js/ama-call.js'));
         $program = <<<JS
-            const { createVoiceCall, CALL_GREETING, CALL_GOODBYE, CALL_ERROR } = await import({$module});
+            const { createVoiceCall, CALL_GREETING, CALL_GOODBYE, CALL_ERROR, PAUSE_MS } = await import({$module});
             const tick = () => new Promise((resolve) => setImmediate(resolve));
 
             function setup(askImpl) {
@@ -271,6 +277,8 @@ class AmaCallTest extends TestCase
                     mic.onresult?.({ resultIndex: 0, results: [Object.assign([{ transcript: text }], { isFinal: true })] });
                     mic.onend?.();
                 };
+                // Phrase dite puis silence : la phrase part après le délai de silence (PAUSE_MS).
+                env.sayDone = (text) => { env.say(text); env.advance(PAUSE_MS); };
                 env.synth = {
                     speak(utterance) { env.current = utterance; env.spoken.push(utterance); env.log.push('dit : ' + utterance.text); },
                     cancel() { env.current = null; env.log.push('voix arrêtée'); },
@@ -319,7 +327,7 @@ class AmaCallTest extends TestCase
                 out.greeting = { text: env.current?.text, state: env.call.state, mics: env.recognitions.length, rate: env.current?.rate, voice: env.current?.voice?.name, lang: env.current?.lang };
                 env.finishAll();
                 out.afterGreeting = env.call.state;
-                env.say('Combien coûte la formation ?');
+                env.sayDone('Combien coûte la formation ?');
                 out.sent = { asked: env.asked, state: env.call.state, visitor: env.visitor };
                 env.onText('Elle coûte 25 000 FCFA. Vous');
                 out.firstSentence = { text: env.current?.text, state: env.call.state, stillWaiting: true };
@@ -338,7 +346,7 @@ class AmaCallTest extends TestCase
                 const env = setup((text, { onText }) => { onText('Voici une longue réponse. Avec plusieurs phrases. '); return new Promise(() => {}); });
                 env.call.start();
                 env.finishAll();
-                env.say('Parle-moi des formations');
+                env.sayDone('Parle-moi des formations');
                 out.interruptBefore = env.call.state;
                 const mics = env.recognitions.length;
                 env.call.touch();
@@ -371,7 +379,7 @@ class AmaCallTest extends TestCase
                 const env = setup(() => Promise.resolve({ reply: 'Vous avez posé beaucoup de questions aujourd\'hui. Notre équipe vous répond sur WhatsApp.', fallback: true }));
                 env.call.start();
                 env.finishAll();
-                env.say('Encore une question');
+                env.sayDone('Encore une question');
                 await tick();
                 out.limit = { text: env.current?.text, state: env.call.state };
                 env.finishAll();
@@ -383,7 +391,7 @@ class AmaCallTest extends TestCase
                 const env = setup(() => Promise.resolve(null));
                 env.call.start();
                 env.finishAll();
-                env.say('Bonjour');
+                env.sayDone('Bonjour');
                 await tick();
                 out.error = env.current?.text;
                 env.finishAll();
@@ -395,7 +403,7 @@ class AmaCallTest extends TestCase
                 const env = setup(() => Promise.resolve({ reply: 'Première phrase. Deuxième phrase !', fallback: false }));
                 env.call.start();
                 env.finishAll();
-                env.say('Bonjour');
+                env.sayDone('Bonjour');
                 await tick();
                 const first = env.current?.text;
                 env.finishSentence();
@@ -454,7 +462,8 @@ class AmaCallTest extends TestCase
         // La première phrase est lue avant la fin de la réponse.
         $this->assertSame(['text' => 'Elle coûte 25 000 FCFA.', 'state' => 'speaking', 'stillWaiting' => true], $out['firstSentence']);
         $this->assertSame('Vous payez par Mobile Money.', $out['secondSentence']);
-        $this->assertSame(['state' => 'listening', 'mics' => 2, 'final' => ['Elle coûte 25 000 FCFA. Vous payez par Mobile Money.', true]], $out['afterReply']);
+        // Micro rouvert une fois pendant la pause (le navigateur l'avait fermé), puis après la réponse.
+        $this->assertSame(['state' => 'listening', 'mics' => 3, 'final' => ['Elle coûte 25 000 FCFA. Vous payez par Mobile Money.', true]], $out['afterReply']);
 
         // 2. Interruption.
         $this->assertSame('speaking', $out['interruptBefore']);
@@ -472,7 +481,8 @@ class AmaCallTest extends TestCase
         $this->assertSame(['text' => 'Vous avez posé beaucoup de questions aujourd\'hui.', 'state' => 'speaking'], $out['limit']);
         $this->assertSame('ended', $out['limitEnd']['state']);
         $this->assertSame(['limit'], $out['limitEnd']['ends']);
-        $this->assertSame(1, $out['limitEnd']['micOpen'], 'Le micro ne se rouvre pas après une limite.');
+        // Un micro pour écouter, rouvert une fois pendant la pause, et aucun après la limite.
+        $this->assertSame(2, $out['limitEnd']['micOpen'], 'Le micro ne se rouvre pas après une limite.');
         $this->assertTrue($out['limitEnd']['final'][1]);
 
         // 5. Erreur.

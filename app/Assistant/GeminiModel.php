@@ -7,7 +7,9 @@ use App\Enums\AssistantIncidentType;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -18,6 +20,11 @@ use Throwable;
  * - Modèle : GEMINI_MODEL (config services.gemini.model), modifiable sans toucher au code.
  * - Erreur passagère (500, 503) : un seul nouvel essai après 1 seconde, comme le conseille Google ; un quota
  *   atteint (429) n'est pas réessayé (il ne se libère qu'après une minute ou le lendemain).
+ * - Réflexion (« thinking ») réduite au minimum pour répondre plus vite : niveau « minimal » pour les modèles Gemini 3
+ *   et suivants (le plus bas possible : la réflexion ne peut pas y être coupée complètement), budget 0 pour les
+ *   modèles 2.5 Flash. Réglage GEMINI_THINKING (« minimal » par défaut, vide = aucun réglage envoyé). Si Google refuse
+ *   ce réglage pour le modèle choisi (erreur 400), la demande repart aussitôt sans lui, et il n'est plus envoyé pour
+ *   ce modèle (mémorisé une journée).
  * - Mode appel : réponse reçue en continu (méthode « streamGenerateContent », format « alt=sse »), transmise morceau
  *   par morceau pour qu'Ama commence à parler dès la première phrase.
  */
@@ -27,6 +34,11 @@ class GeminiModel implements AssistantModel
      * Longueur maximale d'une réponse montrée au visiteur.
      */
     public const int MAX_REPLY_LENGTH = 1500;
+
+    /**
+     * Clé de cache : modèle qui a refusé le réglage de réflexion.
+     */
+    private const string NO_THINKING_CACHE = 'gemini:no-thinking:';
 
     public function isConfigured(): bool
     {
@@ -125,8 +137,39 @@ class GeminiModel implements AssistantModel
             ], $messages),
         ];
 
+        $thinking = self::thinkingConfig($model);
+
+        if ($thinking !== null) {
+            $body['generationConfig'] = ['thinkingConfig' => $thinking];
+        }
+
+        $response = $this->post($url, $body, $stream);
+
+        // Réglage de réflexion refusé pour ce modèle : la demande repart sans lui (une seule fois), et il n'est plus
+        // envoyé pour ce modèle pendant une journée.
+        if ($thinking !== null && $response->status() === 400 && str_contains(Str::lower((string) $response->json('error.message')), 'think')) {
+            Cache::put(self::NO_THINKING_CACHE.$model, true, now()->addDay());
+            unset($body['generationConfig']);
+            $response = $this->post($url, $body, $stream);
+        }
+
+        if ($response->failed()) {
+            throw new AssistantFailure(
+                $response->status() === 429 ? AssistantIncidentType::GeminiQuota : AssistantIncidentType::GeminiError,
+                $this->describe($response),
+            );
+        }
+
+        return $response;
+    }
+
+    /**
+     * @param  array<string, mixed>  $body
+     */
+    private function post(string $url, array $body, bool $stream): Response
+    {
         try {
-            $response = Http::withHeaders(['x-goog-api-key' => $this->key()])
+            return Http::withHeaders(['x-goog-api-key' => $this->key()])
                 ->acceptJson()
                 ->withOptions($stream ? ['stream' => true] : [])
                 ->connectTimeout(5)
@@ -138,15 +181,42 @@ class GeminiModel implements AssistantModel
         } catch (Throwable $exception) {
             throw new AssistantFailure(AssistantIncidentType::GeminiError, $this->hide($exception::class.' : '.$exception->getMessage()));
         }
+    }
 
-        if ($response->failed()) {
-            throw new AssistantFailure(
-                $response->status() === 429 ? AssistantIncidentType::GeminiQuota : AssistantIncidentType::GeminiError,
-                $this->describe($response),
-            );
+    /**
+     * Réglage de réflexion envoyé à Google pour ce modèle (null : aucun).
+     *
+     * @return array<string, int|string>|null
+     */
+    public static function thinkingConfig(string $model): ?array
+    {
+        $level = Str::lower(trim((string) config('services.gemini.thinking', 'minimal')));
+
+        if ($level === '' || Cache::get(self::NO_THINKING_CACHE.$model) === true) {
+            return null;
         }
 
-        return $response;
+        // Gemini 2.5 : budget de réflexion en jetons (0 = aucune réflexion, accepté par les modèles Flash seulement).
+        if (str_starts_with($model, 'gemini-2.5')) {
+            return str_contains($model, 'flash') && $level === 'minimal' ? ['thinkingBudget' => 0] : null;
+        }
+
+        // Gemini 3 et suivants : niveau (« minimal » est le plus bas : la réflexion ne peut pas être coupée).
+        return ['thinkingLevel' => $level];
+    }
+
+    /**
+     * Réglage de réflexion en clair (mesure des durées, écran de l'admin).
+     */
+    public static function thinkingLabel(): string
+    {
+        $config = self::thinkingConfig(trim((string) config('services.gemini.model')));
+
+        return match (true) {
+            $config === null => 'aucun réglage envoyé',
+            isset($config['thinkingBudget']) => 'budget '.$config['thinkingBudget'],
+            default => 'niveau '.$config['thinkingLevel'],
+        };
     }
 
     private function emptyReply(mixed $reason): AssistantFailure

@@ -355,14 +355,17 @@ export function createSentenceSplitter({ maxLength = 220 } = {}) {
 }
 
 /**
- * Lecture d'une réponse du serveur envoyée ligne par ligne (une ligne JSON par événement : « text » puis « done »).
- * Les lignes coupées entre deux morceaux sont recollées ; une ligne illisible est ignorée.
+ * Lecture d'une réponse du serveur envoyée au format « text/event-stream » (une ligne « data: {JSON} » par événement :
+ * « text » puis « done » ; une simple ligne JSON est aussi acceptée). Les lignes coupées entre deux morceaux sont
+ * recollées ; une ligne illisible ou de commentaire est ignorée.
  */
 export function createLineReader(onEvent) {
     let buffer = '';
 
-    const emit = (line) => {
-        if (line.trim() === '') {
+    const emit = (raw) => {
+        // Format « text/event-stream » : « data: {…} » ; les lignes de commentaire (« : … ») sont ignorées.
+        const line = raw.trim().replace(/^data:\s?/u, '');
+        if (line === '' || line.startsWith(':')) {
             return;
         }
 

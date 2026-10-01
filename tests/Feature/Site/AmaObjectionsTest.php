@@ -207,7 +207,11 @@ class AmaObjectionsTest extends TestCase
         $this->assertStringContainsString('n\'a pas encore de certification officielle', $guide);
         $this->assertStringContainsString('attestation de participation, jamais un diplôme', $guide);
         $this->assertStringContainsString('aucune fausse urgence', $guide);
-        // Le guide est bien envoyé à Ama avec le reste.
-        $this->assertStringContainsString('**Objections**', AmaPrompt::build([]));
+        // La partie « Règles pour Ama » du guide (pour l'agent ElevenLabs) n'est pas renvoyée à Gemini : la même règle
+        // lui est déjà donnée par le code, une seule fois.
+        $prompt = AmaPrompt::build([]);
+        $this->assertStringNotContainsString('**Objections**', $prompt);
+        $this->assertSame(1, substr_count($prompt, 'Règle « Objections »'));
+        $this->assertStringContainsString('## Guide des parcours du site', $prompt);
     }
 }

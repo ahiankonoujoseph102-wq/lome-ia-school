@@ -50,6 +50,9 @@ return [
         'endpoint' => env('GEMINI_ENDPOINT', 'https://generativelanguage.googleapis.com/v1beta'),
         // Secondes d'attente au maximum pour une réponse (le visiteur voit ensuite le bouton WhatsApp).
         'timeout' => (int) env('GEMINI_TIMEOUT', 20),
+        // Réflexion du modèle avant de répondre, au plus bas pour répondre vite : « minimal » (Gemini 3 et suivants :
+        // niveau le plus bas, la réflexion ne peut pas être coupée ; Gemini 2.5 Flash : budget 0). Vide = rien envoyé.
+        'thinking' => env('GEMINI_THINKING', 'minimal'),
     ],
 
 ];

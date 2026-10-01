@@ -66,6 +66,7 @@ Route::middleware(['no-store', 'throttle:60,1'])->prefix('consultation-gratuite/
 // Assistante « Ama » (Gemini) : message du visiteur, réponse d'Ama (limites dans App\Assistant\AmaChat).
 Route::post('assistante/message', [AssistantController::class, 'message'])->middleware('throttle:30,1')->name('assistant.message');
 Route::post('assistante/appel', [AssistantController::class, 'call'])->middleware('throttle:30,1')->name('assistant.call');
+Route::post('assistante/duree', [AssistantController::class, 'timing'])->middleware('throttle:30,1')->name('assistant.timing');
 // « Transmettre au fondateur » : question transmise à Coach Joseph, au toucher de « Envoyer » (App\Assistant\FounderHandoff).
 Route::post('assistante/transmettre', [AssistantController::class, 'handoff'])->middleware('throttle:10,1')->name('assistant.handoff');
 Route::get('a-propos', [PageController::class, 'about'])->name('about');

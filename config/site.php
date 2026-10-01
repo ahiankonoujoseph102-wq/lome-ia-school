@@ -465,6 +465,8 @@ return [
         'lessons' => false,
         // Aide proactive : bulle « Vous semblez bloqué ? » quand le site repère une difficulté.
         'proactive' => true,
+        // Mode appel : interruption à la voix (expérimental). Éteinte par défaut : toucher le cercle coupe la parole.
+        'voice_interrupt' => false,
         // Secondes sur une même étape du paiement avant de proposer l'aide.
         'help_delay' => 90,
     ],

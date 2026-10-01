@@ -28,7 +28,12 @@ use Throwable;
  *
  * Mode appel ($onText fourni) : la réponse de Gemini arrive en continu et chaque morceau est transmis tout de suite
  * au navigateur, qui la lit phrase par phrase ; Ama reçoit aussi la consigne de répondre comme au téléphone.
- * Chaque phrase dite par le visiteur compte comme un message, avec les mêmes limites.
+ * Chaque phrase dite par le visiteur compte comme un message, avec les mêmes limites ; une phrase mal entendue (Ama
+ * demande de répéter) ne compte pas.
+ *
+ * Durées : chaque réponse de Gemini est mesurée (préparation, premier morceau, réponse complète) et notée comme incident
+ * « Mesure des durées de réponse » (sans aucun texte du visiteur) ; le navigateur y ajoute ensuite, en mode appel, le
+ * délai avant le début de la voix (AssistantController::timing).
  *
  * Aucune donnée personnelle : le texte du visiteur est nettoyé (PersonalData) avant l'envoi et
  * l'enregistrement, et le contexte de la page est réduit à la liste fermée de VoiceAssistant::FIELDS.
@@ -36,19 +41,29 @@ use Throwable;
 class AmaChat
 {
     /**
-     * Messages précédents envoyés à Gemini avec la question (les plus récents).
+     * Messages précédents envoyés à Gemini avec la question (les plus récents ; 12 suffisent pour suivre la conversation et allègent chaque demande).
      */
-    public const int HISTORY = 16;
+    public const int HISTORY = 12;
+
+    /**
+     * Hésitations sans contenu (minuscules, sans accents retirés).
+     *
+     * @var list<string>
+     */
+    public const array FILLERS = ['euh', 'heu', 'hum', 'hmm', 'mmh', 'mh', 'ben', 'bah', 'beh', 'hein', 'ah', 'oh', 'eh', 'pff', 'bon'];
 
     public function __construct(private readonly AssistantModel $model) {}
 
     /**
      * @param  array<array-key, mixed>  $context
      * @param  (callable(string): void)|null  $onText  mode appel : reçoit chaque morceau de la réponse
-     * @return array{reply: string, fallback: bool, conversation: string|null, whatsapp: string|null, handoff: array{first_name: string, channel: string, contact: string, question: string}|null}
+     * @param  bool  $interrupted  mode appel : le visiteur vient de couper la parole à Ama
+     * @return array{reply: string, fallback: bool, conversation: string|null, whatsapp: string|null, handoff: array{first_name: string, channel: string, contact: string, question: string}|null, timing?: int|null, misheard?: bool}
      */
-    public function handle(string $message, ?string $conversationId, array $context, bool $voice, string $visitorHash, string $ipHash, ?callable $onText = null): array
+    public function handle(string $message, ?string $conversationId, array $context, bool $voice, string $visitorHash, string $ipHash, ?callable $onText = null, bool $interrupted = false): array
     {
+        $startedAt = defined('LARAVEL_START') ? (float) LARAVEL_START : microtime(true);
+
         $context = VoiceAssistant::pickContext($context);
         $conversation = $this->conversation($conversationId, $visitorHash);
 
@@ -73,10 +88,19 @@ class AmaChat
         // « Transmettre au fondateur » : l'adresse e-mail ou le numéro écrit reste sur le serveur (jamais chez Google).
         FounderHandoff::rememberContacts($conversation->public_id, $message);
 
+        // Formations et parties du guide à détailler : celles que le visiteur vient de nommer (ce message et le précédent).
+        $recent = $text.' '.$this->previousVisitorMessage($conversation);
+        $instructions = AmaPrompt::build($context, call: $onText !== null, recent: $recent, interrupted: $interrupted);
+        $sentAt = microtime(true);
+        $firstAt = null;
+
         try {
             $reply = $onText !== null
-                ? $this->model->stream(AmaPrompt::build($context, call: true), $this->history($conversation), $onText)
-                : $this->model->reply(AmaPrompt::build($context), $this->history($conversation));
+                ? $this->model->stream($instructions, $this->history($conversation), function (string $delta) use ($onText, &$firstAt): void {
+                    $firstAt ??= microtime(true);
+                    $onText($delta);
+                })
+                : $this->model->reply($instructions, $this->history($conversation));
         } catch (AssistantFailure $failure) {
             AssistantUsage::query()->where('day', AssistantUsage::today())->increment('failures');
 
@@ -86,6 +110,20 @@ class AmaChat
 
             return $this->fallback(AssistantIncidentType::GeminiError, $conversation, $exception::class);
         }
+
+        $doneAt = microtime(true);
+        $timing = AssistantIncident::query()->create([
+            'assistant_conversation_id' => $conversation->id,
+            'type' => AssistantIncidentType::ResponseTiming,
+            'timings' => [
+                'mode' => $onText !== null ? 'appel' : 'écrit',
+                'prepare' => self::ms($startedAt, $sentAt),
+                'first' => $firstAt !== null ? self::ms($sentAt, $firstAt) : null,
+                'total' => self::ms($sentAt, $doneAt),
+                'tokens' => AmaKnowledge::tokens($instructions),
+                'thinking' => GeminiModel::thinkingLabel(),
+            ],
+        ]);
 
         // Récapitulatif « Transmettre au fondateur » : carte de confirmation, ou Ama redemande poliment ce qui manque
         // (prénom, moyen de réponse, coordonnée au bon format). La demande ne part qu'au toucher de « Envoyer ».
@@ -98,9 +136,58 @@ class AmaChat
         }
 
         ['text' => $reply, 'unanswered' => $unanswered] = UnansweredReply::inspect($reply);
+
+        // Gemini n'a pas compris la phrase dite (reconnaissance vocale) : Ama demande de répéter, et cette phrase ne
+        // compte pas dans les messages du visiteur ; ce n'est jamais une « question sans réponse ».
+        $misheard = $onText !== null && self::isRepeatRequest($reply);
+
+        if ($misheard) {
+            $unanswered = false;
+            $conversation->messages()->where('role', AssistantMessage::VISITOR)->latest('id')->limit(1)->update(['misheard' => true]);
+        }
+
         $this->store($conversation, AssistantMessage::AMA, $reply, $unanswered);
 
-        return ['reply' => $reply, 'fallback' => false, 'conversation' => $conversation->public_id, 'whatsapp' => null, 'handoff' => $handoff];
+        return ['reply' => $reply, 'fallback' => false, 'conversation' => $conversation->public_id, 'whatsapp' => null, 'handoff' => $handoff, 'timing' => $timing->id, 'misheard' => $misheard];
+    }
+
+    /**
+     * Phrase dite en appel qui ne vaut pas une demande à Gemini : vide, réduite à de la ponctuation ou à des
+     * hésitations (« euh », « hum »…), ou d'une seule lettre. Ama demande alors de répéter (AmaPrompt::MISHEARD_REPLY),
+     * sans appeler Gemini et sans compter de message. Une réponse courte (« oui », « non », « d'accord ») reste valable.
+     */
+    public static function isMisheard(string $text): bool
+    {
+        $words = preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($text), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $meaningful = array_filter($words, fn (string $word): bool => ! in_array($word, self::FILLERS, true));
+
+        return $meaningful === [] || (count($meaningful) === 1 && mb_strlen((string) reset($meaningful)) < 2);
+    }
+
+    /**
+     * Réponse d'Ama qui demande de répéter (phrase mal entendue).
+     */
+    public static function isRepeatRequest(string $reply): bool
+    {
+        return str_starts_with(trim($reply), 'Excusez-moi, je n\'ai pas bien entendu');
+    }
+
+    private static function ms(float $from, float $to): int
+    {
+        return max(0, (int) round(($to - $from) * 1000));
+    }
+
+    /**
+     * Message précédent du visiteur (avant celui qui vient d'être enregistré).
+     */
+    private function previousVisitorMessage(AssistantConversation $conversation): string
+    {
+        return (string) AssistantMessage::query()
+            ->where('assistant_conversation_id', $conversation->id)
+            ->where('role', AssistantMessage::VISITOR)
+            ->orderByDesc('id')
+            ->skip(1)
+            ->value('content');
     }
 
     /**
@@ -131,6 +218,7 @@ class AmaChat
 
         $today = AssistantMessage::query()
             ->where('role', AssistantMessage::VISITOR)
+            ->where('misheard', false)
             ->where('created_at', '>=', now()->startOfDay())
             ->whereHas('conversation', fn ($query) => $query->where('visitor_hash', $visitorHash))
             ->count();

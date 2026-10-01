@@ -385,9 +385,11 @@ class AmaHandoffTest extends TestCase
         Http::fake(['generativelanguage.googleapis.com/*' => Http::response($body, 200, ['Content-Type' => 'text/event-stream'])]);
 
         $response = $this->withCredentials()->withCookie('ama_visitor', self::VISITOR)
-            ->post(route('assistant.call'), ['message' => 'Oui, transmettez ma question, par e-mail. Je m\'appelle Awa.'], ['Accept' => 'application/x-ndjson'])
+            ->post(route('assistant.call'), ['message' => 'Oui, transmettez ma question, par e-mail. Je m\'appelle Awa.'], ['Accept' => 'text/event-stream'])
             ->assertOk();
-        $events = array_map(fn (string $line): array => json_decode($line, true), array_values(array_filter(explode("\n", $response->streamedContent()))));
+        // Format « text/event-stream » : une ligne « data: {…} » par événement.
+        $lines = array_filter(explode("\n", $response->streamedContent()), fn (string $line): bool => str_starts_with($line, 'data: '));
+        $events = array_map(fn (string $line): array => json_decode(substr($line, 6), true), array_values($lines));
         $done = array_pop($events);
         $spoken = implode('', array_column($events, 'text'));
 

@@ -19,6 +19,43 @@
         </div>
     </section>
 
+    <section class="card space-y-3 p-4 sm:p-5" data-test="assistant-timings">
+        <h2 class="font-semibold text-white">Durées de réponse aujourd'hui</h2>
+        <p class="text-sm text-slate-400">Médianes de {{ $timingsCount }} réponse{{ $timingsCount > 1 ? 's' : '' }} d'Ama, en secondes. Mesurées à chaque réponse, sans aucun texte du visiteur. Les durées « appel » viennent du téléphone du visiteur.</p>
+        @if ($timingsCount > 0)
+            <dl class="grid gap-1 text-sm sm:grid-cols-2">
+                @foreach (\App\Http\Controllers\Admin\AssistantConversationController::TIMING_LABELS as $key => $label)
+                    <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">{{ $label }}</dt><dd class="shrink-0 text-slate-100">{{ $timingMedians[$key] !== null ? number_format($timingMedians[$key] / 1000, 1, ',', ' ').' s' : '—' }}</dd></div>
+                @endforeach
+                <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Poids d'une demande (estimation)</dt><dd class="shrink-0 text-slate-100">{{ $timingMedians['tokens'] !== null ? '≈ '.number_format($timingMedians['tokens'], 0, ',', ' ').' jetons' : '—' }}</dd></div>
+            </dl>
+            <details class="text-sm">
+                <summary class="cursor-pointer text-electric-300">Dernières mesures</summary>
+                <ol class="mt-2 divide-y divide-veil/10">
+                    @foreach ($recentTimings as $timing)
+                        @php($values = (array) $timing->timings)
+                        <li class="py-2 text-xs text-slate-300">
+                            <span class="font-semibold text-slate-100">{{ $timing->created_at?->translatedFormat('H\hi') }} · {{ $values['mode'] ?? '' }}</span>
+                            @foreach (['client_pause' => 'silence', 'prepare' => 'préparation', 'first' => '1er morceau', 'total' => 'réponse', 'client_voice' => 'voix'] as $key => $short)
+                                @if (isset($values[$key]))
+                                    · {{ $short }} {{ number_format($values[$key] / 1000, 1, ',', ' ') }} s
+                                @endif
+                            @endforeach
+                            @if (isset($values['tokens']))
+                                · ≈ {{ number_format($values['tokens'], 0, ',', ' ') }} jetons
+                            @endif
+                            @if (isset($values['thinking']))
+                                · réflexion : {{ $values['thinking'] }}
+                            @endif
+                        </li>
+                    @endforeach
+                </ol>
+            </details>
+        @else
+            <p class="text-sm text-slate-400">Aucune réponse d'Ama aujourd'hui.</p>
+        @endif
+    </section>
+
     <section class="card space-y-3 p-4 sm:p-5" data-test="assistant-incidents">
         <h2 class="font-semibold text-white">Incidents récents</h2>
         <p class="text-sm text-slate-400">À chaque incident, le visiteur a vu un message clair et le bouton « Écrivez-nous sur WhatsApp ».</p>
