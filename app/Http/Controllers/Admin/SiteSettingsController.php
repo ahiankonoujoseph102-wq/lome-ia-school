@@ -10,6 +10,7 @@ use App\Enums\AdminAction;
 use App\Http\Controllers\Controller;
 use App\Services\ImageUploader;
 use App\Settings\SiteSettings;
+use App\Support\HomeVideo;
 use App\Support\PastedLink;
 use App\Support\PhoneNumber;
 use App\Support\VoiceAssistant;
@@ -40,6 +41,7 @@ class SiteSettingsController extends Controller
         'regles' => ['title' => 'Seuils et délais', 'text' => 'Seuil d\'accès provisoire, délai de vérification, réglages des sessions.', 'icon' => 'adjustments-horizontal'],
         'affiliation' => ['title' => 'Affiliation', 'text' => 'Taux de commission, durée des liens, délai de disponibilité, retrait minimum.', 'icon' => 'share', 'sensitive' => true],
         'textes' => ['title' => 'Textes du site', 'text' => 'Accroche de l\'accueil, présentation du formateur, questions fréquentes.', 'icon' => 'document-text'],
+        'video-accueil' => ['title' => 'Vidéo d\'accueil', 'text' => 'Vidéo YouTube verticale de l\'accueil : lien, titre, phrase, bouton TikTok et interrupteur.', 'icon' => 'play-circle'],
         'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
         'assistante' => ['title' => 'Assistante Ama', 'text' => 'Bouton « Parler avec notre assistante » : activation, Ama (Gemini) ou ElevenLabs, instructions, limites, lecteur de cours et aide proactive.', 'icon' => 'chat-bubble-oval-left-ellipsis'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
@@ -78,6 +80,7 @@ class SiteSettingsController extends Controller
             'regles' => $this->updateRules($request),
             'affiliation' => $this->updateAffiliate($request),
             'textes' => $this->updateTexts($request),
+            'video-accueil' => $this->updateHomeVideo($request),
             'entreprises' => $this->updateBusiness($request),
             'assistante' => $this->updateVoiceAssistant($request),
             'legal' => $this->updateLegal($request),
@@ -451,6 +454,46 @@ class SiteSettingsController extends Controller
         ]);
 
         ActivityLog::record(AdminAction::SettingsUpdated, 'Textes du site modifiés (accueil, formateur, questions fréquentes).');
+    }
+
+    private function updateHomeVideo(Request $request): void
+    {
+        PastedLink::cleanRequest($request, ['video_url', 'tiktok_url']);
+
+        $validated = $request->validate([
+            'enabled' => ['nullable', 'boolean'],
+            'video_url' => ['nullable', 'string', 'max:500'],
+            'title' => ['nullable', 'string', 'max:160'],
+            'subtitle' => ['nullable', 'string', 'max:200'],
+            'tiktok_url' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $video = trim((string) ($validated['video_url'] ?? ''));
+        $tiktok = trim((string) ($validated['tiktok_url'] ?? ''));
+
+        if ($video !== '' && YouTube::id($video) === null) {
+            throw ValidationException::withMessages(['video_url' => YouTube::invalidMessage().' Un lien Shorts (https://www.youtube.com/shorts/…) fonctionne aussi.']);
+        }
+
+        if ($tiktok !== '' && ! HomeVideo::isTikTokUrl($tiktok)) {
+            throw ValidationException::withMessages(['tiktok_url' => HomeVideo::tiktokInvalidMessage()]);
+        }
+
+        $enabled = $request->boolean('enabled');
+
+        SiteSettings::save(['site.home_video' => [
+            'enabled' => $enabled,
+            'video_url' => $video,
+            'title' => trim((string) ($validated['title'] ?? '')) ?: HomeVideo::DEFAULT_TITLE,
+            'subtitle' => trim((string) ($validated['subtitle'] ?? '')) ?: HomeVideo::DEFAULT_SUBTITLE,
+            'tiktok_url' => $tiktok,
+        ]]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Vidéo d\'accueil modifiée ('.match (true) {
+            $video === '' => 'sans lien : section masquée',
+            ! $enabled => 'vidéo masquée par l\'interrupteur',
+            default => 'vidéo affichée',
+        }.').');
     }
 
     private function updateBusiness(Request $request): void

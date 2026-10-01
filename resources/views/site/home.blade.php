@@ -89,6 +89,9 @@
         </div>
     </section>
 
+    {{-- Vidéo d'accueil (verticale, chargée au toucher) : absente sans lien YouTube valide --}}
+    @include('site.partials.home-video')
+
     {{-- Chiffres clés --}}
     <section class="border-y border-veil/10 bg-veil/[0.02]">
         <dl class="mx-auto grid max-w-6xl grid-cols-2 gap-px px-4 sm:px-6 lg:grid-cols-4">
@@ -158,7 +161,7 @@
 
     {{-- Formations mises en avant --}}
     @if ($featured->isNotEmpty())
-        <section class="relative">
+        <section id="catalogue" class="relative scroll-mt-16">
             <div class="glow pointer-events-none absolute inset-0 opacity-50"></div>
             <div class="section relative">
                 <div class="flex flex-col items-center justify-between gap-6 text-center md:flex-row md:items-end md:text-left">

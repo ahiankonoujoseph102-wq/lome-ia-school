@@ -97,7 +97,13 @@
                 <li><strong>lis_ref</strong> : le code du dernier lien d'affiliation cliqué et la date du clic, conservé {{ config('affiliate.cookie_days') }} jours, pour attribuer votre éventuel achat à l'affilié qui vous a recommandé le site ;</li>
                 <li><strong>lis_visitor</strong> : un identifiant aléatoire, conservé 12 mois, pour ne compter qu'une fois vos clics sur le lien d'un même affilié.</li>
             </ul>
-            <p>Aucun cookie publicitaire ni de mesure d'audience tiers n'est utilisé. Vous pouvez supprimer ces cookies à tout moment depuis les réglages de votre navigateur.</p>
+            <p>Le site lui-même n'utilise aucun cookie publicitaire ni de mesure d'audience tiers ; la seule exception possible est le lecteur vidéo YouTube, qui n'est chargé que lorsque vous touchez un bouton lecture (voir « Vidéos YouTube »). Vous pouvez supprimer ces cookies à tout moment depuis les réglages de votre navigateur.</p>
+
+            <h2>Vidéos YouTube</h2>
+            <div data-test="privacy-youtube">
+                <p>Certaines pages (par exemple la vidéo de présentation de l'accueil) montrent une vidéo hébergée sur YouTube, un service de Google. Pour garder la page légère et respecter votre vie privée, seule une image d'aperçu est affichée au départ : cette image est chargée depuis les serveurs de YouTube, qui peuvent donc voir votre adresse IP, comme pour toute image hébergée à l'extérieur.</p>
+                <p><strong>Au toucher du bouton lecture, la vidéo est fournie par YouTube (Google).</strong> Le lecteur est alors chargé depuis le domaine youtube-nocookie.com (mode de confidentialité renforcé de YouTube) : YouTube peut recevoir votre adresse IP et des informations sur votre navigateur, et enregistrer des données techniques dans votre navigateur, selon sa propre politique de confidentialité. Aucune vidéo ne démarre et aucun son n'est lu sans que vous ayez touché ce bouton, et nous n'ajoutons aucun suivi publicitaire.</p>
+            </div>
 
             <h2>Hébergement et lieu de stockage</h2>
             <p>Le site et ses données (compte, achats, preuves de paiement, messages et fichiers des groupes) sont hébergés par {{ $legal['host'] }}@if (filled($legal['data_location'] ?? null)), dans la région suivante : {{ $legal['data_location'] }}@endif. Les fichiers privés restent dans un espace privé, accessible uniquement par le site.</p>

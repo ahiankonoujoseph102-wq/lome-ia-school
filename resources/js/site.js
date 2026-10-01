@@ -16,6 +16,7 @@ import {
     SPEECH_RATE,
     speechSupport,
 } from './ama.js';
+import { isPlaybackError, listeningMessage, PLAYER_ORIGIN } from './home-video.js';
 import { bottomOffset, createInstallState, isInstalled, isIos, overlaps } from './install-app.js';
 
 /**
@@ -447,6 +448,47 @@ Alpine.data('lessonVideoPreview', (provider, initialUrl) => ({
 
     get problem() {
         return this.source.problem(this.url);
+    },
+}));
+
+/**
+ * Vidéo d'accueil : seule l'image d'aperçu est chargée ; le lecteur YouTube (youtube-nocookie.com) n'est ajouté
+ * qu'au toucher du bouton lecture. Aucune lecture automatique. Si la vidéo est illisible (aperçu introuvable, ou
+ * erreur signalée par le lecteur), un message simple et le lien « Regarder sur YouTube » remplacent la zone vide.
+ */
+Alpine.data('homeVideo', () => ({
+    playing: false,
+    failed: false,
+    listener: null,
+
+    play() {
+        if (this.playing) {
+            return;
+        }
+
+        this.playing = true;
+        this.listener = (event) => {
+            const frame = this.$refs.frame;
+
+            if (frame && event.source === frame.contentWindow && isPlaybackError(event.origin, event.data)) {
+                this.fail();
+            }
+        };
+        window.addEventListener('message', this.listener);
+    },
+
+    listen() {
+        this.$refs.frame?.contentWindow?.postMessage(listeningMessage(), PLAYER_ORIGIN);
+    },
+
+    fail() {
+        this.failed = true;
+        this.playing = false;
+
+        if (this.listener) {
+            window.removeEventListener('message', this.listener);
+            this.listener = null;
+        }
     },
 }));
 
