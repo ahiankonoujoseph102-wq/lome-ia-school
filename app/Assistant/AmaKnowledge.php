@@ -4,6 +4,7 @@ namespace App\Assistant;
 
 use App\Models\CourseModule;
 use App\Models\Formation;
+use App\Models\Lesson;
 use App\Support\LiveOffer;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\Collection;
@@ -167,12 +168,14 @@ class AmaKnowledge
         $list = $formations->groupBy(fn (Formation $formation): string => $formation->category->label())
             ->map(fn (Collection $group, string $category): string => 'Catégorie « '.$category.' » :'."\n".$group->map(function (Formation $formation): string {
                 $lessons = $formation->modules->sum(fn (CourseModule $module): int => $module->lessons->count());
+                $previews = $formation->modules->sum(fn (CourseModule $module): int => $module->lessons->where('is_preview', true)->count());
                 $liveOffer = LiveOffer::for($formation);
 
                 return '- '.$formation->title.' : '.$formation->formatted_price.'.'
                     .($formation->subtitle ? ' '.trim((string) $formation->subtitle) : '')
                     .' ('.$formation->slug
-                    .($lessons > 0 ? ' ; programme publié : '.$lessons.' leçon'.($lessons > 1 ? 's' : '') : '').')'
+                    .($lessons > 0 ? ' ; programme publié : '.$lessons.' leçon'.($lessons > 1 ? 's' : '') : '')
+                    .($previews > 0 ? ', dont '.$previews.' en aperçu gratuit' : '').')'
                     .($liveOffer !== null ? ' EN DIRECT sur Google Meet : '.Str::lcfirst($liveOffer->period()).', '.Str::lcfirst($liveOffer->schedule()).'.' : '');
             })->implode("\n"))
             ->implode("\n");
@@ -257,7 +260,9 @@ class AmaKnowledge
             $lines[] = 'Programme (titres des modules et des leçons publiées) :';
 
             foreach ($modules as $module) {
-                $lines[] = '- '.$module->title.' : '.$module->lessons->pluck('title')->implode(' ; ');
+                $lines[] = '- '.$module->title.' : '.$module->lessons
+                    ->map(fn (Lesson $lesson): string => $lesson->title.($lesson->is_preview ? ' (aperçu gratuit)' : ''))
+                    ->implode(' ; ');
             }
         }
 

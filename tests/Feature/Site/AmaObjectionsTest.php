@@ -2,9 +2,15 @@
 
 namespace Tests\Feature\Site;
 
+use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
 use App\Models\AssistantMessage;
+use App\Models\CourseModule;
+use App\Models\Formation;
+use App\Models\Lesson;
 use App\Settings\SiteSettings;
+use App\Support\Money;
+use Database\Seeders\FormationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -21,6 +27,11 @@ class AmaObjectionsTest extends TestCase
     use RefreshDatabase;
 
     private const string VISITOR = 'dddddddddddddddddddddddddddddddddddddddd';
+
+    /**
+     * Poids (jetons estimés) de la règle « Objections » avant l'ajout de la règle « Ton » et des nouvelles objections.
+     */
+    private const int OBJECTION_RULES_BEFORE = 940;
 
     protected function setUp(): void
     {
@@ -54,6 +65,11 @@ class AmaObjectionsTest extends TestCase
             'pourquoi payer alors que tout est gratuit sur YouTube ?',
             'je dois réfléchir',
             'et si je ne reçois pas mon accès ?',
+            'je n\'ai pas d\'ordinateur',
+            'vais-je gagner de l\'argent ?',
+            'le paiement Mobile Money est compliqué',
+            'méfiance envers l\'IA',
+            'je n\'ai pas d\'argent maintenant',
         ] as $objection) {
             $this->assertStringContainsString($objection, $prompt);
         }
@@ -69,8 +85,8 @@ class AmaObjectionsTest extends TestCase
         // Ordre : reconnaître, répondre avec des faits, prochaine étape ; le fondateur seulement ensuite.
         $this->assertStringContainsString('(1) reconnais la préoccupation en une phrase', $prompt);
         $this->assertStringContainsString('(2) réponds calmement avec un ou deux faits vrais', $prompt);
-        $this->assertStringContainsString('(3) propose une prochaine étape simple', $prompt);
-        $this->assertStringContainsString('Tu ne transmets la question à Coach Joseph qu\'ensuite', $prompt);
+        $this->assertStringContainsString('(3) propose une seule prochaine étape simple (le lien de la page de la formation concernée, la consultation gratuite, ou expliquer le paiement étape par étape), pas à chaque message', $prompt);
+        $this->assertStringContainsString('Tu ne transmets la question à Coach Joseph qu\'ensuite, et seulement si une vraie question reste sans réponse', $prompt);
         // La règle de transmission renvoie à la règle des objections.
         $this->assertStringContainsString('Face à une objection (règle « Objections »), tu réponds d\'abord toi-même', $prompt);
         // Une réponse à une objection n'est pas comptée parmi les questions sans réponse.
@@ -104,6 +120,10 @@ class AmaObjectionsTest extends TestCase
         $this->assertStringContainsString('aucune fausse urgence ni fausse rareté', $prompt);
         $this->assertStringContainsString('le site annonce des places non limitées', $prompt);
         $this->assertStringContainsString('aucune pression', $prompt);
+        $this->assertStringContainsString('aucun dénigrement ni aucune comparaison mensongère avec YouTube ou un concurrent', $prompt);
+        $this->assertStringContainsString('Tu ne valides jamais un paiement : seule l\'équipe le vérifie.', $prompt);
+        // Jamais de rareté : « places » n'apparaît que sous la forme « places non limitées ».
+        $this->assertSame(substr_count($prompt, 'places'), substr_count($prompt, 'places non limitées'));
     }
 
     #[DataProvider('modes')]
@@ -213,5 +233,138 @@ class AmaObjectionsTest extends TestCase
         $this->assertStringNotContainsString('**Objections**', $prompt);
         $this->assertSame(1, substr_count($prompt, 'Règle « Objections »'));
         $this->assertStringContainsString('## Guide des parcours du site', $prompt);
+    }
+
+    /**
+     * Repères chiffrés lus dans la base et les réglages, jamais écrits en dur : formation la moins chère et seuil
+     * d'accès provisoire (un changement dans l'admin est connu d'Ama tout de suite).
+     */
+    #[DataProvider('modes')]
+    public function test_the_cheapest_formation_and_the_threshold_come_from_the_database_and_the_settings(bool $call): void
+    {
+        Formation::factory()->create(['title' => 'Formation Exemple Chère', 'price' => 36000]);
+        Formation::factory()->create(['title' => 'Formation Exemple Petit Prix', 'price' => 5100]);
+        Formation::factory()->create(['title' => 'Formation Exemple Masquée', 'price' => 1000, 'is_active' => false]);
+
+        $prompt = AmaPrompt::build([], call: $call);
+        $this->assertStringContainsString('Formations à partir de '.Money::fcfa(5100).' (« Formation Exemple Petit Prix »).', $prompt);
+        $this->assertStringContainsString('Formation ouverte tout de suite, à titre provisoire, sous '.Money::fcfa(50000).' payés', $prompt);
+        $this->assertStringContainsString('paiement Mobile Money en 4 étapes guidées', $prompt);
+
+        SiteSettings::save(['site.payments.verification_threshold' => 40000]);
+        $this->assertStringContainsString('sous '.Money::fcfa(40000).' payés', AmaPrompt::build([], call: $call));
+    }
+
+    public function test_without_any_visible_formation_no_starting_price_is_given(): void
+    {
+        $this->assertStringNotContainsString('Formations à partir de', AmaPrompt::build([]));
+    }
+
+    /**
+     * Visiteur sans moyens : aucune insistance, solutions gratuites ou la moins chère, jamais d'endettement.
+     */
+    #[DataProvider('modes')]
+    public function test_a_visitor_without_money_is_never_pushed(bool $call): void
+    {
+        $prompt = AmaPrompt::build([], call: $call);
+
+        $this->assertStringContainsString('Pas les moyens, pas d\'argent maintenant ou difficulté financière : aucune insistance ni relance.', $prompt);
+        $this->assertStringContainsString('Propose les leçons en aperçu gratuit s\'il y en a, la consultation gratuite ou la formation la moins chère qui correspond à son besoin, et dis qu\'il peut revenir quand il veut.', $prompt);
+        $this->assertStringContainsString('N\'encourage jamais à emprunter ni à s\'endetter.', $prompt);
+    }
+
+    /**
+     * Les leçons en aperçu gratuit sont signalées à Ama (elle peut les proposer) ; sans aperçu, aucune mention.
+     */
+    public function test_free_preview_lessons_are_marked_for_ama(): void
+    {
+        $formation = Formation::factory()->create(['title' => 'Formation Exemple Aperçu', 'price' => 15500]);
+        $module = CourseModule::factory()->create(['formation_id' => $formation->id, 'title' => 'Module Exemple', 'position' => 1]);
+        Lesson::factory()->preview()->create(['course_module_id' => $module->id, 'title' => 'Leçon Exemple Ouverte', 'position' => 1]);
+        Lesson::factory()->create(['course_module_id' => $module->id, 'title' => 'Leçon Exemple Fermée', 'position' => 2]);
+
+        $text = AmaKnowledge::formations(null, ['Formation Exemple Aperçu']);
+        $this->assertStringContainsString('programme publié : 2 leçons, dont 1 en aperçu gratuit', $text);
+        $this->assertStringContainsString('Leçon Exemple Ouverte (aperçu gratuit) ; Leçon Exemple Fermée', $text);
+        $this->assertStringNotContainsString('Leçon Exemple Fermée (aperçu gratuit)', $text);
+
+        Lesson::query()->update(['is_preview' => false]);
+        $this->assertStringNotContainsString('aperçu gratuit', AmaKnowledge::formations(null, ['Formation Exemple Aperçu']));
+    }
+
+    /**
+     * Objections courantes, réponses simulées faites de faits vrais (faux Gemini) : chaque demande part avec les
+     * règles « Ton » et « Objections », et la réponse n'est ni notée « sans réponse », ni une proposition de
+     * transmettre au fondateur (aucune carte). Le vrai Gemini n'est pas vérifiable ici.
+     *
+     * @return array<string, array{0: string, 1: string, 2: bool}>
+     */
+    public static function objectionScenarios(): array
+    {
+        $scenarios = [
+            'trop cher' => ['C\'est trop cher pour moi.', 'Je comprends, le budget compte. Les formations ont des prix différents et le prix est affiché avant de payer. Voulez-vous que je vous indique la moins chère qui correspond à votre besoin ?'],
+            'pas le temps' => ['Je n\'ai pas le temps de suivre une formation.', 'Je comprends, le temps est précieux. Les formations sont enregistrées : vous avancez à votre rythme, avec un accès à vie.'],
+            'sans ordinateur' => ['Je suis débutant et je n\'ai pas d\'ordinateur.', 'C\'est une question importante. Le site et les cours s\'ouvrent aussi sur téléphone. La consultation gratuite permet de vérifier ensemble ce qui vous convient.'],
+            'gagner de l\'argent' => ['Est-ce que je vais gagner de l\'argent ?', 'Je comprends la question. La formation vous apprend à faire les choses vous-même ; je ne peux promettre aucun revenu, cela dépend de chacun.'],
+            'YouTube' => ['Pourquoi payer alors que c\'est gratuit sur YouTube ?', 'Bonne question. YouTube a de bonnes vidéos ; ici, vous avez un parcours organisé, un accompagnement à vie et un groupe réservé aux élèves.'],
+            'peur de ne pas recevoir l\'accès' => ['Et si je paie et que je ne reçois rien ?', 'C\'est normal d\'être prudent. Le suivi de votre achat est dans « Mes achats », et un remboursement est possible sous 48 heures si aucune leçon n\'a été consultée.'],
+            'Mobile Money difficile' => ['Le paiement Mobile Money c\'est compliqué pour moi.', 'Pas d\'inquiétude, le paiement se fait en 4 étapes guidées, avec « Copier le numéro ». Voulez-vous que je vous l\'explique étape par étape ?'],
+            'méfiance envers l\'IA' => ['Je me méfie de l\'IA.', 'C\'est une prudence saine. L\'IA est un outil : elle propose, et c\'est vous qui gardez le contrôle.'],
+            'pas d\'argent maintenant' => ['Je n\'ai pas d\'argent maintenant.', 'Je comprends tout à fait. Vous pouvez réserver la consultation gratuite, et revenir quand vous voulez.'],
+        ];
+
+        $cases = [];
+        foreach ($scenarios as $name => [$question, $answer]) {
+            $cases[$name.' (écrit)'] = [$question, $answer, false];
+            $cases[$name.' (appel)'] = [$question, $answer, true];
+        }
+
+        return $cases;
+    }
+
+    #[DataProvider('objectionScenarios')]
+    public function test_common_objections_are_answered_without_sending_to_the_founder(string $question, string $answer, bool $call): void
+    {
+        $candidate = ['candidates' => [['content' => ['role' => 'model', 'parts' => [['text' => $answer]]], 'finishReason' => 'STOP']]];
+        Http::fake(['generativelanguage.googleapis.com/*' => $call
+            ? Http::response('data: '.json_encode($candidate)."\r\n\r\n", 200, ['Content-Type' => 'text/event-stream'])
+            : Http::response($candidate)]);
+
+        $request = $this->withCredentials()->withCookie('ama_visitor', self::VISITOR);
+
+        if ($call) {
+            $content = $request->post(route('assistant.call'), ['message' => $question])->assertOk()->streamedContent();
+            $this->assertStringContainsString('"handoff":null', $content);
+            $this->assertStringNotContainsString('transmettre', $content);
+        } else {
+            $response = $request->postJson(route('assistant.message'), ['message' => $question])->assertOk();
+            $this->assertSame($answer, $response->json('reply'));
+            $this->assertNull($response->json('handoff'));
+        }
+
+        $this->assertFalse(AssistantMessage::query()->where('role', AssistantMessage::AMA)->sole()->unanswered);
+
+        Http::assertSent(function (Request $sent): bool {
+            $system = (string) data_get($sent->data(), 'system_instruction.parts.0.text');
+
+            return str_contains($system, 'Règle « Ton »')
+                && str_contains($system, 'Règle « Objections »')
+                && str_contains($system, 'Une objection n\'est jamais une question sans réponse');
+        });
+    }
+
+    /**
+     * Contrainte de Joseph : au plus environ 600 jetons ajoutés aux règles (ton + compléments des objections), et
+     * moins de 10 000 jetons par demande habituelle (à l'écrit comme en appel, avec la conversation).
+     */
+    public function test_the_new_rules_stay_light(): void
+    {
+        $this->seed(FormationSeeder::class);
+
+        $rules = AmaKnowledge::tokens(AmaPrompt::toneRules().AmaPrompt::objectionRules());
+        $this->assertLessThanOrEqual(self::OBJECTION_RULES_BEFORE + 600, $rules);
+
+        $this->assertLessThan(10000, AmaPrompt::stats()['perRequest']);
+        $this->assertLessThan(10000, AmaKnowledge::tokens(AmaPrompt::build([], call: true)) + AmaPrompt::CONVERSATION_ALLOWANCE);
     }
 }
