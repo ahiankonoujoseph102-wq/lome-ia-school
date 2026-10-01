@@ -4,12 +4,13 @@ namespace Tests\Feature\Site;
 
 use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
+use App\Models\AssistantMessage;
 use App\Models\CourseModule;
 use App\Models\Formation;
 use App\Models\Lesson;
-use App\Models\AssistantMessage;
 use App\Settings\SiteSettings;
 use App\Support\Money;
+use Database\Seeders\FormationSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -358,7 +359,7 @@ class AmaObjectionsTest extends TestCase
      */
     public function test_the_new_rules_stay_light(): void
     {
-        $this->seed(\Database\Seeders\FormationSeeder::class);
+        $this->seed(FormationSeeder::class);
 
         $rules = AmaKnowledge::tokens(AmaPrompt::toneRules().AmaPrompt::objectionRules());
         $this->assertLessThanOrEqual(self::OBJECTION_RULES_BEFORE + 600, $rules);
