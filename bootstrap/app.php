@@ -30,8 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             LogoutBlockedUser::class,
             TrackAffiliateReferral::class,
-            BlockSearchEngines::class,
         ]);
+
+        // Sur toutes les réponses (pages, redirections vers la connexion, erreurs) : « noindex » hors pages publiques.
+        $middleware->append(BlockSearchEngines::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

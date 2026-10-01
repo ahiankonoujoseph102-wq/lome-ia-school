@@ -14,12 +14,19 @@
 @php
     $siteName = config('app.name');
     $fullTitle = $title ? $title.' | '.$siteName : $siteName.' | Formations en intelligence artificielle à Lomé et en ligne';
-    $description ??= 'Formations pratiques en intelligence artificielle, en français : ChatGPT, création visuelle et vidéo, sites web, automatisation, agents IA. Paiement par Mobile Money.';
+    // Description toujours présente, même si celle d'une page est vide.
+    $description = filled($description) ? $description : 'Formations pratiques en intelligence artificielle, en français : ChatGPT, création visuelle et vidéo, sites web, automatisation, agents IA. Paiement par Mobile Money.';
     // Aperçus de partage : adresses absolues fondées sur APP_URL (voir App\Support\AppUrl).
     $imageType ??= $image === null ? \App\Support\Brand::shareImageType() : 'image/png';
     $image = \App\Support\AppUrl::to($image ?? route('og.site'));
-    $canonical = url()->current();
-    $shareUrl = \App\Support\AppUrl::to($canonical);
+    // Adresse canonique (sans paramètre) et adresse de partage : toujours fondées sur APP_URL, pour qu'un
+    // changement de nom de domaine ne laisse aucune ancienne adresse dans les pages.
+    $canonical = \App\Support\AppUrl::to(url()->current());
+    $shareUrl = $canonical;
+    // Pages privées, pages avec paramètre, ou NOINDEX=true : jamais référencées (voir App\Support\SearchEngines).
+    $robots = $noindex || in_array($variant, ['student', 'chat'], true)
+        ? 'noindex, nofollow'
+        : \App\Support\SearchEngines::directive(request());
     // Assistante vocale : pages de VoiceAssistant::PAGES (jamais l'admin ni la conversation d'un groupe ; le lecteur de cours au choix de l'admin).
     $voiceAssistant = \App\Support\VoiceAssistant::shownOn(request()->route()?->getName(), $variant);
     $bottomNav = $variant === 'student';
@@ -58,8 +65,8 @@
         <meta name="description" content="{{ $description }}">
         <link rel="canonical" href="{{ $canonical }}">
         <meta name="theme-color" content="#0b1030">
-        @if ($noindex || in_array($variant, ['student', 'chat'], true) || config('app.noindex'))
-            <meta name="robots" content="noindex, nofollow">
+        @if ($robots)
+            <meta name="robots" content="{{ $robots }}">
         @endif
 
         {{-- Aperçus de partage (WhatsApp, Facebook, LinkedIn) --}}
