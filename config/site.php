@@ -381,6 +381,23 @@ return [
 
     /*
     |----------------------------------------------------------------------
+    | Vidéo d'accueil (section entre le haut de page et le catalogue)
+    |----------------------------------------------------------------------
+    | Tout se modifie dans l'admin (Réglages du site > Vidéo d'accueil). Aucun lien n'est écrit dans le
+    | code : lien YouTube vide ou invalide = section masquée. Vidéo verticale (9:16). Le bouton TikTok
+    | n'apparaît que si son lien est renseigné.
+    */
+
+    'home_video' => [
+        'enabled' => true,
+        'video_url' => '',
+        'title' => 'L\'intelligence artificielle expliquée simplement',
+        'subtitle' => 'Une courte vidéo de Coach Joseph',
+        'tiktok_url' => '',
+    ],
+
+    /*
+    |----------------------------------------------------------------------
     | Page « Entreprises et centres de formation » (/entreprises)
     |----------------------------------------------------------------------
     | Tout se modifie dans l'admin (Réglages du site > Page Entreprises). Vidéo YouTube vide = bloc
@@ -480,7 +497,7 @@ return [
         // Modifiables dans l'admin (Réglages du site > Pages légales) : à changer lors du passage sur Hostinger.
         'host' => 'Laravel Cloud (https://cloud.laravel.com)',
         'data_location' => 'Europe (Londres, Royaume-Uni)',
-        'updated_at' => '29 septembre 2026',
+        'updated_at' => '1er octobre 2026',
         'access_duration' => 'L\'accès à la formation est accordé à vie, avec un accompagnement à vie dans le groupe privé de la formation, tant que la plateforme Lomé IA School est en activité.',
         'refund_policy' => 'Vous pouvez demander le remboursement d\'une formation dans les 48 heures qui suivent son achat, uniquement si elle n\'a pas été commencée, c\'est-à-dire si aucune leçon n\'a été consultée. La demande se fait par e-mail ou sur WhatsApp. Passé ce délai, ou dès qu\'une leçon a été consultée, aucun remboursement n\'est possible.',
         'data_retention' => 'Vos données personnelles, y compris les preuves de paiement (captures d\'écran, identifiants de transaction), sont conservées 3 ans après votre dernier achat, puis supprimées.',
