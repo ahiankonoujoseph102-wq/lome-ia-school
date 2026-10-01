@@ -575,6 +575,31 @@ body {
     }
 }
 
+/*
+ * Bannière « Installer l'application » (partiel install-banner) affichée : place réservée en bas de page (le bas de
+ * la page reste accessible) et, sur téléphone et tablette, bouton d'Ama remonté au-dessus d'elle. Fenêtre d'Ama
+ * ouverte : la bannière s'efface. --install-banner-space = hauteur de la bannière + sa distance au bas de l'écran.
+ */
+.install-banner-shown::after {
+    content: '';
+    display: block;
+    height: var(--install-banner-space, 5rem);
+}
+
+.ama-open .install-banner {
+    display: none !important;
+}
+
+@media (width < 64rem) {
+    .install-banner-shown .voice-assistant {
+        transform: translateY(calc(-1 * var(--install-banner-space, 5rem)));
+    }
+
+    .install-banner-shown.ama-help-shown::after {
+        height: calc(5.5rem + var(--install-banner-space, 5rem));
+    }
+}
+
 /* Mode appel d'Ama : ondes autour du cercle (écoute, parole) et barres de la voix. Couleurs fixes, en contour
    (ring) et en or « gold-500 », stables face au mode sombre forcé. Rien ne bouge si le visiteur préfère moins
    d'animations. */

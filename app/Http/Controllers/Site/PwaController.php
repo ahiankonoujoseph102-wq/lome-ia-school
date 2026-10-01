@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Site;
 use App\Http\Controllers\Controller;
 use App\Support\Brand;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
@@ -23,7 +25,11 @@ class PwaController extends Controller
             'description' => 'Formations en intelligence artificielle, cours et groupes de discussion.',
             'lang' => 'fr',
             'dir' => 'ltr',
-            'start_url' => '/mon-espace?source=app',
+            // Identité de l'application : l'ancienne adresse de départ, pour que les applications déjà installées
+            // reçoivent ce manifeste comme une mise à jour (sans « id », Chrome prend l'adresse de départ).
+            'id' => '/mon-espace?source=app',
+            // Ouverture depuis l'icône : Mon espace pour un élève connecté, l'accueil pour un visiteur (start()).
+            'start_url' => '/application',
             'scope' => '/',
             'display' => 'standalone',
             'orientation' => 'portrait',
@@ -40,6 +46,14 @@ class PwaController extends Controller
                 ['name' => 'Mes formations', 'url' => '/mon-espace/formations', 'icons' => [['src' => Brand::icon('icon-192.png'), 'sizes' => '192x192']]],
             ],
         ], 200, ['Content-Type' => 'application/manifest+json', 'Cache-Control' => 'public, max-age=3600'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Adresse de départ de l'application installée.
+     */
+    public function start(Request $request): RedirectResponse
+    {
+        return redirect()->route($request->user() ? 'dashboard' : 'home');
     }
 
     public function serviceWorker(): Response

@@ -39,6 +39,7 @@
                 <li><a href="{{ route('contact') }}" class="text-slate-400 hover:text-white">Contact</a></li>
                 <li><a href="{{ route('register') }}" class="text-slate-400 hover:text-white">Créer un compte</a></li>
                 <li><a href="{{ route('login') }}" class="text-slate-400 hover:text-white">Connexion</a></li>
+                <li>@include('site.partials.install-link')</li>
             </ul>
         </div>
 

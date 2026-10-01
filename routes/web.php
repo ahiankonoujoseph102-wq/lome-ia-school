@@ -86,6 +86,7 @@ Route::get('robots.txt', [SitemapController::class, 'robots'])->name('robots');
 // Site installable sur l'écran d'accueil (manifeste et service worker)
 Route::get('manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
 Route::get('sw.js', [PwaController::class, 'serviceWorker'])->name('pwa.service-worker');
+Route::get('application', [PwaController::class, 'start'])->name('pwa.start');
 
 // Parcours d'achat : récapitulatif de commande et paiement Mobile Money avec preuve de paiement
 Route::get('commande/{formation}', [CheckoutController::class, 'show'])->name('checkout.show');

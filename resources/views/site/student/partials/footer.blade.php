@@ -5,6 +5,7 @@
             <li><a href="{{ route('home') }}" class="hover:text-white">Site</a></li>
             <li><a href="{{ route('legal.terms') }}" class="hover:text-white">CGV</a></li>
             <li><a href="{{ route('legal.privacy') }}" class="hover:text-white">Confidentialité</a></li>
+            <li>@include('site.partials.install-link')</li>
         </ul>
     </div>
 </footer>
