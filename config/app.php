@@ -155,9 +155,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | NOINDEX=true : aucune page référencée (balise « noindex », en-tête X-Robots-Tag et
-    | « Disallow: / » dans robots.txt), par exemple tant que le site est sur une adresse
-    | provisoire. false (ou absent) sur le site définitif. Hors production, le site n'est
-    | jamais référencé.
+    | « Disallow: / » dans robots.txt). NOINDEX=false (ou absent) : seules les pages
+    | publiques peuvent l'être, les pages privées restent bloquées (App\Support\SearchEngines).
+    | Hors production, le site n'est jamais référencé.
     |
     */
 

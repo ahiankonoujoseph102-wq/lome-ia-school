@@ -2,13 +2,14 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\SearchEngines;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * NOINDEX=true : aucune réponse du site (pages, images, fichiers) n'est référencée par les moteurs
- * de recherche, par exemple tant que le site est sur une adresse provisoire.
+ * En-tête X-Robots-Tag « noindex » sur toute réponse qui ne doit pas être référencée (voir SearchEngines) :
+ * pages privées et pages avec un jeton ou un paramètre, toujours ; tout le site avec NOINDEX=true.
  */
 class BlockSearchEngines
 {
@@ -19,8 +20,8 @@ class BlockSearchEngines
     {
         $response = $next($request);
 
-        if (config('app.noindex')) {
-            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        if (($directive = SearchEngines::directive($request)) !== null) {
+            $response->headers->set('X-Robots-Tag', $directive);
         }
 
         return $response;

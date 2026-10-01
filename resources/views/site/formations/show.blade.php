@@ -23,14 +23,14 @@
         'inLanguage' => 'fr',
         'url' => FormationShare::url($formation),
         'image' => FormationShare::imageUrl($formation),
-        'provider' => ['@type' => 'EducationalOrganization', 'name' => config('app.name'), 'url' => route('home')],
+        'provider' => ['@type' => 'EducationalOrganization', 'name' => config('app.name'), 'url' => \App\Support\AppUrl::to(route('home'))],
         'offers' => [
             '@type' => 'Offer',
             'price' => $formation->price,
             'priceCurrency' => 'XOF',
             'availability' => 'https://schema.org/InStock',
             'category' => 'Paid',
-            'url' => route('formations.show', $formation),
+            'url' => FormationShare::url($formation),
         ],
     ];
 

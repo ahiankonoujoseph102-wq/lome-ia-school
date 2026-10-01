@@ -7,7 +7,7 @@
 
 <x-layouts::site
     title="Contact"
-    description="Contactez Lomé IA School par téléphone, WhatsApp ou e-mail. Adidogomé, Lycée moderne 2, Lomé, Togo."
+    :description="'Contactez Lomé IA School par téléphone, WhatsApp ou e-mail. '.config('site.contact.address').'.'"
 >
     @include('site.partials.page-header', [
         'eyebrow' => 'Contact',
