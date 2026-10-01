@@ -2,6 +2,7 @@
     Vidéo d'accueil (verticale 9:16), entre le haut de page et le catalogue. Réglages : admin > Vidéo d'accueil.
     Section courte sur téléphone : aperçu de 10 rem qui s'agrandit au toucher.
     Section absente tant qu'il n'y a pas de lien YouTube valide (ou si l'interrupteur est éteint).
+    Image d'aperçu : celle envoyée depuis l'admin (9:16), sinon la miniature YouTube entière sur un fond flouté.
     Seule l'image d'aperçu est chargée : le lecteur (youtube-nocookie.com) n'est ajouté qu'au toucher du bouton lecture.
     Sans JavaScript, le bouton est un simple lien vers YouTube. Aucune transcription ni sous-titre n'est affiché.
     Style stable face au mode sombre forcé : fonds foncés, contours dessinés en ombre, icône blanche, image jamais recolorée.
@@ -12,6 +13,7 @@
 
     $homeVideoId = HomeVideo::videoId();
     $homeVideoTiktok = HomeVideo::tiktokUrl();
+    $homeVideoPoster = HomeVideo::posterUrl();
     $homeVideoCatalogue = $featured->isNotEmpty() ? '#catalogue' : route('formations.index');
 @endphp
 
@@ -66,21 +68,55 @@
                     aria-label="Lire la vidéo : {{ HomeVideo::title() }}"
                     data-test="home-video-play"
                 >
-                    <img
-                        src="{{ YouTube::thumbnailUrl($homeVideoId) }}"
-                        alt=""
-                        class="size-full object-cover"
-                        width="480"
-                        height="360"
-                        loading="lazy"
-                        decoding="async"
-                        x-on:error="fail()"
-                    >
-                    <span class="absolute inset-0 grid place-items-center bg-night-950/30 transition group-hover:bg-night-950/10">
-                        <span class="grid size-12 place-items-center rounded-full sm:size-16 bg-night-950/85 text-white shadow-[0_0_0_2px_var(--color-gold-500),0_10px_30px_rgb(0_0_0/0.5)] transition group-hover:scale-105">
-                            <flux:icon.play class="size-5 translate-x-0.5 text-white sm:size-7" variant="solid" />
+                    @if ($homeVideoPoster)
+                        {{-- Image d'aperçu verticale envoyée depuis l'admin (WebP 9:16) : remplit le cadre sans rien couper. --}}
+                        <img
+                            src="{{ $homeVideoPoster }}"
+                            alt=""
+                            class="size-full object-cover"
+                            width="{{ HomeVideo::POSTER_WIDTH }}"
+                            height="{{ HomeVideo::POSTER_HEIGHT }}"
+                            loading="lazy"
+                            decoding="async"
+                            data-test="home-video-poster"
+                        >
+                        <span class="absolute inset-0 grid place-items-center bg-night-950/20 transition group-hover:bg-night-950/5">
+                            @include('site.partials.home-video-play-button')
                         </span>
-                    </span>
+                    @else
+                        {{--
+                            Miniature YouTube (4:3, avec bandes noires autour d'une image 16:9) : jamais recadrée en hauteur.
+                            Fond = la même image floutée et assombrie (une seule image téléchargée) ; devant, la miniature
+                            entière en 16:9 (les bandes noires du 4:3 sont retirées), puis le bouton lecture dessous.
+                        --}}
+                        <img
+                            src="{{ YouTube::thumbnailUrl($homeVideoId) }}"
+                            alt=""
+                            class="absolute inset-0 size-full scale-125 object-cover opacity-70 blur-xl"
+                            width="480"
+                            height="360"
+                            loading="lazy"
+                            decoding="async"
+                            aria-hidden="true"
+                            data-test="home-video-backdrop"
+                        >
+                        <span class="absolute inset-0 bg-night-950/45"></span>
+                        <span class="absolute inset-0 flex flex-col items-center justify-center gap-4 sm:gap-6">
+                            <span class="relative block aspect-video w-full overflow-hidden shadow-[0_10px_30px_rgb(0_0_0/0.5)]" data-test="home-video-thumbnail">
+                                <img
+                                    src="{{ YouTube::thumbnailUrl($homeVideoId) }}"
+                                    alt=""
+                                    class="size-full object-cover"
+                                    width="480"
+                                    height="360"
+                                    loading="lazy"
+                                    decoding="async"
+                                    x-on:error="fail()"
+                                >
+                            </span>
+                            @include('site.partials.home-video-play-button')
+                        </span>
+                    @endif
                 </a>
             </div>
         </div>

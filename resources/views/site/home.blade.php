@@ -30,8 +30,13 @@
 
     {{-- Accroche --}}
     <section class="relative isolate overflow-hidden">
-        <div class="glow pointer-events-none absolute inset-0 -z-10"></div>
-        <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
+        {{-- Fond animé (interrupteur « Fond animé » de l'admin) ; éteint : fond fixe d'origine. --}}
+        @if (\App\Support\AnimatedBackground::shownOn('home'))
+            @include('site.partials.animated-background')
+        @else
+            <div class="glow pointer-events-none absolute inset-0 -z-10"></div>
+            <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
+        @endif
 
         <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-10 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-[1.15fr_0.85fr] lg:pt-20 lg:pb-24">
             <div class="text-center lg:text-left">

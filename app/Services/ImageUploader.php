@@ -16,10 +16,15 @@ class ImageUploader
 {
     public const string DISK = 'public';
 
+    /** Qualité WebP : image légère pour les téléphones en 4G, sans défaut visible à la taille affichée. */
+    public const int WEBP_QUALITY = 72;
+
     /**
-     * Recadre au centre au format demandé (ex. 1200 × 630) et enregistre en JPEG.
+     * Recadre au centre au format demandé (ex. 1200 × 630) et enregistre en JPEG (ou en WebP, plus léger).
+     *
+     * @param  'jpg'|'webp'  $format
      */
-    public function cover(UploadedFile $file, string $directory, int $width, int $height, string $field = 'image'): string
+    public function cover(UploadedFile $file, string $directory, int $width, int $height, string $field = 'image', string $format = 'jpg'): string
     {
         $source = $this->read($file, $field);
         $sourceWidth = imagesx($source);
@@ -38,7 +43,7 @@ class ImageUploader
         $canvas = $this->canvas($width, $height, opaque: true);
         imagecopyresampled($canvas, $source, 0, 0, intdiv($sourceWidth - $cropWidth, 2), intdiv($sourceHeight - $cropHeight, 2), $width, $height, $cropWidth, $cropHeight);
 
-        return $this->put($canvas, $directory, 'jpg');
+        return $this->put($canvas, $directory, $format === 'webp' && function_exists('imagewebp') ? 'webp' : 'jpg');
     }
 
     /**
@@ -101,7 +106,11 @@ class ImageUploader
     private function put(GdImage $image, string $directory, string $extension): string
     {
         ob_start();
-        $extension === 'png' ? imagepng($image, null, 8) : imagejpeg($image, null, 82);
+        match ($extension) {
+            'png' => imagepng($image, null, 8),
+            'webp' => imagewebp($image, null, self::WEBP_QUALITY),
+            default => imagejpeg($image, null, 82),
+        };
         $contents = (string) ob_get_clean();
 
         $path = trim($directory, '/').'/'.Str::lower(Str::random(20)).'.'.$extension;
