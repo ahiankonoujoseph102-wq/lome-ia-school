@@ -1,8 +1,8 @@
 # Guide du site Lomé IA School pour Ama
 
-Ce document décrit le site tel qu'il fonctionne vraiment. Il est destiné à Ama, l'assistante IA du site : il est envoyé automatiquement à Gemini avec chaque question (et, si l'agent ElevenLabs est choisi dans l'admin, il se charge dans sa base de connaissances).
+Ce document décrit le site tel qu'il fonctionne vraiment. Chaque partie commence par une ligne « En bref » : Gemini reçoit toujours ces lignes, et le détail d'une partie seulement quand la page du visiteur ou ses derniers messages s'y rapportent. Il est destiné à Ama, l'assistante IA du site : il est envoyé automatiquement à Gemini avec chaque question, sauf la partie « Règles pour Ama », déjà donnée à Gemini par le code (si l'agent ElevenLabs est choisi dans l'admin, tout le fichier se charge dans sa base de connaissances).
 
-Mis à jour le 2 octobre 2026. Avec Ama (Gemini), une modification de ce fichier est prise en compte dès sa mise en ligne ; avec l'agent ElevenLabs, il faut le recharger chez ElevenLabs.
+Mis à jour le 1er octobre 2026 (version courte, pour des réponses plus rapides). Avec Ama (Gemini), une modification de ce fichier est prise en compte dès sa mise en ligne ; avec l'agent ElevenLabs, il faut le recharger chez ElevenLabs.
 
 ## Règles pour Ama
 
@@ -20,246 +20,98 @@ Mis à jour le 2 octobre 2026. Avec Ama (Gemini), une modification de ce fichier
   - **Interdits** : aucun faux témoignage ni faux avis ; aucun chiffre ni aucune durée inventés ; aucune promesse de revenus, de clients, de ventes, d'emploi ou de résultat ; aucune fausse urgence ni rareté (ne dis jamais qu'il reste peu de places : le site annonce des places non limitées) ; aucune pression ; aucun dénigrement de YouTube ni d'un concurrent.
   - **Certification** : ne dis jamais que l'école est certifiée, agréée, enregistrée ou reconnue par l'État. Si on te le demande : « L'école est récente et n'a pas encore de certification officielle. » Pour « Agents IA », la fin de la formation donne une attestation de participation, jamais un diplôme ni un certificat reconnu.
   - **Témoignages et résultats** : s'il n'y en a pas dans ta base de connaissances ni sur les pages du site, dis honnêtement que tu n'en as pas à citer pour le moment, puis propose la consultation gratuite.
+- **Appel à la voix** : ce que tu reçois est transcrit par le téléphone. Si la phrase est vide, incompréhensible ou coupée au milieu, dis seulement « Excusez-moi, je n'ai pas bien entendu. Pouvez-vous répéter votre question ? », sans proposer de transmettre la question à Coach Joseph. Si la personne te coupe la parole, réponds directement à ce qu'elle vient de dire : ne dis jamais « patientez » ni « je termine d'abord ».
 - Le site te donne le contexte de la page : la page ouverte, l'étape du paiement, la formation, le montant, le pays, l'opérateur et la dernière erreur affichée. Commence par là.
 
 ## 1. Créer un compte
 
-1. En haut du site, touchez « Créer un compte ». Vous pouvez aussi créer votre compte directement sur la page de commande d'une formation.
-2. Écrivez votre nom complet.
-3. Choisissez votre pays, puis écrivez votre numéro WhatsApp. Un numéro ne peut servir qu'à un seul compte.
-4. Écrivez votre adresse e-mail.
-5. Choisissez un mot de passe d'au moins 8 caractères, avec des lettres et des chiffres. Le bouton « Afficher » permet de vérifier ce que vous avez tapé.
-6. La case « Je souhaite être informé(e) des nouvelles formations » est facultative.
-7. Touchez « Créer mon compte ».
-8. Le site vous envoie ensuite un code par e-mail. Il faut confirmer votre adresse pour pouvoir payer. Voir la partie suivante.
+En bref : « Créer un compte » en haut du site (nom, numéro WhatsApp, e-mail, mot de passe), puis confirmer l'adresse e-mail.
 
-Si une erreur s'affiche :
-- « adresse déjà utilisée » ou « numéro déjà utilisé » : vous avez sans doute déjà un compte. Touchez « Connexion », puis si besoin « Mot de passe oublié ? ».
-- Mot de passe refusé : il faut au moins 8 caractères, avec des lettres et des chiffres.
+- « Créer un compte » en haut du site (ou sur la page de commande) : nom complet, pays puis numéro WhatsApp (un numéro = un compte), adresse e-mail, mot de passe d'au moins 8 caractères avec lettres et chiffres (« Afficher » pour vérifier), case facultative « Je souhaite être informé(e) des nouvelles formations », puis « Créer mon compte ». Un code arrive ensuite par e-mail (partie 2).
+- « adresse déjà utilisée » ou « numéro déjà utilisé » : compte existant, « Connexion » puis si besoin « Mot de passe oublié ? ».
 
 ## 2. Confirmer son adresse e-mail
 
-1. Après l'inscription, le site ouvre la page « Confirmez votre e-mail ».
-2. Ouvrez votre boîte e-mail. Cherchez l'e-mail de Lomé IA School. Il peut mettre une minute à arriver.
-3. Si vous ne le trouvez pas, regardez dans les courriers indésirables, aussi appelés spam.
-4. Deux possibilités :
-   - Tapez les 6 chiffres du code dans la case, puis touchez « Confirmer mon adresse ».
-   - Ou touchez le bouton « Confirmer mon adresse e-mail » dans l'e-mail.
-5. Le code et le bouton sont valables 30 minutes, et une seule fois.
+En bref : code à 6 chiffres reçu par e-mail (30 minutes, voir les spams), « Renvoyer le code » si besoin ; obligatoire pour payer.
 
-En cas de problème :
-- Pas d'e-mail, ou code trop ancien : touchez « Renvoyer le code ». Un nouveau code est possible une fois par minute, et 5 fois par heure. L'ancien code ne marche plus.
-- Adresse mal tapée : touchez « Adresse mal tapée ? Corrigez-la », écrivez la bonne adresse, puis touchez « Enregistrer et recevoir un nouveau code ».
-- Après 5 codes faux, la saisie est bloquée 15 minutes, pour protéger le compte. Il faut ensuite demander un nouveau code.
-- On peut visiter le site sans confirmer son adresse. Mais on ne peut ni payer ni demander un retrait d'affiliation avant de l'avoir confirmée.
+- Page « Confirmez votre e-mail » : taper les 6 chiffres reçus puis « Confirmer mon adresse », ou toucher « Confirmer mon adresse e-mail » dans l'e-mail (valables 30 minutes, une seule fois). E-mail absent : attendre une minute, regarder les spams.
+- « Renvoyer le code » : une fois par minute, 5 fois par heure (l'ancien code ne marche plus). « Adresse mal tapée ? Corrigez-la », puis « Enregistrer et recevoir un nouveau code ». 5 codes faux : saisie bloquée 15 minutes.
+- Sans adresse confirmée : visite possible, mais ni paiement ni retrait d'affiliation.
 
 ## 3. Se connecter
 
-1. En haut du site, touchez « Connexion ».
-2. Écrivez votre adresse e-mail et votre mot de passe.
-3. Touchez « Se connecter ».
-4. Si vous avez activé la double authentification, le site demande ensuite le code de votre application d'authentification. Si vous avez perdu votre téléphone, vous pouvez utiliser un de vos codes de récupération. Chaque code de récupération ne sert qu'une fois.
+En bref : « Connexion », e-mail et mot de passe, « Se connecter ».
 
-Si vous veniez de la page de commande d'une formation, le site vous y ramène automatiquement.
+- « Connexion », e-mail et mot de passe, « Se connecter ». Double authentification : code de l'application, ou un code de récupération (un seul usage chacun). Le site ramène à la page de commande si l'on en venait.
 
 ## 4. Mot de passe oublié
 
-1. Sur la page de connexion, touchez « Mot de passe oublié ? ».
-2. Écrivez l'adresse e-mail de votre compte.
-3. Touchez « Recevoir le lien ».
-4. Ouvrez l'e-mail reçu, et touchez le lien. Il est valable 60 minutes. Pensez aux courriers indésirables.
-5. Choisissez un nouveau mot de passe, avec au moins 8 caractères, des lettres et des chiffres.
-6. Touchez « Enregistrer le mot de passe ». Vous pouvez ensuite vous connecter.
+En bref : « Mot de passe oublié ? » sur la page de connexion, lien reçu par e-mail.
+
+- « Mot de passe oublié ? », adresse du compte, « Recevoir le lien » (valable 60 minutes, voir les spams), nouveau mot de passe, « Enregistrer le mot de passe ».
 
 ## 5. Acheter une formation
 
-1. Ouvrez la formation depuis l'accueil ou le catalogue « Formations ».
-2. Lisez la page, puis touchez « Acheter maintenant ».
-3. Vous arrivez sur le récapitulatif de commande.
-4. Si vous n'êtes pas connecté, créez votre compte ou connectez-vous sur cette même page. Le site vous ramène ensuite au récapitulatif.
-5. Confirmez votre adresse e-mail si ce n'est pas encore fait. Sans cela, le paiement n'apparaît pas.
-6. Payez par Mobile Money en 4 étapes. Voir la partie suivante.
+En bref : « Acheter maintenant » sur la page de la formation, puis récapitulatif de commande (code promo possible) et paiement.
 
-### Avec un code promo
-
-1. Sur le récapitulatif de commande, touchez « Vous avez un code promo ? ».
-2. Écrivez le code, puis touchez « Appliquer ».
-3. Si le code est accepté, le site affiche « Code … appliqué ». L'ancien prix est barré, la remise est affichée, et le « Total à payer » baisse. C'est ce nouveau montant qu'il faut envoyer.
-4. Si le code est refusé, un message rouge explique pourquoi. Par exemple : le code n'existe pas, il est expiré, il ne concerne pas cette formation, ou il a déjà été utilisé. Vérifiez l'orthographe du code. Sinon, vous pouvez payer le prix normal, ou demander à la personne qui vous a donné le code.
-5. Pour enlever un code, touchez « Retirer ».
-
-Le code est vérifié une deuxième fois au moment de l'envoi de la capture.
+- Page de la formation, « Acheter maintenant » : récapitulatif de commande (créer son compte ou se connecter sur place ; adresse e-mail à confirmer, sinon le paiement n'apparaît pas).
+- Code promo : « Vous avez un code promo ? », le code, « Appliquer ». Accepté : « Code … appliqué », prix barré, remise, « Total à payer » réduit à envoyer. Refusé : le message rouge dit pourquoi (inexistant, expiré, autre formation, déjà utilisé) ; vérifier l'orthographe ou payer le prix normal. « Retirer » l'enlève. Revérifié à l'envoi de la capture. Pas de code pour les suppléments de sessions.
 
 ## 6. Payer par Mobile Money
 
-Le paiement se fait par transfert Mobile Money depuis votre téléphone. Les frais de transfert sont à votre charge. Le paiement se fait en 4 étapes, une à la fois. En haut, le site indique « Étape 1 sur 4 », « Étape 2 sur 4 », et ainsi de suite.
+En bref : Mobile Money depuis le téléphone, 4 étapes (pays, opérateur, envoi du montant affiché au numéro affiché, capture d'écran envoyée) ; accès tout de suite sous 50 000 FCFA, après vérification au-delà.
 
-### Étape 1 : le pays
+Transfert Mobile Money depuis le téléphone, frais de transfert à la charge de l'élève, en 4 étapes (« Étape 1 sur 4 »…). Pour un montant, dis de regarder celui affiché à l'écran (code promo compris).
 
-Touchez votre pays : Togo, Burkina Faso ou Bénin.
-
-### Étape 2 : l'opérateur
-
-Touchez votre opérateur. Le site ne montre que les opérateurs de votre pays.
-- Togo : Mixx by Yas, ou Flooz / Moov Money.
-- Burkina Faso : Orange Money, ou Wave.
-- Bénin : MTN, Moov, ou Celtiis.
-
-Au Burkina Faso et au Bénin, le paiement est reçu par le représentant de l'école dans ce pays. Le site l'indique à l'étape 3.
-
-Pour changer de pays, touchez « Changer de pays ».
-
-### Étape 3 : envoyer l'argent
-
-1. Le site affiche en grand le montant exact à envoyer, le numéro, et le nom du bénéficiaire.
-2. « Copier le montant » et « Copier le numéro » permettent de les coller dans votre application.
-3. Vérifiez que le nom du bénéficiaire s'affiche bien sur votre téléphone avant de valider le transfert.
-4. Envoyez exactement le montant affiché.
-
-Le bouton « Payer maintenant » :
-- Sur Android, le bouton « Ouvrir » suivi du nom de l'opérateur ouvre le clavier du téléphone avec le code du menu de transfert déjà tapé. Il suffit d'appeler.
-- Le menu de votre opérateur s'ouvre. Choisissez le transfert, saisissez le numéro et le montant affichés, puis validez avec votre code secret. Le code secret se tape seulement dans le menu de l'opérateur, jamais sur le site.
-- Sur iPhone, il n'y a pas de bouton. Le site affiche le code à taper à la main sur le clavier du téléphone, avec un bouton « Copier ».
-- Téléphone double SIM : utilisez la carte SIM de cet opérateur.
-- Wave n'a pas de code : ouvrez l'application Wave pour envoyer le montant au numéro affiché.
-
-Codes du menu de transfert affichés en septembre 2026. L'école peut les changer ; le site affiche toujours le bon code.
-- Togo, Mixx by Yas : étoile 145 étoile 1 dièse.
-- Togo, Flooz : étoile 155 étoile 1 dièse.
-- Burkina Faso, Orange Money : étoile 144 étoile 2 dièse.
-- Bénin, MTN : étoile 880 dièse.
-- Bénin, Moov : étoile 855 étoile 1 dièse.
-- Bénin, Celtiis : étoile 889 dièse.
-
-Quand le transfert est fait, faites une capture d'écran du message de confirmation. Puis touchez « J'ai payé : envoyer ma capture ». Pour revenir au choix de l'opérateur, touchez « Changer d'opérateur ».
-
-### Étape 4 : envoyer la capture
-
-1. Touchez « Envoyer la capture de mon paiement ».
-2. Choisissez la capture dans votre galerie, ou prenez une photo.
-3. L'envoi part tout seul. Il n'y a rien d'autre à remplir : ni numéro, ni nom, ni référence.
-
-La capture doit être une image JPG, PNG ou WebP, de 8 Mo au maximum.
-
-Si l'envoi échoue :
-- Image refusée : envoyez une vraie capture d'écran, pas un document PDF.
-- Image trop lourde : faites une nouvelle capture d'écran, plutôt qu'une photo de l'écran.
-- « Cette capture d'écran a déjà été envoyée » : chaque capture ne sert qu'une fois. Envoyez la capture de votre propre paiement.
-- « Un paiement est déjà en cours de vérification » : on ne peut avoir qu'un seul paiement en attente à la fois. Il faut attendre qu'il soit vérifié.
-- « Vous avez déjà accès à cette formation » : inutile de payer une deuxième fois.
-
-Pour revoir le numéro et le montant, touchez « Revoir le numéro et le montant ».
-
-Le bouton « Besoin d'aide pour payer ? », en bas de chaque étape, ouvre WhatsApp vers l'école, avec un message qui donne déjà le nom de la formation et le montant.
-
-### Après l'envoi
-
-- Formation de moins de 50 000 FCFA : la formation s'ouvre tout de suite, à titre provisoire. Touchez « Commencer la formation ». L'équipe vérifie ensuite le paiement.
-- Formation de 50 000 FCFA ou plus : l'accès s'ouvre après la vérification et la validation du paiement par l'école, du lundi au samedi, de 8 h à 20 h. Un e-mail prévient l'élève.
-- Le seuil porte sur le montant payé, code promo compris.
-- Le suivi se trouve dans « Mon espace », onglet « Achats ». Le reçu est disponible quand le paiement est validé.
-- Si le paiement est refusé, l'e-mail et la page du suivi donnent le motif. L'accès provisoire est alors retiré.
-
-### Supplément d'une session à Lomé
-
-Certaines sessions en présentiel demandent un supplément. Le paiement se fait de la même façon, en 4 étapes, depuis la page de la session dans « Mon espace », onglet « Sessions ». La place est réservée 24 heures pour envoyer la capture. Les codes promo ne s'appliquent pas aux suppléments.
+- Étape 1 : le pays (Togo, Burkina Faso ou Bénin) ; « Changer de pays » pour revenir.
+- Étape 2 : l'opérateur. Togo : Mixx by Yas, ou Flooz / Moov Money. Burkina Faso : Orange Money, ou Wave. Bénin : MTN, Moov, ou Celtiis. Au Burkina Faso et au Bénin, l'argent est reçu par le représentant de l'école.
+- Étape 3 : montant exact, numéro et nom du bénéficiaire en grand, avec « Copier le montant » et « Copier le numéro » (ne dicte jamais le numéro). Vérifier le nom du bénéficiaire avant de valider, envoyer exactement le montant affiché. Sur Android, « Ouvrir » suivi du nom de l'opérateur ouvre le clavier avec le code du menu de transfert : appeler, choisir le transfert, saisir numéro et montant, valider avec son code secret, seulement dans le menu de l'opérateur, jamais sur le site. Sur iPhone : taper à la main le code affiché (« Copier »). Double SIM : la carte SIM de cet opérateur. Wave : pas de code, ouvrir l'application Wave. Codes (septembre 2026, le site affiche toujours le bon) : Togo Mixx by Yas étoile 145 étoile 1 dièse ; Togo Flooz étoile 155 étoile 1 dièse ; Burkina Faso Orange Money étoile 144 étoile 2 dièse ; Bénin MTN étoile 880 dièse ; Bénin Moov étoile 855 étoile 1 dièse ; Bénin Celtiis étoile 889 dièse. Ensuite, capture d'écran du message de confirmation, puis « J'ai payé : envoyer ma capture » (« Changer d'opérateur » pour revenir).
+- Étape 4 : « Envoyer la capture de mon paiement », galerie ou photo ; l'envoi part tout seul, rien d'autre à remplir. JPG, PNG ou WebP, 8 Mo au maximum. « Revoir le numéro et le montant » pour revenir. Échecs : pas un PDF mais une vraie capture ; trop lourde : refaire une capture d'écran ; « Cette capture d'écran a déjà été envoyée » (une capture ne sert qu'une fois) ; « Un paiement est déjà en cours de vérification » (un seul à la fois) ; « Vous avez déjà accès à cette formation » (inutile de repayer).
+- « Besoin d'aide pour payer ? », à chaque étape : WhatsApp de l'école, message déjà rempli (formation, montant).
+- Après l'envoi : moins de 50 000 FCFA payés, formation ouverte tout de suite à titre provisoire (« Commencer la formation »), puis vérification ; à partir de 50 000 FCFA, accès après validation par l'école (du lundi au samedi, de 8 h à 20 h), avec un e-mail. Suivi : « Mon espace », onglet « Achats » ; reçu une fois validé. Refusé : motif par e-mail et sur le suivi, accès provisoire retiré.
+- Supplément d'une session à Lomé : même paiement, depuis la page de la session (« Mon espace », « Sessions ») ; place réservée 24 heures pour envoyer la capture.
 
 ## 7. Accéder à ses cours
 
-1. Connectez-vous.
-2. Ouvrez « Mon espace », puis « Mes formations » (« Formations » sur téléphone).
-3. Touchez votre formation. La page montre la progression et le programme.
-4. Touchez « Reprendre » pour revenir à la dernière leçon, ou touchez une leçon du programme.
-5. Sous la vidéo, touchez « Marquer comme terminée » quand vous avez fini une leçon.
-6. Si la vidéo ne se lance pas, touchez « Lecteur de secours », quand il est proposé.
-7. Les fichiers de la leçon, comme les PDF, sont dans « Fichiers à télécharger », sous la vidéo.
-8. Chaque formation a un groupe de discussion privé. On le trouve dans l'onglet « Groupes » de « Mon espace ». On y est ajouté automatiquement quand l'accès s'ouvre.
+En bref : « Mon espace », « Mes formations », puis la formation ; groupe privé dans « Groupes » ; séances en direct dans « Sessions ».
 
-L'accès aux formations est à vie.
-
-### Suivre une séance en direct (Google Meet)
-
-1. Le lien Google Meet n'est donné qu'aux élèves de la formation, après le paiement. Il ne se trouve jamais sur les pages publiques.
-2. Ouvrez « Mon espace », puis « Sessions ». Touchez la séance : la page montre la date, l'heure de Lomé et le lien Google Meet.
-3. Le bouton « Rejoindre la session » s'active 15 minutes avant le début.
-4. Le lien se trouve aussi dans l'annonce épinglée en haut du groupe de la formation.
-5. Un rappel est envoyé par e-mail la veille et 1 heure avant la séance.
-6. Téléphone ou ordinateur : l'un ou l'autre suffit.
+- « Mon espace », « Mes formations » (« Formations » sur téléphone), la formation : progression, programme, « Reprendre ». Sous la vidéo : « Marquer comme terminée », « Lecteur de secours » (quand il est proposé), « Fichiers à télécharger ». Accès à vie.
+- Groupe privé par formation (onglet « Groupes »), ajout automatique à l'ouverture de l'accès.
+- Séance en direct (Google Meet) : lien réservé aux élèves, jamais public ; « Mon espace », « Sessions », la séance ; « Rejoindre la session » s'active 15 minutes avant ; lien aussi épinglé dans le groupe ; rappels la veille et 1 heure avant.
 
 ## 8. Réserver la consultation gratuite
 
-La consultation gratuite dure 30 minutes. Elle se fait en direct, en ligne, par appel vidéo. Aucun compte n'est nécessaire.
+En bref : page « Consultation gratuite », 30 minutes en appel vidéo, sans compte ; déplacement ou annulation jusqu'à 3 heures avant.
 
-1. Ouvrez la page « Consultation gratuite ».
-2. Choisissez un jour, puis une heure. Les heures sont celles de Lomé. L'heure du Bénin est affichée à côté.
-3. Indiquez qui vous êtes : un particulier, un centre de formation ou une entreprise. Pour un centre ou une entreprise, écrivez son nom.
-4. Écrivez votre nom et prénom, votre numéro WhatsApp et votre adresse e-mail.
-5. Dites en quelques mots de quoi vous voulez parler. Vous pouvez aussi choisir une formation qui vous intéresse.
-6. Touchez « Confirmer ma consultation gratuite ».
-7. Vous recevez un e-mail de confirmation avec le lien de l'appel vidéo, et un lien pour gérer votre rendez-vous. Des rappels arrivent avant le rendez-vous.
-
-Pour déplacer ou annuler : ouvrez le lien de gestion reçu par e-mail. Touchez « Déplacer », choisissez un autre créneau, puis « Confirmer le nouveau créneau ». Ou touchez « Annuler mon rendez-vous », puis « Confirmer l'annulation ». C'est possible jusqu'à 3 heures avant le rendez-vous.
-
-Une seule consultation à venir est possible par numéro WhatsApp et par adresse e-mail.
+- 30 minutes, en ligne par appel vidéo, sans compte. Page « Consultation gratuite » : jour, heure (de Lomé, celle du Bénin à côté), particulier, centre de formation ou entreprise (avec son nom), nom et prénom, WhatsApp, e-mail, sujet (et une formation si on veut), puis « Confirmer ma consultation gratuite ».
+- E-mail avec le lien de l'appel vidéo et un lien de gestion ; rappels. « Déplacer » puis « Confirmer le nouveau créneau », ou « Annuler mon rendez-vous » puis « Confirmer l'annulation », jusqu'à 3 heures avant. Une seule consultation à venir par numéro et par e-mail.
 
 ## 9. L'affiliation
 
-Toute personne inscrite peut devenir affiliée, même sans avoir acheté de formation.
+En bref : « Mon espace », « Affiliation » ; 10 % sur chaque achat validé via son lien, retrait par Mobile Money dès 2 000 FCFA.
 
-1. Ouvrez « Mon espace », puis l'onglet « Affiliation ».
-2. Lisez les conditions, cochez « J'ai lu et j'accepte les conditions du programme d'affiliation », puis touchez « Activer mon compte affilié ».
-3. Vous recevez un lien vers le site et un lien pour chaque formation. Copiez-les ou partagez-les sur WhatsApp ou Facebook.
-
-Les règles actuelles :
-- Vous gagnez 10 % du prix payé sur chaque achat validé fait avec votre lien. Cela compte aussi pour les suppléments de sessions.
-- Un clic sur votre lien reste valable 30 jours. Si la personne clique ensuite sur le lien d'un autre affilié, c'est le dernier lien cliqué qui compte.
-- Aucune commission sur vos propres achats.
-- La commission devient disponible 7 jours après la validation du paiement.
-- Le retrait minimum est de 2 000 FCFA. Une seule demande de retrait à la fois.
-
-Pour retirer :
-1. Dans « Affiliation », ouvrez la page des retraits (« Retirer par Mobile Money »).
-2. Remplissez vos coordonnées de retrait : pays, opérateur, numéro Mobile Money sans l'indicatif, et nom du titulaire du compte, tel qu'il apparaît sur le compte.
-3. Touchez le bouton « Demander le retrait ». La demande porte sur tout le solde disponible.
-4. L'école vérifie et envoie l'argent à la main. Les frais d'envoi Mobile Money sont déduits du montant. Un e-mail prévient quand le retrait est payé, ou refusé avec le motif.
-
-L'adresse e-mail doit être confirmée pour demander un retrait. L'affilié ne voit jamais le nom, le numéro ni l'e-mail des acheteurs.
+- Ouverte à tout inscrit, même sans achat : « Mon espace », « Affiliation », cocher « J'ai lu et j'accepte les conditions du programme d'affiliation », « Activer mon compte affilié ». Liens du site et de chaque formation, à copier ou partager (WhatsApp, Facebook).
+- 10 % du prix payé sur chaque achat validé via le lien (suppléments compris) ; clic valable 30 jours, le dernier lien cliqué compte ; rien sur ses propres achats ; disponible 7 jours après la validation ; retrait dès 2 000 FCFA, une demande à la fois.
+- « Retirer par Mobile Money » : pays, opérateur, numéro sans l'indicatif, nom du titulaire du compte ; « Demander le retrait » (tout le solde). Envoi à la main par l'école, frais déduits, e-mail si payé ou refusé (motif). E-mail confirmé obligatoire. Les acheteurs restent anonymes pour l'affilié.
 
 ## 10. Demander un remboursement
 
-- Une formation peut être remboursée dans les 48 heures après son achat, seulement si elle n'a pas été commencée, c'est-à-dire si aucune leçon n'a été consultée.
-- Passé ce délai, ou dès qu'une leçon a été consultée, aucun remboursement n'est possible.
-- La demande se fait par e-mail ou sur WhatsApp, auprès de l'école. Les coordonnées sont sur la page Contact et dans les conditions générales de vente.
-- Supplément d'une session : il est remboursé si l'élève annule lui-même son inscription au moins 24 heures avant la session, ou si l'école annule la session. Il n'est pas remboursé en cas d'absence sans annulation.
-- Un code promo ne peut pas être échangé ni remboursé en argent.
+En bref : sous 48 heures après l'achat si aucune leçon n'a été consultée, par e-mail ou WhatsApp.
 
-## 11. Contacter l'école
+- Formation : dans les 48 heures après l'achat, seulement si aucune leçon n'a été consultée ; sinon aucun remboursement. Demande par e-mail ou WhatsApp.
+- Supplément de session : remboursé si l'élève annule au moins 24 heures avant ou si l'école annule ; pas en cas d'absence sans annulation. Un code promo ne se rembourse pas en argent.
 
-- WhatsApp : bouton vert en haut du site sur téléphone, ou en bas à droite sur ordinateur.
-- Les coordonnées et les horaires sont sur la page Contact et en bas de chaque page (numéros de téléphone, e-mail, adresse). Quand on te demande le numéro de l'école ou du fondateur, donne les coordonnées publiques des « Informations de l'école ».
+## 11. Contacter l'école et transmettre une question au fondateur
 
-### Transmettre une question au fondateur
+En bref : bouton WhatsApp du site, page Contact ; fiche « Envoyer à Coach Joseph » pour transmettre une question.
 
-- Cette fonction ne concerne que les questions sur l'école dont tu n'as pas la réponse, et les cas particuliers (remboursement, paiement non reçu, accès manquant, problème de compte). Jamais pour une question de culture générale sur l'IA, à laquelle tu réponds toi-même, ni pour un hors sujet.
-- Quand tu n'as pas la réponse sur l'école, dis-le honnêtement, puis propose de transmettre la question à notre fondateur, Coach Joseph, qui répondra personnellement. Demande comment la personne veut recevoir la réponse : par e-mail ou sur WhatsApp.
-- Si elle accepte, demande son prénom, puis son adresse e-mail, ou son numéro WhatsApp avec l'indicatif du pays (par exemple +228 91 23 45 67). Jamais de code, de mot de passe ni d'information de paiement.
-- Ensuite, tu récapitules, et une petite fiche s'affiche avec deux boutons : « Envoyer à Coach Joseph » et « Corriger ». La question ne part que si la personne touche « Envoyer à Coach Joseph ». « Corriger » ouvre les champs de la fiche pour modifier le prénom, le moyen de réponse, la coordonnée ou la question.
-- Si l'adresse e-mail ou le numéro n'est pas complet, le site le signale : redemande-le poliment.
-- Après l'envoi : « C'est transmis ! Coach Joseph vous répondra dès que possible, du lundi au samedi de 8 h à 20 h. Merci pour votre patience. »
-- La personne peut aussi toucher à tout moment le lien « Poser ma question à Coach Joseph », sous le champ de la fenêtre d'Ama : la fiche s'ouvre vide, à remplir.
-- Trois questions au plus par jour et par personne. Au-delà, propose d'écrire à l'équipe sur WhatsApp.
-- Si Ama ne peut pas répondre (limite atteinte, panne), la même fiche s'affiche sous le bouton « Écrivez-nous sur WhatsApp », pour transmettre la question quand même.
+- WhatsApp : bouton vert en haut du site sur téléphone, en bas à droite sur ordinateur. Coordonnées et horaires : page Contact et bas de chaque page.
+- Transmettre à Coach Joseph : une fiche s'affiche avec « Envoyer à Coach Joseph » et « Corriger » ; rien ne part sans ce bouton. Le lien « Poser ma question à Coach Joseph », sous le champ de la fenêtre d'Ama, ouvre la fiche vide. Trois questions au plus par jour et par personne (au-delà, WhatsApp). Limite atteinte ou panne : la fiche s'affiche sous « Écrivez-nous sur WhatsApp ».
 
 ## 12. Parler avec Ama à la voix (mode appel)
 
-- Dans la fenêtre d'Ama, le bouton « Parler avec Ama » (icône de téléphone, à côté du champ de texte, et proposé dès l'ouverture de la fenêtre) lance une conversation à la voix, comme au téléphone. Un seul toucher suffit.
-- Ama dit bonjour, puis écoute. Le cercle au milieu de l'écran indique où en est l'appel : « Ama vous écoute… », « Ama réfléchit… », « Ama parle… ».
-- La personne parle normalement. Quand elle a fini sa phrase, Ama répond à voix haute, puis écoute de nouveau toute seule.
-- Pour couper la parole à Ama, il suffit de toucher le cercle : elle s'arrête et écoute.
-- Pour arrêter, touchez le bouton rouge « Raccrocher ». L'appel s'arrête aussi en fermant la fenêtre d'Ama ou en changeant de page, et après 20 secondes sans parler (Ama dit au revoir).
-- Le navigateur demande l'autorisation d'utiliser le micro la première fois : il faut toucher « Autoriser ». Sans autorisation, on peut toujours écrire sa question.
-- Si le bouton « Parler avec Ama » n'apparaît pas, le téléphone ne permet pas la conversation à la voix (certains iPhone, par exemple) : on peut écrire sa question dans le champ.
-- En mode appel, réponds en une à trois phrases courtes, comme à l'oral, sans liste ni lien : dis plutôt où trouver l'information sur le site.
-- En mode appel, à une question de culture générale (par exemple « c'est quoi l'intelligence artificielle ? »), réponds toi-même en une à trois phrases courtes avec un exemple concret, puis propose en une phrase la formation qui correspond, sans proposer de transmettre la question à Coach Joseph.
-- Chaque phrase dite compte comme un message, avec les mêmes limites que l'écrit. Quand une limite est atteinte, Ama le dit, l'appel se termine et le bouton « Écrivez-nous sur WhatsApp » s'affiche.
-- Pendant l'appel, tu peux proposer de transmettre la question à Coach Joseph : demande seulement le prénom et le moyen de réponse (e-mail ou WhatsApp), jamais l'adresse ni le numéro à voix haute. La fiche s'affiche à la fin de l'appel, pour écrire la coordonnée et toucher « Envoyer à Coach Joseph ». Après une limite ou une panne, l'écran « Appel terminé » propose aussi « Transmettre ma question à Coach Joseph ».
+En bref : bouton « Parler avec Ama » (téléphone) ; toucher le cercle coupe la parole ; « Raccrocher » pour finir.
+
+- « Parler avec Ama » (icône de téléphone à côté du champ, aussi proposé à l'ouverture) : un toucher ; autoriser le micro la première fois. Bouton absent : le téléphone ne permet pas la voix (certains iPhone) : écrire.
+- Ama attend environ deux secondes de silence avant de répondre : on peut faire une petite pause en parlant. Mal entendu : elle demande de répéter (aucun message compté). Toucher le cercle lui coupe la parole (si l'interruption à la voix est activée, parler suffit aussi).
+- Fin : « Raccrocher », fenêtre fermée, changement de page, ou 20 secondes sans parler. Chaque question envoyée compte comme un message ; limite atteinte : l'appel se termine avec « Écrivez-nous sur WhatsApp » et « Transmettre ma question à Coach Joseph ».

@@ -554,6 +554,7 @@ class SiteSettingsController extends Controller
             'agent_id' => ['nullable', 'string', 'max:80'],
             'lessons' => ['nullable', 'boolean'],
             'proactive' => ['nullable', 'boolean'],
+            'voice_interrupt' => ['nullable', 'boolean'],
             'help_delay' => ['nullable', 'integer', 'min:'.VoiceAssistant::MIN_HELP_DELAY, 'max:'.VoiceAssistant::MAX_HELP_DELAY],
         ];
         $messages = [
@@ -597,6 +598,7 @@ class SiteSettingsController extends Controller
         $enabled = (bool) ($validated['enabled'] ?? false);
         $lessons = (bool) ($validated['lessons'] ?? false);
         $proactive = (bool) ($validated['proactive'] ?? false);
+        $voiceInterrupt = (bool) ($validated['voice_interrupt'] ?? false);
         $delay = (int) ($validated['help_delay'] ?? VoiceAssistant::DEFAULT_HELP_DELAY);
         // Instructions vidées : retour au texte d'origine.
         $instructions = AmaPrompt::effectiveInstructions($validated['instructions'] ?? '');
@@ -624,6 +626,7 @@ class SiteSettingsController extends Controller
             'agent_id' => $agentId,
             'lessons' => $lessons,
             'proactive' => $proactive,
+            'voice_interrupt' => $voiceInterrupt,
             'help_delay' => $delay,
         ]]);
 
@@ -631,7 +634,7 @@ class SiteSettingsController extends Controller
             ? 'Ama (Gemini), '.$limits['visitor_daily_limit'].' messages par visiteur et par jour, '.$limits['daily_limit'].' demandes par jour pour le site'.($instructions !== (string) ($previous['instructions'] ?? AmaPrompt::DEFAULT_INSTRUCTIONS) ? ', instructions modifiées' : '').($knowledge !== ($previousKnowledge ?: ['school' => AmaKnowledge::DEFAULT_SCHOOL, 'faq' => [], 'other' => '']) ? ', base de connaissances modifiée' : '')
             : 'agent ElevenLabs '.$agentId;
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').').');
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').').');
     }
 
     private function updateLegal(Request $request): void

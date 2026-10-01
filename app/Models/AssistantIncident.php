@@ -10,13 +10,15 @@ use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Incident de l'assistante (limite atteinte, erreur ou silence de Gemini), pour l'admin.
+ * Incident de l'assistante (limite atteinte, erreur ou silence de Gemini), pour l'admin. Type « response_timing » :
+ * durées mesurées d'une réponse (colonne timings, en millisecondes), sans aucune donnée personnelle.
  * Le détail ne contient jamais la clé d'API. Effacé après 90 jours, comme les conversations.
  *
  * @property int $id
  * @property int|null $assistant_conversation_id
  * @property AssistantIncidentType $type
  * @property string|null $detail
+ * @property array<string, int|string|null>|null $timings
  * @property CarbonImmutable|null $created_at
  */
 class AssistantIncident extends Model
@@ -25,14 +27,14 @@ class AssistantIncident extends Model
 
     public const UPDATED_AT = null;
 
-    protected $fillable = ['assistant_conversation_id', 'type', 'detail'];
+    protected $fillable = ['assistant_conversation_id', 'type', 'detail', 'timings'];
 
     /**
      * @return array<string, string>
      */
     protected function casts(): array
     {
-        return ['type' => AssistantIncidentType::class];
+        return ['type' => AssistantIncidentType::class, 'timings' => 'array'];
     }
 
     /**

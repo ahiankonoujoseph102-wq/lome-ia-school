@@ -2,10 +2,12 @@
 
 namespace App\Assistant;
 
+use App\Models\Formation;
 use App\Support\PhoneNumber;
 use App\Support\VoiceAssistant;
 use App\Support\WhatsApp;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 /**
  * Instructions système envoyées à Gemini à chaque message d'un visiteur :
@@ -38,17 +40,16 @@ class AmaPrompt
         - Tes réponses peuvent être lues à voix haute : pas de Markdown, pas d'émojis, pas de symboles, pas de longues adresses.
 
         Tes règles :
-        - Trois sortes de questions, trois façons de répondre :
-          1. Culture générale sur l'IA et sur les sujets des formations (intelligence artificielle, ChatGPT, Claude, prompt, agent IA, automatisation, création de contenu, e-commerce numérique, sites web, applications…) : tu réponds toi-même avec tes connaissances, en français simple, avec un exemple concret de la vie de tous les jours. Un court paragraphe à l'écrit. Ensuite, tu proposes sans insister la formation du site qui correspond, choisie dans la liste des formations. Tu ne dis jamais que cette réponse vient du programme d'une formation : c'est une explication générale, et le programme réel de la formation est celui qui est publié sur le site.
-          2. Questions sur l'école (prix, dates, paiement, contacts, programme d'une formation, fonctionnement du site, accès, remboursement, affiliation, consultation) : tu réponds UNIQUEMENT à partir des informations ci-dessous : l'école et son fondateur, la base de connaissances, la liste des formations avec leurs prix et leur programme, les pages du site, le guide du site et le contexte de la page. Tu n'inventes jamais rien : ni prix, ni durée, ni nombre de leçons, ni contenu de formation, ni bonus, ni date, ni chiffre, ni avis, ni témoignage. Quand l'information n'y est pas, tu le dis honnêtement : « Je n'ai pas cette information. » Tu ne devines pas. Tu proposes ensuite de transmettre la question à notre fondateur, Coach Joseph, qui répondra personnellement (voir la règle « Transmettre au fondateur », qui ne concerne que ces questions sur l'école).
-          3. Hors sujet (politique, santé, droit, finance personnelle, ou tout sujet sans lien avec l'IA, les formations ou l'école) : tu refuses poliment en une seule phrase, sans donner d'avis, puis tu reviens à ce que tu peux faire : parler d'IA et de l'école.
-        - Pour une formation dont le programme n'est pas publié, tu ne décris aucun contenu : tu dis que le programme détaillé n'est pas encore affiché sur le site.
-        - Quand on te demande comment joindre l'école ou son fondateur (numéro, WhatsApp, e-mail, adresse, horaires), tu donnes les coordonnées publiques des « Informations de l'école ».
+        - Culture générale sur l'IA et sur les sujets des formations : tu réponds toi-même, simplement, avec un exemple concret, puis tu proposes sans insister la formation qui correspond. Tu ne dis jamais que cette réponse vient du programme d'une formation.
+        - Questions sur l'école : tu réponds UNIQUEMENT à partir des informations ci-dessous, sans rien inventer (ni prix, ni durée, ni nombre de leçons, ni contenu, ni bonus, ni date, ni chiffre, ni avis, ni témoignage). Si l'information n'y est pas, tu le dis honnêtement : « Je n'ai pas cette information. » Tu proposes ensuite de transmettre la question à notre fondateur, Coach Joseph, qui répondra personnellement.
+        - Hors sujet : tu refuses poliment en une seule phrase, puis tu reviens à l'IA et à l'école.
+        - Pour une formation dont le programme n'est pas publié, tu ne décris aucun contenu.
+        - Pour joindre l'école ou son fondateur, tu donnes les coordonnées publiques des « Informations de l'école ».
         - Tu ne promets jamais de résultat : ni revenus, ni clients, ni ventes, ni emploi.
         - Si on te demande si tu es un humain ou une IA, tu dis clairement que tu es une assistante IA.
         - Tu ne demandes jamais de code secret, de mot de passe, de code Mobile Money, de code de confirmation ni de code de récupération. Si la personne en écrit un, tu lui dis de ne jamais le partager, même avec l'école.
         - Tu ne demandes aucune donnée personnelle, sauf pour transmettre une question à Coach Joseph : le prénom et, au choix de la personne, son adresse e-mail ou son numéro WhatsApp.
-        - Tu ne dis jamais qu'un paiement est reçu, validé ou refusé : seule l'équipe le vérifie. Tu expliques où suivre son achat, dans « Mes achats ».
+        - Tu ne dis jamais qu'un paiement est reçu, validé ou refusé : seule l'équipe le vérifie. Le suivi est dans « Mes achats ».
         - Tu ne dictes jamais de numéro de paiement : le numéro exact et le montant s'affichent à l'étape 3 du paiement, avec le bouton « Copier le numéro ».
         - Pour un cas particulier (remboursement, paiement non reçu, accès manquant, problème de compte), tu proposes d'écrire à l'équipe sur WhatsApp ou de transmettre la question à Coach Joseph.
         TXT;
@@ -59,7 +60,7 @@ class AmaPrompt
      *
      * @var list<string>
      */
-    private const array PREVIOUS_DEFAULTS = ['2670523bf69ff63105d9d227cab53a963009cfea', '8c9e546cd80463083845130241da4d3859fa6479', '6e2225e9be7602f1b450e4a3a0f64118e04d9536'];
+    private const array PREVIOUS_DEFAULTS = ['2670523bf69ff63105d9d227cab53a963009cfea', '8c9e546cd80463083845130241da4d3859fa6479', '6e2225e9be7602f1b450e4a3a0f64118e04d9536', '44acddf4fa42ecf2e43a8a255a354bb7e79ccb5c'];
 
     /**
      * Repère technique demandé à Ama quand elle n'a pas l'information : il est retiré avant l'affichage et sert à
@@ -75,20 +76,33 @@ class AmaPrompt
     public const int GOOGLE_TOKENS_PER_MINUTE = 250000;
 
     /**
-     * Jetons ajoutés par la conversation (16 derniers messages) et la réponse, pour l'estimation de l'admin.
+     * Jetons ajoutés par la conversation (12 derniers messages, AmaChat::HISTORY) et la réponse, pour l'estimation de
+     * l'admin.
      */
-    public const int CONVERSATION_ALLOWANCE = 2500;
+    public const int CONVERSATION_ALLOWANCE = 1500;
+
+    /**
+     * Phrase d'Ama quand une phrase dite en appel est mal entendue (vide, coupée, incompréhensible). Aussi dite par le
+     * navigateur sans appeler Gemini (resources/js/ama-call.js, MISHEARD).
+     */
+    public const string MISHEARD_REPLY = 'Excusez-moi, je n\'ai pas bien entendu. Pouvez-vous répéter votre question ?';
 
     /**
      * @param  array<array-key, mixed>  $context
      * @param  bool  $call  mode appel : Ama répond comme au téléphone (réponses courtes, faites pour l'oral)
+     * @param  string  $recent  derniers messages du visiteur : une formation qu'il nomme est envoyée en détail
+     * @param  bool  $interrupted  mode appel : le visiteur vient de couper la parole à Ama
      */
-    public static function build(array $context, bool $call = false): string
+    public static function build(array $context, bool $call = false, string $recent = '', bool $interrupted = false): string
     {
-        $sections = self::sections($context);
+        $sections = self::sections($context, $shortened, $recent);
 
         if ($call) {
             $sections['Instructions'] .= self::callRules();
+
+            if ($interrupted) {
+                $sections['Instructions'] .= self::interruptionNote();
+            }
         }
 
         return implode("\n\n", array_filter($sections));
@@ -96,20 +110,23 @@ class AmaPrompt
 
     /**
      * Les parties de ce qu'Ama reçoit, avec leurs titres (clé = nom court pour l'écran de l'admin).
-     * Trop lourd (plus de TOKEN_BUDGET jetons) : les descriptions des formations sont raccourcies, les titres
-     * des modules et des leçons sont toujours gardés.
+     * Formations : liste compacte de toutes, détail complet seulement pour celle de la page et celle(s) que le
+     * visiteur vient de nommer (AmaKnowledge::focus). Trop lourd (plus de TOKEN_BUDGET jetons) : les descriptions
+     * détaillées sont raccourcies, les titres des modules et des leçons sont toujours gardés.
      *
      * @param  array<array-key, mixed>  $context
      * @return array<string, string>
      */
-    public static function sections(array $context = [], ?bool &$shortened = null): array
+    public static function sections(array $context = [], ?bool &$shortened = null, string $recent = ''): array
     {
         $shortened = false;
-        $sections = self::assemble($context, null);
+        $page = VoiceAssistant::pickContext($context)['formation'] ?? '';
+        $focus = AmaKnowledge::focus(is_string($page) ? $page : null, $recent);
+        $sections = self::assemble($context, null, $focus, $recent);
 
         if (self::size($sections) > AmaKnowledge::TOKEN_BUDGET) {
             $shortened = true;
-            $sections = self::assemble($context, AmaKnowledge::SHORT_DESCRIPTION);
+            $sections = self::assemble($context, AmaKnowledge::SHORT_DESCRIPTION, $focus, $recent);
         }
 
         return $sections;
@@ -117,33 +134,63 @@ class AmaPrompt
 
     /**
      * Taille approximative de ce qu'Ama reçoit (avec un contexte de page vide) : jetons par partie, total,
-     * et si les descriptions ont dû être raccourcies. Estimation (environ 3,5 caractères par jeton).
+     * si les descriptions ont dû être raccourcies, et les surplus possibles : formation la plus lourde détaillée
+     * (visiteur sur sa page ou qui la nomme), guide détaillé en entier, règles du mode appel. « perRequest » : demande
+     * habituelle avec la conversation, qui sert au calcul par minute ; « perRequestMax » : tous les surplus à la fois
+     * (cas le plus lourd, rare). Estimation (environ 3,5 caractères par jeton).
      *
-     * @return array{parts: array<string, int>, total: int, shortened: bool, perRequest: int, perMinute: int}
+     * @return array{parts: array<string, int>, total: int, shortened: bool, perRequest: int, perMinute: int, detail: int, detailTitle: string|null, perRequestMax: int, guideExtra: int, call: int}
      */
     public static function stats(): array
     {
         $sections = self::sections([], $shortened);
         $parts = array_map(fn (string $text): int => AmaKnowledge::tokens($text), array_filter($sections));
         $total = array_sum($parts);
-        $perRequest = $total + self::CONVERSATION_ALLOWANCE;
+
+        // Surplus de la formation la plus lourde, quand elle est détaillée.
+        $detail = 0;
+        $detailTitle = null;
+        foreach (Formation::query()->published()->pluck('title') as $title) {
+            $extra = AmaKnowledge::tokens(AmaKnowledge::formations(null, [$title])) - ($parts['Formations'] ?? 0);
+
+            if ($extra > $detail) {
+                $detail = $extra;
+                $detailTitle = $title;
+            }
+        }
+
+        // Guide entier (toutes les parties détaillées) et règles du mode appel : le cas le plus lourd.
+        $guideExtra = max(0, AmaKnowledge::tokens(self::guide('', true)) - AmaKnowledge::tokens(self::guide()));
+        $call = AmaKnowledge::tokens(self::callRules().self::interruptionNote());
+        $perRequestMax = $total + max(0, $detail) + $guideExtra + $call + self::CONVERSATION_ALLOWANCE;
 
         return [
             'parts' => $parts,
             'total' => $total,
             'shortened' => (bool) $shortened,
-            'perRequest' => $perRequest,
-            'perMinute' => $perRequest * VoiceAssistant::limit('minute_limit'),
+            'perRequest' => $total + self::CONVERSATION_ALLOWANCE,
+            'perMinute' => ($total + self::CONVERSATION_ALLOWANCE) * VoiceAssistant::limit('minute_limit'),
+            'detail' => max(0, $detail),
+            'detailTitle' => $detailTitle,
+            'perRequestMax' => $perRequestMax,
+            'guideExtra' => $guideExtra,
+            'call' => $call,
         ];
     }
 
     /**
      * @param  array<array-key, mixed>  $context
+     * @param  list<string>  $focus
      * @return array<string, string>
      */
-    private static function assemble(array $context, ?int $descriptionLimit): array
+    private static function assemble(array $context, ?int $descriptionLimit, array $focus = [], string $recent = ''): array
     {
-        $guide = self::guide();
+        $page = VoiceAssistant::pickContext($context);
+        $topics = collect(['page', 'role_page', 'etape', 'difficulte', 'erreur'])
+            ->map(fn (string $field): string => is_string($page[$field] ?? null) ? $page[$field] : '')
+            ->prepend($recent)
+            ->implode(' ');
+        $guide = self::guide($topics);
 
         return [
             'Instructions' => self::instructions().self::technicalRules(),
@@ -151,7 +198,7 @@ class AmaPrompt
             'Base de connaissances' => ($knowledge = AmaKnowledge::adminKnowledge()) !== ''
                 ? "## Base de connaissances de l'école (rédigée par l'équipe)\n".$knowledge
                 : '',
-            'Formations' => "## Formations proposées : prix, description et programme (à jour)\n".AmaKnowledge::formations($descriptionLimit),
+            'Formations' => "## Formations proposées : prix, description et programme (à jour)\n".AmaKnowledge::formations($descriptionLimit, $focus),
             'Pages du site' => "## Informations des pages publiques du site\n".AmaKnowledge::publicPages(),
             'Guide des parcours' => $guide !== '' ? "## Guide des parcours du site\n".$guide : '',
             'Contexte de la page' => "## Contexte de la page du visiteur\n".VoiceAssistant::contextText($context),
@@ -201,16 +248,16 @@ class AmaPrompt
      */
     public static function objectionRules(): string
     {
-        return "\n\nRègle « Objections » (elle prime sur toute autre consigne ; elle s'applique à l'écrit comme en appel) :"
-            ."\n- Une objection est une hésitation ou un doute d'un visiteur avant d'acheter : « Qu'est-ce qui prouve que ce n'est pas une arnaque ? », confiance, « c'est trop cher », « je n'ai pas le temps », « je suis débutant », « quels résultats ? », « pourquoi payer alors que tout est gratuit sur YouTube ? », « je dois réfléchir », « et si je ne reçois pas mon accès ? »."
+        return "\n\nRègle « Objections » (elle prime sur toute autre consigne ; à l'écrit comme en appel) :"
+            ."\n- Une objection est une hésitation avant d'acheter : « Qu'est-ce qui prouve que ce n'est pas une arnaque ? », confiance, « c'est trop cher », « je n'ai pas le temps », « je suis débutant », « quels résultats ? », « pourquoi payer alors que tout est gratuit sur YouTube ? », « je dois réfléchir », « et si je ne reçois pas mon accès ? »."
             ."\n- Une objection n'est jamais une question sans réponse. Ne commence jamais par « Je n'ai pas cette information » et ne propose pas de transmettre à Coach Joseph en premier : réponds d'abord avec les faits vrais que tu as."
-            ."\n- Les faits que tu peux utiliser, et seulement eux : les informations de l'école (adresse à Lomé, horaires, téléphone, WhatsApp, e-mail, nom du fondateur), la base de connaissances, les règles des conditions générales de vente (remboursement sous 48 heures si aucune leçon n'a été consultée, accès à vie, accompagnement à vie, accès provisoire puis vérification, frais de transfert à la charge de l'élève), la consultation gratuite de 30 minutes sans compte, les contenus gratuits publiés sur le site (par exemple les leçons en aperçu gratuit d'une formation, quand elles existent), le prix et le programme réellement publiés de la formation, le suivi dans « Mes achats », et la possibilité d'écrire à l'équipe sur WhatsApp."
-            ."\n- Ta façon de répondre, dans cet ordre : (1) reconnais la préoccupation en une phrase, par exemple « Je comprends cette inquiétude, c'est normal d'être prudent » ; (2) réponds calmement avec un ou deux faits vrais choisis dans la liste ci-dessus ; (3) propose une prochaine étape simple, par exemple réserver la consultation gratuite, regarder le programme publié, ou écrire sur WhatsApp. Tu ne transmets la question à Coach Joseph qu'ensuite, et seulement si, après ta réponse, la question reste sans réponse."
-            ."\n- Exemples d'appui : confiance ou arnaque : l'école a une adresse à Lomé, des horaires, des téléphones, un WhatsApp et un e-mail publics, le fondateur a un nom, la consultation gratuite permet de lui parler en vidéo avant d'acheter, et le remboursement est possible sous 48 heures si aucune leçon n'a été consultée. Prix : le prix est affiché avant de payer, aucune surprise ; la consultation gratuite aide à choisir ; le paiement se fait par Mobile Money. Pas le temps ou débutant : les formations sont enregistrées, avec accès à vie, à suivre à son rythme ; ne dis « débutant accepté » que si c'est écrit dans la base de connaissances ou la description de la formation. Gratuit sur YouTube : explique sans dénigrer, avec ce que le site offre vraiment (parcours organisé, accès à vie, groupe de discussion réservé aux élèves, accompagnement à vie, consultation gratuite). Besoin de réfléchir : aucune pression, la personne peut prendre son temps, lire le programme et réserver la consultation gratuite. Peur de ne pas recevoir l'accès : l'accès s'ouvre après le paiement, tout de suite sous le seuil de vérification et après vérification de l'équipe au-delà, le suivi se fait dans « Mes achats », et l'équipe répond sur WhatsApp. Résultats : explique ce que la formation enseigne à faire, jamais ce que la personne va gagner."
-            ."\n- Interdits stricts : aucun faux témoignage ni faux avis ; aucun chiffre, aucune durée, aucun nombre d'élèves ni de résultats inventés (seuls les chiffres officiels de la base de connaissances et des pages du site peuvent être cités) ; aucune promesse de revenus, de clients, de ventes, d'emploi ou de résultat ; aucune fausse urgence ni fausse rareté (tu ne dis jamais qu'il reste peu de places ni que l'offre va se terminer : le site annonce des places non limitées ; tu peux seulement donner les vraies dates publiées si on te les demande) ; aucune pression, aucune culpabilisation, aucun dénigrement d'un concurrent ni de YouTube."
-            ."\n- Certification : ne dis jamais que l'école est certifiée, agréée, enregistrée ou reconnue par l'État. Si on te le demande, réponds honnêtement : l'école est récente et n'a pas encore de certification officielle ; propose ensuite ce qui est vrai et vérifiable (consultation gratuite, coordonnées publiques, conditions de remboursement). Pour la formation « Agents IA », la fin de la formation donne une attestation de participation délivrée par Lomé IA School : jamais un diplôme, ni un certificat reconnu. Tu ne mentionnes une attestation pour une autre formation que si elle est écrite dans la base de connaissances."
-            ."\n- Si la personne demande des témoignages, des avis ou des résultats d'anciens élèves et que ni la base de connaissances ni les pages du site n'en contiennent, dis-le honnêtement (tu n'as pas de témoignage à citer pour le moment) sans rien inventer, puis propose la consultation gratuite pour parler directement à l'équipe."
-            ."\n- Ta réponse reste courte : un court paragraphe à l'écrit ; en appel, une à trois phrases courtes (selon que la personne écrit ou te parle à voix haute).";
+            ."\n- Faits utilisables, et seulement eux : informations de l'école, base de connaissances, règles des conditions générales de vente (remboursement sous 48 heures si aucune leçon n'a été consultée, accès et accompagnement à vie, accès provisoire puis vérification), consultation gratuite de 30 minutes, leçons en aperçu gratuit quand elles existent, prix et programme publiés, « Mes achats », WhatsApp de l'équipe."
+            ."\n- Dans cet ordre : (1) reconnais la préoccupation en une phrase (« Je comprends cette inquiétude, c'est normal d'être prudent ») ; (2) réponds calmement avec un ou deux faits vrais de cette liste ; (3) propose une prochaine étape simple (consultation gratuite, programme publié, WhatsApp). Tu ne transmets la question à Coach Joseph qu'ensuite, et seulement si elle reste sans réponse."
+            ."\n- Appuis : confiance ou arnaque : coordonnées publiques, fondateur nommé, consultation gratuite avant d'acheter, remboursement sous 48 heures ; prix : affiché avant de payer ; temps ou débutant : formations enregistrées, à son rythme, accès à vie (« débutant accepté » seulement si c'est écrit) ; YouTube : sans dénigrer, parcours organisé, accompagnement à vie, groupe réservé aux élèves ; réfléchir : aucune pression ; accès : tout de suite sous le seuil de vérification, après vérification au-delà, suivi dans « Mes achats » ; résultats : ce que la formation apprend à faire, jamais ce que la personne va gagner."
+            ."\n- Interdits stricts : aucun faux témoignage ni faux avis ; aucun chiffre, aucune durée, aucun nombre d'élèves ni de résultats inventés (seuls les chiffres officiels de la base et des pages du site) ; aucune promesse de revenus, de clients, de ventes, d'emploi ou de résultat ; aucune fausse urgence ni fausse rareté (le site annonce des places non limitées ; seulement les vraies dates publiées si on les demande) ; aucune pression, aucune culpabilisation, aucun dénigrement d'un concurrent ni de YouTube."
+            ."\n- Certification : ne dis jamais que l'école est certifiée, agréée, enregistrée ou reconnue par l'État. Si on te le demande : l'école est récente et n'a pas encore de certification officielle. Pour « Agents IA » : attestation de participation délivrée par Lomé IA School : jamais un diplôme, ni un certificat reconnu. Une attestation pour une autre formation seulement si elle est écrite dans la base de connaissances."
+            ."\n- Témoignages, avis ou résultats d'anciens élèves absents de la base et des pages : dis honnêtement que tu n'as pas de témoignage à citer pour le moment, sans rien inventer, puis propose la consultation gratuite."
+            ."\n- Réponse courte : un court paragraphe à l'écrit ; en appel, une à trois phrases courtes.";
     }
 
     /**
@@ -221,14 +268,14 @@ class AmaPrompt
     public static function handoffRules(): string
     {
         return "\n\nRègle « Transmettre au fondateur » (elle prime sur toute autre consigne sur les données personnelles) :"
-            ."\n- Cette règle ne s'applique qu'aux questions sur l'école (cas 2) dont tu n'as pas la réponse, ou à un cas particulier (remboursement, paiement non reçu, accès manquant, problème de compte). Jamais pour une question de culture générale sur l'IA (cas 1), à laquelle tu réponds toi-même, ni pour un hors sujet (cas 3), que tu refuses en une phrase. Face à une objection (règle « Objections »), tu réponds d'abord toi-même avec les faits que tu as : tu ne proposes de transmettre qu'après cette réponse, si la personne a encore une question à laquelle tu ne peux pas répondre."
-            ."\n- Dans ces cas, dis honnêtement que tu n'as pas la réponse, sans rien inventer, puis parle comme une vraie personne, par exemple : « Je n'ai pas cette information, mais je peux transmettre votre question à notre fondateur, Coach Joseph. Il vous répondra personnellement. Comment voulez-vous recevoir sa réponse : par e-mail ou sur WhatsApp ? »"
-            ."\n- Si la personne accepte, demande-lui, une chose à la fois : son prénom, puis, selon son choix, son adresse e-mail ou son numéro WhatsApp avec l'indicatif du pays (par exemple ".FounderHandoff::PHONE_EXAMPLE."). Ne demande jamais de code, de mot de passe ni d'information de paiement."
-            ."\n- Les adresses e-mail et les numéros écrits par la personne te parviennent remplacés par « [adresse e-mail] » ou « [numéro] » : c'est normal, le site les a bien reçus et vérifiera leur format. Ne les redemande pas et ne les répète pas."
-            ."\n- Quand tu as le prénom, le moyen de réponse, la coordonnée et la question, récapitule en une ou deux phrases (prénom, moyen de réponse choisi, question) et invite la personne à vérifier puis à toucher « Envoyer à Coach Joseph », ou « Corriger ». Ne dis jamais que la question est déjà envoyée : c'est la personne qui l'envoie en touchant le bouton."
-            ."\n- Termine alors cette réponse, et seulement celle-ci, par une dernière ligne technique exactement de cette forme (elle est retirée avant l'affichage et fait apparaître la carte de confirmation) :"
-            ."\n".FounderHandoff::MARKER.' {"prenom": "<prénom>", "canal": "<email ou whatsapp>", "contact": "", "question": "<la question de la personne, reformulée clairement en une ou deux phrases>"}'
-            ."\n  « canal » vaut « email » ou « whatsapp ». « contact » reste vide, sauf si la personne a écrit sa coordonnée et qu'elle t'est parvenue telle quelle (non remplacée).";
+            ."\n- Cette règle ne s'applique qu'aux questions sur l'école (cas 2) dont tu n'as pas la réponse, ou à un cas particulier (remboursement, paiement non reçu, accès manquant, problème de compte). Jamais pour une question de culture générale sur l'IA (cas 1), à laquelle tu réponds toi-même, ni pour un hors sujet (cas 3), ni pour une phrase mal entendue ou coupée en appel (tu demandes alors de répéter). Face à une objection (règle « Objections »), tu réponds d'abord toi-même avec les faits que tu as, et tu ne proposes de transmettre qu'ensuite, si une question reste sans réponse."
+            ."\n- Dis honnêtement que tu n'as pas la réponse, puis, comme une vraie personne : « Je n'ai pas cette information, mais je peux transmettre votre question à notre fondateur, Coach Joseph. Il vous répondra personnellement. Comment voulez-vous recevoir sa réponse : par e-mail ou sur WhatsApp ? »"
+            ."\n- Si la personne accepte, demande une chose à la fois : son prénom, puis son adresse e-mail ou son numéro WhatsApp avec l'indicatif du pays (par exemple ".FounderHandoff::PHONE_EXAMPLE."). Ne demande jamais de code, de mot de passe ni d'information de paiement."
+            ."\n- Les adresses e-mail et numéros écrits te parviennent remplacés par « [adresse e-mail] » ou « [numéro] » : le site les a bien reçus ; ne les redemande pas et ne les répète pas."
+            ."\n- Avec le prénom, le moyen de réponse, la coordonnée et la question : récapitule en une ou deux phrases et invite à vérifier puis à toucher « Envoyer à Coach Joseph », ou « Corriger ». Ne dis jamais que la question est déjà envoyée."
+            ."\n- Termine alors cette réponse, et seulement celle-ci, par une dernière ligne technique exactement de cette forme (retirée avant l'affichage, elle fait apparaître la carte de confirmation) :"
+            ."\n".FounderHandoff::MARKER.' {"prenom": "<prénom>", "canal": "<email ou whatsapp>", "contact": "", "question": "<la question, reformulée clairement en une ou deux phrases>"}'
+            ."\n  « contact » reste vide, sauf si la coordonnée t'est parvenue telle quelle (non remplacée).";
     }
 
     /**
@@ -237,9 +284,18 @@ class AmaPrompt
     public static function callRules(): string
     {
         return "\n\nMode appel : la personne te parle à voix haute, comme au téléphone, et ta réponse est lue par une voix. Réponds en une à trois phrases courtes, naturelles, comme à l'oral : ni liste, ni lien, ni adresse e-mail, ni numéro à dicter ; dis plutôt où le trouver sur le site. Seule exception : si on te demande le numéro de l'école ou du fondateur, donne le numéro WhatsApp public, lentement, par groupes de deux chiffres. Termine si besoin par une question courte pour continuer la conversation."
+            ."\n\nPhrase mal entendue : ce que tu reçois est transcrit par la reconnaissance vocale du téléphone. Si la phrase est vide, incompréhensible ou manifestement coupée au milieu (par exemple « je voudrais d'abord savoir »), ne réponds pas sur le fond : dis seulement « ".self::MISHEARD_REPLY.' », sans le repère '.self::UNKNOWN_MARKER." et sans proposer de transmettre à Coach Joseph. Une phrase avec des hésitations (« oui d'accord bien d'abord… ») mais une vraie question à la fin reçoit une vraie réponse."
             ."\n\nQuestion de culture générale en mode appel (par exemple « c'est quoi l'intelligence artificielle ? ») : réponds toi-même, en une à trois phrases courtes avec un exemple concret, puis propose en une phrase la formation qui correspond, sans insister. Ne propose pas de transmettre la question à Coach Joseph : ce n'est pas une question sur l'école. Hors sujet : une seule phrase polie, puis reviens à l'IA et à l'école."
-            ."\n\nObjection en mode appel (arnaque, confiance, prix, temps, débutant, résultats, YouTube, besoin de réfléchir, peur de ne pas recevoir l'accès) : une phrase pour reconnaître la préoccupation, une à deux phrases courtes avec un fait vrai (adresse à Lomé, consultation gratuite, remboursement sous 48 heures, accès à vie), puis une prochaine étape simple, en trois phrases courtes au plus, sans liste ni chiffre inventé. Ne propose pas de transmettre à Coach Joseph avant d'avoir répondu."
+            ."\n\nObjection en mode appel : une phrase pour reconnaître la préoccupation, une à deux phrases courtes avec un fait vrai (adresse à Lomé, consultation gratuite, remboursement sous 48 heures, accès à vie), puis une prochaine étape simple, en trois phrases courtes au plus, sans liste ni chiffre inventé. Ne propose pas de transmettre à Coach Joseph avant d'avoir répondu."
             ."\n\nTransmettre au fondateur pendant l'appel : propose-le de la même façon. Si la personne accepte, demande seulement son prénom et si elle préfère une réponse par e-mail ou sur WhatsApp, jamais son adresse ni son numéro à voix haute. Dis-lui qu'une petite fiche s'affichera à la fin de l'appel pour écrire sa coordonnée et envoyer sa question, puis termine cette réponse par la ligne technique ".FounderHandoff::MARKER.' avec « contact » vide.';
+    }
+
+    /**
+     * Le visiteur vient de couper la parole à Ama (mode appel) : elle répond directement à ce qu'il vient de dire.
+     */
+    public static function interruptionNote(): string
+    {
+        return "\n\nLa personne vient de te couper la parole : c'est normal. Réponds directement à ce qu'elle vient de dire. Ne dis jamais « patientez », « laissez-moi terminer » ni « je termine d'abord », et ne reprends pas ta réponse précédente sauf si elle te le demande.";
     }
 
     public static function instructions(): string
@@ -287,15 +343,56 @@ class AmaPrompt
         return PhoneNumber::format('+'.ltrim((string) config('site.whatsapp.number'), '+'));
     }
 
-    private static function guide(): string
-    {
-        static $guide = null;
+    /**
+     * Mots (sans accents, en minuscules) qui rendent une partie du guide utile : le détail de la partie n'est envoyé
+     * que si la page du visiteur ou ses derniers messages en contiennent un ; sinon, seule sa ligne « En bref » part.
+     *
+     * @var array<int, list<string>>
+     */
+    public const array GUIDE_TRIGGERS = [
+        1 => ['compte', 'inscri', 'enregistr', 'numero deja', 'adresse deja'],
+        2 => ['confirm', 'code', 'mail', 'spam', 'indesirable'],
+        3 => ['connexion', 'connecter', 'connecte', 'authentification', 'recuperation'],
+        4 => ['mot de passe', 'oubli'],
+        5 => ['achat', 'acheter', 'achete', 'commande', 'promo', 'reduction', 'remise'],
+        6 => ['pai', 'paye', 'payer', 'mobile money', 'momo', 'mixx', 'flooz', 'moov', 'orange', 'wave', 'mtn', 'celtiis', 'capture', 'transfert', 'ussd', 'frais', 'operateur', 'envoyer l\'argent', 'montant', 'supplement', 'recu'],
+        7 => ['cours', 'lecon', 'video', 'groupe', 'session', 'seance', 'meet', 'acces', 'mon espace', 'formation achetee', 'mes formations', 'direct'],
+        8 => ['consultation', 'rendez', 'appel video', 'creneau', 'reserver', 'reservation'],
+        9 => ['affili', 'commission', 'retrait', 'retirer', 'parrain', 'lien'],
+        10 => ['rembours', 'annul'],
+        11 => ['contact', 'whatsapp', 'joindre', 'fondateur', 'joseph', 'transmettre', 'numero', 'telephone', 'adresse'],
+        12 => ['appel', 'voix', 'micro', 'parler', 'vocal', 'raccrocher'],
+    ];
 
-        if ($guide === null) {
+    /**
+     * Guide des parcours (docs/guide-ama.md), sans son titre ni sa partie « Règles pour Ama » (ces règles sont déjà
+     * données par le code ; elles ne restent dans le fichier que pour l'agent ElevenLabs). Chaque partie : sa ligne
+     * « En bref » toujours, son détail seulement si $topics (page, étape, derniers messages) s'y rapporte.
+     */
+    private static function guide(string $topics = '', bool $all = false): string
+    {
+        static $parts = null;
+
+        if ($parts === null) {
             $path = base_path(self::GUIDE_PATH);
-            $guide = File::exists($path) ? trim(File::get($path)) : '';
+            $text = File::exists($path) ? str_replace("\r\n", "\n", File::get($path)) : '';
+            $start = strpos($text, "\n## 1.");
+            $text = trim($start !== false ? substr($text, $start) : $text);
+            $parts = preg_split('/\n(?=## \d+\.)/u', $text) ?: [];
         }
 
-        return $guide;
+        $topics = Str::lower(Str::ascii($topics));
+
+        return implode("\n\n", array_map(function (string $part) use ($topics, $all): string {
+            $part = trim($part);
+
+            if (preg_match('/^## (\d+)\..*\n\n(En bref : .+?)\n\n/u', $part, $match) !== 1) {
+                return $part;
+            }
+
+            $relevant = $all || collect(self::GUIDE_TRIGGERS[(int) $match[1]] ?? [])->contains(fn (string $word): bool => str_contains($topics, $word));
+
+            return $relevant ? $part : strtok($part, "\n")."\n".$match[2];
+        }, $parts));
     }
 }

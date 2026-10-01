@@ -251,11 +251,14 @@ class AmaKnowledgeTest extends TestCase
         $module = CourseModule::factory()->create(['formation_id' => $formation->id, 'title' => 'Module Exemple Lourd']);
         Lesson::factory()->create(['course_module_id' => $module->id, 'title' => 'Leçon Exemple Lourde']);
 
-        $prompt = AmaPrompt::build([]);
-        $stats = AmaPrompt::stats();
+        // Visiteur sur la page de cette formation : elle est détaillée, mais sa description est raccourcie.
+        $context = ['formation' => $formation->title];
+        $prompt = AmaPrompt::build($context);
+        AmaPrompt::sections($context, $shortened);
 
-        $this->assertTrue($stats['shortened']);
-        $this->assertLessThan(AmaKnowledge::TOKEN_BUDGET, $stats['total']);
+        $this->assertTrue($shortened);
+        $this->assertLessThan(AmaKnowledge::TOKEN_BUDGET, AmaKnowledge::tokens($prompt));
+        $this->assertLessThan(AmaKnowledge::TOKEN_BUDGET, AmaPrompt::stats()['total']);
         $this->assertStringContainsString('Module Exemple Lourd : Leçon Exemple Lourde', $prompt);
         $this->assertStringContainsString('…', $prompt);
     }

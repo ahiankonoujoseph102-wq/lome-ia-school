@@ -776,6 +776,7 @@ Alpine.data('voiceAssistant', (config) => ({
     call: null,
     callState: 'idle',
     callEnd: null,
+    bargeInUnavailable: false,
     // « Transmettre au fondateur » : carte de confirmation (ou formulaire de relève) et fiche proposée pendant un appel.
     handoff: null,
     callHandoff: null,
@@ -1222,11 +1223,25 @@ Alpine.data('voiceAssistant', (config) => ({
         this.usedVoice = true;
         let amaIndex = null;
 
+        this.bargeInUnavailable = false;
         this.call = createVoiceCall({
             Recognition,
             synth: window.speechSynthesis,
             Utterance: window.SpeechSynthesisUtterance,
             ask: (text, options) => this.askAloud(text, options),
+            now: () => (window.performance?.now ? window.performance.now() : Date.now()),
+            // Interruption à la voix : seulement si l'admin l'a activée (expérimental).
+            bargeIn: Boolean(config.voiceInterrupt),
+            onBargeInUnavailable: () => {
+                this.bargeInUnavailable = true;
+            },
+            onMisheard: (text) => {
+                // Ama demande de répéter : rien n'est envoyé au serveur (aucun message compté).
+                this.messages.push({ from: 'ama', text, fallback: false });
+                amaIndex = null;
+                this.scrollDown();
+            },
+            onTiming: (durations, result) => this.sendTiming(durations, result),
             onState: (state) => {
                 this.callState = state;
             },
@@ -1279,10 +1294,36 @@ Alpine.data('voiceAssistant', (config) => ({
 
     get callHint() {
         return {
-            listening: 'Parlez quand vous voulez.',
+            listening: 'Parlez quand vous voulez. Ama répond quand vous avez fini.',
             thinking: 'Un instant, s\'il vous plaît.',
-            speaking: 'Touchez le cercle pour lui couper la parole.',
+            speaking: config.voiceInterrupt && !this.bargeInUnavailable
+                ? 'Parlez ou touchez le cercle pour lui couper la parole.'
+                : 'Touchez le cercle pour lui couper la parole.',
         }[this.callState] ?? '';
+    },
+
+    // Durées d'un tour de l'appel (millisecondes, sans aucun texte) : ajoutées à la mesure du serveur pour l'admin.
+    sendTiming(durations, result) {
+        if (!config.timingEndpoint || !result?.timing || !result?.conversation) {
+            return;
+        }
+
+        try {
+            fetch(config.timingEndpoint, {
+                method: 'POST',
+                credentials: 'same-origin',
+                keepalive: true,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                },
+                body: JSON.stringify({ timing: result.timing, conversation: result.conversation, ...durations }),
+            }).catch(() => {});
+        } catch {
+            // Mesure perdue : sans importance.
+        }
     },
 
     // Toucher le cercle : Ama s'arrête de parler et le micro s'ouvre (pendant l'écoute : la phrase part tout de suite).
@@ -1435,7 +1476,7 @@ Alpine.data('voiceAssistant', (config) => ({
     },
 
     // Message dit pendant l'appel : envoyé au serveur, réponse reçue en continu (une ligne JSON par morceau).
-    async askAloud(message, { onText, signal } = {}) {
+    async askAloud(message, { onText, signal, interrupted = false } = {}) {
         let result = null;
         const timeout = new AbortController();
         const timer = setTimeout(() => timeout.abort(), 45000);
@@ -1448,11 +1489,11 @@ Alpine.data('voiceAssistant', (config) => ({
                 signal: timeout.signal,
                 headers: {
                     'Content-Type': 'application/json',
-                    Accept: 'application/x-ndjson, application/json',
+                    Accept: 'text/event-stream, application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
                 },
-                body: JSON.stringify({ message, conversation: this.conversation, context: pick(this.context), voice: true }),
+                body: JSON.stringify({ message, conversation: this.conversation, context: pick(this.context), voice: true, interrupted }),
             });
 
             if (!response.ok) {

@@ -263,6 +263,15 @@ class VoiceAssistant
         return (bool) config('site.voice_assistant.lessons', false);
     }
 
+    /**
+     * Interruption à la voix pendant un appel (expérimental) : le micro reste ouvert pendant qu'Ama parle et elle se
+     * tait dès que le visiteur parle. Éteinte par défaut (réglage « voice_interrupt » de l'admin).
+     */
+    public static function voiceInterrupt(): bool
+    {
+        return (bool) config('site.voice_assistant.voice_interrupt', false);
+    }
+
     public static function proactiveHelp(): bool
     {
         return (bool) config('site.voice_assistant.proactive', true);
@@ -483,6 +492,10 @@ class VoiceAssistant
             'context' => self::context($request),
             'pageKey' => $request->route()?->getName() ?? '',
             'proactive' => self::proactiveHelp(),
+            // Mode appel : interruption à la voix (expérimental, éteinte par défaut, réglée dans l'admin).
+            'voiceInterrupt' => $gemini && self::voiceInterrupt(),
+            // Mode appel : mesure des durées (sans donnée personnelle), voir AssistantController::timing.
+            'timingEndpoint' => $gemini ? route('assistant.timing') : null,
             'helpDelay' => self::helpDelay(),
             'difficulties' => self::DIFFICULTIES,
             'greeting' => self::DEFAULT_GREETING,
