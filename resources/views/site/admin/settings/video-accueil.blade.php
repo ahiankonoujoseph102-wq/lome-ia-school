@@ -5,7 +5,9 @@
 
     $video = (array) SiteSettings::get('site.home_video');
     $enabled = (bool) old('enabled', $video['enabled'] ?? true);
-    $hasLink = YouTube::id($video['video_url'] ?? null) !== null;
+    $videoId = YouTube::id($video['video_url'] ?? null);
+    $hasLink = $videoId !== null;
+    $posterUrl = \App\Support\FileStorage::publicUrl($video['poster'] ?? null);
 @endphp
 
 <x-admin.page :title="$section['title']" :back="route('admin.settings.index')" back-label="Réglages du site">
@@ -22,7 +24,7 @@
         <x-site.alert type="error">Vérifiez les champs signalés : {{ $errors->first() }}</x-site.alert>
     @endif
 
-    <form method="POST" action="{{ route('admin.settings.update', $key) }}" class="space-y-6">
+    <form method="POST" action="{{ route('admin.settings.update', $key) }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PUT')
 
@@ -38,6 +40,26 @@
             </label>
 
             <x-admin.field name="video_url" label="Lien de la vidéo YouTube" type="url" :value="$video['video_url'] ?? ''" placeholder="https://www.youtube.com/watch?v=…" hint="Accepte youtube.com/watch, youtu.be et youtube.com/shorts. Vidéo publique ou non répertoriée, intégration autorisée. Laissez vide pour masquer la section." />
+        </section>
+
+        <section class="card space-y-4 p-5 sm:p-6" data-test="home-video-poster-field">
+            <h2 class="font-semibold text-white">Image d'aperçu</h2>
+            <p class="text-sm text-slate-400">Image verticale (9:16, comme un écran de téléphone) affichée avant que le visiteur touche lecture. Elle est recadrée au centre en {{ HomeVideo::POSTER_WIDTH }} × {{ HomeVideo::POSTER_HEIGHT }} et allégée automatiquement (WebP). Sans image, la miniature YouTube est montrée entière, sur un fond flouté, sans rien couper.</p>
+            <div class="flex items-end gap-4">
+                <div class="relative aspect-[9/16] w-24 shrink-0 overflow-hidden rounded-xl bg-night-900 shadow-[0_0_0_1px_var(--color-night-600)]">
+                    @if ($posterUrl)
+                        <img src="{{ $posterUrl }}" alt="Image d'aperçu actuelle" class="size-full object-cover" width="{{ HomeVideo::POSTER_WIDTH }}" height="{{ HomeVideo::POSTER_HEIGHT }}" data-test="home-video-poster-current">
+                    @elseif ($videoId)
+                        <img src="{{ YouTube::thumbnailUrl($videoId) }}" alt="" class="absolute inset-0 size-full scale-125 object-cover opacity-60 blur-md">
+                        <span class="absolute inset-x-0 top-1/2 aspect-video -translate-y-1/2 overflow-hidden"><img src="{{ YouTube::thumbnailUrl($videoId) }}" alt="Miniature YouTube" class="size-full object-cover"></span>
+                    @endif
+                </div>
+                <p class="text-sm text-slate-400">{{ $posterUrl ? 'Image envoyée depuis l\'administration.' : 'Aucune image envoyée : miniature YouTube.' }}</p>
+            </div>
+            <x-admin.field name="poster" label="Nouvelle image d'aperçu" type="file" accept="image/png,image/jpeg,image/webp" hint="Format vertical conseillé (par exemple une capture de la vidéo). JPEG, PNG ou WebP, 8 Mo au maximum." />
+            @if ($posterUrl)
+                <label class="flex items-center gap-2 text-sm text-slate-300"><input type="hidden" name="remove_poster" value="0"><input type="checkbox" name="remove_poster" value="1" class="size-4 accent-gold-400" data-test="home-video-poster-remove"> Retirer l'image (revenir à la miniature YouTube)</label>
+            @endif
         </section>
 
         <section class="card space-y-4 p-5 sm:p-6">

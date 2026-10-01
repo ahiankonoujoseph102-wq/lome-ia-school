@@ -14,6 +14,13 @@ class HomeVideo
 
     public const string DEFAULT_SUBTITLE = 'Une courte vidéo de Coach Joseph';
 
+    /** Image d'aperçu envoyée depuis l'admin : recadrée au centre en 9:16, puis compressée en WebP. */
+    public const int POSTER_WIDTH = 540;
+
+    public const int POSTER_HEIGHT = 960;
+
+    public const string POSTER_DIRECTORY = 'site/home-video';
+
     /**
      * @return array<string, mixed>
      */
@@ -56,6 +63,22 @@ class HomeVideo
         $subtitle = trim((string) (self::settings()['subtitle'] ?? ''));
 
         return $subtitle !== '' ? $subtitle : self::DEFAULT_SUBTITLE;
+    }
+
+    /**
+     * Image d'aperçu verticale envoyée depuis l'admin (disque public), ou null : la vignette YouTube est alors
+     * affichée entière sur un fond flouté de la même image.
+     */
+    public static function posterUrl(): ?string
+    {
+        return FileStorage::publicUrl(self::posterPath());
+    }
+
+    public static function posterPath(): ?string
+    {
+        $path = trim((string) (self::settings()['poster'] ?? ''));
+
+        return $path !== '' ? $path : null;
     }
 
     /**

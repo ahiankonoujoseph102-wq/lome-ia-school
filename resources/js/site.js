@@ -18,13 +18,19 @@ import {
 } from './ama.js';
 import { isPlaybackError, listeningMessage, PLAYER_ORIGIN } from './home-video.js';
 import { bottomOffset, createInstallState, isInstalled, isIos, overlaps } from './install-app.js';
+import { initAnimatedBackgrounds } from './animated-background.js';
 
 /**
  * Apparition douce des éléments marqués data-reveal, uniquement pour ceux encore sous l'écran.
  * Le contenu reste toujours visible : l'animation n'est qu'un effet ajouté juste avant l'arrivée à l'écran.
  */
 function initReveal() {
-    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    // Moins d'animations ou économie de données : aucune animation.
+    if (
+        !('IntersectionObserver' in window) ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+        navigator.connection?.saveData === true
+    ) {
         return;
     }
 
@@ -1545,6 +1551,7 @@ const startAlpine = () => {
     window.Alpine = Alpine;
     Alpine.start();
     initReveal();
+    initAnimatedBackgrounds();
 };
 
 // Page d'un groupe de discussion : le code du chat est chargé seulement ici.

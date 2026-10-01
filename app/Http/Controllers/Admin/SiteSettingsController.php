@@ -41,7 +41,8 @@ class SiteSettingsController extends Controller
         'regles' => ['title' => 'Seuils et délais', 'text' => 'Seuil d\'accès provisoire, délai de vérification, réglages des sessions.', 'icon' => 'adjustments-horizontal'],
         'affiliation' => ['title' => 'Affiliation', 'text' => 'Taux de commission, durée des liens, délai de disponibilité, retrait minimum.', 'icon' => 'share', 'sensitive' => true],
         'textes' => ['title' => 'Textes du site', 'text' => 'Accroche de l\'accueil, présentation du formateur, questions fréquentes.', 'icon' => 'document-text'],
-        'video-accueil' => ['title' => 'Vidéo d\'accueil', 'text' => 'Vidéo YouTube verticale de l\'accueil : lien, titre, phrase, bouton TikTok et interrupteur.', 'icon' => 'play-circle'],
+        'video-accueil' => ['title' => 'Vidéo d\'accueil', 'text' => 'Vidéo YouTube verticale de l\'accueil : lien, image d\'aperçu, titre, phrase, bouton TikTok et interrupteur.', 'icon' => 'play-circle'],
+        'fond-anime' => ['title' => 'Fond animé', 'text' => 'Halo lumineux, réseau de points et icônes qui bougent doucement derrière le haut de l\'accueil et du catalogue : interrupteur.', 'icon' => 'sparkles'],
         'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
         'assistante' => ['title' => 'Assistante Ama', 'text' => 'Bouton « Parler avec notre assistante » : activation, Ama (Gemini) ou ElevenLabs, instructions, limites, lecteur de cours et aide proactive.', 'icon' => 'chat-bubble-oval-left-ellipsis'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
@@ -80,7 +81,8 @@ class SiteSettingsController extends Controller
             'regles' => $this->updateRules($request),
             'affiliation' => $this->updateAffiliate($request),
             'textes' => $this->updateTexts($request),
-            'video-accueil' => $this->updateHomeVideo($request),
+            'video-accueil' => $this->updateHomeVideo($request, $images),
+            'fond-anime' => $this->updateAnimatedBackground($request),
             'entreprises' => $this->updateBusiness($request),
             'assistante' => $this->updateVoiceAssistant($request),
             'legal' => $this->updateLegal($request),
@@ -456,7 +458,7 @@ class SiteSettingsController extends Controller
         ActivityLog::record(AdminAction::SettingsUpdated, 'Textes du site modifiés (accueil, formateur, questions fréquentes).');
     }
 
-    private function updateHomeVideo(Request $request): void
+    private function updateHomeVideo(Request $request, ImageUploader $images): void
     {
         PastedLink::cleanRequest($request, ['video_url', 'tiktok_url']);
 
@@ -466,6 +468,12 @@ class SiteSettingsController extends Controller
             'title' => ['nullable', 'string', 'max:160'],
             'subtitle' => ['nullable', 'string', 'max:200'],
             'tiktok_url' => ['nullable', 'string', 'max:500'],
+            'poster' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
+            'remove_poster' => ['nullable', 'boolean'],
+        ], [
+            'poster.image' => 'L\'image d\'aperçu doit être une image (JPEG, PNG ou WebP).',
+            'poster.mimes' => 'L\'image d\'aperçu doit être une image (JPEG, PNG ou WebP).',
+            'poster.max' => 'L\'image d\'aperçu est trop lourde (8 Mo au maximum).',
         ]);
 
         $video = trim((string) ($validated['video_url'] ?? ''));
@@ -481,19 +489,45 @@ class SiteSettingsController extends Controller
 
         $enabled = $request->boolean('enabled');
 
+        // Image d'aperçu : gardée telle quelle, remplacée par un nouvel envoi, ou retirée (vignette YouTube).
+        $poster = (string) (((array) SiteSettings::get('site.home_video'))['poster'] ?? '');
+        $posterChange = null;
+
+        if ($request->hasFile('poster')) {
+            $new = $images->cover($request->file('poster'), HomeVideo::POSTER_DIRECTORY, HomeVideo::POSTER_WIDTH, HomeVideo::POSTER_HEIGHT, field: 'poster', format: 'webp');
+            $this->deleteUploaded('poster', $poster, $images);
+            $poster = $new;
+            $posterChange = 'nouvelle image d\'aperçu';
+        } elseif ($request->boolean('remove_poster') && $poster !== '') {
+            $this->deleteUploaded('poster', $poster, $images);
+            $poster = '';
+            $posterChange = 'image d\'aperçu retirée';
+        }
+
         SiteSettings::save(['site.home_video' => [
             'enabled' => $enabled,
             'video_url' => $video,
             'title' => trim((string) ($validated['title'] ?? '')) ?: HomeVideo::DEFAULT_TITLE,
             'subtitle' => trim((string) ($validated['subtitle'] ?? '')) ?: HomeVideo::DEFAULT_SUBTITLE,
             'tiktok_url' => $tiktok,
+            'poster' => $poster,
         ]]);
 
         ActivityLog::record(AdminAction::SettingsUpdated, 'Vidéo d\'accueil modifiée ('.match (true) {
             $video === '' => 'sans lien : section masquée',
             ! $enabled => 'vidéo masquée par l\'interrupteur',
             default => 'vidéo affichée',
-        }.').');
+        }.($posterChange ? ', '.$posterChange : '').').');
+    }
+
+    private function updateAnimatedBackground(Request $request): void
+    {
+        $request->validate(['enabled' => ['nullable', 'boolean']]);
+        $enabled = $request->boolean('enabled');
+
+        SiteSettings::save(['site.animated_background' => ['enabled' => $enabled]]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, $enabled ? 'Fond animé activé (accueil et catalogue).' : 'Fond animé désactivé : fond fixe d\'origine.');
     }
 
     private function updateBusiness(Request $request): void

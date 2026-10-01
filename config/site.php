@@ -394,6 +394,20 @@ return [
         'title' => 'L\'intelligence artificielle expliquée simplement',
         'subtitle' => 'Une courte vidéo de Coach Joseph',
         'tiktok_url' => '',
+        // Image d'aperçu verticale (9:16) envoyée depuis l'admin ; vide = vignette YouTube entière sur fond flouté.
+        'poster' => '',
+    ],
+
+    /*
+    |----------------------------------------------------------------------
+    | Fond animé (accueil et haut du catalogue)
+    |----------------------------------------------------------------------
+    | Halo lumineux, réseau de points et icônes discrètes animés en CSS. Interrupteur dans l'admin
+    | (Réglages du site > Fond animé) : éteint = fond fixe d'origine, sans nouvelle mise en ligne.
+    */
+
+    'animated_background' => [
+        'enabled' => true,
     ],
 
     /*

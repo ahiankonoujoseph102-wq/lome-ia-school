@@ -15,7 +15,11 @@
     description="Découvrez nos {{ $formations->count() }} formations pratiques en IA : ChatGPT, affiches, vidéos, sites web, applications, automatisation, agents IA, business en ligne. Paiement Mobile Money."
 >
     <section class="relative isolate overflow-hidden">
-        <div class="glow pointer-events-none absolute inset-0 -z-10 opacity-70"></div>
+        @if (\App\Support\AnimatedBackground::shownOn('formations.index'))
+            @include('site.partials.animated-background', ['short' => true])
+        @else
+            <div class="glow pointer-events-none absolute inset-0 -z-10 opacity-70"></div>
+        @endif
         <div class="mx-auto max-w-6xl px-4 pt-10 pb-8 text-center sm:px-6 sm:pt-16">
             <span class="eyebrow" data-reveal>Catalogue</span>
             <h1 class="mt-4 text-3xl font-bold tracking-tight text-balance text-white sm:text-5xl" data-reveal>Nos formations en intelligence artificielle</h1>
