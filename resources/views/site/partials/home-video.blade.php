@@ -1,5 +1,6 @@
 {{--
     Vidéo d'accueil (verticale 9:16), entre le haut de page et le catalogue. Réglages : admin > Vidéo d'accueil.
+    Section courte sur téléphone : aperçu de 10 rem qui s'agrandit au toucher.
     Section absente tant qu'il n'y a pas de lien YouTube valide (ou si l'interrupteur est éteint).
     Seule l'image d'aperçu est chargée : le lecteur (youtube-nocookie.com) n'est ajouté qu'au toucher du bouton lecture.
     Sans JavaScript, le bouton est un simple lien vers YouTube. Aucune transcription ni sous-titre n'est affiché.
@@ -15,11 +16,22 @@
 @endphp
 
 @if ($homeVideoId)
-    <section id="video-accueil" class="section !py-10 sm:!py-14" data-test="home-video">
-        <x-site.section-heading :title="HomeVideo::title()" :subtitle="HomeVideo::subtitle()" />
+    <section id="video-accueil" class="section !py-6 sm:!py-14" data-test="home-video">
+        {{-- Section courte sur téléphone (environ 500 px de haut) pour que le catalogue reste proche. --}}
+        <div class="mx-auto max-w-2xl text-center" data-reveal>
+            <h2 class="text-xl leading-snug font-bold tracking-tight text-balance text-white sm:text-4xl">{{ HomeVideo::title() }}</h2>
+            <p class="mt-1.5 text-sm text-pretty text-slate-400 sm:mt-4 sm:text-lg">{{ HomeVideo::subtitle() }}</p>
+        </div>
 
-        {{-- Largeur limitée sur téléphone (la vidéo ne doit pas écraser le reste), 20 rem dès les écrans moyens. --}}
-        <div class="mx-auto mt-8 w-[min(78%,17rem)] sm:w-80" x-data="homeVideo" data-test="home-video-frame" data-reveal>
+        {{-- Aperçu étroit sur téléphone (10 rem) ; le cadre s'agrandit seulement quand le visiteur touche lecture
+             (ou si la vidéo est illisible, pour que le message tienne). 20 rem dès les écrans moyens. --}}
+        <div
+            class="mx-auto mt-4 w-40 transition-[width] duration-300 data-[open=true]:w-[min(78%,17rem)] sm:mt-8 sm:w-80 sm:data-[open=true]:w-80 motion-reduce:transition-none"
+            x-bind:data-open="(playing || failed) ? 'true' : 'false'"
+            x-data="homeVideo"
+            data-test="home-video-frame"
+            data-reveal
+        >
             <div class="relative aspect-[9/16] overflow-hidden rounded-3xl bg-night-900 shadow-[0_0_0_1px_var(--color-night-600),0_24px_48px_-24px_rgb(0_0_0/0.7)]">
                 <template x-if="playing">
                     <iframe
@@ -65,8 +77,8 @@
                         x-on:error="fail()"
                     >
                     <span class="absolute inset-0 grid place-items-center bg-night-950/30 transition group-hover:bg-night-950/10">
-                        <span class="grid size-16 place-items-center rounded-full bg-night-950/85 text-white shadow-[0_0_0_2px_var(--color-gold-500),0_10px_30px_rgb(0_0_0/0.5)] transition group-hover:scale-105">
-                            <flux:icon.play class="size-7 translate-x-0.5 text-white" variant="solid" />
+                        <span class="grid size-12 place-items-center rounded-full sm:size-16 bg-night-950/85 text-white shadow-[0_0_0_2px_var(--color-gold-500),0_10px_30px_rgb(0_0_0/0.5)] transition group-hover:scale-105">
+                            <flux:icon.play class="size-5 translate-x-0.5 text-white sm:size-7" variant="solid" />
                         </span>
                     </span>
                 </a>
@@ -74,13 +86,13 @@
         </div>
 
         {{-- La vidéo se termine par un appel à s'abonner qui n'a pas de sens ici : ces boutons servent de suite. --}}
-        <div class="mx-auto mt-8 flex max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center" data-reveal>
-            <a href="{{ $homeVideoCatalogue }}" class="btn-gold sm:whitespace-nowrap" data-test="home-video-formations">
-                Voir les formations <flux:icon.arrow-right class="size-5" />
+        <div class="mx-auto mt-4 flex max-w-sm flex-wrap justify-center gap-2 sm:mt-8 sm:max-w-none sm:gap-3" data-reveal>
+            <a href="{{ $homeVideoCatalogue }}" class="btn-gold !gap-1.5 !px-2.5 !py-3 !text-sm whitespace-nowrap sm:!gap-2 sm:!px-6 sm:!py-3.5 sm:!text-base" data-test="home-video-formations">
+                Voir les formations <flux:icon.arrow-right class="size-4 sm:size-5" />
             </a>
             @if ($homeVideoTiktok)
-                <a href="{{ $homeVideoTiktok }}" target="_blank" rel="noopener noreferrer" class="btn-ghost sm:whitespace-nowrap" data-test="home-video-tiktok">
-                    Suivre sur TikTok <flux:icon.arrow-up-right class="size-5" />
+                <a href="{{ $homeVideoTiktok }}" target="_blank" rel="noopener noreferrer" class="btn-ghost !gap-1.5 !px-2.5 !py-3 !text-sm whitespace-nowrap sm:!gap-2 sm:!px-6 sm:!py-3.5 sm:!text-base" data-test="home-video-tiktok">
+                    Suivre sur TikTok <flux:icon.arrow-up-right class="size-4 sm:size-5" />
                 </a>
             @endif
         </div>

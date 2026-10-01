@@ -254,14 +254,27 @@ class HomeVideoTest extends TestCase
         $this->assertLessThan(strpos($html, 'data-test="home-video"'), $banner);
     }
 
-    public function test_the_video_stays_narrow_on_phones_and_does_not_replace_the_live_registration(): void
+    public function test_the_section_is_short_on_phones_and_the_frame_widens_only_when_the_visitor_plays(): void
     {
         $partial = file_get_contents(resource_path('views/site/partials/home-video.blade.php'));
 
-        // Largeur limitée sur téléphone, cadre 9:16, section compacte.
-        $this->assertStringContainsString('w-[min(78%,17rem)] sm:w-80', $partial);
+        // Aperçu étroit (10 rem) en 9:16, section compacte, titre et boutons réduits sur téléphone.
+        $this->assertStringContainsString('mt-4 w-40', $partial);
         $this->assertStringContainsString('aspect-[9/16]', $partial);
-        $this->assertStringContainsString('!py-10', $partial);
+        $this->assertStringContainsString('!py-6', $partial);
+        $this->assertStringContainsString('text-xl', $partial);
+        $this->assertStringContainsString('!px-2.5 !py-3 !text-sm', $partial);
+
+        // Le cadre s'agrandit au toucher (lecture) ou si la vidéo est illisible, pas avant.
+        $this->assertStringContainsString('data-[open=true]:w-[min(78%,17rem)]', $partial);
+        $this->assertStringContainsString("x-bind:data-open=\"(playing || failed) ? 'true' : 'false'\"", $partial);
+        $this->assertStringContainsString('motion-reduce:transition-none', $partial);
+
+        // Dès les écrans moyens : 20 rem comme avant.
+        $this->assertStringContainsString('sm:w-80', $partial);
+
+        $this->save();
+        $this->get(route('home'))->assertSee('data-test="home-video-frame"', false)->assertSee('w-40', false);
     }
 
     public function test_a_broken_video_shows_a_message_and_a_youtube_link_instead_of_an_empty_area(): void
