@@ -36,8 +36,18 @@ class OgImageGenerator
         $key = sprintf(
             'formation-%d-%s',
             $formation->id,
-            md5(implode('|', [self::VERSION, $formation->title, $formation->price, (int) $formation->needsPaymentVerification(), $formation->category->value, $formation->updated_at?->timestamp, $liveOffer?->fingerprint()]))
+            md5(implode('|', [self::VERSION, $formation->title, $formation->price, (int) $formation->needsPaymentVerification(), $formation->category->value, $formation->updated_at?->timestamp, $liveOffer?->fingerprint(), $formation->event_date?->toDateString()]))
         );
+
+        // Formation gratuite : date de l'événement à la place de la catégorie, aucune mention de paiement.
+        if ($formation->isFree()) {
+            return $this->cached($key, fn (): GdImage => $this->render(
+                eyebrow: $formation->eventDateLabel() ?? $formation->category->label(),
+                title: $formation->title,
+                badge: 'Gratuit',
+                footer: 'Inscription gratuite sur le site',
+            ));
+        }
 
         return $this->cached($key, fn (): GdImage => $this->render(
             eyebrow: $liveOffer ? str_replace("\u{00A0}", ' ', 'En direct · '.$liveOffer->shortPeriod().' · '.$liveOffer->hours()) : $formation->category->label(),

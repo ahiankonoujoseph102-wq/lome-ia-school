@@ -283,7 +283,8 @@ class AmaPrompt
      */
     private static function objectionFacts(): string
     {
-        $cheapest = Formation::query()->published()->reorder('price')->first();
+        // Les formations gratuites (0 FCFA) ne comptent pas : ce repère porte sur les formations payantes.
+        $cheapest = Formation::query()->published()->where('price', '>', 0)->reorder('price')->first();
         $threshold = (int) config('site.payments.verification_threshold', 50000);
 
         return ($cheapest !== null ? ' Formations à partir de '.$cheapest->formatted_price.' (« '.$cheapest->title.' »).' : '')
@@ -393,6 +394,7 @@ class AmaPrompt
         10 => ['rembours', 'annul'],
         11 => ['contact', 'whatsapp', 'joindre', 'fondateur', 'joseph', 'transmettre', 'numero', 'telephone', 'adresse'],
         12 => ['appel', 'voix', 'micro', 'parler', 'vocal', 'raccrocher'],
+        13 => ['gratuit', 'complet', 'place', 'option', 'presentiel', 'en ligne'],
     ];
 
     /**

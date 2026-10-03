@@ -331,6 +331,11 @@ class VoiceAssistant
             $formation = $route->parameter('session')->formation;
         }
 
+        // Formation gratuite : inscription avec choix d'une option, jamais de paiement.
+        if ($routeName === 'formations.show' && $formation?->isFree()) {
+            $role = 'présente la formation gratuite et l\'inscription « Je m\'inscris gratuitement » (une option à choisir, places limitées, aucun paiement)';
+        }
+
         /** @var array<string, mixed> $extra */
         $extra = (array) $request->attributes->get(self::CONTEXT_ATTRIBUTE, []);
         $errors = $request->session()->get('errors');
@@ -359,7 +364,7 @@ class VoiceAssistant
             'page' => $page,
             'role_page' => $role,
             'formation' => $formation?->title,
-            'prix_formation' => $formation !== null ? Money::fcfa((int) $formation->price) : null,
+            'prix_formation' => $formation?->formatted_price,
             'montant_a_payer' => isset($extra['montant_a_payer']) ? (string) $extra['montant_a_payer'] : null,
             'connecte' => $user !== null,
             'email_confirme' => $user instanceof User ? $user->hasConfirmedEmail() : null,

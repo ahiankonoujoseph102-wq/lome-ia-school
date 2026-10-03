@@ -19,7 +19,9 @@
                         @if ($formation->is_featured)
                             <span class="rounded-full px-2 py-0.5 text-xs font-semibold text-gold-100 ring-1 ring-gold-400/60">Mise en avant</span>
                         @endif
-                        <span class="text-slate-400">{{ $formation->sales_count }} {{ $formation->sales_count > 1 ? 'ventes validées' : 'vente validée' }}</span>
+                        @unless ($formation->isFree())
+                            <span class="text-slate-400">{{ $formation->sales_count }} {{ $formation->sales_count > 1 ? 'ventes validées' : 'vente validée' }}</span>
+                        @endunless
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -33,6 +35,9 @@
                         </button>
                     @else
                         <span class="rounded-full px-3 py-2 text-sm text-slate-400 ring-1 ring-veil/10" title="Une formation masquée n'est pas visible par les visiteurs">Lien inactif (masquée)</span>
+                    @endif
+                    @if ($formation->isFree())
+                        <a href="{{ route('admin.free-registrations.show', $formation) }}" class="rounded-full px-3 py-2 text-sm font-semibold text-gold-200 ring-1 ring-gold-500/50 hover:bg-gold-500/10" data-test="free-registrations-link">Inscriptions</a>
                     @endif
                     <a href="{{ route('admin.content.show', $formation) }}" class="rounded-full px-3 py-2 text-sm font-semibold text-slate-200 ring-1 ring-veil/15 hover:bg-veil/10">Contenu</a>
                     <a href="{{ route('admin.formations.edit', $formation) }}" class="rounded-full px-3 py-2 text-sm font-semibold text-electric-200 ring-1 ring-electric-400/40 hover:bg-electric-500/10">Modifier</a>

@@ -49,6 +49,11 @@ class SubmitManualPayment
      */
     public function handle(User $user, Formation $formation, array $input, UploadedFile $proof, ?LiveSession $session = null): Purchase
     {
+        // Formation gratuite : jamais d'achat (inscription gratuite, voir App\FreeRegistrations\FreeRegistrar).
+        if ($session === null && $formation->isFree()) {
+            throw ValidationException::withMessages(['proof' => 'Cette formation est gratuite : aucun paiement n\'est nécessaire.']);
+        }
+
         $amount = $session !== null ? (int) $session->supplement_amount : $formation->price;
         // Code promo (formations uniquement) : vérifié une première fois ici, puis sous verrou au moment d'enregistrer.
         $promoInput = $session === null ? trim((string) ($input['promo_code'] ?? '')) : '';

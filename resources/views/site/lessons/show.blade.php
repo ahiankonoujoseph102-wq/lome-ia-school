@@ -142,7 +142,11 @@
                 <p class="text-sm font-semibold text-gold-200">Aperçu gratuit</p>
                 <h2 class="mt-1 text-xl font-bold text-white">Accédez à toute la formation</h2>
                 <p class="mt-2 text-sm text-slate-300">Toutes les leçons, les fichiers et le groupe privé de la formation.</p>
-                <a href="{{ route('checkout.show', $formation) }}" class="btn-gold mt-5 w-full sm:w-auto">Acheter · {{ $formation->formatted_price }}</a>
+                @if ($formation->isFree())
+                    <a href="{{ route('formations.show', $formation) }}#inscription" class="btn-gold mt-5 w-full sm:w-auto">Je m'inscris gratuitement</a>
+                @else
+                    <a href="{{ route('checkout.show', $formation) }}" class="btn-gold mt-5 w-full sm:w-auto">Acheter · {{ $formation->formatted_price }}</a>
+                @endif
             </section>
         @endunless
 

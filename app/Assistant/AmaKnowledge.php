@@ -4,6 +4,7 @@ namespace App\Assistant;
 
 use App\Models\CourseModule;
 use App\Models\Formation;
+use App\Models\FreeRegistrationOption;
 use App\Models\Lesson;
 use App\Support\LiveOffer;
 use App\Support\Money;
@@ -176,7 +177,8 @@ class AmaKnowledge
                     .' ('.$formation->slug
                     .($lessons > 0 ? ' ; programme publié : '.$lessons.' leçon'.($lessons > 1 ? 's' : '') : '')
                     .($previews > 0 ? ', dont '.$previews.' en aperçu gratuit' : '').')'
-                    .($liveOffer !== null ? ' EN DIRECT sur Google Meet : '.Str::lcfirst($liveOffer->period()).', '.Str::lcfirst($liveOffer->schedule()).'.' : '');
+                    .($liveOffer !== null ? ' EN DIRECT sur Google Meet : '.Str::lcfirst($liveOffer->period()).', '.Str::lcfirst($liveOffer->schedule()).'.' : '')
+                    .($formation->isFree() ? ' '.self::freeText($formation) : '');
             })->implode("\n"))
             ->implode("\n");
 
@@ -224,6 +226,25 @@ class AmaKnowledge
         }
 
         return array_values(array_unique($titles));
+    }
+
+    /**
+     * Formation gratuite : date, adresse, options et places restantes (lues dans la base), sans aucun paiement.
+     */
+    public static function freeText(Formation $formation): string
+    {
+        $options = $formation->freeOptions()->withTakenCount()->get()->map(fn (FreeRegistrationOption $option): string => $option->label
+            .($option->schedule ? ' ('.$option->schedule.')' : '')
+            .', '.($option->isOnsite() ? 'présentiel' : 'en ligne sur Google Meet')
+            .', '.($option->isFull() ? 'complet' : $option->seatsLeftLabel()));
+
+        return 'FORMATION GRATUITE, sans aucun paiement'
+            .($formation->eventDateLabel() ? ', le '.Str::lcfirst($formation->eventDateLabel()) : '')
+            .'. Inscription sur sa page avec un compte et une adresse e-mail confirmée ; une seule option par personne'
+            .($options->isNotEmpty() ? ' : '.$options->implode(' ; ') : '')
+            .'.'
+            .($formation->event_location ? ' Adresse du présentiel : '.$formation->event_location.'.' : '')
+            .' Le lien Google Meet est publié dans le groupe des inscrits.';
     }
 
     /**

@@ -52,6 +52,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Enrollment> $enrollments
  * @property-read Collection<int, Formation> $formations
  * @property-read Collection<int, Purchase> $purchases
+ * @property-read Collection<int, FreeRegistration> $freeRegistrations
  * @property-read Collection<int, ChatGroupMember> $chatMemberships
  * @property-read Collection<int, PushSubscription> $pushSubscriptions
  * @property-read Collection<int, LiveSessionRegistration> $liveSessionRegistrations
@@ -112,6 +113,16 @@ class User extends Authenticatable implements PasskeyUser
         return $this->belongsToMany(Formation::class, 'enrollments')
             ->withPivot(['source', 'granted_at'])
             ->withTimestamps();
+    }
+
+    /**
+     * Inscriptions aux formations gratuites (annulées comprises).
+     *
+     * @return HasMany<FreeRegistration, $this>
+     */
+    public function freeRegistrations(): HasMany
+    {
+        return $this->hasMany(FreeRegistration::class);
     }
 
     /**
