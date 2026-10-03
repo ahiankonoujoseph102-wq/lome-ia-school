@@ -25,9 +25,14 @@ use Illuminate\Validation\ValidationException;
  */
 class CheckoutController extends Controller
 {
-    public function show(Request $request, Formation $formation, PromoCodes $promoCodes): View
+    public function show(Request $request, Formation $formation, PromoCodes $promoCodes): View|RedirectResponse
     {
         abort_unless($formation->is_active, 404);
+
+        // Formation gratuite : aucun paiement, l'inscription se fait sur la page de la formation.
+        if ($formation->isFree()) {
+            return redirect(route('formations.show', $formation).'#inscription');
+        }
 
         /** @var User|null $user */
         $user = $request->user();
@@ -77,6 +82,10 @@ class CheckoutController extends Controller
     public function pay(StorePaymentProofRequest $request, Formation $formation, SubmitManualPayment $submit): RedirectResponse
     {
         abort_unless($formation->is_active, 404);
+
+        if ($formation->isFree()) {
+            return redirect(route('formations.show', $formation).'#inscription');
+        }
 
         /** @var User $user */
         $user = $request->user();

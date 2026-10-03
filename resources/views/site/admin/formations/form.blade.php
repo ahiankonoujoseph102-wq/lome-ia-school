@@ -25,7 +25,7 @@
             <h2 class="font-semibold text-white">L'essentiel</h2>
             <x-admin.field name="title" label="Titre" :value="$formation->title" />
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-admin.field name="price" label="Prix" type="number" unit="FCFA" :value="$formation->price" :hint="$editing ? 'Les achats déjà faits gardent leur montant.' : 'En chiffres, sans espace (ex. 25000).'" />
+                <x-admin.field name="price" label="Prix" type="number" unit="FCFA" :value="$formation->price" :hint="($editing ? 'Les achats déjà faits gardent leur montant.' : 'En chiffres, sans espace (ex. 25000).').' 0 = formation gratuite (inscription avec options, sans paiement).'" />
                 <x-admin.field name="category" label="Catégorie" type="select" :options="collect(FormationCategory::cases())->mapWithKeys(fn ($category) => [$category->value => $category->label()])->all()" :value="$formation->category?->value" />
             </div>
             <x-admin.field name="subtitle" label="Sous-titre" :value="$formation->subtitle" />

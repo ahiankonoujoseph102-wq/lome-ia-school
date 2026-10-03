@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Site;
 
 use App\Enums\FormationCategory;
+use App\FreeRegistrations\FreeRegistrar;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\LiveSession;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class FormationController extends Controller
 {
@@ -18,9 +22,13 @@ class FormationController extends Controller
         ]);
     }
 
-    public function show(Formation $formation): View
+    public function show(Request $request, Formation $formation, FreeRegistrar $registrar): View
     {
-        abort_unless($formation->is_active, 404);
+        /** @var User|null $user */
+        $user = $request->user();
+
+        // Une formation gratuite masquée (brouillon) reste visible par l'admin, pour la relire avant de la publier.
+        abort_unless($formation->is_active || ($formation->isFree() && $user?->isAdmin()), 404);
 
         $related = Formation::published()
             ->whereKeyNot($formation->getKey())
@@ -39,11 +47,42 @@ class FormationController extends Controller
             );
         }
 
+        if ($formation->isFree()) {
+            return $this->free($request, $formation, $registrar, $related);
+        }
+
         return view('site.formations.show', [
             'formation' => $formation,
             'related' => $related,
             'nextSession' => LiveSession::query()->upcoming()->where('formation_id', $formation->id)->first(),
             'hasAccess' => (bool) auth()->user()?->isEnrolledIn($formation),
+        ]);
+    }
+
+    /**
+     * Page d'une formation gratuite : inscription avec choix d'une option à places limitées (aucun paiement).
+     *
+     * @param  Collection<int, Formation>  $related
+     */
+    private function free(Request $request, Formation $formation, FreeRegistrar $registrar, Collection $related): View
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+
+        // Un visiteur qui crée son compte ou se connecte depuis cette page y revient ensuite automatiquement.
+        if (! $user) {
+            $request->session()->put('url.intended', route('formations.show', $formation).'#inscription');
+        }
+
+        $options = $formation->freeOptions()->withTakenCount()->get();
+
+        return view('site.formations.free', [
+            'formation' => $formation,
+            'related' => $related,
+            'options' => $options,
+            'availableOptions' => $options->reject->isFull()->values(),
+            'registration' => $registrar->activeFor($user, $formation),
+            'closed' => $formation->freeRegistrationsClosed(),
         ]);
     }
 }

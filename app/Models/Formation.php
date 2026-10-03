@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -37,12 +38,16 @@ use Illuminate\Support\Collection;
  * @property list<string>|null $outcomes Ce que l'élève va apprendre.
  * @property list<string>|null $audience Pour qui est la formation.
  * @property list<string> $bonuses Bonus facultatifs, saisis dans l'admin (vides par défaut).
+ * @property Carbon|null $event_date Date de l'événement d'une formation gratuite.
+ * @property string|null $event_location Adresse du présentiel d'une formation gratuite.
  * @property-read string $formatted_price
  * @property-read string|null $image_url
  * @property-read EloquentCollection<int, Enrollment> $enrollments
  * @property-read EloquentCollection<int, Purchase> $purchases
  * @property-read EloquentCollection<int, CourseModule> $modules
  * @property-read ChatGroup|null $chatGroup
+ * @property-read EloquentCollection<int, FreeRegistrationOption> $freeOptions
+ * @property-read EloquentCollection<int, FreeRegistration> $freeRegistrations
  */
 class Formation extends Model
 {
@@ -64,6 +69,8 @@ class Formation extends Model
         'outcomes',
         'audience',
         'bonuses',
+        'event_date',
+        'event_location',
     ];
 
     /**
@@ -92,6 +99,7 @@ class Formation extends Model
             'is_active' => 'boolean',
             'outcomes' => 'array',
             'audience' => 'array',
+            'event_date' => 'date',
         ];
     }
 
@@ -149,7 +157,7 @@ class Formation extends Model
      */
     protected function formattedPrice(): Attribute
     {
-        return Attribute::get(fn (): string => Money::fcfa($this->price));
+        return Attribute::get(fn (): string => $this->isFree() ? 'Gratuit' : Money::fcfa($this->price));
     }
 
     /**
@@ -235,6 +243,50 @@ class Formation extends Model
         }
 
         return (int) $lessons->sum('duration_seconds');
+    }
+
+    /**
+     * Formation à 0 FCFA : inscription gratuite (bouton « Je m'inscris gratuitement »), jamais de paiement ni d'achat.
+     */
+    public function isFree(): bool
+    {
+        return $this->price === 0;
+    }
+
+    /**
+     * Options d'inscription d'une formation gratuite, dans l'ordre.
+     *
+     * @return HasMany<FreeRegistrationOption, $this>
+     */
+    public function freeOptions(): HasMany
+    {
+        return $this->hasMany(FreeRegistrationOption::class)->orderBy('position')->orderBy('id');
+    }
+
+    /**
+     * Inscriptions à une formation gratuite (annulées comprises).
+     *
+     * @return HasMany<FreeRegistration, $this>
+     */
+    public function freeRegistrations(): HasMany
+    {
+        return $this->hasMany(FreeRegistration::class);
+    }
+
+    /**
+     * « Samedi 10 octobre 2026 », ou null sans date.
+     */
+    public function eventDateLabel(): ?string
+    {
+        return $this->event_date ? ucfirst($this->event_date->translatedFormat('l j F Y')) : null;
+    }
+
+    /**
+     * Inscriptions closes : la date de l'événement est passée (heure de Lomé).
+     */
+    public function freeRegistrationsClosed(): bool
+    {
+        return $this->event_date !== null && now()->startOfDay()->gt($this->event_date);
     }
 
     /**

@@ -71,8 +71,10 @@ class AffiliateAlerts
         }
 
         $threshold = (int) config('affiliate.alert_signups_without_purchase', 10);
+        // Une inscription à une formation gratuite n'est pas suspecte : ces inscrits ne comptent pas.
         $withoutPurchase = $affiliate->referrals()
             ->whereDoesntHave('purchases', fn ($query) => $query->whereIn('status', PurchaseStatus::accessGranting()))
+            ->whereDoesntHave('freeRegistrations')
             ->count();
 
         if ($threshold > 0 && $withoutPurchase >= $threshold) {

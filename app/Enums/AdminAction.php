@@ -35,6 +35,7 @@ enum AdminAction: string
     case Export = 'export';
     case HandoffHandled = 'handoff_handled';
     case HandoffReopened = 'handoff_reopened';
+    case FreeRegistrationUpdated = 'free_registration_updated';
 
     public function label(): string
     {
@@ -67,6 +68,7 @@ enum AdminAction: string
             self::Export => 'Export CSV',
             self::HandoffHandled => 'Demande transmise traitée',
             self::HandoffReopened => 'Demande transmise remise à traiter',
+            self::FreeRegistrationUpdated => 'Inscription gratuite modifiée',
         };
     }
 

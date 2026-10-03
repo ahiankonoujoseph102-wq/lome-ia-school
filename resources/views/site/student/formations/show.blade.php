@@ -18,6 +18,24 @@
             </div>
         </div>
 
+        @if ($formation->isFree())
+            {{-- Formation gratuite : option choisie, groupe des inscrits, gestion de l'inscription --}}
+            @php($freeRegistration = app(\App\FreeRegistrations\FreeRegistrar::class)->activeFor(auth()->user(), $formation))
+            <section class="mt-6 rounded-3xl bg-night-900 p-5 ring-1 ring-gold-500/50 sm:p-6" data-test="student-free-registration">
+                <p class="text-sm font-semibold text-gold-200">Formation gratuite</p>
+                @if ($freeRegistration?->option)
+                    <h2 class="mt-1 text-lg font-bold text-white">{{ $freeRegistration->option->label }}</h2>
+                    <p class="mt-1 text-sm text-slate-300">{{ collect([$formation->eventDateLabel(), $freeRegistration->option->schedule])->filter()->implode(' · ') }}</p>
+                @elseif ($formation->eventDateLabel())
+                    <h2 class="mt-1 text-lg font-bold text-white">{{ $formation->eventDateLabel() }}</h2>
+                @endif
+                <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+                    <a href="{{ route('chat.show', $formation) }}" class="btn-gold">Ouvrir le groupe des inscrits</a>
+                    <a href="{{ route('formations.show', $formation) }}#inscription" class="btn-ghost">Voir ou annuler mon inscription</a>
+                </div>
+            </section>
+        @endif
+
         @php($liveOffer = \App\Support\LiveOffer::configured($formation))
         @if ($liveOffer)
             {{-- Formation en direct : où trouver le lien Google Meet, les enregistrements et les documents --}}

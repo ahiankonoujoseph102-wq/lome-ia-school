@@ -42,6 +42,8 @@ class FormationIllustrationsTest extends TestCase
 
     public function test_the_list_covers_the_seeded_formations_exactly(): void
     {
+        // La formation gratuite du 10 octobre 2026 est créée par une migration, pas par le seeder : hors du compte.
+        Formation::query()->where('slug', 'formation-gratuite-ia')->delete();
         $this->seed(FormationSeeder::class);
 
         $this->assertEqualsCanonicalizing(Formation::pluck('slug')->all(), Illustrations::all());

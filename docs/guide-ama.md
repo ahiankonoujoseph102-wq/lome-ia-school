@@ -117,3 +117,12 @@ En bref : bouton « Parler avec Ama » (téléphone) ; toucher le cercle coupe l
 - « Parler avec Ama » (icône de téléphone à côté du champ, aussi proposé à l'ouverture) : un toucher ; autoriser le micro la première fois. Bouton absent : le téléphone ne permet pas la voix (certains iPhone) : écrire.
 - Ama attend environ deux secondes de silence avant de répondre : on peut faire une petite pause en parlant. Mal entendu : elle demande de répéter (aucun message compté). Toucher le cercle lui coupe la parole (si l'interruption à la voix est activée, parler suffit aussi).
 - Fin : « Raccrocher », fenêtre fermée, changement de page, ou 20 secondes sans parler. Chaque question envoyée compte comme un message ; limite atteinte : l'appel se termine avec « Écrivez-nous sur WhatsApp » et « Transmettre ma question à Coach Joseph ».
+
+## 13. S'inscrire à une formation gratuite
+
+En bref : formation affichée « Gratuit » ; « Je m'inscris gratuitement » sur sa page, avec un compte et une adresse e-mail confirmée ; une seule option ; aucun paiement.
+
+- Sur la page de la formation, partie « Je m'inscris gratuitement » : choisir une seule option (par exemple présentiel ou en ligne, journée ou soir), chacune avec ses horaires et ses places restantes. Une option pleine n'est plus proposée ; tout est plein : « Complet », avec le numéro WhatsApp de l'école.
+- Sans compte : « Créer mon compte » ou « J'ai déjà un compte », puis retour sur la page. Adresse e-mail pas encore confirmée : « Confirmer mon adresse » d'abord.
+- Après l'inscription : « Vous êtes inscrit(e) », e-mail de confirmation (option, date, horaires, adresse du présentiel ; en ligne, le lien Google Meet est publié dans le groupe des inscrits), accès au groupe des inscrits (« Ouvrir le groupe des inscrits », aussi dans « Groupes »).
+- Changer d'option ou ne plus venir : « Annuler mon inscription » sur la page de la formation (la place est libérée et l'on quitte le groupe), puis se réinscrire s'il reste des places. Aucun paiement, aucune capture, rien à rembourser.

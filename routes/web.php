@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CourseContentController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\FormationController as AdminFormationController;
+use App\Http\Controllers\Admin\FreeRegistrationController as AdminFreeRegistrationController;
 use App\Http\Controllers\Admin\LessonController as AdminLessonController;
 use App\Http\Controllers\Admin\LiveSessionController as AdminLiveSessionController;
 use App\Http\Controllers\Admin\ModeratorController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Site\AssistantController;
 use App\Http\Controllers\Site\CheckoutController;
 use App\Http\Controllers\Site\ConsultationController;
 use App\Http\Controllers\Site\FormationController;
+use App\Http\Controllers\Site\FreeRegistrationController;
 use App\Http\Controllers\Site\OgImageController;
 use App\Http\Controllers\Site\PageController;
 use App\Http\Controllers\Site\PwaController;
@@ -94,6 +96,14 @@ Route::get('commande/{formation}', [CheckoutController::class, 'show'])->name('c
 Route::post('commande/{formation}/paiement', [CheckoutController::class, 'pay'])
     ->middleware(['auth', 'email-confirmed', 'throttle:10,1'])
     ->name('checkout.pay');
+
+// Inscription gratuite à une formation à 0 FCFA (compte et adresse e-mail confirmée obligatoires) et annulation
+Route::post('formations/{formation}/inscription-gratuite', [FreeRegistrationController::class, 'store'])
+    ->middleware(['auth', 'email-confirmed', 'throttle:10,1'])
+    ->name('free-registration.store');
+Route::delete('formations/{formation}/inscription-gratuite', [FreeRegistrationController::class, 'destroy'])
+    ->middleware(['auth', 'throttle:10,1'])
+    ->name('free-registration.destroy');
 
 // Confirmation de l'adresse e-mail : bouton de l'e-mail (valable 30 minutes, une seule fois, même sans être connecté)
 Route::get('confirmer-email/{token}', [EmailConfirmationController::class, 'link'])
@@ -220,6 +230,9 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::post('formations', [AdminFormationController::class, 'store'])->name('formations.store');
     Route::get('formations/{formation}', [AdminFormationController::class, 'edit'])->name('formations.edit');
     Route::put('formations/{formation}', [AdminFormationController::class, 'update'])->name('formations.update');
+    Route::get('formations/{formation}/inscriptions', [AdminFreeRegistrationController::class, 'show'])->name('free-registrations.show');
+    Route::put('formations/{formation}/inscriptions', [AdminFreeRegistrationController::class, 'update'])->name('free-registrations.update');
+    Route::get('formations/{formation}/inscriptions/export', [AdminFreeRegistrationController::class, 'export'])->name('free-registrations.export');
     Route::post('formations/{formation}/deplacer/{direction}', [AdminFormationController::class, 'move'])->whereIn('direction', ['up', 'down'])->name('formations.move');
     Route::get('eleves', [StudentController::class, 'index'])->name('students.index');
     Route::get('eleves/{user}', [StudentController::class, 'show'])->name('students.show');
