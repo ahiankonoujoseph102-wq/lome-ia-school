@@ -25,6 +25,8 @@
     ];
     $switches = [
         ['name' => 'enabled', 'label' => 'Assistante activée', 'hint' => 'Désactivée : le bouton disparaît du site.', 'on' => (bool) old('enabled', $assistant['enabled'] ?? false)],
+        ['name' => 'character', 'label' => 'Personnage animé', 'hint' => 'Allumé : le visage d\'Ama (dessin animé) remplace le bouton rond, et un grand personnage apparaît pendant les appels (il écoute, réfléchit, parle). Éteint : l\'ancien bouton et l\'ancien cercle reviennent. Le visage est dessiné par le site : aucun poids ni service en plus.', 'on' => (bool) old('character', $assistant['character'] ?? true)],
+        ['name' => 'nudge', 'label' => 'Ama se présente toute seule', 'hint' => 'Allumé : après environ 8 secondes sur le site, Ama fait un petit signe et affiche une bulle courte (textes ci-dessous), une seule fois par visite. La bulle se ferme d\'un geste et ne recouvre jamais un bouton important. Éteint : Ama n\'apparaît que quand on la touche.', 'on' => (bool) old('nudge', $assistant['nudge'] ?? true)],
         ['name' => 'lessons', 'label' => 'Afficher Ama dans le lecteur de cours', 'hint' => 'Désactivé : le bouton n\'apparaît pas pendant qu\'un élève regarde une leçon.', 'on' => (bool) old('lessons', $assistant['lessons'] ?? false)],
         ['name' => 'voice_interrupt', 'label' => 'Interruption à la voix (expérimental)', 'hint' => 'Pendant un appel, si le visiteur se met à parler pendant qu\'Ama parle, elle se tait tout de suite et l\'écoute. Le micro reste alors ouvert pendant qu\'Ama parle : sur certains téléphones (Android surtout), le micro peut couper la voix d\'Ama ou entendre sa voix. Si cela pose problème, éteignez cet interrupteur : toucher le cercle coupe toujours la parole à Ama.', 'on' => (bool) old('voice_interrupt', $assistant['voice_interrupt'] ?? false)],
         ['name' => 'proactive', 'label' => 'Aide proactive', 'hint' => 'Quand le site repère qu\'un client bloque (même erreur deux fois, code promo refusé, capture refusée, code de confirmation faux deux fois, étape du paiement trop longue, allers-retours), une petite bulle « Vous semblez bloqué ? Ama peut vous guider. » s\'affiche à côté du bouton, une fois par page. Elle n\'ouvre jamais le micro toute seule.', 'on' => (bool) old('proactive', $assistant['proactive'] ?? true)],
@@ -77,6 +79,36 @@
                     @endforeach
                 </div>
             </fieldset>
+        </section>
+
+        <section class="card space-y-5 p-5 sm:p-6" data-test="assistant-character">
+            <div>
+                <h2 class="font-semibold text-white">Visage et messages de présentation</h2>
+                <p class="mt-1 text-sm text-slate-400">Ces réglages ne servent que si « Personnage animé » ou « Ama se présente toute seule » est allumé. Les messages sont écrits à l'avance : ils ne passent jamais par l'IA. Videz un champ puis enregistrez pour revenir au texte d'origine.</p>
+            </div>
+
+            <fieldset class="space-y-2" data-test="assistant-face-style">
+                <legend class="font-semibold text-white">Visage d'Ama</legend>
+                <div class="grid grid-cols-3 gap-2">
+                    @foreach (['a' => 'Cheveux naturels', 'b' => 'Tresses', 'c' => 'Foulard'] as $value => $label)
+                        <label class="flex cursor-pointer flex-col items-center gap-2 rounded-2xl bg-veil/5 px-2 py-3 text-center ring-1 ring-veil/15 transition hover:bg-veil/10 has-[:checked]:bg-gold-400/10 has-[:checked]:ring-2 has-[:checked]:ring-gold-400 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold-300">
+                            <span class="block size-16 overflow-hidden rounded-full ring-1 ring-night-600"><x-site.ama-face :style="$value" /></span>
+                            <input type="radio" name="character_style" value="{{ $value }}" class="size-4 accent-gold-400" @checked(old('character_style', VoiceAssistant::characterStyle()) === $value)>
+                            <span class="text-sm font-semibold text-slate-100">{{ $label }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </fieldset>
+
+            @foreach ([
+                'home' => 'Accueil',
+                'formation' => 'Page d\'une formation',
+                'free' => 'Formation gratuite',
+                'checkout' => 'Paiement',
+                'other' => 'Autres pages publiques (catalogue, À propos, Entreprises, Contact, Affiliation, Consultation)',
+            ] as $type => $label)
+                <x-admin.field :name="'nudges['.$type.']'" :label="'Message : '.$label" :value="old('nudges.'.$type, VoiceAssistant::nudgeText($type))" :maxlength="VoiceAssistant::NUDGE_MAX_LENGTH" :hint="'Court : '.VoiceAssistant::NUDGE_MAX_LENGTH.' caractères au maximum. N\'écrivez ni promesse ni chiffre.'" />
+            @endforeach
         </section>
 
         {{-- Ama (Gemini) --}}

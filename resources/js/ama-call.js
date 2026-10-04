@@ -160,6 +160,7 @@ function hasVisitorWords(heard, amaText) {
  * @param {Function} [options.now]  horloge en millisecondes (mesure des durées)
  * @param {boolean} [options.bargeIn]  interruption à la voix (expérimental)
  * @param {Function} [options.onState]  état : listening, thinking, speaking, ended
+ * @param {Function} [options.onSpeech]  synthèse vocale : 'start' et 'end' de chaque phrase lue, 'boundary' à chaque mot repéré
  * @param {Function} [options.onVisitor]  phrase du visiteur envoyée
  * @param {Function} [options.onAmaText]  réponse d'Ama en cours (texte reçu jusqu'ici), puis complète (final = true)
  * @param {Function} [options.onMisheard]  Ama demande de répéter (rien n'est envoyé)
@@ -176,6 +177,7 @@ export function createVoiceCall({
     now = () => Date.now(),
     bargeIn = false,
     onState = () => {},
+    onSpeech = () => {},
     onVisitor = () => {},
     onAmaText = () => {},
     onMisheard = () => {},
@@ -454,10 +456,17 @@ export function createVoiceCall({
         const next = () => {
             if (!done) {
                 done = true;
+                if (myTurn === turn) {
+                    onSpeech('end');
+                }
                 speakNext(myTurn);
             }
         };
+        utterance.onboundary = () => myTurn === turn && onSpeech('boundary');
         utterance.onstart = () => {
+            if (myTurn === turn) {
+                onSpeech('start');
+            }
             if (myTurn === turn && measure && measure.voice === null) {
                 measure.voice = Math.round(now() - measure.sentAt);
                 delete measure.sentAt;

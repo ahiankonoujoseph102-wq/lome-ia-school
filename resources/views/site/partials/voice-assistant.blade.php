@@ -15,10 +15,17 @@
     ne cacher ni le prix ni les grands boutons pleine largeur (« Acheter maintenant », « Envoyer la capture de mon
     paiement »…) ; au-dessus de la barre d'achat (« has-sticky-cta ») et de la barre de l'espace élève (« has-bottom-nav »).
     Sur ordinateur : bouton avec son texte en bas à gauche (le bouton WhatsApp flottant est à droite).
+    Visage animé (« character », x-site.ama-face) : remplace l'icône du bouton, l'initiale de l'en-tête et le cercle du mode
+    appel ; il cligne des yeux, fait un signe avec la bulle de présentation (« nudge », texte écrit à l'avance, sans IA,
+    une fois par visite, jamais au-dessus d'un bouton important) et sa bouche suit la synthèse vocale pendant l'appel.
     La fenêtre d'Ama couvre le bas de l'écran sur téléphone (fond assombri derrière) et s'ouvre en bas à gauche sur ordinateur.
 --}}
 @php
     use App\Support\VoiceAssistant;
+
+    // Visage animé (dessin SVG) : allumé par défaut, éteint dans l'admin = l'ancien bouton et l'ancien cercle.
+    $character = VoiceAssistant::characterEnabled();
+    $faceStyle = VoiceAssistant::characterStyle();
 @endphp
 
 <div x-data="voiceAssistant(@js(VoiceAssistant::browserConfig(request())))" data-test="voice-assistant">
@@ -39,17 +46,44 @@
             </button>
         </div>
 
+        @if (VoiceAssistant::nudgeEnabled())
+        {{-- Présentation d'Ama (texte écrit à l'avance, aucun appel à l'IA) : une fois par visite, se ferme d'un geste
+             (croix, glissement sur le côté ou toucher), invisible tant qu'elle passerait au-dessus d'un bouton important. --}}
+        <div
+            x-show="nudge"
+            x-cloak
+            x-ref="nudgeBubble"
+            :class="[covering && 'invisible', nudgeAbove && 'absolute right-0 bottom-full mb-2 w-[calc(100vw-6.5rem)]']"
+            @pointerdown="swipeStart($event)"
+            @pointerup.window="swipeEnd($event)"
+            role="status"
+            class="relative max-w-[calc(100vw-6.5rem)] touch-pan-y rounded-2xl sm:max-w-[17rem] bg-night-900/95 py-2.5 pr-10 pl-4 shadow-xl ring-2 shadow-black/40 ring-electric-400/70"
+            data-test="ama-nudge"
+        >
+            <button type="button" @click="open()" class="text-left text-sm leading-snug font-semibold text-white" x-text="nudgeText"></button>
+            <button type="button" @click="closeNudge()" class="absolute top-1/2 right-1.5 grid size-8 -translate-y-1/2 place-items-center rounded-full text-slate-300 hover:bg-veil/10 hover:text-white" aria-label="Fermer ce message" data-test="ama-nudge-close">
+                <flux:icon.x-mark class="size-4" />
+            </button>
+        </div>
+        @endif
+
         <button
             type="button"
+            x-ref="launcher"
             @click="open()"
             :disabled="loading"
             :aria-busy="loading"
             aria-label="Parler avec notre assistante"
-            :class="bubble && covering ? 'ring-gold-500' : 'ring-electric-400/70'"
-            class="group relative flex items-center gap-2.5 rounded-full bg-night-900/95 p-2 text-sm font-semibold text-white shadow-xl ring-2 shadow-black/40 backdrop-blur-md transition hover:ring-gold-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-300 disabled:cursor-wait lg:py-2 lg:pr-4 lg:pl-2"
+            :class="(bubble || nudge) && covering ? 'ring-gold-500' : 'ring-electric-400/70'"
+            class="group relative flex items-center gap-2.5 rounded-full bg-night-900/95 {{ $character ? 'p-1 lg:py-1 lg:pr-4 lg:pl-1' : 'p-2 lg:py-2 lg:pr-4 lg:pl-2' }} text-sm font-semibold text-white shadow-xl ring-2 shadow-black/40 backdrop-blur-md transition hover:ring-gold-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-300 disabled:cursor-wait"
         >
             {{-- Aide proposée mais bulle en attente d'une place libre : repère doré sur le bouton. --}}
-            <span x-show="bubble && covering" x-cloak class="absolute -top-0.5 -right-0.5 size-3.5 rounded-full bg-gold-500 ring-2 ring-night-950" aria-hidden="true"></span>
+            <span x-show="(bubble || nudge) && covering" x-cloak class="absolute -top-0.5 -right-0.5 size-3.5 rounded-full bg-gold-500 ring-2 ring-night-950" aria-hidden="true"></span>
+            @if ($character)
+                <span class="relative block size-14 shrink-0 overflow-hidden rounded-full" data-test="ama-face">
+                    <x-site.ama-face zoom :style="$faceStyle" x-bind:data-blink="faceBlink" x-bind:data-wave="faceWave" x-bind:data-still="! motion" />
+                </span>
+            @else
             <span class="relative grid size-10 shrink-0 place-items-center rounded-full bg-electric-500/25 text-electric-200 ring-1 ring-electric-300/50 lg:size-8">
                 @if (VoiceAssistant::usesGemini())
                     <flux:icon.chat-bubble-oval-left-ellipsis x-show="! loading" class="size-5 lg:size-4.5" />
@@ -58,6 +92,7 @@
                 @endif
                 <svg x-show="loading" x-cloak class="size-4.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".3" stroke-width="3" /><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round" /></svg>
             </span>
+            @endif
             <span class="sr-only lg:not-sr-only" x-text="loading ? 'Connexion…' : 'Parler avec notre assistante'">Parler avec notre assistante</span>
         </button>
     </div>
@@ -78,7 +113,13 @@
 
             <section class="relative flex h-[min(88dvh,46rem)] w-full flex-col overflow-hidden rounded-t-3xl bg-night-900 shadow-2xl ring-1 shadow-black/60 ring-night-600 lg:h-[min(38rem,calc(100dvh-3rem))] lg:w-[24rem] lg:rounded-3xl">
                 <header class="flex items-center gap-3 px-4 py-3 shadow-[inset_0_-1px_0_0_var(--color-night-700)]">
-                    <span class="grid size-10 shrink-0 place-items-center rounded-full bg-electric-500/25 text-base font-bold text-electric-100 ring-1 ring-electric-300/50" aria-hidden="true">A</span>
+                    @if ($character)
+                        <span class="block size-10 shrink-0 overflow-hidden rounded-full ring-1 ring-electric-300/50" aria-hidden="true" data-test="ama-face-header">
+                            <x-site.ama-face zoom :style="$faceStyle" x-bind:data-blink="faceBlink" x-bind:data-talking="faceTalking" x-bind:data-beat="faceBeat" x-bind:data-still="! motion" />
+                        </span>
+                    @else
+                        <span class="grid size-10 shrink-0 place-items-center rounded-full bg-electric-500/25 text-base font-bold text-electric-100 ring-1 ring-electric-300/50" aria-hidden="true">A</span>
+                    @endif
                     <div class="min-w-0 flex-1">
                         <h2 id="ama-chat-title" class="font-display text-base leading-tight font-bold text-white">Ama</h2>
                         <p class="truncate text-xs text-slate-400">Assistante IA de Lomé IA School</p>
@@ -111,10 +152,10 @@
                      Toucher le cercle pendant qu'Ama parle : elle s'arrête et le micro s'ouvre. --}}
                 <div x-show="call" x-cloak class="flex flex-1 flex-col items-center overflow-hidden px-5 pt-6 pb-[max(1.25rem,env(safe-area-inset-bottom))]" data-test="ama-call">
                     <div class="flex flex-1 flex-col items-center justify-center gap-6">
-                        <div class="relative grid size-56 place-items-center">
-                            <span x-show="callState === 'listening'" class="ama-call-wave absolute inset-6 rounded-full ring-2 ring-electric-400/70" aria-hidden="true"></span>
-                            <span x-show="callState === 'listening'" class="ama-call-wave ama-call-wave-late absolute inset-6 rounded-full ring-2 ring-electric-400/70" aria-hidden="true"></span>
-                            <span x-show="callState === 'speaking'" class="ama-call-wave absolute inset-6 rounded-full ring-2 ring-gold-500/70" aria-hidden="true"></span>
+                        <div class="relative grid {{ $character ? 'size-52' : 'size-56' }} place-items-center">
+                            <span x-show="callState === 'listening'" class="ama-call-wave absolute {{ $character ? 'inset-1' : 'inset-6' }} rounded-full ring-2 ring-electric-400/70" aria-hidden="true"></span>
+                            <span x-show="callState === 'listening'" class="ama-call-wave ama-call-wave-late absolute {{ $character ? 'inset-1' : 'inset-6' }} rounded-full ring-2 ring-electric-400/70" aria-hidden="true"></span>
+                            <span x-show="callState === 'speaking'" class="ama-call-wave absolute {{ $character ? 'inset-1' : 'inset-6' }} rounded-full ring-2 ring-gold-500/70" aria-hidden="true"></span>
                             <button
                                 type="button"
                                 @click="touchCircle()"
@@ -123,10 +164,15 @@
                                     'bg-electric-500/25 ring-electric-400 text-electric-100': callState === 'listening',
                                     'bg-night-800 ring-slate-500 text-slate-200': callState === 'thinking',
                                     'bg-gold-500/15 ring-gold-500 text-gold-200': callState === 'speaking',
+                                    'bg-night-800 ring-slate-600 text-slate-200': callState === 'idle',
                                 }"
-                                class="relative grid size-40 place-items-center rounded-full shadow-2xl ring-4 shadow-black/50 transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold-300"
+                                class="relative grid {{ $character ? 'size-44 overflow-hidden' : 'size-40' }} place-items-center rounded-full shadow-2xl ring-4 shadow-black/50 transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold-300"
                                 data-test="ama-call-circle"
                             >
+                                @if ($character)
+                                    {{-- Grand personnage : écoute, réfléchit, parle (bouche suivant la synthèse vocale) ou au repos. --}}
+                                    <x-site.ama-face large :style="$faceStyle" x-bind:data-state="callState" x-bind:data-blink="faceBlink" x-bind:data-talking="faceTalking" x-bind:data-beat="faceBeat" x-bind:data-enter="faceEnter" x-bind:data-still="! motion" data-test="ama-face-call" />
+                                @else
                                 <flux:icon.microphone x-show="callState === 'listening'" class="size-14" />
                                 <svg x-show="callState === 'thinking'" class="size-14 motion-safe:animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".25" stroke-width="2.5" /><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" /></svg>
                                 <span x-show="callState === 'speaking'" class="ama-call-bars flex h-14 items-center gap-1.5" aria-hidden="true">
@@ -136,6 +182,7 @@
                                     <span class="h-12 w-2 rounded-full bg-gold-500"></span>
                                     <span class="h-6 w-2 rounded-full bg-gold-500"></span>
                                 </span>
+                                @endif
                             </button>
                         </div>
                         <div class="text-center" role="status" aria-live="polite">
@@ -165,9 +212,15 @@
 
                 {{-- Appel terminé par une limite atteinte ou une panne : le message a été lu, le bouton WhatsApp s'affiche. --}}
                 <div x-show="callEnd" x-cloak class="flex flex-1 flex-col items-center justify-center gap-5 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-center" data-test="ama-call-ended">
-                    <span class="grid size-20 place-items-center rounded-full bg-night-800 text-slate-300 ring-2 ring-slate-600" aria-hidden="true">
-                        <flux:icon.phone-x-mark class="size-9" />
-                    </span>
+                    @if ($character)
+                        <span class="block size-24 overflow-hidden rounded-full ring-2 ring-slate-600" aria-hidden="true">
+                            <x-site.ama-face zoom :style="$faceStyle" x-bind:data-state="'idle'" x-bind:data-blink="faceBlink" x-bind:data-still="! motion" />
+                        </span>
+                    @else
+                        <span class="grid size-20 place-items-center rounded-full bg-night-800 text-slate-300 ring-2 ring-slate-600" aria-hidden="true">
+                            <flux:icon.phone-x-mark class="size-9" />
+                        </span>
+                    @endif
                     <div>
                         <p class="font-display text-xl font-bold text-white">Appel terminé</p>
                         <p x-text="messages.at(-1)?.text" class="mt-2 text-[15px] leading-relaxed text-slate-300"></p>

@@ -185,9 +185,10 @@ class VoiceAssistantContextTest extends TestCase
             $this->assertStringNotContainsString($forbidden, (string) file_get_contents(resource_path('js/ama.js')));
         }
 
-        // Le panneau ne s'ouvre que par un toucher : bouton « Parler avec notre assistante » ou bulle d'aide.
+        // Le panneau ne s'ouvre que par un toucher : bouton « Parler avec notre assistante », bulle d'aide ou bulle de
+        // présentation d'Ama.
         $partial = (string) file_get_contents(resource_path('views/site/partials/voice-assistant.blade.php'));
-        $this->assertSame(2, substr_count($partial, '@click="open()"'));
+        $this->assertSame(3, substr_count($partial, '@click="open()"'));
         $this->assertStringNotContainsString('x-init', $partial);
         // Le composant ne s'ouvre jamais lui-même (ni à l'arrivée d'une difficulté, ni après un délai).
         $this->assertStringNotContainsString('this.open(', $component);

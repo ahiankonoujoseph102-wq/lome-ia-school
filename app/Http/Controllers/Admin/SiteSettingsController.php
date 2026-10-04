@@ -589,6 +589,11 @@ class SiteSettingsController extends Controller
             'lessons' => ['nullable', 'boolean'],
             'proactive' => ['nullable', 'boolean'],
             'voice_interrupt' => ['nullable', 'boolean'],
+            'character' => ['nullable', 'boolean'],
+            'nudge' => ['nullable', 'boolean'],
+            'character_style' => ['nullable', Rule::in(VoiceAssistant::CHARACTER_STYLES)],
+            'nudges' => ['array'],
+            'nudges.*' => ['nullable', 'string', 'max:'.VoiceAssistant::NUDGE_MAX_LENGTH],
             'help_delay' => ['nullable', 'integer', 'min:'.VoiceAssistant::MIN_HELP_DELAY, 'max:'.VoiceAssistant::MAX_HELP_DELAY],
         ];
         $messages = [
@@ -598,6 +603,7 @@ class SiteSettingsController extends Controller
             'knowledge_faq.*.question.max' => 'Une question est trop longue (200 caractères au maximum).',
             'knowledge_faq.*.answer.max' => 'Une réponse est trop longue ('.number_format(AmaKnowledge::MAX_ANSWER, 0, ',', ' ').' caractères au maximum).',
             'knowledge_other.max' => 'Le texte « Autres informations » est trop long ('.number_format(AmaKnowledge::MAX_OTHER, 0, ',', ' ').' caractères au maximum).',
+            'nudges.*.max' => 'Un message de présentation est trop long ('.VoiceAssistant::NUDGE_MAX_LENGTH.' caractères au maximum).',
             'help_delay.integer' => 'Le délai s\'écrit en secondes, sans virgule (par exemple 90).',
             'help_delay.min' => 'Le délai doit être d\'au moins '.VoiceAssistant::MIN_HELP_DELAY.' secondes.',
             'help_delay.max' => 'Le délai ne peut pas dépasser '.VoiceAssistant::MAX_HELP_DELAY.' secondes.',
@@ -633,6 +639,17 @@ class SiteSettingsController extends Controller
         $lessons = (bool) ($validated['lessons'] ?? false);
         $proactive = (bool) ($validated['proactive'] ?? false);
         $voiceInterrupt = (bool) ($validated['voice_interrupt'] ?? false);
+        $character = (bool) ($validated['character'] ?? false);
+        $nudge = (bool) ($validated['nudge'] ?? false);
+        $characterStyle = (string) ($validated['character_style'] ?? 'a');
+        // Messages de présentation : un champ vidé ou identique au texte d'origine revient au texte d'origine.
+        $nudges = [];
+        foreach (VoiceAssistant::NUDGES as $type => $default) {
+            $text = trim((string) preg_replace('/\s+/u', ' ', (string) ($validated['nudges'][$type] ?? '')));
+            if ($text !== '' && $text !== $default) {
+                $nudges[$type] = $text;
+            }
+        }
         $delay = (int) ($validated['help_delay'] ?? VoiceAssistant::DEFAULT_HELP_DELAY);
         // Instructions vidées : retour au texte d'origine.
         $instructions = AmaPrompt::effectiveInstructions($validated['instructions'] ?? '');
@@ -661,6 +678,10 @@ class SiteSettingsController extends Controller
             'lessons' => $lessons,
             'proactive' => $proactive,
             'voice_interrupt' => $voiceInterrupt,
+            'character' => $character,
+            'character_style' => $characterStyle,
+            'nudge' => $nudge,
+            'nudges' => $nudges,
             'help_delay' => $delay,
         ]]);
 
@@ -668,7 +689,7 @@ class SiteSettingsController extends Controller
             ? 'Ama (Gemini), '.$limits['visitor_daily_limit'].' messages par visiteur et par jour, '.$limits['daily_limit'].' demandes par jour pour le site'.($instructions !== (string) ($previous['instructions'] ?? AmaPrompt::DEFAULT_INSTRUCTIONS) ? ', instructions modifiées' : '').($knowledge !== ($previousKnowledge ?: ['school' => AmaKnowledge::DEFAULT_SCHOOL, 'faq' => [], 'other' => '']) ? ', base de connaissances modifiée' : '')
             : 'agent ElevenLabs '.$agentId;
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').').');
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').', personnage animé : '.($character ? 'oui (visage '.$characterStyle.')' : 'non').', Ama se présente toute seule : '.($nudge ? 'oui' : 'non').').');
     }
 
     private function updateLegal(Request $request): void
