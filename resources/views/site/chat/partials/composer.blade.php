@@ -18,14 +18,17 @@
         <x-site.alert type="error">{{ $message }}</x-site.alert>
     @enderror
 
-    {{-- Réponse à un message --}}
-    <div x-show="replyTo" x-cloak class="flex items-center gap-3 rounded-2xl bg-veil/[0.06] py-2 pr-2 pl-3 ring-1 ring-veil/10">
+    {{-- Réponse à un message (préparée par le geste vers la droite ou par « Répondre » dans le menu) --}}
+    <div x-show="replyTo" x-cloak class="chat-reply-draft" data-test="reply-draft">
         <span class="h-9 w-1 shrink-0 rounded-full bg-electric-400"></span>
         <span class="min-w-0 flex-1">
             <span class="block truncate text-xs font-semibold text-electric-200" x-text="replyTo ? 'Réponse à ' + replyTo.author : ''"></span>
             <span class="block truncate text-sm text-slate-300" x-text="replyTo ? replyTo.preview : ''"></span>
         </span>
-        <button type="button" @click="replyTo = null" class="grid size-9 place-items-center rounded-full text-slate-400 hover:bg-veil/10 hover:text-white" aria-label="Annuler la réponse">
+        <template x-if="replyTo && replyTo.thumb">
+            <img :src="replyTo.thumb" alt="" class="size-10 shrink-0 rounded-lg bg-black/30 object-cover">
+        </template>
+        <button type="button" @click="cancelReply()" class="grid size-9 shrink-0 place-items-center rounded-full text-slate-400 hover:bg-veil/10 hover:text-white" aria-label="Annuler la réponse">
             <flux:icon.x-mark class="size-5" />
         </button>
     </div>
@@ -121,6 +124,7 @@
             placeholder="Écrire un message"
             @input="autosize()"
             @keydown.enter="onEnter($event)"
+            @keydown.escape="cancelReply()"
             class="chat-input"
         ></textarea>
 

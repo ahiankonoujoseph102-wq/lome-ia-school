@@ -79,6 +79,7 @@ En bref : « Mon espace », « Mes formations », puis la formation ; groupe pri
 
 - « Mon espace », « Mes formations » (« Formations » sur téléphone), la formation : progression, programme, « Reprendre ». Sous la vidéo : « Marquer comme terminée », « Lecteur de secours » (quand il est proposé), « Fichiers à télécharger ». Accès à vie.
 - Groupe privé par formation (onglet « Groupes »), ajout automatique à l'ouverture de l'accès.
+- Répondre à un message précis du groupe : le glisser vers la droite, ou appui long sur le message puis « Répondre » (sur ordinateur : les trois points à côté du message).
 - Séance en direct (Google Meet) : lien réservé aux élèves, jamais public ; « Mon espace », « Sessions », la séance ; « Rejoindre la session » s'active 15 minutes avant ; lien aussi épinglé dans le groupe ; rappels la veille et 1 heure avant.
 
 ## 8. Réserver la consultation gratuite

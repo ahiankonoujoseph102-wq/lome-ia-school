@@ -18,6 +18,7 @@ use App\Models\Formation;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -139,7 +140,10 @@ class GroupController extends Controller
 
         $updated = $this->loader->query($group)
             ->where('id', '<=', $afterId)
-            ->where('updated_at', '>=', $since)
+            ->where(fn (Builder $query) => $query
+                ->where('updated_at', '>=', $since)
+                // Message d'origine supprimé depuis : la citation des réponses devient « Message supprimé ».
+                ->orWhereHas('replyTo', fn (Builder $original) => $original->where('deleted_at', '>=', $since)))
             ->orderBy('id')
             ->limit(100)
             ->get()
