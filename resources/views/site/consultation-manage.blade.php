@@ -8,7 +8,7 @@
     $isUpcoming = $consultation->isBooked() && ! $consultation->isPast();
 @endphp
 
-<x-layouts::site title="Ma consultation gratuite" noindex :whatsapp-message="config('site.whatsapp.consultation_message')">
+<x-layouts::site title="Ma consultation gratuite" noindex :whatsapp-message="\App\Support\WhatsAppMessages::consultationBooked($consultation)">
     <div class="mx-auto max-w-2xl space-y-5 px-4 pt-6 pb-16 sm:px-6 sm:pt-10">
         @if (session('booked'))
             <div class="card border-emerald-400/30 bg-emerald-400/10 p-5 text-center" data-test="booking-confirmed">
@@ -135,7 +135,7 @@
             @else
                 <div class="card p-5 text-sm text-slate-300">
                     Le rendez-vous ne peut plus être déplacé ni annulé en ligne (c'est possible jusqu'à {{ $deadlineHours }} heures avant). En cas d'empêchement, prévenez-nous sur WhatsApp.
-                    <a href="{{ WhatsApp::url('Bonjour Lomé IA School, j\'ai un empêchement pour ma consultation du '.ConsultationTime::short($consultation).'.') }}" target="_blank" rel="noopener" class="btn-ghost mt-4 w-full">Nous écrire sur WhatsApp</a>
+                    <a href="{{ WhatsApp::url(\App\Support\WhatsAppMessages::consultationBooked($consultation)) }}" target="_blank" rel="noopener" class="btn-ghost mt-4 w-full">Nous écrire sur WhatsApp</a>
                 </div>
             @endif
         @endif

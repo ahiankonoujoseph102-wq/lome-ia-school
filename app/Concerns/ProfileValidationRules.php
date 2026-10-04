@@ -3,6 +3,7 @@
 namespace App\Concerns;
 
 use App\Models\User;
+use App\Rules\NotATeamTitle;
 use App\Rules\WhatsAppNumber;
 use App\Support\PhoneNumber;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -65,7 +66,8 @@ trait ProfileValidationRules
      */
     protected function nameRules(): array
     {
-        return ['required', 'string', 'max:255'];
+        // Les titres de l'équipe (« Formateur principal », « Administrateur »…) ne peuvent pas être imités par un nom.
+        return ['required', 'string', 'max:255', new NotATeamTitle];
     }
 
     /**

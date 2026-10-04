@@ -27,7 +27,7 @@
                             <p class="flex min-w-0 items-center gap-1.5">
                                 <span class="truncate font-semibold text-white">{{ $user->id === $viewer->user->id ? $user->name.' (vous)' : $user->name }}</span>
                                 @if ($user->chatBadge())
-                                    <span @class(['chat-badge', 'chat-badge-trainer' => $user->isAdmin(), 'chat-badge-team' => ! $user->isAdmin()])>{{ $user->chatBadge() }}</span>
+                                    <span class="{{ \App\Chat\ChatBadges::classes($user->chatBadgeKind()) }}">{{ $user->chatBadge() }}</span>
                                 @endif
                             </p>
                             @if ($member->isMuted())

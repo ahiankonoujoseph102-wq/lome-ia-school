@@ -1,4 +1,4 @@
-<x-layouts::site title="Supplément de la session" variant="student">
+<x-layouts::site title="Supplément de la session" variant="student" :whatsapp-message="\App\Support\WhatsAppMessages::payment($formation, $session, \App\Support\WhatsAppMessages::paymentStep(auth()->user(), $unverifiedPurchase ?? null))">
     <div class="mx-auto max-w-2xl px-4 pt-6 pb-12 sm:px-6 sm:pt-10">
         <a href="{{ route('student.sessions.show', $session) }}" class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
             <flux:icon.arrow-left class="size-4" /> Retour à la session

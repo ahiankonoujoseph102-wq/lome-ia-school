@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Admin\ActivityLog;
+use App\Chat\ChatBadges;
 use App\Chat\GroupMembership;
 use App\Enums\AdminAction;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Settings\SiteSettings;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -33,7 +36,53 @@ class ModeratorController extends Controller
         return view('site.admin.moderators', [
             'moderators' => User::query()->where('role', UserRole::Moderator->value)->orderBy('name')->get(),
             'admins' => User::query()->where('role', UserRole::Admin->value)->orderBy('name')->get(),
+            'principalId' => ChatBadges::principalId(),
         ]);
+    }
+
+    /**
+     * Étiquettes des groupes : compte principal (« Formateur principal ») et libellés. Mot de passe redemandé ;
+     * un changement de compte principal est un changement de rôle (alerte par e-mail et journal).
+     */
+    public function updateBadges(Request $request): RedirectResponse
+    {
+        $validated = $request->validateWithBag('badges', [
+            'principal_user_id' => ['required', 'integer', Rule::exists(User::class, 'id')->where('role', UserRole::Admin->value)],
+            'principal_label' => ['required', 'string', 'max:'.ChatBadges::LABEL_MAX_LENGTH],
+            'admin_label' => ['required', 'string', 'max:'.ChatBadges::LABEL_MAX_LENGTH],
+            'current_password' => ['required', 'current_password'],
+        ], [
+            'principal_user_id.required' => 'Choisissez le compte du formateur principal.',
+            'principal_user_id.exists' => 'Ce compte n\'est pas administrateur.',
+            'principal_label.required' => 'Saisissez l\'étiquette du formateur principal.',
+            'principal_label.max' => 'Étiquette trop longue : '.ChatBadges::LABEL_MAX_LENGTH.' caractères au maximum.',
+            'admin_label.required' => 'Saisissez l\'étiquette des administrateurs.',
+            'admin_label.max' => 'Étiquette trop longue : '.ChatBadges::LABEL_MAX_LENGTH.' caractères au maximum.',
+        ] + self::PASSWORD_MESSAGES);
+
+        $principalLabel = trim((string) preg_replace('/\s+/u', ' ', (string) $validated['principal_label']));
+        $adminLabel = trim((string) preg_replace('/\s+/u', ' ', (string) $validated['admin_label']));
+
+        if (mb_strtolower($principalLabel) === mb_strtolower($adminLabel)) {
+            throw ValidationException::withMessages(['admin_label' => 'Les deux étiquettes doivent être différentes.'])->errorBag('badges');
+        }
+
+        $previous = ChatBadges::principalId();
+        $principal = User::query()->findOrFail((int) $validated['principal_user_id']);
+
+        SiteSettings::save(['site.chat_badges' => [
+            'principal_user_id' => $principal->id,
+            'principal' => $principalLabel,
+            'admin' => $adminLabel,
+        ]]);
+
+        if ($previous !== $principal->id) {
+            ActivityLog::record(AdminAction::RoleChanged, $principal->name.' ('.$principal->email.') est maintenant le compte principal (« '.$principalLabel.' ») dans les groupes.', $principal);
+        }
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Étiquettes des groupes : « '.$principalLabel.' » et « '.$adminLabel.' ».');
+
+        return back()->with('status', 'Étiquettes enregistrées : elles sont déjà visibles dans les groupes.');
     }
 
     public function store(Request $request, GroupMembership $membership): RedirectResponse

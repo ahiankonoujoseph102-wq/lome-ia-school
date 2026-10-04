@@ -5,12 +5,13 @@ namespace App\Support;
 class WhatsApp
 {
     /**
-     * Lien wa.me qui ouvre une conversation avec un message prérempli.
+     * Lien wa.me qui ouvre une conversation avec un message prérempli (par défaut : message des « autres pages »,
+     * voir WhatsAppMessages).
      */
     public static function url(?string $message = null): string
     {
         $number = (string) config('site.whatsapp.number');
-        $message ??= (string) config('site.whatsapp.message');
+        $message ??= WhatsAppMessages::general();
 
         return 'https://wa.me/'.$number.'?text='.rawurlencode($message);
     }

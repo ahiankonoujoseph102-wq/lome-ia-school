@@ -1,10 +1,11 @@
 @php
     $user = auth()->user();
     $activeTab = old('form') === 'login' ? 'login' : 'register';
-    $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur le paiement de la formation « '.$formation->title.' ».';
     $moduleCount = $formation->publicCurriculum()->count();
     $lessonCount = $formation->orderedPublishedLessons()->count();
     $paying = $user && ! $alreadyEnrolled;
+    // Message WhatsApp de l'en-tête : formation et étape affichée (mis à jour par le paiement à chaque étape).
+    $whatsappMessage = \App\Support\WhatsAppMessages::payment($formation, null, \App\Support\WhatsAppMessages::paymentStep($user, $unverifiedPurchase ?? null, (bool) $alreadyEnrolled));
 @endphp
 
 <x-layouts::site title="Récapitulatif de commande" :whatsapp-message="$whatsappMessage" noindex>

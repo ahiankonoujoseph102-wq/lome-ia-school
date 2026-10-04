@@ -8,7 +8,7 @@
     use App\Payments\PaymentMethods;
     use App\Support\Device;
     use App\Support\Money;
-    use App\Support\WhatsApp;
+    use App\Support\WhatsAppMessages;
 
     $liveSession ??= null;
     $user ??= auth()->user();
@@ -23,9 +23,8 @@
     $samePayment = $unverifiedPurchase && ($liveSession
         ? $unverifiedPurchase->live_session_id === $liveSession->id
         : $unverifiedPurchase->formation_id === $formation->id && ! $unverifiedPurchase->isSessionSupplement());
-    $helpUrl = WhatsApp::url($liveSession
-        ? 'Bonjour Lomé IA School, j\'ai besoin d\'aide pour payer le supplément de la session de la formation « '.$formation->title.' » (montant : '.$amount.').'
-        : 'Bonjour Lomé IA School, j\'ai besoin d\'aide pour payer la formation « '.$formation->title.' » (montant : '.$amount.').');
+    // « Besoin d'aide pour payer ? » : un message WhatsApp par étape (formation et étape affichée).
+    $helpUrls = WhatsAppMessages::paymentUrls($formation, $liveSession);
     $initialMethod = $paymentMethods->has((string) old('payment_method')) ? (string) old('payment_method') : null;
     $stepLabels = ['Pays', 'Opérateur', 'Paiement', 'Capture'];
     $maxMb = intdiv((int) $payments['proof_max_kb'], 1024);
@@ -61,6 +60,7 @@
             maxBytes: @js((int) $payments['proof_max_kb'] * 1024),
             maxMb: @js($maxMb),
             labels: @js($stepLabels),
+            helpUrls: @js($helpUrls),
         })"
         x-ref="payment"
         @pageshow.window="sending = false"
@@ -286,7 +286,7 @@
 
         {{-- Aide, visible à chaque étape --}}
         <div class="border-t border-veil/10 p-5 sm:p-6">
-            <a href="{{ $helpUrl }}" target="_blank" rel="noopener" class="btn-ghost w-full" data-test="payment-help">
+            <a href="{{ $helpUrls[($initialMethod ? ($errors->has('proof') ? 4 : 3) : 1) - 1] }}" :href="helpUrls[step - 1]" target="_blank" rel="noopener" class="btn-ghost w-full" data-test="payment-help">
                 <span class="grid size-8 place-items-center rounded-full bg-[#25D366] text-white" aria-hidden="true"><x-site.whatsapp-icon class="size-4.5" /></span> Besoin d'aide pour payer ?
             </a>
         </div>

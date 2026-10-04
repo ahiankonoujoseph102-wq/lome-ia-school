@@ -49,6 +49,6 @@ class StaticPagesTest extends TestCase
     {
         $this->get(route('consultation'))
             ->assertOk()
-            ->assertSee('https://wa.me/22872240231?text='.rawurlencode(config('site.whatsapp.consultation_message')), false);
+            ->assertSee('https://wa.me/22872240231?text='.rawurlencode('Bonjour Coach Joseph, j\'ai une question sur la consultation gratuite. Ma question : '), false);
     }
 }

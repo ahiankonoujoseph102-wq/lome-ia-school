@@ -182,6 +182,7 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
         Route::post('groupes/{formation}/messages', [MessageController::class, 'store'])->middleware('throttle:chat-messages')->name('chat.messages.store');
         Route::delete('groupes/{formation}/messages/{message}', [MessageController::class, 'destroy'])->name('chat.messages.destroy');
         Route::post('groupes/{formation}/messages/{message}/epingler', [MessageController::class, 'togglePin'])->name('chat.messages.pin');
+        Route::post('groupes/{formation}/messages/{message}/reaction', [MessageController::class, 'react'])->middleware('throttle:60,1')->name('chat.messages.react');
         Route::post('groupes/{formation}/messages/{message}/signaler', [MessageController::class, 'report'])->middleware('throttle:20,1')->name('chat.messages.report');
         Route::get('groupes/{formation}/fichiers/{message}', [AttachmentController::class, 'show'])->name('chat.attachments.show');
         Route::post('groupes/{formation}/lu', [GroupController::class, 'read'])->name('chat.read');
@@ -283,6 +284,7 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::get('equipe', [ModeratorController::class, 'index'])->name('moderators.index');
     Route::post('equipe', [ModeratorController::class, 'store'])->name('moderators.store');
     Route::delete('equipe/{user}', [ModeratorController::class, 'destroy'])->name('moderators.destroy');
+    Route::put('equipe/etiquettes', [ModeratorController::class, 'updateBadges'])->name('moderators.badges');
 
     // Affiliation : retraits à payer et affiliés (admin uniquement, jamais les modérateurs : il s'agit d'argent)
     Route::get('affiliation/retraits', [AdminAffiliateController::class, 'withdrawals'])->name('affiliates.withdrawals');

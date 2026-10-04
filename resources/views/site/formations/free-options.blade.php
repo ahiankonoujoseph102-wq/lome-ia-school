@@ -10,7 +10,7 @@
     $date = $formation->eventDateLabel();
 @endphp
 
-<x-layouts::site title="Choisissez votre option" :noindex="true">
+<x-layouts::site title="Choisissez votre option" :noindex="true" :whatsapp-message="\App\Support\WhatsAppMessages::free($formation)">
     <div class="mx-auto max-w-lg px-4 pt-6 pb-16 sm:pt-10" data-test="free-options-page">
         <p class="inline-flex items-center gap-2 rounded-full bg-night-900 px-3 py-1 text-sm font-semibold text-gold-200 ring-1 ring-gold-500/60">
             <flux:icon.check-circle class="size-4" /> Compte créé · Étape 3 sur 3

@@ -20,6 +20,7 @@ import {
     handoffIsReady,
     lastVisitorQuestion,
     loadConversation,
+    personalGreeting,
     pick,
     pickFrenchVoice,
     saveConversation,
@@ -141,9 +142,17 @@ Alpine.data('catalogue', (items) => ({
  * La capture est envoyée dès qu'elle est choisie (un seul bouton), après un contrôle du type et de la
  * taille dans le navigateur (le serveur revérifie tout).
  */
-Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxBytes, maxMb, labels }) => ({
+// Boutons WhatsApp qui suivent la page (data-whatsapp-page) : le paiement envoie le lien de l'étape affichée.
+window.addEventListener('whatsapp-page-url', (event) => {
+    if (typeof event.detail === 'string' && event.detail.startsWith('https://wa.me/')) {
+        document.querySelectorAll('a[data-whatsapp-page]').forEach((link) => link.setAttribute('href', event.detail));
+    }
+});
+
+Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxBytes, maxMb, labels, helpUrls = [] }) => ({
     methods,
     labels,
+    helpUrls,
     step: initialStep,
     country: '',
     method: '',
@@ -173,6 +182,10 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxByt
         };
         // Après l'initialisation des autres composants (le bouton d'Ama peut être plus bas dans la page).
         queueMicrotask(() => window.dispatchEvent(new CustomEvent('ama-context', { detail })));
+        // Boutons WhatsApp de la page (en-tête, bouton flottant, Ama) : message avec l'étape affichée.
+        if (this.helpUrls[this.step - 1]) {
+            window.dispatchEvent(new CustomEvent('whatsapp-page-url', { detail: this.helpUrls[this.step - 1] }));
+        }
     },
 
     goTo(step) {
@@ -1053,6 +1066,8 @@ Alpine.data('voiceAssistant', (config) => ({
             return;
         }
 
+        // « Bonjour » ou « Bonsoir » selon l'heure du téléphone, avec le prénom si la personne est connectée.
+        this.nudgeText = this.greet(config.nudge?.text ?? '');
         this.nudge = true;
         this.$nextTick(() => this.checkCovering());
         // La page change sous la bulle (étape suivante du paiement, menu ouvert…) : la place est revérifiée deux fois
@@ -1195,7 +1210,10 @@ Alpine.data('voiceAssistant', (config) => ({
         const difficulty = this.context.difficulte && config.difficulties[this.context.difficulte];
         const greeting = difficulty ? difficulty[1] : config.greeting;
 
-        if (this.messages.length === 0 || (difficulty && this.messages.at(-1)?.text !== greeting)) {
+        if (this.messages.length === 0) {
+            // Premier message de la conversation : « Bonjour » ou « Bonsoir » (heure du téléphone) et le prénom.
+            this.messages.push({ from: 'ama', text: this.greet(greeting), fallback: false });
+        } else if (difficulty && this.messages.at(-1)?.text !== greeting) {
             this.messages.push({ from: 'ama', text: greeting, fallback: false });
         }
 
@@ -1207,6 +1225,11 @@ Alpine.data('voiceAssistant', (config) => ({
                 this.$refs.input?.focus();
             }
         });
+    },
+
+    // Salutation calculée dans le navigateur, sans appel à l'IA (le prénom ne part jamais au serveur).
+    greet(text) {
+        return personalGreeting(text, { hour: new Date().getHours(), firstName: config.firstName ?? '' });
     },
 
     closeChat() {
@@ -1431,7 +1454,9 @@ Alpine.data('voiceAssistant', (config) => ({
         let amaIndex = null;
 
         this.bargeInUnavailable = false;
+        const callGreeting = this.greet(CALL_GREETING);
         this.call = createVoiceCall({
+            greeting: callGreeting,
             Recognition,
             synth: window.speechSynthesis,
             Utterance: window.SpeechSynthesisUtterance,
@@ -1504,8 +1529,8 @@ Alpine.data('voiceAssistant', (config) => ({
                 }
             },
         });
-        if (this.messages.at(-1)?.text !== CALL_GREETING) {
-            this.messages.push({ from: 'ama', text: CALL_GREETING, fallback: false });
+        if (this.messages.at(-1)?.text !== callGreeting) {
+            this.messages.push({ from: 'ama', text: callGreeting, fallback: false });
         }
         // Le grand personnage apparaît en se dessinant (sans animation si le téléphone préfère moins de mouvement).
         this.faceEnter = true;

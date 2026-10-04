@@ -227,7 +227,8 @@
                         <p x-text="messages.at(-1)?.text" class="mt-2 text-[15px] leading-relaxed text-slate-300"></p>
                     </div>
                     <a
-                        href="{{ \App\Support\WhatsApp::url() }}"
+                        href="{{ \App\Support\WhatsApp::url($whatsappMessage ?? null) }}"
+                        data-whatsapp-page
                         target="_blank"
                         rel="noopener"
                         class="flex w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-emerald-500/15 px-5 py-3.5 font-semibold text-emerald-100 ring-1 ring-emerald-400/60 transition hover:bg-emerald-500/25"
@@ -260,7 +261,8 @@
                                 <p x-text="message.text" class="whitespace-pre-line"></p>
                                 <a
                                     x-show="message.fallback"
-                                    href="{{ \App\Support\WhatsApp::url() }}"
+                                    href="{{ \App\Support\WhatsApp::url($whatsappMessage ?? null) }}"
+                        data-whatsapp-page
                                     target="_blank"
                                     rel="noopener"
                                     class="mt-3 flex items-center justify-center gap-2 rounded-xl bg-emerald-500/15 px-4 py-2.5 text-sm font-semibold text-emerald-100 ring-1 ring-emerald-400/60 transition hover:bg-emerald-500/25"

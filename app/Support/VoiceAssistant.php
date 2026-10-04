@@ -7,6 +7,7 @@ use App\Models\Formation;
 use App\Models\LiveSession;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\ViewErrorBag;
 
 /**
@@ -614,7 +615,25 @@ class VoiceAssistant
             'helpDelay' => self::helpDelay(),
             'difficulties' => self::DIFFICULTIES,
             'greeting' => self::DEFAULT_GREETING,
+            // Prénom de la personne connectée, pour « Bonsoir Kossi » (bulle et premier message, calculés dans le
+            // navigateur selon l'heure du téléphone). Jamais dans le contexte envoyé à Ama, ni à Google, ni à ElevenLabs.
+            'firstName' => $gemini ? self::firstName($request->user()) : '',
         ];
+    }
+
+    /**
+     * Prénom affiché par Ama : premier mot du nom du compte (lettres, trait d'union, apostrophe), vide pour un visiteur.
+     */
+    public static function firstName(?User $user): string
+    {
+        if ($user === null) {
+            return '';
+        }
+
+        $first = (string) Str::of((string) $user->name)->squish()->before(' ');
+        $first = mb_substr((string) preg_replace('/[^\p{L}\'’-]/u', '', $first), 0, 30);
+
+        return $first === '' ? '' : mb_strtoupper(mb_substr($first, 0, 1)).mb_substr($first, 1);
     }
 
     /**

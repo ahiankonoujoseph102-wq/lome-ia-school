@@ -12,11 +12,15 @@
     $palette = ['text-sky-300', 'text-emerald-300', 'text-amber-300', 'text-pink-300', 'text-cyan-300', 'text-lime-300', 'text-orange-300', 'text-fuchsia-300'];
     $nameColor = $author->isStaff() ? 'text-gold-300' : $palette[$author->id % count($palette)];
     $reply = $message->replyTo;
+    // Réactions (six emojis, une par personne) : compteurs sous la bulle, comme sur WhatsApp.
+    $reactionCounts = $deleted ? [] : $message->reactionCounts();
+    $myReaction = $deleted ? null : $message->reactionOf($viewer->user);
+    $canReact = $viewer->canReact($message);
 @endphp
 
 <div
     id="m-{{ $message->id }}"
-    @class(['chat-row group/message flex items-end gap-2', 'justify-end' => $mine, 'mt-0.5' => $grouped, 'mt-3' => ! $grouped])
+    @class(['chat-row group/message flex items-end gap-2', 'justify-end' => $mine, 'mt-0.5' => $grouped, 'mt-3' => ! $grouped, 'pb-4' => $reactionCounts !== []])
     data-message-id="{{ $message->id }}"
     data-author-id="{{ $author->id }}"
     data-author="{{ $mine ? 'Vous' : $author->name }}"
@@ -28,6 +32,8 @@
     data-can-report="{{ $viewer->canReport($message) ? '1' : '0' }}"
     data-can-moderate="{{ $viewer->canModerateAuthorOf($message) ? '1' : '0' }}"
     data-deleted="{{ $deleted ? '1' : '0' }}"
+    data-can-react="{{ $canReact ? '1' : '0' }}"
+    data-my-reaction="{{ $myReaction?->value }}"
 >
     @unless ($mine)
         <div class="w-8 shrink-0 self-end">
@@ -49,7 +55,7 @@
             <p class="mb-0.5 flex min-w-0 items-center gap-1.5 text-[13px] leading-5 font-semibold">
                 <span class="truncate {{ $nameColor }}">{{ $author->name }}</span>
                 @if ($badge)
-                    <span @class(['chat-badge', 'chat-badge-trainer' => $author->isAdmin(), 'chat-badge-team' => ! $author->isAdmin()])>{{ $badge }}</span>
+                    <span class="{{ \App\Chat\ChatBadges::classes($author->chatBadgeKind()) }}" data-test="chat-badge">{{ $badge }}</span>
                 @endif
             </p>
         @endif
@@ -147,6 +153,23 @@
             @endif
             <time datetime="{{ $message->created_at->toIso8601String() }}">{{ $message->created_at->format('H:i') }}</time>
         </p>
+
+        @if ($reactionCounts !== [])
+            {{-- Toucher un emoji : on réagit avec lui (ou on retire sa réaction si c'était déjà la sienne). --}}
+            <div @class(['chat-reactions', 'justify-end' => $mine]) data-test="reactions">
+                @foreach ($reactionCounts as $key => $count)
+                    @php $reaction = \App\Enums\ChatReaction::from($key); @endphp
+                    <button
+                        type="button"
+                        @class(['chat-reaction', 'chat-reaction-mine' => $myReaction === $reaction])
+                        @if ($canReact) data-react="{{ $key }}" @else disabled @endif
+                        aria-pressed="{{ $myReaction === $reaction ? 'true' : 'false' }}"
+                        aria-label="{{ $reaction->label() }} : {{ $count }} {{ $count > 1 ? 'réactions' : 'réaction' }}{{ $myReaction === $reaction ? ', dont la vôtre' : '' }}"
+                        data-test="reaction-{{ $key }}"
+                    ><span aria-hidden="true" class="chat-reaction-emoji">{{ $reaction->emoji() }}</span><span class="tabular-nums">{{ $count }}</span></button>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     @unless ($deleted)

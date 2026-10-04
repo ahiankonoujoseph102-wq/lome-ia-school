@@ -466,6 +466,15 @@ export default function registerChat(Alpine) {
         /* ---------- Menu d'un message ---------- */
 
         onListClick(event) {
+            // Pastille de réaction sous un message : réagir avec cet emoji (ou retirer sa réaction).
+            const reaction = event.target.closest('[data-react]');
+
+            if (reaction) {
+                this.react(reaction.dataset.react, reaction.closest('[data-message-id]')?.dataset.messageId);
+
+                return;
+            }
+
             const menuButton = event.target.closest('[data-menu]');
 
             if (menuButton) {
@@ -545,6 +554,8 @@ export default function registerChat(Alpine) {
                 pinned: data.pinned === '1',
                 canReport: data.canReport === '1',
                 canModerate: data.canModerate === '1',
+                canReact: data.canReact === '1',
+                myReaction: data.myReaction || '',
             };
         },
 
@@ -599,6 +610,45 @@ export default function registerChat(Alpine) {
                 this.flash(json.status || success);
                 this.closeAll();
                 await this.poll();
+            } catch (error) {
+                this.flash(error.message);
+            } finally {
+                this.busy = false;
+            }
+        },
+
+        /**
+         * Réaction par emoji : une seule par personne (un autre emoji remplace, le même retire).
+         * Le message est remplacé tout de suite par sa nouvelle version (compteurs à jour).
+         */
+        async react(emoji, id = this.menu?.id) {
+            if (!emoji || !id || this.busy) {
+                return;
+            }
+
+            this.busy = true;
+
+            try {
+                const response = await fetch(this.url('react', id), {
+                    method: 'POST',
+                    headers: { ...jsonHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emoji }),
+                    credentials: 'same-origin',
+                });
+                const json = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(errorForStatus(response.status, json));
+                }
+
+                const element = document.getElementById(`m-${id}`);
+
+                if (element && json.html) {
+                    element.outerHTML = json.html;
+                }
+
+                navigator.vibrate?.(8);
+                this.menu = null;
             } catch (error) {
                 this.flash(error.message);
             } finally {
