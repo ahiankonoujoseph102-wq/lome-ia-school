@@ -1,5 +1,9 @@
 <x-layouts::site title="Créer un compte" description="Créez votre compte Lomé IA School en moins d'une minute." noindex>
     <x-site.auth-card title="Créez votre compte" subtitle="Moins d'une minute, et vous accédez à votre espace élève.">
+        <x-slot:notice>
+            @include('site.partials.free-choice-reminder', ['step' => 'register'])
+        </x-slot:notice>
+
         @include('site.auth.partials.register-form')
 
         <x-slot:footer>

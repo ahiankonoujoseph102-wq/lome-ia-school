@@ -101,6 +101,14 @@ Route::post('commande/{formation}/paiement', [CheckoutController::class, 'pay'])
 Route::post('formations/{formation}/inscription-gratuite', [FreeRegistrationController::class, 'store'])
     ->middleware(['auth', 'email-confirmed', 'throttle:10,1'])
     ->name('free-registration.store');
+// Visiteur sans compte (ou adresse non confirmée) : l'option choisie est gardée en mémoire, aucune place réservée ;
+// l'inscription se termine toute seule après la création du compte et la confirmation de l'e-mail.
+Route::post('formations/{formation}/inscription-gratuite/choix', [FreeRegistrationController::class, 'choose'])
+    ->middleware('throttle:20,1')
+    ->name('free-registration.choose');
+Route::get('inscription-gratuite/terminer', [FreeRegistrationController::class, 'complete'])
+    ->middleware(['auth', 'no-store', 'throttle:20,1'])
+    ->name('free-registration.complete');
 Route::delete('formations/{formation}/inscription-gratuite', [FreeRegistrationController::class, 'destroy'])
     ->middleware(['auth', 'throttle:10,1'])
     ->name('free-registration.destroy');

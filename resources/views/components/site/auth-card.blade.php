@@ -4,6 +4,9 @@
     <div class="glow pointer-events-none absolute inset-0 -z-10 opacity-80"></div>
     <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
     <div class="mx-auto w-full max-w-md px-4 pt-8 pb-16 sm:pt-14">
+        @if (isset($notice) && $notice->hasActualContent())
+            <div class="mb-6">{{ $notice }}</div>
+        @endif
         <div class="text-center">
             <h1 class="text-3xl font-bold tracking-tight text-balance text-white">{{ $title }}</h1>
             @if ($subtitle)

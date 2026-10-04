@@ -1,6 +1,8 @@
 {{--
     Inscription à une formation gratuite. États : inscrit(e) (récapitulatif, groupe, annulation), inscriptions closes,
-    complet (WhatsApp), visiteur (compte à créer), adresse e-mail à confirmer, choix de l'option.
+    complet (WhatsApp), choix de l'option. Visiteur sans compte ou adresse non confirmée : les trois étapes,
+    options sélectionnables tout de suite, bouton toujours actif ; le choix est gardé pendant la création du
+    compte et la confirmation de l'e-mail, puis l'inscription se termine toute seule (PendingFreeChoice).
     Une option pleine n'est plus proposée. Style stable face au mode sombre forcé : fond foncé, texte clair,
     contour doré translucide pour l'option choisie (comme le sélecteur de créneaux).
 --}}
@@ -81,28 +83,62 @@
             </a>
         </div>
     @else
+        @php
+            $canRegister = $user && $user->hasConfirmedEmail();
+            $chosen = (string) old('option', $chosenOptionId ?? '');
+            // Un choix gardé pour une option devenue pleine n'est plus présélectionné.
+            $chosen = $availableOptions->contains(fn ($option) => (string) $option->id === $chosen) ? $chosen : '';
+            $needsOption = $availableOptions->isNotEmpty();
+        @endphp
+
         <h2 class="text-xl font-bold text-white">Je m'inscris gratuitement</h2>
-        <p class="mt-1 text-sm text-slate-300">
-            @if ($options->isNotEmpty())
-                Choisissez une seule option.
-            @endif
-            @if ($date)
-                {{ $date }}.
-            @endif
-        </p>
+        @if ($date)
+            <p class="mt-1 text-sm text-slate-300">{{ $date }}.</p>
+        @endif
 
-        @php $canRegister = $user && $user->hasConfirmedEmail(); @endphp
+        @unless ($canRegister)
+            {{-- Les trois étapes, avant les options : le visiteur sait tout de suite ce qui l'attend --}}
+            <ol class="mt-4 grid gap-2 sm:grid-cols-3 sm:gap-3" data-test="free-steps">
+                @foreach ([
+                    $needsOption ? 'Choisissez votre option' : 'Touchez « Je m\'inscris »',
+                    $user ? 'Compte créé' : 'Créez votre compte (1 minute)',
+                    'Confirmez votre e-mail : vous êtes inscrit',
+                ] as $step)
+                    @php $done = $loop->iteration === 2 && $user; @endphp
+                    <li class="flex items-center gap-2.5 rounded-xl bg-night-900 px-3 py-2 text-sm text-slate-200 ring-1 ring-night-600 sm:flex-col sm:items-start sm:gap-1.5 sm:py-3">
+                        <span @class([
+                            'grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold ring-1 ring-inset',
+                            'bg-emerald-500/15 text-emerald-300 ring-emerald-400/50' => $done,
+                            'bg-gold-500/10 text-gold-200 ring-gold-500/70' => ! $done,
+                        ])>
+                            @if ($done)
+                                <flux:icon.check class="size-3.5" />
+                            @else
+                                {{ $loop->iteration }}
+                            @endif
+                        </span>
+                        <span><span class="sr-only">Étape {{ $loop->iteration }} : </span>{{ $step }}</span>
+                    </li>
+                @endforeach
+            </ol>
+        @endunless
 
-        <form method="POST" action="{{ route('free-registration.store', $formation) }}" class="mt-5" data-test="free-form">
+        <form
+            method="POST"
+            action="{{ $canRegister ? route('free-registration.store', $formation) : route('free-registration.choose', $formation) }}"
+            class="mt-5"
+            data-test="free-form"
+            x-data="{ chosen: @js($chosen), missing: false, needsOption: @js($needsOption) }"
+        >
             @csrf
 
-            @if ($availableOptions->isNotEmpty())
-                <fieldset>
-                    <legend class="sr-only">Option d'inscription</legend>
-                    <div class="space-y-3">
+            @if ($needsOption)
+                <fieldset data-ama-avoid data-ama-clear data-install-avoid>
+                    <legend class="mb-3 text-sm font-semibold text-white">{{ $canRegister ? 'Choisissez une seule option' : '1. Choisissez votre option' }}</legend>
+                    <div class="space-y-3 rounded-2xl transition" :class="missing && 'ring-2 ring-rose-400/70 ring-offset-4 ring-offset-night-950'">
                         @foreach ($availableOptions as $option)
                             <label class="group/option flex cursor-pointer items-start gap-3 rounded-2xl bg-night-900 p-4 ring-1 ring-night-600 transition has-checked:bg-gold-500/10 has-checked:ring-2 has-checked:ring-gold-500 has-focus-visible:outline-2 has-focus-visible:outline-gold-500" data-test="free-option">
-                                <input type="radio" name="option" value="{{ $option->id }}" class="peer sr-only" @checked((string) old('option') === (string) $option->id) @disabled(! $canRegister) required>
+                                <input type="radio" name="option" value="{{ $option->id }}" class="peer sr-only" x-model="chosen" @change="missing = false" @checked($chosen === (string) $option->id)>
                                 <span class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ring-2 ring-slate-400 group-has-checked/option:ring-gold-500" aria-hidden="true">
                                     <span class="size-2.5 scale-0 rounded-full bg-gold-500 transition group-has-checked/option:scale-100"></span>
                                 </span>
@@ -122,31 +158,43 @@
                 </fieldset>
             @endif
 
-            @error('option')
-                <p class="mt-3 text-sm text-rose-300" data-test="free-error">{{ $message }}</p>
-            @enderror
+            <div class="mt-5" data-ama-avoid data-ama-clear data-install-avoid>
+                {{-- Message près du bouton : aucune option choisie (navigateur), ou erreur renvoyée par le serveur --}}
+                <p class="mb-3 flex items-start gap-2 rounded-xl bg-rose-500/10 px-3 py-2.5 text-sm font-semibold text-rose-200 ring-1 ring-rose-400/50" role="alert" x-show="missing" style="display: none" data-test="free-missing-option">
+                    <flux:icon.exclamation-circle class="mt-0.5 size-4 shrink-0" /> Choisissez d'abord une option ci-dessus.
+                </p>
+                @error('option')
+                    <p class="mb-3 flex items-start gap-2 rounded-xl bg-rose-500/10 px-3 py-2.5 text-sm font-semibold text-rose-200 ring-1 ring-rose-400/50" role="alert" x-show="! missing" data-test="free-error">
+                        <flux:icon.exclamation-circle class="mt-0.5 size-4 shrink-0" /> {{ $message }}
+                    </p>
+                @enderror
 
-            @if (! $user)
-                <div class="mt-5 rounded-2xl bg-night-900 p-4 ring-1 ring-night-600" data-test="free-guest">
-                    <p class="text-sm text-slate-200">Pour vous inscrire, créez votre compte (c'est gratuit) ou connectez-vous. Vous revenez ensuite sur cette page.</p>
-                    <div class="mt-4 flex flex-col gap-3 sm:flex-row">
-                        <a href="{{ route('register') }}" class="btn-gold">Créer mon compte</a>
-                        <a href="{{ route('login') }}" class="btn-ghost">J'ai déjà un compte</a>
-                    </div>
-                </div>
-            @elseif (! $user->hasConfirmedEmail())
-                <div class="mt-5">
-                    @include('site.partials.email-confirmation-required', ['action' => 'vous inscrire'])
-                </div>
-            @else
-                @unless ($formation->is_active)
-                    <p class="mt-4 text-sm text-gold-200">Aperçu : l'inscription fonctionnera une fois la formation publiée.</p>
-                @endunless
-                <button type="submit" class="btn-gold mt-5 w-full" data-test="free-submit">
+                @if ($canRegister && ! $formation->is_active)
+                    <p class="mb-3 text-sm text-gold-200">Aperçu : l'inscription fonctionnera une fois la formation publiée.</p>
+                @endif
+
+                <button
+                    type="submit"
+                    name="then"
+                    value="register"
+                    class="btn-gold w-full"
+                    data-test="free-submit"
+                    @click="if (needsOption && ! chosen) { $event.preventDefault(); missing = true }"
+                >
                     Je m'inscris gratuitement <flux:icon.arrow-right class="size-5" />
                 </button>
-                <p class="mt-3 text-xs text-slate-400">Vous rejoignez aussitôt le groupe des inscrits et recevez un e-mail de confirmation.</p>
-            @endif
+
+                @if (! $user)
+                    <p class="mt-3 text-center text-sm text-slate-300">
+                        <button type="submit" name="then" value="login" class="font-semibold text-electric-300 underline-offset-4 hover:text-white hover:underline" data-test="free-login">J'ai déjà un compte</button>
+                    </p>
+                    <p class="mt-3 text-xs text-slate-400">C'est gratuit. Votre choix est gardé pendant la création du compte ; la place est réservée dès que votre e-mail est confirmé.</p>
+                @elseif (! $canRegister)
+                    <p class="mt-3 text-xs text-slate-400" data-test="free-unconfirmed">Il ne reste qu'à confirmer votre adresse e-mail ({{ $user->email }}) : vous serez inscrit(e) aussitôt après.</p>
+                @else
+                    <p class="mt-3 text-xs text-slate-400">Vous rejoignez aussitôt le groupe des inscrits et recevez un e-mail de confirmation.</p>
+                @endif
+            </div>
         </form>
     @endif
 </div>

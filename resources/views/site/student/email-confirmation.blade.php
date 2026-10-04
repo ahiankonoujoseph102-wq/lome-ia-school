@@ -26,6 +26,12 @@
             </p>
         </div>
 
+        @if ($freeChoice)
+            <div class="mt-6">
+                @include('site.partials.free-choice-reminder', ['step' => 'confirm'])
+            </div>
+        @endif
+
         @if (session('status'))
             <x-site.alert type="info" class="mt-6">{{ session('status') }}</x-site.alert>
         @endif
@@ -59,7 +65,7 @@
                         <p id="code-erreur" class="text-sm text-rose-300" data-test="code-error">{{ $message }}</p>
                     @enderror
                 </div>
-                <button type="submit" class="btn-gold w-full disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:brightness-75" @disabled($lockedFor > 0)>
+                <button type="submit" data-ama-clear class="btn-gold w-full disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:brightness-75" @disabled($lockedFor > 0)>
                     <flux:icon.check-circle class="size-5" /> Confirmer mon adresse
                 </button>
                 <p class="text-center text-xs text-slate-400">Vous pouvez aussi cliquer sur le bouton « Confirmer mon adresse e-mail » de l'e-mail. Code et bouton sont valables {{ $minutes }} minutes et ne servent qu'une fois.</p>

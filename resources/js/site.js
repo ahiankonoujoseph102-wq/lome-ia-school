@@ -1769,11 +1769,44 @@ Alpine.data('voiceAssistant', (config) => ({
     },
 }));
 
+// Bouton rond d'Ama : il s'efface le temps qu'un élément marqué data-ama-clear (options et bouton de
+// l'inscription gratuite) passe dessous, puis revient. Vérifié une fois par image, au défilement seulement.
+const initAmaClearance = () => {
+    const targets = document.querySelectorAll('[data-ama-clear]');
+    const launcher = document.querySelector('[data-ama-launcher]');
+
+    if (targets.length === 0 || !launcher) {
+        return;
+    }
+
+    let frame = 0;
+    const check = () => {
+        frame = 0;
+        const a = launcher.getBoundingClientRect();
+        const hit =
+            a.width > 0 &&
+            [...targets].some((target) => {
+                const r = target.getBoundingClientRect();
+
+                return r.left < a.right && a.left < r.right && r.top < a.bottom && a.top < r.bottom;
+            });
+        document.body.classList.toggle('ama-clear', hit);
+    };
+    const schedule = () => {
+        frame ||= requestAnimationFrame(check);
+    };
+
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    schedule();
+};
+
 const startAlpine = () => {
     window.Alpine = Alpine;
     Alpine.start();
     initReveal();
     initAnimatedBackgrounds();
+    initAmaClearance();
 };
 
 // Page d'un groupe de discussion : le code du chat est chargé seulement ici.
