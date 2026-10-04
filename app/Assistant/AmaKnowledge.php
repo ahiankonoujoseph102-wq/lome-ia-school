@@ -240,7 +240,7 @@ class AmaKnowledge
 
         return 'FORMATION GRATUITE, sans aucun paiement'
             .($formation->eventDateLabel() ? ', le '.Str::lcfirst($formation->eventDateLabel()) : '')
-            .'. Inscription sur sa page avec un compte et une adresse e-mail confirmée ; une seule option par personne'
+            .'. Inscription sur sa page : d\'abord créer son compte (« Créer mon compte »), confirmer son e-mail, puis choisir son option ; une seule option par personne'
             .($options->isNotEmpty() ? ' : '.$options->implode(' ; ') : '')
             .'.'
             .($formation->event_location ? ' Adresse du présentiel : '.$formation->event_location.'.' : '')

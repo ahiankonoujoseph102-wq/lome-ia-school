@@ -10,7 +10,19 @@
     use App\Support\WhatsApp;
     use Illuminate\Support\Str;
 
-    $registerUrl = route('formations.show', $formation).'#inscription';
+    $user = auth()->user();
+    $confirmed = $user && $user->hasConfirmedEmail();
+    $allFull = $options->isNotEmpty() && $availableOptions->isEmpty();
+    // « Je m'inscris » : création du compte d'abord (visiteur), confirmation de l'e-mail, puis choix de l'option.
+    $registerUrl = match (true) {
+        $registration !== null || $closed || $allFull => route('formations.show', $formation).'#inscription',
+        $confirmed && $availableOptions->isNotEmpty() => route('free-registration.options', $formation),
+        $confirmed => route('formations.show', $formation).'#inscription',
+        default => route('free-registration.start', $formation),
+    };
+    $registerIcon = str_contains($registerUrl, '#') ? 'arrow-down' : 'arrow-right';
+    // Compte créé mais pas encore inscrit : rappel bien visible en haut de la page.
+    $showPendingReminder = $user && $registration === null && ! $closed && $availableOptions->isNotEmpty();
     $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur la formation gratuite « '.$formation->title.' ».';
     $trainer = config('site.trainer');
     $date = $formation->eventDateLabel();
@@ -61,6 +73,23 @@
         </div>
     @endunless
 
+    @if ($showPendingReminder)
+        <div class="mx-auto max-w-6xl px-4 pt-4 sm:px-6" data-ama-avoid data-ama-clear data-install-avoid>
+            <div class="flex flex-col gap-3 rounded-2xl bg-night-900 p-4 ring-2 ring-gold-500/80 sm:flex-row sm:items-center sm:gap-4" role="status" data-test="free-pending-reminder">
+                <span class="hidden size-10 shrink-0 place-items-center rounded-full bg-gold-500/10 text-gold-200 ring-1 ring-gold-500/60 ring-inset sm:grid">
+                    <flux:icon.bell-alert class="size-5" />
+                </span>
+                <p class="min-w-0 flex-1 text-base font-semibold text-white">
+                    Votre compte est créé, mais vous n'êtes pas encore inscrit.
+                    <span class="text-gold-200">{{ $confirmed ? 'Choisissez votre option.' : 'Confirmez votre e-mail, puis choisissez votre option.' }}</span>
+                </p>
+                <a href="{{ $confirmed ? route('free-registration.options', $formation) : route('free-registration.start', $formation) }}" class="btn-gold w-full shrink-0 sm:w-auto" data-test="free-pending-button">
+                    {{ $confirmed ? 'Choisir mon option' : 'Confirmer mon e-mail' }} <flux:icon.arrow-right class="size-5" />
+                </a>
+            </div>
+        </div>
+    @endif
+
     {{-- En-tête de la formation --}}
     <section class="relative isolate overflow-hidden">
         <div class="glow pointer-events-none absolute inset-0 -z-10"></div>
@@ -102,7 +131,7 @@
                     <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center" data-reveal style="--reveal-delay: 200ms">
                         <p class="text-4xl font-bold text-gold-300" data-test="free-price">Gratuit</p>
                         <div class="flex flex-col gap-3 sm:ml-auto sm:flex-row lg:ml-8">
-                            <a href="{{ $registerUrl }}" class="btn-gold">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }} <flux:icon.arrow-down class="size-5" /></a>
+                            <a href="{{ $registerUrl }}" class="btn-gold" data-test="free-hero-register">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }} <flux:icon :icon="$registerIcon" class="size-5" /></a>
                             <a href="{{ WhatsApp::url($whatsappMessage) }}" target="_blank" rel="noopener" class="btn-ghost">
                                 <x-site.whatsapp-icon class="size-5 text-[#25D366]" /> Poser une question
                             </a>
@@ -209,7 +238,7 @@
                 @if ($date)
                     <p class="-mt-3 flex items-center gap-2 text-sm text-slate-300"><flux:icon.calendar-days class="size-4 text-gold-400" /> {{ $date }}</p>
                 @endif
-                <a href="#inscription" class="btn-gold w-full">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }}</a>
+                <a href="{{ $registerUrl }}" class="btn-gold w-full">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }}</a>
                 <div class="border-t border-veil/10 pt-5">
                     <p class="text-sm text-slate-400">Une question ?</p>
                     <a href="{{ WhatsApp::url($whatsappMessage) }}" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[#25D366]">
@@ -223,7 +252,7 @@
     {{-- Appel à l'action final --}}
     <x-site.cta-banner
         :title="'Rejoignez « '.$formation->title.' »'"
-        text="Créez votre compte, choisissez votre option et rejoignez le groupe des inscrits. C'est gratuit."
+        text="Créez votre compte, confirmez votre e-mail, choisissez votre option et rejoignez le groupe des inscrits. C'est gratuit."
     >
         <a href="{{ $registerUrl }}" class="btn-gold">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }}</a>
         <a href="{{ WhatsApp::url($whatsappMessage) }}" target="_blank" rel="noopener" class="btn-ghost">
@@ -251,7 +280,7 @@
                     <p class="truncate text-xs text-slate-400">{{ $formation->title }}</p>
                     <p class="text-lg leading-tight font-bold text-gold-300">Gratuit</p>
                 </div>
-                <a href="#inscription" class="btn-gold shrink-0 !px-5 !py-3">{{ $registration ? 'Mon inscription' : 'Je m\'inscris' }}</a>
+                <a href="{{ $registerUrl }}" class="btn-gold shrink-0 !px-5 !py-3" data-test="free-bar-register">{{ $registration ? 'Mon inscription' : 'Je m\'inscris' }}</a>
             </div>
         </div>
     </x-slot:after>

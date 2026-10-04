@@ -12,7 +12,6 @@ use App\Models\Formation;
 use App\Models\FreeRegistration;
 use App\Models\FreeRegistrationOption;
 use App\Models\User;
-use App\Settings\SiteSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -20,10 +19,12 @@ use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
- * Parcours d'un visiteur sans compte sur une formation gratuite : il choisit son option tout de suite, crée son
- * compte (rappel de son choix), confirme son e-mail par code, puis l'inscription se termine toute seule (place
- * prise à ce moment-là, entrée dans le groupe, écran de confirmation). Option devenue pleine entre-temps :
- * retour sur la page avec un message clair et choix parmi les options restantes.
+ * ANCIEN parcours d'un visiteur sans compte (option choisie avant le compte), remplacé en octobre 2026 par
+ * « compte d'abord » (FreeRegistrationAccountFirstTest) mais toujours pris en charge pour les personnes qui
+ * avaient déjà fait leur choix (choix gardé en mémoire, page déjà ouverte) : création du compte (rappel de son
+ * choix), confirmation de l'e-mail par code, puis inscription terminée toute seule (place prise à ce moment-là,
+ * entrée dans le groupe, écran de confirmation). Option devenue pleine entre-temps : écran du choix parmi les
+ * options restantes, avec un message clair.
  */
 class FreeRegistrationGuestJourneyTest extends TestCase
 {
@@ -149,20 +150,16 @@ class FreeRegistrationGuestJourneyTest extends TestCase
             ->assertDontSee('data-test="free-choice-reminder"', false);
     }
 
-    public function test_the_button_without_option_shows_a_message_near_the_button(): void
+    public function test_an_old_form_sent_without_option_shows_a_message_on_the_page(): void
     {
         $formation = $this->freeFormation();
 
-        $this->get(route('formations.show', $formation))
-            ->assertSee('data-test="free-missing-option"', false)
-            ->assertSee('Choisissez d\'abord une option ci-dessus.', false);
-
-        // Sans JavaScript : le serveur renvoie le même message, près du bouton.
+        // Page ouverte avant la mise à jour, sans option choisie : le serveur renvoie un message clair.
         $this->post(route('free-registration.choose', $formation), ['then' => 'register'])
             ->assertRedirect($this->page($formation));
 
         $this->get(route('formations.show', $formation))
-            ->assertSeeInOrder(['data-test="free-error"', 'Choisissez d&#039;abord une option ci-dessus', 'data-test="free-submit"'], false);
+            ->assertSeeInOrder(['data-test="free-error"', 'Choisissez d&#039;abord une option ci-dessus', 'data-test="free-create-account"'], false);
 
         $this->assertNull(session(PendingFreeChoice::SESSION_KEY));
     }
@@ -180,20 +177,19 @@ class FreeRegistrationGuestJourneyTest extends TestCase
         $this->fill($full, 1);
 
         $this->post(route('email-confirmation.confirm'), ['code' => $this->lastMail()->code])
-            ->assertRedirect($this->page($formation));
+            ->assertRedirect(route('free-registration.options', $formation));
 
         $this->assertTrue($student->fresh()->hasConfirmedEmail());
         $this->assertFalse(FreeRegistration::query()->where('user_id', $student->id)->exists());
         $this->assertFalse($student->isEnrolledIn($formation));
         $this->assertSame(1, $full->fresh()->seatsTaken());
 
-        // Retour sur la page : message clair, seule l'option restante est proposée, rien n'est présélectionné.
-        $page = $this->get(route('formations.show', $formation))
+        // Écran du choix : message clair, seule l'option restante est proposée, rien n'est présélectionné.
+        $page = $this->get(route('free-registration.options', $formation))
             ->assertSee('data-test="free-error"', false)
             ->assertSee('L&#039;option « Présentiel journée » vient d&#039;être complète. Choisissez-en une autre.', false)
             ->assertSee('value="'.$other->id.'"', false)
-            ->assertDontSee('value="'.$full->id.'"', false)
-            ->assertDontSee('data-test="free-steps"', false);
+            ->assertDontSee('value="'.$full->id.'"', false);
         $this->assertDoesNotMatchRegularExpression('/<input type="radio"[^>]*\schecked/', $page->getContent());
 
         // Elle choisit l'option restante et s'inscrit.
@@ -308,31 +304,6 @@ class FreeRegistrationGuestJourneyTest extends TestCase
 
         $this->assertSame($option->id, FreeRegistration::query()->sole()->free_registration_option_id);
         $this->actingAs($student)->get(route('formations.show', $formation))->assertSee('Vous êtes inscrit(e)');
-    }
-
-    public function test_the_top_and_bottom_buttons_lead_to_the_options_block(): void
-    {
-        $formation = $this->freeFormation();
-
-        $this->get(route('formations.show', $formation))
-            ->assertSee('href="'.$this->page($formation).'"', false)
-            ->assertSee('href="#inscription" class="btn-gold shrink-0', false)
-            ->assertSee('id="inscription"', false)
-            ->assertSeeInOrder(['id="inscription"', 'data-test="free-steps"', 'data-test="free-option"', 'data-test="free-submit"'], false);
-    }
-
-    public function test_ama_and_the_install_banner_keep_away_from_the_options_and_the_button(): void
-    {
-        config(['services.gemini.key' => 'cle-de-test', 'services.gemini.model' => 'modele-de-test']);
-        SiteSettings::save(['site.voice_assistant' => ['enabled' => true, 'provider' => 'gemini']]);
-        $formation = $this->freeFormation();
-
-        $html = $this->get(route('formations.show', $formation))->getContent();
-
-        // Bulle d'Ama et bannière d'installation : jamais posées dessus ; bouton rond d'Ama effacé quand ils passent dessous.
-        $this->assertStringContainsString('<fieldset data-ama-avoid data-ama-clear data-install-avoid>', $html);
-        $this->assertStringContainsString('<div class="mt-5" data-ama-avoid data-ama-clear data-install-avoid>', $html);
-        $this->assertStringContainsString('data-ama-launcher', $html);
     }
 
     public function test_a_paid_formation_is_unchanged(): void

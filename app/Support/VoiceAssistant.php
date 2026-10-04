@@ -437,7 +437,7 @@ class VoiceAssistant
 
         // Formation gratuite : inscription avec choix d'une option, jamais de paiement.
         if ($routeName === 'formations.show' && $formation?->isFree()) {
-            $role = 'présente la formation gratuite et l\'inscription « Je m\'inscris gratuitement » (une option à choisir, places limitées, aucun paiement)';
+            $role = 'présente la formation gratuite et l\'inscription « Je m\'inscris gratuitement » (d\'abord « Créer mon compte », puis confirmer son e-mail, puis choisir une option ; places limitées, aucun paiement)';
         }
 
         /** @var array<string, mixed> $extra */

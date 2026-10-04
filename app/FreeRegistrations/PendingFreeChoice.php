@@ -11,7 +11,12 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Choix d'une formation gratuite (et de son option) fait AVANT d'avoir un compte ou une adresse e-mail confirmée.
+ * Choix d'une formation gratuite fait AVANT d'avoir un compte ou une adresse e-mail confirmée.
+ *
+ * Parcours actuel (« compte d'abord ») : seule la formation est gardée (option vide) ; une fois le compte créé
+ * et l'adresse confirmée, la personne arrive directement sur l'écran « Dernière étape : choisissez votre option ».
+ * Ancien parcours (option choisie avant le compte) : toujours pris en charge pour les choix déjà gardés en mémoire,
+ * l'inscription se termine alors toute seule avec cette option.
  *
  * Le choix est gardé dans la session du visiteur pendant la création du compte ou la connexion, puis aussi
  * dans le cache au nom de la personne dès qu'elle a un compte : un bouton de confirmation ouvert sur un autre
@@ -94,8 +99,10 @@ class PendingFreeChoice
     /**
      * Termine l'inscription choisie (adresse e-mail confirmée). Le choix est oublié dans tous les cas :
      * si l'option est devenue pleine, la personne choisit de nouveau parmi les options restantes.
+     * Aucune option gardée alors que la formation en propose (parcours « compte d'abord ») : rien n'est réservé,
+     * « choose » demande d'ouvrir l'écran du choix de l'option.
      *
-     * @return array{formation: Formation, registration: FreeRegistration|null, already: bool, error: string|null}|null
+     * @return array{formation: Formation, registration: FreeRegistration|null, already: bool, error: string|null, choose: bool}|null
      */
     public function complete(?Request $request, User $user): ?array
     {
@@ -111,7 +118,11 @@ class PendingFreeChoice
         $existing = $this->registrar->activeFor($user, $formation);
 
         if ($existing !== null) {
-            return ['formation' => $formation, 'registration' => $existing, 'already' => true, 'error' => null];
+            return ['formation' => $formation, 'registration' => $existing, 'already' => true, 'error' => null, 'choose' => false];
+        }
+
+        if ($choice['option'] === null && $formation->freeOptions()->exists()) {
+            return ['formation' => $formation, 'registration' => null, 'already' => false, 'error' => null, 'choose' => true];
         }
 
         try {
@@ -119,22 +130,39 @@ class PendingFreeChoice
         } catch (ValidationException $exception) {
             $message = $exception->validator->errors()->first('option') ?: 'Choisissez de nouveau votre option.';
 
-            return ['formation' => $formation, 'registration' => null, 'already' => false, 'error' => $message];
+            return ['formation' => $formation, 'registration' => null, 'already' => false, 'error' => $message, 'choose' => false];
         }
 
-        return ['formation' => $formation, 'registration' => $registration, 'already' => false, 'error' => null];
+        return ['formation' => $formation, 'registration' => $registration, 'already' => false, 'error' => null, 'choose' => false];
     }
 
     /**
      * Rappel affiché sur la création du compte, la connexion et la confirmation de l'e-mail.
+     * Sans option (parcours « compte d'abord ») : « Vous créez votre compte pour vous inscrire… ».
      */
-    public static function reminder(Formation $formation, ?FreeRegistrationOption $option): string
+    public static function reminder(Formation $formation, ?FreeRegistrationOption $option, string $step = 'register'): string
     {
-        $what = $formation->event_date !== null
+        $what = self::eventName($formation);
+
+        if ($option !== null) {
+            return 'Vous vous inscrivez '.$what.', option : '.$option->label.'.';
+        }
+
+        return match ($step) {
+            'login' => 'Vous vous connectez pour vous inscrire '.$what.'.',
+            'confirm' => 'Vous vous inscrivez '.$what.'.',
+            default => 'Vous créez votre compte pour vous inscrire '.$what.'.',
+        };
+    }
+
+    /**
+     * « à la formation gratuite du 10 octobre » (ou son titre s'il n'y a pas de date).
+     */
+    public static function eventName(Formation $formation): string
+    {
+        return $formation->event_date !== null
             ? 'à la formation gratuite du '.$formation->event_date->translatedFormat('j F')
             : 'à la formation gratuite « '.$formation->title.' »';
-
-        return 'Vous vous inscrivez '.$what.($option !== null ? ', option : '.$option->label : '').'.';
     }
 
     private function cacheKey(User $user): string
