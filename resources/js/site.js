@@ -1,6 +1,17 @@
 import Alpine from 'alpinejs';
 import { CALL_GREETING, createVoiceCall } from './ama-call.js';
 import {
+    NUDGE_AVOID,
+    NUDGE_VISIBLE_MS,
+    blinkDelay,
+    createNudgeTimer,
+    isSwipe,
+    markNudgeDone,
+    motionAllowed,
+    nextBeat,
+    nudgeDone,
+} from './ama-presence.js';
+import {
     buildVariables,
     createHelpTracker,
     createLineReader,
@@ -786,6 +797,26 @@ Alpine.data('voiceAssistant', (config) => ({
     // « Transmettre au fondateur » : carte de confirmation (ou formulaire de relève) et fiche proposée pendant un appel.
     handoff: null,
     callHandoff: null,
+    // Visage animé d'Ama (attributs lus par le CSS) : clignement, signe de la main, bouche qui suit la synthèse vocale,
+    // entrée du grand personnage. « motion » faux : moins d'animations demandé ou économie de données (visage fixe).
+    character: Boolean(config.character),
+    motion: true,
+    faceBlink: false,
+    faceWave: false,
+    faceTalking: false,
+    faceBeat: 'a',
+    faceEnter: false,
+    blinkTimer: null,
+    enterTimer: null,
+    // Bulle de présentation (texte écrit à l'avance, aucun appel à l'IA), une fois par visite.
+    nudge: false,
+    nudgeText: config.nudge?.text ?? '',
+    nudgeShown: false,
+    nudgeAbove: false,
+    nudgeWatch: null,
+    nudgeTimer: null,
+    nudgeHideTimer: null,
+    swipe: null,
 
     init() {
         let storage = null;
@@ -797,6 +828,13 @@ Alpine.data('voiceAssistant', (config) => ({
 
         this.tracker = createHelpTracker({ storage, pageKey: config.pageKey, enabled: config.proactive });
         this.storage = storage;
+        this.motion = motionAllowed(window);
+
+        if (this.character) {
+            this.scheduleBlink();
+        }
+
+        this.initNudge();
 
         // Voix : seulement ce que le navigateur sait faire (rien n'est demandé ni ouvert ici).
         const speech = speechSupport(window);
@@ -885,6 +923,7 @@ Alpine.data('voiceAssistant', (config) => ({
         }
 
         if (this.tracker.offer()) {
+            this.closeNudge();
             this.context = pick({ ...this.context, difficulte: key });
             this.showBubble(true);
         }
@@ -898,24 +937,172 @@ Alpine.data('voiceAssistant', (config) => ({
     },
 
     checkCovering() {
-        const bubble = this.$refs.bubble;
+        // L'aide « Vous semblez bloqué ? » a la priorité sur la bulle de présentation.
+        const bubble = this.bubble ? this.$refs.bubble : this.nudge ? this.$refs.nudgeBubble : null;
 
-        if (!this.bubble || !bubble) {
+        if (!bubble) {
             this.covering = false;
 
             return;
         }
 
         const box = bubble.getBoundingClientRect();
-        this.covering = [...document.querySelectorAll('a, button, input:not([type=hidden]), select, textarea, label[for]')].some((element) => {
-            if (this.$el.contains(element)) {
-                return false;
+
+        // Bulle pas encore dessinée (affichage en cours) : nouvel essai à l'image suivante.
+        if (box.width === 0) {
+            requestAnimationFrame(() => this.checkCovering());
+
+            return;
+        }
+
+        // La présentation ne recouvre jamais un bouton important (paiement, inscription, copier, envoi de capture…) ;
+        // l'aide, qui répond à un blocage, évite aussi les liens et les étiquettes de champ.
+        const selector = this.bubble ? 'a, button, input:not([type=hidden]), select, textarea, label[for]' : NUDGE_AVOID;
+        const elements = [...document.querySelectorAll(selector)].filter((element) => !this.$el.contains(element)).map((element) => element.getBoundingClientRect());
+        const hits = (left, top) =>
+            elements.some((rect) => rect.width > 1 && rect.height > 1 && rect.left < left + box.width && left < rect.right && rect.top < top + box.height && top < rect.bottom);
+
+        if (this.bubble || !this.$refs.launcher) {
+            this.covering = hits(box.left, box.top);
+        } else {
+            // Présentation : à côté du visage, sinon au-dessus de lui (téléphone et tablette), sinon elle attend une
+            // place libre (défilement).
+            const launcher = this.$refs.launcher.getBoundingClientRect();
+            const beside = this.nudgeAbove ? [launcher.left - 8 - box.width, launcher.bottom - box.height] : [box.left, box.top];
+            const above = [launcher.right - box.width, launcher.top - 8 - box.height];
+            const canStack = !window.matchMedia('(min-width: 64rem)').matches;
+
+            let place = null;
+            if (!hits(...beside)) {
+                place = false;
+            } else if (canStack && above[0] >= 0 && above[1] >= 0 && !hits(...above)) {
+                place = true;
             }
 
-            const rect = element.getBoundingClientRect();
+            if (place === null) {
+                this.covering = true;
+            } else if (place !== this.nudgeAbove) {
+                // Elle change de place : cachée le temps du déplacement, puis vérifiée à sa vraie position.
+                this.nudgeAbove = place;
+                this.covering = true;
+                requestAnimationFrame(() => this.checkCovering());
+            } else {
+                this.covering = hits(box.left, box.top);
+            }
+        }
 
-            return rect.width > 1 && rect.height > 1 && rect.left < box.right && box.left < rect.right && rect.top < box.bottom && box.top < rect.bottom;
-        });
+        if (this.nudge && !this.bubble && !this.nudgeShown && !this.covering) {
+            this.nudgeVisible();
+        }
+    },
+
+    // --- Visage animé et présentation d'Ama -----------------------------------------------------------------
+
+    // Clignement des yeux toutes les 3 à 6 secondes (un minuteur, rien entre deux clignements).
+    scheduleBlink() {
+        if (!this.motion) {
+            return;
+        }
+
+        clearTimeout(this.blinkTimer);
+        this.blinkTimer = setTimeout(() => {
+            if (document.visibilityState === 'visible') {
+                this.faceBlink = true;
+                setTimeout(() => {
+                    this.faceBlink = false;
+                }, 140);
+            }
+            this.scheduleBlink();
+        }, blinkDelay());
+    },
+
+    // Petit signe de la main (sans mouvement si « moins d'animations » : la main s'affiche seulement).
+    waveHand() {
+        if (!this.character) {
+            return;
+        }
+
+        this.faceWave = true;
+        setTimeout(() => {
+            this.faceWave = false;
+        }, 2500);
+    },
+
+    // Après environ 8 secondes sur le site (cumulées d'une page à l'autre), une seule fois par visite.
+    initNudge() {
+        if (!config.nudge?.text || nudgeDone(this.storage)) {
+            return;
+        }
+
+        this.nudgeTimer = createNudgeTimer({ storage: this.storage, seconds: config.nudge.seconds, onDue: () => this.offerNudge() });
+
+        if (document.visibilityState === 'visible') {
+            this.nudgeTimer.arm();
+        }
+
+        document.addEventListener('visibilitychange', () => (document.visibilityState === 'hidden' ? this.nudgeTimer.pause() : this.nudgeTimer.arm()));
+        window.addEventListener('pagehide', () => this.nudgeTimer.pause());
+    },
+
+    offerNudge() {
+        if (this.opened || this.bubble || this.nudge) {
+            // Ama est déjà ouverte ou l'aide « bloqué » est affichée : pas de présentation.
+            this.nudgeTimer?.stop();
+            markNudgeDone(this.storage);
+
+            return;
+        }
+
+        this.nudge = true;
+        this.$nextTick(() => this.checkCovering());
+        // La page change sous la bulle (étape suivante du paiement, menu ouvert…) : la place est revérifiée deux fois
+        // par seconde tant qu'elle est là, pour ne jamais recouvrir un bouton qui vient d'apparaître.
+        this.nudgeWatch = setInterval(() => this.checkCovering(), 500);
+    },
+
+    // La bulle est réellement visible (libre de tout bouton) : un signe de la main, puis elle s'efface seule.
+    nudgeVisible() {
+        this.nudgeShown = true;
+        this.nudgeTimer?.stop();
+        markNudgeDone(this.storage);
+        document.body.classList.add('ama-help-shown');
+        this.waveHand();
+        this.nudgeHideTimer = setTimeout(() => this.closeNudge(), NUDGE_VISIBLE_MS);
+    },
+
+    closeNudge() {
+        this.nudgeTimer?.stop();
+        clearTimeout(this.nudgeHideTimer);
+        clearInterval(this.nudgeWatch);
+
+        // Ama touchée, aide « bloqué » affichée ou bulle fermée : plus de présentation pendant cette visite.
+        if (this.nudgeTimer) {
+            markNudgeDone(this.storage);
+        }
+
+        if (!this.nudge) {
+            return;
+        }
+
+        this.nudge = false;
+
+        if (!this.bubble) {
+            this.covering = false;
+            document.body.classList.remove('ama-help-shown');
+        }
+    },
+
+    // Glissement sur le côté ou croix : la bulle se ferme et ne revient pas.
+    swipeStart(event) {
+        this.swipe = { x: event.clientX, y: event.clientY };
+    },
+
+    swipeEnd(event) {
+        if (this.swipe && isSwipe(event.clientX - this.swipe.x, event.clientY - this.swipe.y)) {
+            this.closeNudge();
+        }
+
+        this.swipe = null;
     },
 
     closeBubble() {
@@ -938,6 +1125,7 @@ Alpine.data('voiceAssistant', (config) => ({
         }
 
         this.showBubble(false);
+        this.closeNudge();
 
         if (this.provider === 'gemini') {
             this.openChat();
@@ -1212,6 +1400,19 @@ Alpine.data('voiceAssistant', (config) => ({
         if (voice) {
             utterance.voice = voice;
         }
+        // L'en-tête de la discussion : la bouche d'Ama suit la lecture à voix haute.
+        utterance.onstart = () => {
+            this.faceTalking = true;
+        };
+        utterance.onboundary = () => {
+            this.faceBeat = nextBeat(this.faceBeat);
+        };
+        utterance.onend = () => {
+            this.faceTalking = false;
+        };
+        utterance.onerror = () => {
+            this.faceTalking = false;
+        };
         synth.speak(utterance);
     },
 
@@ -1250,6 +1451,20 @@ Alpine.data('voiceAssistant', (config) => ({
             onTiming: (durations, result) => this.sendTiming(durations, result),
             onState: (state) => {
                 this.callState = state;
+                if (state !== 'speaking') {
+                    this.faceTalking = false;
+                }
+            },
+            // La bouche suit la synthèse vocale du navigateur : elle bouge de « début » à « fin » de chaque phrase lue,
+            // et change de rythme à chaque mot repéré (pas tous les téléphones les signalent).
+            onSpeech: (event) => {
+                if (event === 'start') {
+                    this.faceTalking = true;
+                } else if (event === 'boundary') {
+                    this.faceBeat = nextBeat(this.faceBeat);
+                } else {
+                    this.faceTalking = false;
+                }
             },
             onVisitor: (text) => {
                 this.messages.push({ from: 'visitor', text, fallback: false });
@@ -1272,6 +1487,7 @@ Alpine.data('voiceAssistant', (config) => ({
             onEnd: (reason) => {
                 this.call = null;
                 this.callState = 'idle';
+                this.faceTalking = false;
                 // Ama a proposé de transmettre la question pendant l'appel : la fiche s'affiche maintenant, pour écrire
                 // la coordonnée (jamais dictée à voix haute).
                 if (this.callHandoff) {
@@ -1291,6 +1507,12 @@ Alpine.data('voiceAssistant', (config) => ({
         if (this.messages.at(-1)?.text !== CALL_GREETING) {
             this.messages.push({ from: 'ama', text: CALL_GREETING, fallback: false });
         }
+        // Le grand personnage apparaît en se dessinant (sans animation si le téléphone préfère moins de mouvement).
+        this.faceEnter = true;
+        clearTimeout(this.enterTimer);
+        this.enterTimer = setTimeout(() => {
+            this.faceEnter = false;
+        }, 2200);
         this.call.start();
     },
 

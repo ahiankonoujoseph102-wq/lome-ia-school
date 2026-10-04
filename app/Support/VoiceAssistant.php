@@ -126,6 +126,44 @@ class VoiceAssistant
     ];
 
     /**
+     * Visages proposés (voir le composant x-site.ama-face).
+     *
+     * @var list<string>
+     */
+    public const array CHARACTER_STYLES = ['a', 'b', 'c'];
+
+    /**
+     * Textes d'origine des bulles par lesquelles Ama se présente (modifiables dans l'admin). Écrits à l'avance : aucun appel
+     * à Gemini. Aucune promesse, aucun chiffre.
+     *
+     * @var array<string, string>
+     */
+    public const array NUDGES = [
+        'home' => 'Bonjour, je suis Ama, votre assistante. Une question ? Je suis là pour vous aider.',
+        'formation' => 'Une question sur cette formation ? Posez-la-moi, je vous réponds.',
+        'free' => 'Envie de vous inscrire ? Je peux vous aider à le faire.',
+        'checkout' => 'Besoin d\'aide pour payer ? Je vous guide étape par étape.',
+        'other' => 'Une question ? Je suis là pour vous répondre.',
+    ];
+
+    /**
+     * Pages publiques (hors accueil, formation et paiement) où la bulle « other » peut apparaître.
+     *
+     * @var list<string>
+     */
+    public const array NUDGE_OTHER_PAGES = ['formations.index', 'about', 'business', 'contact', 'affiliate.program', 'consultation'];
+
+    /**
+     * Longueur maximale d'un message de présentation (bulle courte).
+     */
+    public const int NUDGE_MAX_LENGTH = 140;
+
+    /**
+     * Secondes passées sur le site avant la bulle de présentation (cumulées sur la visite).
+     */
+    public const int NUDGE_DELAY = 8;
+
+    /**
      * Délai par défaut (secondes) sur une étape du paiement avant de proposer l'aide, et ses limites.
      */
     public const int DEFAULT_HELP_DELAY = 90;
@@ -270,6 +308,72 @@ class VoiceAssistant
     public static function voiceInterrupt(): bool
     {
         return (bool) config('site.voice_assistant.voice_interrupt', false);
+    }
+
+    /**
+     * Visage animé d'Ama (Gemini) : dessin SVG du bouton et grand personnage du mode appel. Allumé par défaut ;
+     * éteint dans l'admin, l'ancien bouton rond et l'ancien cercle du mode appel reviennent.
+     */
+    public static function characterEnabled(): bool
+    {
+        return self::usesGemini() && (bool) config('site.voice_assistant.character', true);
+    }
+
+    /**
+     * Visage choisi parmi les trois propositions : a (cheveux naturels), b (tresses), c (foulard).
+     */
+    public static function characterStyle(): string
+    {
+        $style = config('site.voice_assistant.character_style');
+
+        return is_string($style) && in_array($style, self::CHARACTER_STYLES, true) ? $style : 'a';
+    }
+
+    /**
+     * Ama se présente toute seule : bulle courte après quelques secondes, une fois par visite. Allumé par défaut.
+     */
+    public static function nudgeEnabled(): bool
+    {
+        return (bool) config('site.voice_assistant.nudge', true);
+    }
+
+    /**
+     * Texte de la bulle d'un type de page : celui de l'admin, sinon le texte d'origine (écrit à l'avance, aucun appel à l'IA).
+     */
+    public static function nudgeText(string $type): string
+    {
+        $stored = config('site.voice_assistant.nudges.'.$type);
+        $text = is_string($stored) ? trim((string) preg_replace('/\s+/u', ' ', $stored)) : '';
+
+        return $text !== '' ? $text : (self::NUDGES[$type] ?? '');
+    }
+
+    /**
+     * Type de bulle de la page : accueil, formation, formation gratuite, paiement ou autre page publique.
+     * Aucune bulle sur les pages de compte (connexion, inscription, espace élève…) ni dans le lecteur de cours.
+     */
+    public static function nudgeType(Request $request): ?string
+    {
+        $route = $request->route();
+
+        if ($route === null) {
+            return null;
+        }
+
+        $routeName = (string) $route->getName();
+
+        if ($routeName === 'formations.show') {
+            $formation = $route->parameter('formation');
+
+            return $formation instanceof Formation && $formation->isFree() ? 'free' : 'formation';
+        }
+
+        return match (true) {
+            $routeName === 'home' => 'home',
+            in_array($routeName, ['checkout.show', 'student.sessions.payment'], true) => 'checkout',
+            in_array($routeName, self::NUDGE_OTHER_PAGES, true) => 'other',
+            default => null,
+        };
     }
 
     public static function proactiveHelp(): bool
@@ -497,6 +601,12 @@ class VoiceAssistant
             'context' => self::context($request),
             'pageKey' => $request->route()?->getName() ?? '',
             'proactive' => self::proactiveHelp(),
+            // Visage animé d'Ama (dessin SVG) et bulle de présentation : textes écrits à l'avance, aucun appel à Gemini.
+            'character' => self::characterEnabled(),
+            'faceStyle' => self::characterStyle(),
+            'nudge' => self::nudgeEnabled() && ($type = self::nudgeType($request)) !== null
+                ? ['text' => self::nudgeText($type), 'type' => $type, 'seconds' => self::NUDGE_DELAY]
+                : null,
             // Mode appel : interruption à la voix (expérimental, éteinte par défaut, réglée dans l'admin).
             'voiceInterrupt' => $gemini && self::voiceInterrupt(),
             // Mode appel : mesure des durées (sans donnée personnelle), voir AssistantController::timing.

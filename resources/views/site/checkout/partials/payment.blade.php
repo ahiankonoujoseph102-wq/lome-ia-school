@@ -141,7 +141,7 @@
                         <h3 class="text-lg font-semibold text-white">Envoyez le paiement par {{ $method->name }}</h3>
                     </div>
 
-                    <div class="divide-y divide-veil/10 rounded-2xl bg-night-900 ring-1 ring-gold-400/40">
+                    <div class="divide-y divide-veil/10 rounded-2xl bg-night-900 ring-1 ring-gold-400/40" data-ama-avoid>
                         <div class="p-4">
                             <p class="text-sm text-slate-400">Montant exact à envoyer</p>
                             <div class="mt-1 flex flex-wrap items-center justify-between gap-3">

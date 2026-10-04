@@ -483,6 +483,14 @@ return [
         'voice_interrupt' => false,
         // Secondes sur une même étape du paiement avant de proposer l'aide.
         'help_delay' => 90,
+        // Visage animé d'Ama (dessin SVG) à la place du bouton rond, et grand personnage du mode appel. Éteint : l'ancien bouton.
+        'character' => true,
+        // Visage choisi parmi les trois propositions : a (cheveux naturels), b (tresses), c (foulard).
+        'character_style' => 'a',
+        // Ama se présente toute seule (une bulle courte après environ 8 secondes, une fois par visite). Éteint : jamais.
+        'nudge' => true,
+        // Textes des bulles (vide = texte d'origine, App\Support\VoiceAssistant::NUDGES).
+        'nudges' => [],
     ],
 
     /*
