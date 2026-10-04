@@ -189,6 +189,7 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
         Route::post('groupes/{formation}/regles', [GroupController::class, 'rulesSeen'])->name('chat.rules.seen');
         Route::post('groupes/{formation}/notifications', [GroupController::class, 'toggleNotifications'])->name('chat.notifications');
         Route::get('groupes/{formation}/membres', [GroupController::class, 'members'])->name('chat.members');
+        Route::get('groupes/{formation}/annonce-email', [MessageController::class, 'emailPreview'])->middleware('staff-2fa')->name('chat.announcement-email');
 
         // Modération (admin et modérateurs, double authentification obligatoire)
         Route::middleware('staff-2fa')->group(function () {

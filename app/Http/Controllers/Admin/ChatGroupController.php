@@ -6,6 +6,7 @@ use App\Chat\ChatRealtime;
 use App\Enums\ReportStatus;
 use App\Events\Chat\ChatGroupChanged;
 use App\Http\Controllers\Controller;
+use App\Models\ChatEmailAnnouncement;
 use App\Models\ChatGroup;
 use App\Models\ChatMessage;
 use App\Models\ChatMessageReport;
@@ -49,6 +50,8 @@ class ChatGroupController extends Controller
             'totalBytes' => (int) $diskByGroup->sum('bytes'),
             'totalFiles' => (int) $diskByGroup->sum('files'),
             // Même compteur que « Messages signalés » : un message signalé plusieurs fois compte une fois.
+            // Annonces envoyées par e-mail : combien sont parties, en échec ou encore en file d'attente.
+            'emailAnnouncements' => ChatEmailAnnouncement::query()->with(['group.formation', 'author', 'message'])->latest('id')->limit(10)->get(),
             'openReports' => ChatMessageReport::query()->where('status', ReportStatus::Open->value)->distinct()->count('chat_message_id'),
         ]);
     }

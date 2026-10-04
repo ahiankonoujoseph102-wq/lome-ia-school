@@ -35,6 +35,40 @@
             </a>
         </div>
 
+        <section class="card mt-6 p-4 sm:p-5" data-test="email-announcements">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 class="font-semibold text-white">Annonces envoyées par e-mail</h2>
+                <a href="{{ route('admin.settings.edit', 'emails') }}" class="text-sm font-semibold text-electric-300 hover:text-white">E-mails du jour : {{ \App\Mail\MailQuota::sentToday() }} / {{ \App\Mail\MailQuota::dailyLimit() }}</a>
+            </div>
+            @if ($emailAnnouncements->isEmpty())
+                <p class="mt-2 text-sm text-slate-400">Aucune pour l'instant. Dans un groupe, cochez « Envoyer aussi par e-mail aux membres » sous la zone d'écriture.</p>
+            @else
+                <ul class="mt-3 divide-y divide-veil/[0.06]">
+                    @foreach ($emailAnnouncements as $announcement)
+                        <li class="py-3 text-sm">
+                            <p class="flex flex-wrap items-baseline justify-between gap-x-3">
+                                <span class="font-semibold text-slate-100">{{ $announcement->group->formation->title }}</span>
+                                <span class="text-xs text-slate-400">{{ $announcement->created_at->timezone('Africa/Lome')->translatedFormat('j F à H \\h i') }}{{ $announcement->author ? ' · '.$announcement->author->name : '' }}</span>
+                            </p>
+                            <p class="mt-0.5 truncate text-slate-400">{{ $announcement->message?->isDeleted() ? 'Message supprimé' : $announcement->message?->preview(90) }}</p>
+                            <p class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                                <span class="text-emerald-300"><span class="font-semibold">{{ $announcement->sent }}</span> / {{ $announcement->recipients }} partis</span>
+                                @if ($announcement->pending() > 0)
+                                    <span class="text-slate-300"><span class="font-semibold">{{ $announcement->pending() }}</span> en cours d'envoi</span>
+                                @endif
+                                @if ($announcement->failed > 0)
+                                    <span class="text-rose-300"><span class="font-semibold">{{ $announcement->failed }}</span> en échec</span>
+                                @endif
+                                @if ($announcement->skipped > 0)
+                                    <span class="text-slate-400"><span class="font-semibold">{{ $announcement->skipped }}</span> non envoyés (message supprimé ou membre parti)</span>
+                                @endif
+                            </p>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </section>
+
         <div class="mt-6 space-y-3" data-test="group-list">
             @foreach ($groups as $group)
                 @php $disk = $diskByGroup->get($group->id); @endphp

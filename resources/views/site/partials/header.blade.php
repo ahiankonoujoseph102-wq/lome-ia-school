@@ -50,14 +50,25 @@
                     <x-site.whatsapp-icon class="size-5" />
                 </a>
                 @auth
+                    @php
+                        // Messages non lus de tous ses groupes : une seule requête par page, partagée avec la barre de Mon espace.
+                        $unreadTotal = app(\App\Chat\UnreadCounter::class)->totalFor(auth()->user());
+                        $unreadLabel = $unreadTotal > 99 ? '99+' : (string) $unreadTotal;
+                    @endphp
                     {{-- Élève connecté : photo ou initiales, avec accès rapide à « Mon espace » --}}
-                    <a href="{{ route('dashboard') }}" class="rounded-full lg:hidden" aria-label="Mon espace">
+                    <a href="{{ route('dashboard') }}" class="relative rounded-full lg:hidden" aria-label="Mon espace{{ $unreadTotal > 0 ? ' : '.$unreadTotal.' '.($unreadTotal > 1 ? 'messages non lus' : 'message non lu') : '' }}">
                         <x-site.avatar :user="auth()->user()" class="size-10 text-sm" />
+                        @if ($unreadTotal > 0)
+                            <span class="absolute -top-1 -right-1 min-w-5 rounded-full bg-gold-400 px-1 text-center text-[10px] leading-5 font-bold text-night-950" data-test="header-unread" aria-hidden="true">{{ $unreadLabel }}</span>
+                        @endif
                     </a>
                     <div class="relative hidden lg:block" x-data="{ userMenu: false }" @click.outside="userMenu = false" @keydown.escape.window="userMenu = false">
                         <button type="button" @click="userMenu = !userMenu" :aria-expanded="userMenu.toString()" class="flex items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm font-semibold text-white ring-1 ring-veil/15 transition hover:bg-veil/10">
                             <x-site.avatar :user="auth()->user()" class="size-8 text-xs" />
                             {{ auth()->user()->first_name }}
+                            @if ($unreadTotal > 0)
+                                <span class="min-w-5 rounded-full bg-gold-400 px-1.5 text-center text-[11px] leading-5 font-bold text-night-950" aria-label="{{ $unreadTotal }} non lus">{{ $unreadLabel }}</span>
+                            @endif
                             <flux:icon.chevron-down class="size-4 text-slate-400" />
                         </button>
                         <div x-show="userMenu" x-cloak x-transition.origin.top.right class="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-veil/10 bg-night-900/95 p-2 shadow-2xl shadow-black/50 backdrop-blur-xl">
@@ -67,7 +78,11 @@
                             </div>
                             <a href="{{ route('dashboard') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.home class="size-4" /> Mon espace</a>
                             <a href="{{ route('student.formations.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.academic-cap class="size-4" /> Mes formations</a>
-                            <a href="{{ route('chat.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.chat-bubble-left-right class="size-4" /> Mes groupes</a>
+                            <a href="{{ route('chat.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.chat-bubble-left-right class="size-4" /> Mes groupes
+                                @if ($unreadTotal > 0)
+                                    <span class="ml-auto min-w-5 rounded-full bg-gold-400 px-1.5 text-center text-[11px] leading-5 font-bold text-night-950" aria-label="{{ $unreadTotal }} non lus">{{ $unreadLabel }}</span>
+                                @endif
+                            </a>
                             <a href="{{ route('student.sessions.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.calendar-days class="size-4" /> Mes sessions</a>
                             <a href="{{ route('student.purchases.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.receipt-percent class="size-4" /> Mes achats</a>
                             <a href="{{ route('student.affiliate.index') }}" class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-200 hover:bg-veil/5"><flux:icon.banknotes class="size-4" /> Affiliation</a>
@@ -147,6 +162,12 @@
                         </div>
                     </div>
                     <a href="{{ route('dashboard') }}" class="btn-ghost w-full">Mon espace</a>
+                    <a href="{{ route('chat.index') }}" class="card flex items-center gap-3 px-4 py-3.5 font-semibold text-slate-100" data-test="menu-groups">
+                        <flux:icon.chat-bubble-left-right class="size-5 text-slate-400" /> Mes groupes
+                        @if ($unreadTotal > 0)
+                            <span class="ml-auto min-w-6 rounded-full bg-gold-400 px-1.5 text-center text-xs leading-6 font-bold text-night-950" aria-label="{{ $unreadTotal }} non lus">{{ $unreadLabel }}</span>
+                        @endif
+                    </a>
                     @include('site.partials.admin-entry-link', ['class' => 'card px-4 py-3.5 font-semibold'])
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

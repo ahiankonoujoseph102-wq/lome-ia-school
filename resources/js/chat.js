@@ -164,6 +164,12 @@ export default function registerChat(Alpine) {
         toast: '',
         removed: false,
 
+        // Annonce envoyée aussi par e-mail (administrateurs seulement).
+        emailMembers: false,
+        emailConfirmed: false,
+        emailCheck: null,
+        emailResult: '',
+
         atBottom: true,
         newCount: 0,
         loadingOlder: false,
@@ -926,6 +932,12 @@ export default function registerChat(Alpine) {
                 return;
             }
 
+            if (this.wantsEmail() && !this.emailConfirmed) {
+                await this.askEmailConfirmation();
+
+                return;
+            }
+
             if (this.pending) {
                 await this.sendPending();
 
@@ -946,12 +958,13 @@ export default function registerChat(Alpine) {
                 data.append('reply_to_id', this.replyTo.id);
             }
 
+            this.appendEmailChoice(data);
             this.sending = true;
             this.text = '';
             this.$nextTick(() => this.autosize());
 
             try {
-                await this.upload(data, false);
+                this.showEmailOutcome(await this.upload(data, false));
                 this.replyTo = null;
                 await this.poll({ scroll: true });
             } catch (error) {
@@ -975,6 +988,8 @@ export default function registerChat(Alpine) {
                 data.append('reply_to_id', this.replyTo.id);
             }
 
+            this.appendEmailChoice(data);
+
             await this.uploadWithProgress(data, () => {
                 this.clearPending();
                 this.text = '';
@@ -987,7 +1002,7 @@ export default function registerChat(Alpine) {
             this.uploadProgress = 0;
 
             try {
-                await this.upload(data, true);
+                this.showEmailOutcome(await this.upload(data, true));
                 onSuccess();
                 this.replyTo = null;
                 await this.poll({ scroll: true });
@@ -995,6 +1010,82 @@ export default function registerChat(Alpine) {
                 this.flash(error.message);
             } finally {
                 this.uploading = false;
+            }
+        },
+
+        /* ---------- Annonce par e-mail (administrateurs) ---------- */
+
+        wantsEmail() {
+            return Boolean(config.canEmailAnnounce && this.emailMembers);
+        },
+
+        /**
+         * Avant l'envoi : nombre de membres qui recevront l'e-mail (ou raison du refus), à confirmer.
+         */
+        async askEmailConfirmation() {
+            if (!this.text.trim()) {
+                this.flash('Écrivez le texte de l\'annonce : l\'e-mail reprend ce texte.');
+
+                return;
+            }
+
+            this.busy = true;
+
+            try {
+                const response = await fetch(config.urls.emailPreview, { headers: jsonHeaders(), credentials: 'same-origin' });
+                const json = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(errorForStatus(response.status, json));
+                }
+
+                this.emailCheck = json;
+                this.dialog = 'email-confirm';
+            } catch (error) {
+                this.flash(error.message);
+            } finally {
+                this.busy = false;
+            }
+        },
+
+        async confirmEmailAnnouncement() {
+            if (!this.emailCheck?.allowed) {
+                this.emailMembers = false;
+            }
+
+            this.emailConfirmed = true;
+            this.dialog = null;
+            await this.sendText();
+        },
+
+        cancelEmailAnnouncement() {
+            this.emailConfirmed = false;
+            this.dialog = null;
+        },
+
+        appendEmailChoice(data) {
+            if (this.wantsEmail() && this.emailConfirmed) {
+                data.append('email_members', '1');
+            }
+
+            this.emailConfirmed = false;
+        },
+
+        /**
+         * Réponse du serveur : e-mail en cours d'envoi (message bref) ou refusé (fenêtre à fermer soi-même).
+         */
+        showEmailOutcome(json) {
+            if (!json?.email) {
+                return;
+            }
+
+            this.emailMembers = false;
+
+            if (json.email.status === 'queued') {
+                this.flash(json.email.text);
+            } else {
+                this.emailResult = json.email.text;
+                this.dialog = 'email-result';
             }
         },
 

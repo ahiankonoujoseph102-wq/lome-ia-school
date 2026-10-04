@@ -30,10 +30,18 @@ class UnreadCounter
     }
 
     /**
-     * Total pour la barre de navigation (calculé une seule fois par page).
+     * Total pour l'en-tête du site et la barre de Mon espace : calculé une seule fois par page (gardé sur la
+     * requête en cours, donc jamais périmé d'une page à l'autre), aucune requête pour un visiteur.
      */
     public function totalFor(User $user): int
     {
-        return once(fn (): int => (int) $this->forUser($user)->sum());
+        $attributes = request()->attributes;
+        $key = 'chat_unread_total.'.$user->id;
+
+        if (! $attributes->has($key)) {
+            $attributes->set($key, (int) $this->forUser($user)->sum());
+        }
+
+        return (int) $attributes->get($key);
     }
 }

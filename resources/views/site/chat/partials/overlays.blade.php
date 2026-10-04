@@ -116,6 +116,28 @@
     </div>
 </div>
 
+@if (\App\Chat\EmailAnnouncements::canUse($viewer->user))
+    {{-- Annonce par e-mail (administrateurs seulement) : confirmation avant l'envoi, ou refus expliqué --}}
+    <div x-show="dialog === 'email-confirm'" x-cloak x-transition class="chat-dialog" role="alertdialog" aria-modal="true" aria-labelledby="titre-annonce-email" data-test="email-confirm">
+        <span class="grid size-12 place-items-center rounded-2xl bg-electric-500/15 text-electric-300"><flux:icon.envelope class="size-6" /></span>
+        <h2 id="titre-annonce-email" class="mt-3 text-lg font-bold text-white" x-text="emailCheck && emailCheck.allowed ? 'Envoyer aussi par e-mail ?' : 'E-mail impossible pour cette annonce'"></h2>
+        <p class="mt-1 text-sm text-slate-300" x-text="emailCheck ? emailCheck.text : ''" data-test="email-confirm-text"></p>
+        <p class="mt-2 text-xs text-slate-400" x-show="emailCheck && emailCheck.allowed">Seuls les membres dont l'adresse e-mail est confirmée le reçoivent. L'annonce est aussi publiée dans le groupe.</p>
+        <p class="mt-2 text-xs text-slate-400" x-show="emailCheck && !emailCheck.allowed">Vous pouvez quand même publier l'annonce dans le groupe, sans e-mail.</p>
+        <div class="mt-5 grid gap-2.5">
+            <button type="button" class="btn w-full bg-electric-600 !py-3 text-white hover:bg-electric-500" :disabled="sending || uploading" @click="confirmEmailAnnouncement()" x-text="emailCheck && emailCheck.allowed ? 'Publier et envoyer l\'e-mail' : 'Publier sans e-mail'"></button>
+            <button type="button" class="btn-ghost w-full !py-3" @click="cancelEmailAnnouncement()">Annuler</button>
+        </div>
+    </div>
+
+    <div x-show="dialog === 'email-result'" x-cloak x-transition class="chat-dialog" role="alertdialog" aria-modal="true" aria-labelledby="titre-annonce-refus" data-test="email-refused">
+        <span class="grid size-12 place-items-center rounded-2xl bg-gold-500/15 text-gold-300 ring-1 ring-gold-500/40"><flux:icon.exclamation-triangle class="size-6" /></span>
+        <h2 id="titre-annonce-refus" class="mt-3 text-lg font-bold text-white">Annonce publiée, sans e-mail</h2>
+        <p class="mt-1 text-sm text-slate-300" x-text="emailResult"></p>
+        <button type="button" class="btn-ghost mt-5 w-full !py-3" @click="closeAll()">J'ai compris</button>
+    </div>
+@endif
+
 {{-- Règles du groupe (affichées à l'entrée, puis à chaque modification) --}}
 <div
     x-show="dialog === 'rules'"

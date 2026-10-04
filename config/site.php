@@ -71,6 +71,14 @@ return [
         'admin' => 'Administrateur',
     ],
 
+    // Quota d'e-mails du fournisseur (Brevo, offre gratuite : 300 par jour) et réserve gardée pour les codes de
+    // confirmation, inscriptions et paiements : une annonce de groupe par e-mail est refusée si elle entamerait
+    // cette réserve (App\Mail\MailQuota). Modifiables dans l'admin (Réglages du site > E-mails envoyés).
+    'mail_quota' => [
+        'daily_limit' => 300,
+        'reserve' => 100,
+    ],
+
     // Messages préremplis des boutons WhatsApp, adaptés à la page (App\Support\WhatsAppMessages).
     // Modifiables dans l'admin (Réglages du site > Messages WhatsApp). Chacun se termine par « : » pour que
     // la personne écrive sa question juste après. Repères remplacés à l'envoi : {formation}, {etape}, {date}, {recu}.
