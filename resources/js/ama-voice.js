@@ -87,42 +87,68 @@ export class NaturalUtterance {
  * Lecteur audio du navigateur (un seul élément <audio>, réutilisé : sur iPhone, il reste autorisé après le premier
  * toucher). play(adresse, { onstart, onend, onerror }), stop(), unlock().
  */
-export function createElementPlayer(element) {
+export function createElementPlayer(element, { setTimer = (callback, delay) => setTimeout(callback, delay), clearTimer = (id) => clearTimeout(id) } = {}) {
     let handlers = null;
+    let watchdog = null;
     const take = () => {
         const current = handlers;
         handlers = null;
+        if (watchdog !== null) {
+            clearTimer(watchdog);
+            watchdog = null;
+        }
 
         return current;
     };
+    // Événement de la lecture en cours seulement (jamais celui, tardif, d'un son précédent ou du silence d'autorisation).
+    const mine = () => handlers !== null && element.src === handlers.url;
 
-    element.addEventListener('playing', () => handlers?.onstart?.());
-    element.addEventListener('ended', () => take()?.onend?.());
-    element.addEventListener('error', () => take()?.onerror?.());
+    element.addEventListener('playing', () => {
+        if (!mine()) {
+            return;
+        }
+        handlers.onstart?.();
+        // Sécurité : un son qui ne finit jamais (téléphone qui le bloque) passe à la voix du téléphone.
+        const seconds = Number.isFinite(element.duration) && element.duration > 0 ? element.duration : 60;
+        if (watchdog !== null) {
+            clearTimer(watchdog);
+        }
+        watchdog = setTimer(() => {
+            watchdog = null;
+            if (mine()) {
+                take()?.onerror?.();
+            }
+        }, seconds * 1000 + 3000);
+    });
+    element.addEventListener('ended', () => mine() && take()?.onend?.());
+    element.addEventListener('error', () => mine() && take()?.onerror?.());
+    // Pause imposée par le téléphone (micro ouvert, appel entrant…) : la phrase passe à la voix du téléphone.
+    element.addEventListener('pause', () => mine() && !element.ended && take()?.onerror?.());
 
     return {
         play(url, next) {
-            handlers = next;
+            take();
+            handlers = { ...next, url };
+            const current = handlers;
             try {
                 element.src = url;
+                current.url = element.src;
                 const started = element.play();
                 started?.catch?.(() => {
-                    if (handlers === next) {
+                    if (handlers === current) {
                         take()?.onerror?.();
                     }
                 });
             } catch {
-                if (handlers === next) {
+                if (handlers === current) {
                     take()?.onerror?.();
                 }
             }
         },
         stop() {
-            handlers = null;
+            take();
             try {
                 element.pause();
-                element.removeAttribute('src');
-                element.load();
             } catch {
                 // Rien à arrêter.
             }
