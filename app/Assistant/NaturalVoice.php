@@ -292,7 +292,7 @@ class NaturalVoice
     public static function removeWord(string $text, string $word): string
     {
         $text = (string) preg_replace('/(?<![\p{L}\p{N}])'.preg_quote($word, '/').'(?![\p{L}\p{N}])/iu', '', $text);
-        $text = (string) preg_replace('/\s+([,.!?;:])/u', '$1', $text);
+        $text = (string) preg_replace('/\s+([,.])/u', '$1', $text);
         $text = (string) preg_replace('/([,;:])(?=[,.!?;:])/u', '', $text);
 
         return self::normalizeSpaces($text);

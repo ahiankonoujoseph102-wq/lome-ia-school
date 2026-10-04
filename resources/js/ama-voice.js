@@ -45,7 +45,7 @@ export function hidePrivateWords(text, words = []) {
     }
 
     return result
-        .replace(/\s+([,.!?;:])/gu, '$1')
+        .replace(/\s+([,.])/gu, '$1')
         .replace(/([,;:])(?=[,.!?;:])/gu, '')
         .replace(/\s+/gu, ' ')
         .trim();
@@ -197,8 +197,14 @@ export function createNaturalSynth({
         if (spoken === '') {
             settle('failed', null);
         } else {
-            Promise.resolve()
-                .then(() => fetchAudio(spoken, { signal: controller?.signal }))
+            let sent;
+            try {
+                // Envoi immédiat : chaque milliseconde compte pour que la voix commence vite.
+                sent = Promise.resolve(fetchAudio(spoken, { signal: controller?.signal }));
+            } catch {
+                sent = Promise.resolve(null);
+            }
+            sent
                 .then((result) => settle(result?.url ? 'ready' : 'failed', result?.url ? result : null))
                 .catch(() => settle('failed', null));
         }
