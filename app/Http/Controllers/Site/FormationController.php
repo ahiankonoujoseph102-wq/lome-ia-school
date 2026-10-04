@@ -70,8 +70,8 @@ class FormationController extends Controller
         /** @var User|null $user */
         $user = $request->user();
 
-        // Option déjà choisie avant la création du compte : présélectionnée, et l'inscription se terminera
-        // toute seule après la connexion ou la confirmation de l'e-mail.
+        // Formation commencée avant la création du compte (« Créer mon compte », ou ancien choix avec option) :
+        // après la connexion ou la confirmation de l'e-mail, la suite s'ouvre toute seule.
         $choice = app(PendingFreeChoice::class)->current($request, $user);
         $choice = $choice !== null && $choice['formation']->is($formation) ? $choice : null;
 
@@ -91,7 +91,6 @@ class FormationController extends Controller
             'availableOptions' => $options->reject->isFull()->values(),
             'registration' => $registrar->activeFor($user, $formation),
             'closed' => $formation->freeRegistrationsClosed(),
-            'chosenOptionId' => $choice !== null ? $choice['option']?->id : null,
         ]);
     }
 }

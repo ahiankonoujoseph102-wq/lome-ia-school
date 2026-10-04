@@ -7,15 +7,20 @@ use App\FreeRegistrations\PendingFreeChoice;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\User;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
  * Inscription gratuite à une formation à 0 FCFA (compte et adresse e-mail confirmée obligatoires) et annulation.
  *
- * Parcours d'un visiteur sans compte (ou dont l'adresse n'est pas confirmée) : il choisit d'abord son option
- * (« choose », gardée en mémoire, aucune place réservée), crée son compte ou se connecte, confirme son e-mail,
- * puis l'inscription se termine toute seule (« complete ») : place prise à ce moment-là, entrée dans le groupe.
+ * Parcours d'un visiteur sans compte (« compte d'abord », octobre 2026) : « Créer mon compte » (« start » : la
+ * formation est gardée en mémoire, aucune place réservée), création du compte ou connexion, confirmation de
+ * l'e-mail (« complete »), puis écran « Dernière étape : choisissez votre option » (« options ») et
+ * « Je confirme mon inscription » (« store ») : place prise à ce moment-là, entrée dans le groupe.
+ *
+ * Ancien parcours (option choisie avant le compte, « choose ») : gardé pour les personnes qui avaient déjà
+ * fait leur choix ; leur inscription se termine toute seule après la confirmation de l'e-mail.
  */
 class FreeRegistrationController extends Controller
 {
@@ -24,7 +29,76 @@ class FreeRegistrationController extends Controller
     public const string REGISTERED = 'C\'est noté : vous êtes inscrit(e) ! Un e-mail de confirmation vous a été envoyé.';
 
     /**
-     * Choix de l'option avant d'avoir un compte (ou une adresse confirmée) : gardé en mémoire, puis direction
+     * « Créer mon compte » / « J'ai déjà un compte » / « Je m'inscris » : la formation est gardée en mémoire
+     * (sans option), puis création du compte, connexion ou confirmation de l'e-mail ; ensuite, écran du choix.
+     */
+    public function start(Request $request, Formation $formation, PendingFreeChoice $choices, FreeRegistrar $registrar): RedirectResponse
+    {
+        abort_unless($formation->isFree(), 404);
+
+        /** @var User|null $user */
+        $user = $request->user();
+        $page = route('formations.show', $formation).'#inscription';
+
+        if ($formation->freeRegistrationsClosed() || $registrar->activeFor($user, $formation) !== null) {
+            return redirect($page);
+        }
+
+        if ($user !== null && $user->hasConfirmedEmail()) {
+            return to_route('free-registration.options', $formation);
+        }
+
+        $choices->remember($request, $formation, null, $user);
+        $request->session()->put('url.intended', route('free-registration.complete'));
+
+        if ($user !== null) {
+            return to_route('email-confirmation.show');
+        }
+
+        return to_route($request->query('compte') === 'existant' ? 'login' : 'register');
+    }
+
+    /**
+     * Écran « Dernière étape : choisissez votre option » (compte créé, adresse confirmée, pas encore inscrit).
+     */
+    public function options(Request $request, Formation $formation, PendingFreeChoice $choices, FreeRegistrar $registrar): View|RedirectResponse
+    {
+        abort_unless($formation->isFree(), 404);
+
+        /** @var User $user */
+        $user = $request->user();
+        abort_unless($formation->is_active || $user->isAdmin(), 404);
+
+        $page = route('formations.show', $formation).'#inscription';
+
+        if ($formation->freeRegistrationsClosed() || $registrar->activeFor($user, $formation) !== null) {
+            return redirect($page);
+        }
+
+        if (! $user->hasConfirmedEmail()) {
+            // Il reste à confirmer l'adresse : l'écran du choix s'ouvrira juste après.
+            $choices->remember($request, $formation, null, $user);
+            $request->session()->put('url.intended', route('free-registration.complete'));
+
+            return to_route('email-confirmation.show');
+        }
+
+        $options = $formation->freeOptions()->withTakenCount()->get();
+        $available = $options->reject->isFull()->values();
+
+        if ($available->isEmpty()) {
+            // Aucune option (inscription simple, bouton sur la page) ou tout est complet.
+            return redirect($page);
+        }
+
+        return view('site.formations.free-options', [
+            'formation' => $formation,
+            'availableOptions' => $available,
+        ]);
+    }
+
+    /**
+     * Ancien parcours. Choix de l'option avant d'avoir un compte (ou une adresse confirmée) : gardé en mémoire, puis direction
      * la création du compte, la connexion ou la confirmation de l'e-mail.
      */
     public function choose(Request $request, Formation $formation, PendingFreeChoice $choices): RedirectResponse
@@ -101,10 +175,11 @@ class FreeRegistrationController extends Controller
     }
 
     /**
-     * Page de la formation après la fin automatique de l'inscription : écran « Vous êtes inscrit(e) », ou
-     * message clair et choix parmi les options restantes si l'option est devenue pleine entre-temps.
+     * Après la confirmation de l'e-mail ou la connexion : écran du choix de l'option (parcours « compte d'abord »),
+     * écran « Vous êtes inscrit(e) » (ancien choix avec option), ou message clair et choix parmi les options
+     * restantes si l'option gardée est devenue pleine entre-temps.
      *
-     * @param  array{formation: Formation, registration: mixed, already: bool, error: string|null}|null  $result
+     * @param  array{formation: Formation, registration: mixed, already: bool, error: string|null, choose: bool}|null  $result
      */
     public static function redirectAfter(?array $result): RedirectResponse
     {
@@ -112,10 +187,21 @@ class FreeRegistrationController extends Controller
             return to_route('dashboard');
         }
 
-        $page = redirect(route('formations.show', $result['formation']).'#inscription');
+        if ($result['choose']) {
+            return to_route('free-registration.options', $result['formation']);
+        }
+
+        $formation = $result['formation'];
+        $page = redirect(route('formations.show', $formation).'#inscription');
 
         if ($result['error'] !== null) {
-            return $page->withErrors(['option' => $result['error']]);
+            // Option devenue pleine entre-temps : écran du choix parmi les options restantes, avec le message.
+            $canChoose = $formation->is_active
+                && ! $formation->freeRegistrationsClosed()
+                && $formation->freeOptions()->withTakenCount()->get()->contains(fn ($option) => ! $option->isFull());
+
+            return ($canChoose ? to_route('free-registration.options', $formation) : $page)
+                ->withErrors(['option' => $result['error']]);
         }
 
         return $page->with('status', $result['already'] ? 'Vous êtes déjà inscrit(e) à cette formation.' : self::REGISTERED);

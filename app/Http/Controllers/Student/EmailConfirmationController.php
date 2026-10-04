@@ -140,8 +140,15 @@ class EmailConfirmationController extends Controller
                 : to_route('dashboard')->with('status', 'L\'adresse '.$confirmed->email.' est confirmée.');
         }
 
-        // Bouton ouvert sur un autre appareil : l'inscription gratuite choisie avant se termine quand même.
+        // Bouton ouvert sur un autre appareil : l'inscription gratuite choisie avant se termine quand même
+        // (ou, sans option gardée, la personne choisit son option juste après la connexion).
         $result = $this->choices->complete(null, $confirmed);
+
+        if ($result !== null && $result['choose']) {
+            $request->session()->put('url.intended', route('free-registration.options', $result['formation']));
+
+            return to_route('login')->with('status', 'Merci, votre adresse e-mail est confirmée. Connectez-vous, puis choisissez votre option : vous serez inscrit(e).');
+        }
 
         if ($result !== null && $result['error'] === null) {
             $request->session()->put('url.intended', route('formations.show', $result['formation']).'#inscription');
@@ -159,8 +166,9 @@ class EmailConfirmationController extends Controller
     }
 
     /**
-     * Adresse confirmée : une inscription gratuite choisie avant se termine aussitôt (place prise maintenant,
-     * entrée dans le groupe, écran « Vous êtes inscrit(e) ») ; sinon, retour à la page d'où venait l'élève.
+     * Adresse confirmée : formation gratuite commencée avant → écran du choix de l'option (ou, pour un ancien
+     * choix avec option, inscription terminée aussitôt : place prise, groupe, « Vous êtes inscrit(e) ») ;
+     * sinon, retour à la page d'où venait l'élève.
      */
     private function afterConfirmation(Request $request, User $user): RedirectResponse
     {

@@ -101,8 +101,15 @@ Route::post('commande/{formation}/paiement', [CheckoutController::class, 'pay'])
 Route::post('formations/{formation}/inscription-gratuite', [FreeRegistrationController::class, 'store'])
     ->middleware(['auth', 'email-confirmed', 'throttle:10,1'])
     ->name('free-registration.store');
-// Visiteur sans compte (ou adresse non confirmée) : l'option choisie est gardée en mémoire, aucune place réservée ;
-// l'inscription se termine toute seule après la création du compte et la confirmation de l'e-mail.
+// Visiteur sans compte (ou adresse non confirmée) : « Créer mon compte » garde la formation en mémoire (aucune
+// place réservée) ; après la création du compte et la confirmation de l'e-mail, écran du choix de l'option.
+Route::get('formations/{formation}/inscription-gratuite/compte', [FreeRegistrationController::class, 'start'])
+    ->middleware(['no-store', 'throttle:30,1'])
+    ->name('free-registration.start');
+Route::get('formations/{formation}/inscription-gratuite/option', [FreeRegistrationController::class, 'options'])
+    ->middleware(['auth', 'no-store', 'throttle:30,1'])
+    ->name('free-registration.options');
+// Ancien parcours (option choisie avant le compte) : gardé pour les choix déjà en mémoire et les pages déjà ouvertes.
 Route::post('formations/{formation}/inscription-gratuite/choix', [FreeRegistrationController::class, 'choose'])
     ->middleware('throttle:20,1')
     ->name('free-registration.choose');
