@@ -5,6 +5,8 @@
  * Chargé uniquement sur la page d'un groupe (voir site.js), pour garder le reste du site léger.
  */
 
+import { createSwipeGesture } from './chat-swipe.js';
+
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
 const jsonHeaders = () => ({
@@ -194,6 +196,7 @@ export default function registerChat(Alpine) {
 
             this.els.list.addEventListener('click', (event) => this.onListClick(event));
             this.listenLongPress();
+            this.listenSwipe();
 
             window.addEventListener('chat-toast', (event) => this.flash(event.detail));
             document.addEventListener('visibilitychange', () => {
@@ -571,9 +574,161 @@ export default function registerChat(Alpine) {
         },
 
         reply() {
-            this.replyTo = { id: this.menu.id, author: this.menu.author, preview: this.menu.preview };
+            this.startReply(document.getElementById(`m-${this.menu.id}`), this.menu);
+        },
+
+        /**
+         * Prépare la réponse à un message (geste ou menu) : encadré au-dessus de la zone de saisie.
+         */
+        startReply(row, fallback = null) {
+            const data = row?.dataset || {};
+            const id = data.messageId || fallback?.id;
+
+            if (!id || data.deleted === '1' || !this.canPost) {
+                this.closeAll();
+
+                return;
+            }
+
+            this.replyTo = {
+                id,
+                author: data.author || fallback?.author || '',
+                preview: data.preview || fallback?.preview || '',
+                thumb: data.thumb || '',
+            };
             this.closeAll();
             this.$nextTick(() => this.els.input.focus());
+        },
+
+        cancelReply() {
+            this.replyTo = null;
+        },
+
+        /**
+         * Glisser un message vers la droite (téléphone) : prépare la réponse, comme sur WhatsApp.
+         * La bulle suit le doigt, une flèche apparaît ; relâcher après le seuil prépare la réponse.
+         */
+        listenSwipe() {
+            const gesture = createSwipeGesture();
+            const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+            let row = null;
+            let icon = null;
+
+            const reset = () => {
+                if (!row) {
+                    return;
+                }
+
+                const current = row;
+                const currentIcon = icon;
+                current.style.transition = reduced ? 'none' : 'transform 180ms ease-out';
+                current.style.transform = '';
+                currentIcon?.remove();
+                setTimeout(() => {
+                    current.style.transition = '';
+                    current.classList.remove('chat-swiping');
+                }, reduced ? 0 : 200);
+                row = null;
+                icon = null;
+            };
+
+            this.els.list.addEventListener(
+                'touchstart',
+                (event) => {
+                    reset();
+
+                    const candidate = event.target.closest('[data-message-id]');
+
+                    if (
+                        event.touches.length !== 1 ||
+                        !candidate ||
+                        !this.canPost ||
+                        candidate.dataset.deleted === '1' ||
+                        event.target.closest('input, textarea, video, audio, .chat-voice, .chat-reactions')
+                    ) {
+                        return;
+                    }
+
+                    const touch = event.touches[0];
+
+                    if (gesture.start(touch.clientX, touch.clientY, window.innerWidth).state === 'pending') {
+                        row = candidate;
+                    }
+                },
+                { passive: true },
+            );
+
+            this.els.list.addEventListener(
+                'touchmove',
+                (event) => {
+                    if (!row) {
+                        return;
+                    }
+
+                    const touch = event.touches[0];
+                    const step = gesture.move(touch.clientX, touch.clientY);
+
+                    if (step.state === 'scrolling') {
+                        row = null;
+
+                        return;
+                    }
+
+                    if (step.state !== 'swiping') {
+                        return;
+                    }
+
+                    if (!icon) {
+                        row.classList.add('chat-swiping');
+                        row.style.transition = 'none';
+                        icon = document.createElement('span');
+                        icon.className = 'chat-swipe-icon';
+                        icon.setAttribute('aria-hidden', 'true');
+                        icon.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" class="size-4"><path fill-rule="evenodd" d="M7.793 2.232a.75.75 0 0 1-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 0 1 0 10.75H10.75a.75.75 0 0 1 0-1.5h2.875a3.875 3.875 0 0 0 0-7.75H3.622l4.146 3.957a.75.75 0 0 1-1.036 1.085l-5.5-5.25a.75.75 0 0 1 0-1.085l5.5-5.25a.75.75 0 0 1 1.06.025Z" clip-rule="evenodd"/></svg>';
+                        row.prepend(icon);
+                    }
+
+                    row.style.transform = `translateX(${step.offset}px)`;
+                    icon.style.opacity = String(Math.min(1, step.offset / 64));
+                    icon.classList.toggle('chat-swipe-icon-armed', step.armed);
+
+                    if (step.crossed) {
+                        navigator.vibrate?.(10);
+                    }
+                },
+                { passive: true },
+            );
+
+            const finish = () => {
+                const target = row;
+                const result = gesture.end();
+
+                if (!target) {
+                    return;
+                }
+
+                reset();
+
+                if (result.swiped) {
+                    // Le doigt a glissé : pas de clic (agrandir l'image, citation…) à la fin du geste.
+                    const block = (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    };
+                    this.els.list.addEventListener('click', block, { capture: true, once: true });
+                    setTimeout(() => this.els.list.removeEventListener('click', block, { capture: true }), 350);
+                }
+
+                if (result.reply) {
+                    this.startReply(target);
+                }
+            };
+
+            this.els.list.addEventListener('touchend', finish, { passive: true });
+            this.els.list.addEventListener('touchcancel', () => {
+                gesture.end();
+                reset();
+            }, { passive: true });
         },
 
         async copyText() {

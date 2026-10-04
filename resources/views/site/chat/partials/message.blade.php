@@ -25,6 +25,7 @@
     data-author-id="{{ $author->id }}"
     data-author="{{ $mine ? 'Vous' : $author->name }}"
     data-preview="{{ $message->preview(80) }}"
+    data-thumb="{{ ! $deleted && $message->type === ChatMessageType::Image && ! $message->isExpired() ? $message->attachmentUrl() : '' }}"
     data-text="{{ $message->type === ChatMessageType::Text && ! $deleted ? $message->body : '' }}"
     data-can-delete="{{ $viewer->canDelete($message) ? '1' : '0' }}"
     data-can-pin="{{ $viewer->canPin($message) ? '1' : '0' }}"
@@ -66,10 +67,7 @@
             </p>
         @else
             @if ($reply)
-                <button type="button" class="chat-quote" data-jump="{{ $reply->id }}">
-                    <span class="block truncate text-xs font-semibold {{ $reply->author->isStaff() ? 'text-gold-300' : 'text-electric-200' }}">{{ $reply->user_id === $viewer->user->id ? 'Vous' : $reply->author->name }}</span>
-                    <span class="line-clamp-2 text-xs text-slate-300">{{ $reply->preview(120) }}</span>
-                </button>
+                @include('site.chat.partials.quote', ['reply' => $reply, 'viewer' => $viewer])
             @endif
 
             @if ($message->isExpired())
