@@ -413,7 +413,7 @@ php artisan migrate
 
 **En cours sur la branche `claude/hopeful-hawking-r0fw8x`** : formation gratuite avec inscription par options à places limitées (voir « Formation gratuite : inscription avec options ») et formation du samedi 10 octobre 2026 créée en brouillon. Aperçu à valider ; pull request à ouvrir seulement après l'accord de Joseph. À faire de son côté après la fusion : relire puis publier la formation dans l'admin (Formations > Modifier > visible), publier et épingler dans le groupe des inscrits les liens Google Meet et les informations pratiques.
 
-**En cours sur la branche `claude/ama-animated-character`** : visage animé d'Ama et bulle de présentation (voir « Visage animé d'Ama et présentation »). Aperçu des trois visages à valider ; pull request à ouvrir seulement après l'accord de Joseph.
+**En cours sur la branche `claude/ama-animated-character`** : visage animé d'Ama et bulle de présentation (voir « Visage animé d'Ama et présentation »). Aperçu validé par Joseph : visage A (cheveux naturels), bulle gardée aussi sur les autres pages publiques (catalogue, À propos, Entreprises, Contact, Affiliation, Consultation). Pull request « Visage animé d'Ama ».
 
 **Prochaine étape** : fusion de la branche en cours ; Joseph colle le lien de sa vidéo et choisit son format (Réglages du site > Page Entreprises), saisit le contenu de ses formations (écran « Contenu des formations ») et son lien Google Meet (« Disponibilités »). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 
