@@ -15,6 +15,7 @@
         'pollInterval' => (int) config('chat.poll_interval') * 1000,
         'safetyPollInterval' => (int) config('chat.safety_poll_interval') * 1000,
         'showRules' => $showRules,
+        'canEmailAnnounce' => \App\Chat\EmailAnnouncements::canUse($viewer->user),
         'voiceMaxSeconds' => (int) config('chat.attachments.voice.max_seconds'),
         'maxBytes' => [
             'image' => (int) config('chat.attachments.image.max_kb') * 1024,
@@ -35,6 +36,7 @@
             'mute' => route('chat.members.mute', [$formation, $placeholder]),
             'exclude' => route('chat.members.exclude', [$formation, $placeholder]),
             'broadcastAuth' => url('/broadcasting/auth'),
+            'emailPreview' => route('chat.announcement-email', $formation),
         ],
     ];
     $fileAccept = collect((array) config('chat.attachments.file.mimes'))->map(fn ($ext) => '.'.$ext)->implode(',');

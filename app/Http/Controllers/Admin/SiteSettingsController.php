@@ -47,6 +47,7 @@ class SiteSettingsController extends Controller
         'messages-whatsapp' => ['title' => 'Messages WhatsApp', 'text' => 'Message prérempli de chaque bouton WhatsApp selon la page : formation, paiement, formation gratuite, consultation, autres pages.', 'icon' => 'chat-bubble-left-right'],
         'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
         'assistante' => ['title' => 'Assistante Ama', 'text' => 'Bouton « Parler avec notre assistante » : activation, Ama (Gemini) ou ElevenLabs, instructions, limites, lecteur de cours et aide proactive.', 'icon' => 'chat-bubble-oval-left-ellipsis'],
+        'emails' => ['title' => 'E-mails envoyés', 'text' => 'Quota quotidien du fournisseur d\'e-mails (Brevo), réserve gardée pour les codes et les paiements, e-mails partis aujourd\'hui.', 'icon' => 'envelope'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
     ];
 
@@ -88,6 +89,7 @@ class SiteSettingsController extends Controller
             'messages-whatsapp' => $this->updateWhatsAppMessages($request),
             'entreprises' => $this->updateBusiness($request),
             'assistante' => $this->updateVoiceAssistant($request),
+            'emails' => $this->updateMailQuota($request),
             'legal' => $this->updateLegal($request),
         };
 
@@ -529,6 +531,33 @@ class SiteSettingsController extends Controller
         SiteSettings::save(['site.animated_background' => ['enabled' => $enabled]]);
 
         ActivityLog::record(AdminAction::SettingsUpdated, $enabled ? 'Fond animé activé (accueil et catalogue).' : 'Fond animé désactivé : fond fixe d\'origine.');
+    }
+
+    /**
+     * Quota d'e-mails : limite du fournisseur (Brevo) et réserve qu'une annonce de groupe par e-mail ne peut
+     * jamais entamer. Les autres e-mails (codes, paiements…) ne sont jamais bloqués par ces réglages.
+     */
+    private function updateMailQuota(Request $request): void
+    {
+        $validated = $request->validate([
+            'daily_limit' => ['required', 'integer', 'min:1', 'max:1000000'],
+            'reserve' => ['required', 'integer', 'min:0', 'lt:daily_limit'],
+        ], [
+            'daily_limit.required' => 'Indiquez le nombre d\'e-mails par jour permis par votre offre Brevo.',
+            'daily_limit.integer' => 'Le quota doit être un nombre entier, par exemple 300.',
+            'daily_limit.min' => 'Le quota doit être d\'au moins 1 e-mail par jour.',
+            'reserve.required' => 'Indiquez la réserve à garder, par exemple 100.',
+            'reserve.integer' => 'La réserve doit être un nombre entier, par exemple 100.',
+            'reserve.min' => 'La réserve ne peut pas être négative.',
+            'reserve.lt' => 'La réserve doit être plus petite que le quota quotidien.',
+        ]);
+
+        $limit = (int) $validated['daily_limit'];
+        $reserve = (int) $validated['reserve'];
+
+        SiteSettings::save(['site.mail_quota' => ['daily_limit' => $limit, 'reserve' => $reserve]]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Quota d\'e-mails : '.$limit.' par jour, réserve de '.$reserve.' pour les codes, inscriptions et paiements.');
     }
 
     /**

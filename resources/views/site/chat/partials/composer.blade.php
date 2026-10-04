@@ -73,6 +73,18 @@
         </button>
     </div>
 
+    {{-- Annonce importante aussi envoyée par e-mail : administrateurs seulement (jamais visible pour un élève) --}}
+    @if (\App\Chat\EmailAnnouncements::canUse($viewer->user))
+        <label x-show="!recording" class="flex cursor-pointer items-center gap-2.5 px-1 text-sm text-slate-300" data-test="email-members">
+            <input type="checkbox" name="email_members" value="1" x-model="emailMembers" class="peer sr-only">
+            <span class="grid size-5 shrink-0 place-items-center rounded-md bg-night-900 ring-1 ring-slate-600 transition peer-checked:bg-gold-500/20 peer-checked:ring-gold-500 peer-focus-visible:outline-2 peer-focus-visible:outline-gold-300" aria-hidden="true">
+                <flux:icon.check x-show="emailMembers" x-cloak class="size-3.5 text-white" />
+            </span>
+            <flux:icon.envelope class="size-4 text-slate-400" />
+            Envoyer aussi par e-mail aux membres
+        </label>
+    @endif
+
     {{-- Ligne d'écriture --}}
     <div x-show="!recording" class="flex items-end gap-1.5">
         <div class="relative" @click.outside="attachMenu = false">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Chat;
 
 use App\Chat\ChatRealtime;
 use App\Chat\ConversationLoader;
+use App\Chat\EmailAnnouncements;
 use App\Chat\MessageGrouping;
 use App\Chat\MessagePins;
 use App\Chat\MessageReactions;
@@ -52,11 +53,45 @@ class MessageController extends Controller
             $request->integer('duration') ?: null,
         );
 
+        // Annonce importante envoyée aussi par e-mail (administrateurs seulement ; jamais pour un élève).
+        $email = $request->boolean('email_members') && EmailAnnouncements::canUse($viewer->user)
+            ? app(EmailAnnouncements::class)->send($message->setRelation('group', $viewer->group), $viewer->user)
+            : null;
+
         if (! $request->expectsJson()) {
-            return redirect()->route('chat.show', $formation);
+            return redirect()->route('chat.show', $formation)->with('status', $email === null ? null : self::emailStatus($email));
         }
 
-        return response()->json(['id' => $message->id], 201);
+        return response()->json(['id' => $message->id, 'email' => $email === null ? null : [...$email, 'text' => self::emailStatus($email)]], 201);
+    }
+
+    /**
+     * Avant l'envoi : nombre de membres qui recevront l'e-mail, ou raison du refus (administrateurs seulement).
+     */
+    public function emailPreview(Request $request, Formation $formation, EmailAnnouncements $announcements): JsonResponse
+    {
+        $viewer = $this->viewer($request, $formation);
+
+        abort_unless(EmailAnnouncements::canUse($viewer->user), 403);
+
+        $check = $announcements->check($viewer->group, $viewer->user);
+
+        return response()->json([
+            ...$check,
+            'text' => $check['allowed']
+                ? 'Cet e-mail sera envoyé à '.$check['recipients'].' '.($check['recipients'] > 1 ? 'membres' : 'membre').'.'
+                : $check['reason'],
+        ]);
+    }
+
+    /**
+     * @param  array{status: string, recipients: int, reason: string|null}  $email
+     */
+    private static function emailStatus(array $email): string
+    {
+        return $email['status'] === 'queued'
+            ? 'Annonce publiée. E-mail en cours d\'envoi à '.$email['recipients'].' '.($email['recipients'] > 1 ? 'membres' : 'membre').'.'
+            : (string) $email['reason'];
     }
 
     /**

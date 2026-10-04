@@ -28,6 +28,7 @@ class StoreChatMessageRequest extends FormRequest
             'type' => ['required', Rule::enum(ChatMessageType::class)],
             'body' => [$type === ChatMessageType::Text ? 'required' : 'nullable', 'string', 'max:'.config('chat.max_text_length')],
             'reply_to_id' => ['nullable', 'integer'],
+            'email_members' => ['nullable', 'boolean'],
             'attachment' => $type === null || $type === ChatMessageType::Text ? ['prohibited'] : $this->attachmentRules($type),
             'duration' => $type === ChatMessageType::Voice
                 ? ['required', 'integer', 'min:1', 'max:'.((int) config('chat.attachments.voice.max_seconds') + 2)]
