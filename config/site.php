@@ -63,6 +63,29 @@ return [
         'consultation_message' => 'Bonjour Lomé IA School, je souhaite réserver une consultation gratuite.',
     ],
 
+    // Étiquettes à côté du nom dans les groupes (App\Chat\ChatBadges), modifiables dans l'admin (Équipe).
+    // principal_user_id vide : l'administrateur dont l'adresse est celle du responsable du site (legal.owner.email).
+    'chat_badges' => [
+        'principal_user_id' => null,
+        'principal' => 'Formateur principal',
+        'admin' => 'Administrateur',
+    ],
+
+    // Messages préremplis des boutons WhatsApp, adaptés à la page (App\Support\WhatsAppMessages).
+    // Modifiables dans l'admin (Réglages du site > Messages WhatsApp). Chacun se termine par « : » pour que
+    // la personne écrive sa question juste après. Repères remplacés à l'envoi : {formation}, {etape}, {date}, {recu}.
+    'whatsapp_messages' => [
+        'general' => 'Bonjour Coach Joseph, je suis sur le site Lomé IA School. Ma question :',
+        'formation' => 'Bonjour Coach Joseph, je suis sur la page de la formation « {formation} ». Ma question :',
+        'payment' => 'Bonjour Coach Joseph, j\'ai besoin d\'aide pour payer la formation « {formation} » (étape : {etape}). Mon problème :',
+        'session_payment' => 'Bonjour Coach Joseph, j\'ai besoin d\'aide pour payer le supplément de la session du {date} de la formation « {formation} » (étape : {etape}). Mon problème :',
+        'free' => 'Bonjour Coach Joseph, j\'ai une question sur la formation gratuite du {date}. Ma question :',
+        'free_full' => 'Bonjour Coach Joseph, la formation gratuite du {date} est complète. Ma question :',
+        'consultation' => 'Bonjour Coach Joseph, j\'ai une question sur la consultation gratuite. Ma question :',
+        'consultation_booked' => 'Bonjour Coach Joseph, j\'ai une question sur ma consultation gratuite du {date}. Ma question :',
+        'purchase_refused' => 'Bonjour Coach Joseph, mon paiement {recu} pour « {formation} » a été refusé. Ma question :',
+    ],
+
     // Liens vers vos pages (adresse complète commençant par https://).
     // Un réseau dont le lien est vide ('') est masqué automatiquement.
     'social' => [

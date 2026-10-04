@@ -14,6 +14,7 @@ use App\Support\HomeVideo;
 use App\Support\PastedLink;
 use App\Support\PhoneNumber;
 use App\Support\VoiceAssistant;
+use App\Support\WhatsAppMessages;
 use App\Support\YouTube;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -43,6 +44,7 @@ class SiteSettingsController extends Controller
         'textes' => ['title' => 'Textes du site', 'text' => 'Accroche de l\'accueil, présentation du formateur, questions fréquentes.', 'icon' => 'document-text'],
         'video-accueil' => ['title' => 'Vidéo d\'accueil', 'text' => 'Vidéo YouTube verticale de l\'accueil : lien, image d\'aperçu, titre, phrase, bouton TikTok et interrupteur.', 'icon' => 'play-circle'],
         'fond-anime' => ['title' => 'Fond animé', 'text' => 'Halo lumineux, réseau de points et icônes qui bougent doucement derrière le haut de l\'accueil et du catalogue : interrupteur.', 'icon' => 'sparkles'],
+        'messages-whatsapp' => ['title' => 'Messages WhatsApp', 'text' => 'Message prérempli de chaque bouton WhatsApp selon la page : formation, paiement, formation gratuite, consultation, autres pages.', 'icon' => 'chat-bubble-left-right'],
         'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
         'assistante' => ['title' => 'Assistante Ama', 'text' => 'Bouton « Parler avec notre assistante » : activation, Ama (Gemini) ou ElevenLabs, instructions, limites, lecteur de cours et aide proactive.', 'icon' => 'chat-bubble-oval-left-ellipsis'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
@@ -83,6 +85,7 @@ class SiteSettingsController extends Controller
             'textes' => $this->updateTexts($request),
             'video-accueil' => $this->updateHomeVideo($request, $images),
             'fond-anime' => $this->updateAnimatedBackground($request),
+            'messages-whatsapp' => $this->updateWhatsAppMessages($request),
             'entreprises' => $this->updateBusiness($request),
             'assistante' => $this->updateVoiceAssistant($request),
             'legal' => $this->updateLegal($request),
@@ -103,8 +106,6 @@ class SiteSettingsController extends Controller
             'map_url' => ['nullable', 'url:https', 'max:500'],
             'hours' => ['required', 'string', 'max:120'],
             'whatsapp_number' => ['required', 'string', 'max:30'],
-            'whatsapp_message' => ['required', 'string', 'max:300'],
-            'consultation_message' => ['required', 'string', 'max:300'],
             'social' => ['array'],
             'social.facebook' => ['nullable', 'url:https', 'max:255'],
             'social.tiktok' => ['nullable', 'url:https', 'max:255'],
@@ -139,10 +140,10 @@ class SiteSettingsController extends Controller
                 'map_url' => $validated['map_url'] ?: 'https://www.google.com/maps/search/?api=1&query='.rawurlencode((string) $validated['address']),
                 'hours' => trim((string) $validated['hours']),
             ],
+            // Les messages préremplis se règlent dans « Messages WhatsApp » (WhatsAppMessages).
             'site.whatsapp' => [
+                ...(array) SiteSettings::get('site.whatsapp'),
                 'number' => ltrim($whatsapp, '+'),
-                'message' => trim((string) $validated['whatsapp_message']),
-                'consultation_message' => trim((string) $validated['consultation_message']),
             ],
             'site.social' => [
                 'facebook' => (string) ($validated['social']['facebook'] ?? ''),
@@ -528,6 +529,51 @@ class SiteSettingsController extends Controller
         SiteSettings::save(['site.animated_background' => ['enabled' => $enabled]]);
 
         ActivityLog::record(AdminAction::SettingsUpdated, $enabled ? 'Fond animé activé (accueil et catalogue).' : 'Fond animé désactivé : fond fixe d\'origine.');
+    }
+
+    /**
+     * Messages préremplis des boutons WhatsApp : un champ vidé reprend le texte d'origine ; chaque message se
+     * termine par « : » (la personne écrit juste après) et n'utilise que les repères prévus pour lui.
+     */
+    private function updateWhatsAppMessages(Request $request): void
+    {
+        $rules = [];
+
+        foreach (array_keys(WhatsAppMessages::TEMPLATES) as $key) {
+            $rules['messages.'.$key] = ['nullable', 'string', 'max:400'];
+        }
+
+        $validated = $request->validate($rules + ['messages' => ['array']]);
+        $messages = [];
+        $errors = [];
+
+        foreach (WhatsAppMessages::TEMPLATES as $key => $template) {
+            $text = trim((string) preg_replace('/\s+/u', ' ', (string) ($validated['messages'][$key] ?? '')));
+
+            if ($text === '') {
+                $messages[$key] = (string) SiteSettings::default('site.whatsapp_messages.'.$key);
+
+                continue;
+            }
+
+            if (! str_ends_with($text, ':')) {
+                $errors['messages.'.$key] = '« '.$template['label'].' » : le message doit se terminer par « Ma question : » (ou « Mon problème : »), pour que la personne écrive juste après.';
+            }
+
+            if (($unknown = WhatsAppMessages::unknownPlaceholders($key, $text)) !== []) {
+                $errors['messages.'.$key] = '« '.$template['label'].' » : repère inconnu '.implode(', ', $unknown).'. Repères possibles : '.($template['placeholders'] === [] ? 'aucun' : implode(', ', $template['placeholders'])).'.';
+            }
+
+            $messages[$key] = $text;
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        SiteSettings::save(['site.whatsapp_messages' => $messages]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Messages WhatsApp modifiés.');
     }
 
     private function updateBusiness(Request $request): void

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ChatMessageType;
+use App\Enums\ChatReaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -40,6 +41,7 @@ use Illuminate\Support\Str;
  * @property-read User $author
  * @property-read ChatMessage|null $replyTo
  * @property-read Collection<int, ChatMessageReport> $reports
+ * @property-read Collection<int, ChatMessageReaction> $reactions
  */
 class ChatMessage extends Model
 {
@@ -107,6 +109,41 @@ class ChatMessage extends Model
     public function reports(): HasMany
     {
         return $this->hasMany(ChatMessageReport::class);
+    }
+
+    /**
+     * @return HasMany<ChatMessageReaction, $this>
+     */
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(ChatMessageReaction::class);
+    }
+
+    /**
+     * Réactions sous le message, dans l'ordre des six emojis : emoji => nombre (emojis sans réaction absents).
+     *
+     * @return array<string, int>
+     */
+    public function reactionCounts(): array
+    {
+        $counts = $this->reactions->countBy(fn (ChatMessageReaction $reaction): string => $reaction->emoji->value);
+        $ordered = [];
+
+        foreach (ChatReaction::cases() as $reaction) {
+            if (($counts[$reaction->value] ?? 0) > 0) {
+                $ordered[$reaction->value] = (int) $counts[$reaction->value];
+            }
+        }
+
+        return $ordered;
+    }
+
+    /**
+     * Réaction de cette personne à ce message (null si aucune).
+     */
+    public function reactionOf(User $user): ?ChatReaction
+    {
+        return $this->reactions->firstWhere('user_id', $user->id)?->emoji;
     }
 
     /**
@@ -229,6 +266,10 @@ class ChatMessage extends Model
             'deleted_at' => now(),
             'deleted_by' => $by->id,
         ])->save();
+
+        // Message supprimé : ses réactions disparaissent aussi.
+        $this->reactions()->delete();
+        $this->unsetRelation('reactions');
     }
 
     protected static function booted(): void

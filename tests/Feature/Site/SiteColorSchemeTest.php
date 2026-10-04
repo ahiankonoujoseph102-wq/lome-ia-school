@@ -41,7 +41,7 @@ class SiteColorSchemeTest extends TestCase
         $this->assertStringContainsString('--color-veil: #ffffff;', $css);
         $this->assertMatchesRegularExpression('/html\.force-dark \{[^}]*--color-veil: rgb\(198 198 198\);/', $css);
 
-        foreach (['.force-dark .btn-gold', '.force-dark .bg-gold-400.text-night-950', '.force-dark .bg-emerald-500.text-night-950', '.force-dark .text-gradient', '.force-dark .method-dot', '.force-dark .chat-file-icon', '.force-dark .chat-badge-trainer', '.force-dark .qr-code'] as $selector) {
+        foreach (['.force-dark .btn-gold', '.force-dark .bg-gold-400.text-night-950', '.force-dark .bg-emerald-500.text-night-950', '.force-dark .text-gradient', '.force-dark .method-dot', '.force-dark .chat-file-icon', '.force-dark .qr-code'] as $selector) {
             $this->assertStringContainsString($selector, $css, $selector);
         }
 

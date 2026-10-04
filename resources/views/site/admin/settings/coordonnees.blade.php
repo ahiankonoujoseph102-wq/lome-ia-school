@@ -24,8 +24,7 @@
         <section class="card space-y-4 p-5 sm:p-6">
             <h2 class="font-semibold text-white">WhatsApp</h2>
             <x-admin.field name="whatsapp_number" label="Numéro WhatsApp principal" :value="'+'.ltrim((string) ($whatsapp['number'] ?? ''), '+')" hint="Utilisé par tous les boutons WhatsApp du site." />
-            <x-admin.field name="whatsapp_message" label="Message pré-rempli (informations)" type="textarea" :rows="2" :value="$whatsapp['message'] ?? ''" />
-            <x-admin.field name="consultation_message" label="Message pré-rempli (consultation)" type="textarea" :rows="2" :value="$whatsapp['consultation_message'] ?? ''" />
+            <p class="text-sm text-slate-400">Les messages préremplis de chaque bouton se règlent dans <a href="{{ route('admin.settings.edit', 'messages-whatsapp') }}" class="font-semibold text-electric-300 underline underline-offset-4">Messages WhatsApp</a>.</p>
         </section>
 
         <section class="card space-y-4 p-5 sm:p-6">

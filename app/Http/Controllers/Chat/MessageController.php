@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Chat\ChatRealtime;
+use App\Chat\ConversationLoader;
+use App\Chat\MessageGrouping;
 use App\Chat\MessagePins;
+use App\Chat\MessageReactions;
 use App\Chat\PostMessage;
 use App\Enums\ChatMessageType;
+use App\Enums\ChatReaction;
 use App\Enums\ReportReason;
 use App\Events\Chat\ChatGroupChanged;
 use App\Http\Controllers\Chat\Concerns\ResolvesChatMember;
@@ -98,6 +102,36 @@ class MessageController extends Controller
         }
 
         return $this->done($request, $formation, $status);
+    }
+
+    /**
+     * Réagir par emoji (un seul par personne : un autre emoji remplace, le même retire). Aucune notification.
+     */
+    public function react(Request $request, Formation $formation, ChatMessage $message, MessageReactions $reactions): JsonResponse|RedirectResponse
+    {
+        $viewer = $this->viewer($request, $formation);
+        $message = $this->messageOf($viewer, $message);
+
+        abort_unless($viewer->canReact($message), 403, $viewer->member->isMuted() && ! $viewer->isStaff() ? 'Vous êtes en sourdine : vous ne pouvez pas réagir pour le moment.' : 'Réaction impossible sur ce message.');
+
+        $data = $request->validate(['emoji' => ['required', Rule::enum(ChatReaction::class)]], ['emoji.required' => 'Choisissez une réaction.', 'emoji.enum' => 'Réaction inconnue.']);
+
+        $reaction = $reactions->toggle($message, $viewer->user, ChatReaction::from($data['emoji']));
+
+        if (! $request->expectsJson()) {
+            return redirect()->to(route('chat.show', $formation).'#m-'.$message->id);
+        }
+
+        $message->load(['author', 'replyTo.author', 'reactions']);
+
+        return response()->json([
+            'reaction' => $reaction?->value,
+            'html' => view('site.chat.partials.message', [
+                'message' => $message,
+                'viewer' => $viewer,
+                'grouped' => MessageGrouping::continues($message, app(ConversationLoader::class)->previousOf($viewer->group, $message->id)),
+            ])->render(),
+        ]);
     }
 
     /**

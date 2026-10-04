@@ -8,7 +8,7 @@
 
     // Le bouton d'achat mène au récapitulatif de commande, où se fait le paiement Mobile Money.
     $buyUrl = route('checkout.show', $formation);
-    $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur la formation « '.$formation->title.' ».';
+    $whatsappMessage = \App\Support\WhatsAppMessages::formation($formation);
     $trainer = config('site.trainer');
     $testimonials = Testimonials::all();
 

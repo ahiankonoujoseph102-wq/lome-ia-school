@@ -394,6 +394,48 @@ export function createLineReader(onEvent) {
  * « Transmettre au fondateur » : fiche de la carte de confirmation (prénom, moyen de réponse, coordonnée, question).
  * Le serveur vérifie toujours le format ; ces vérifications évitent seulement un aller-retour inutile.
  */
+/**
+ * « Bonjour » avant midi, « Bonsoir » à partir de midi, selon l'heure du téléphone du visiteur (0 à 23).
+ */
+export function greetingWord(hour) {
+    return Number(hour) < 12 ? 'Bonjour' : 'Bonsoir';
+}
+
+/**
+ * Prénom affichable : premier mot du nom du compte, lettres, trait d'union et apostrophe seulement (30 au plus).
+ */
+export function cleanFirstName(name) {
+    const first = String(name ?? '').trim().split(/\s+/u)[0] ?? '';
+    const letters = first.replace(/[^\p{L}'’-]/gu, '').slice(0, 30);
+
+    return letters === '' ? '' : letters.charAt(0).toLocaleUpperCase('fr') + letters.slice(1);
+}
+
+/**
+ * Message d'Ama (bulle de présentation, premier message d'une conversation) qui commence par « Bonjour » ou
+ * « Bonsoir » selon l'heure du téléphone, suivi du prénom si la personne est connectée : « Bonsoir Kossi, je
+ * suis Ama… ». Un « Bonjour » déjà écrit en tête du texte est remplacé ; sinon la salutation est ajoutée devant.
+ * Calculé dans le navigateur, sans aucun appel à l'IA ; le prénom n'est jamais envoyé au serveur ni à Google.
+ */
+export function personalGreeting(text, { hour = 0, firstName = '' } = {}) {
+    const name = cleanFirstName(firstName);
+    const salutation = name === '' ? greetingWord(hour) : `${greetingWord(hour)} ${name}`;
+    const source = String(text ?? '').trim();
+    const match = source.match(/^(bonjour|bonsoir|salut|hello)\b\s*([,!.]?)\s*/iu);
+
+    if (match) {
+        const rest = source.slice(match[0].length);
+
+        if (rest === '') {
+            return `${salutation} !`;
+        }
+
+        return match[2] === ',' || match[2] === '' ? `${salutation}, ${rest}` : `${salutation} ! ${rest}`;
+    }
+
+    return source === '' ? `${salutation} !` : `${salutation} ! ${source}`;
+}
+
 export const HANDOFF_CHANNELS = ['email', 'whatsapp'];
 
 export const HANDOFF_MAX_QUESTION = 1000;

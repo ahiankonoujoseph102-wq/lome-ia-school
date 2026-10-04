@@ -231,15 +231,21 @@ class SimplePaymentPageTest extends TestCase
             ->assertSee('Copier');
     }
 
-    public function test_help_button_opens_whatsapp_with_the_formation_and_the_amount(): void
+    public function test_help_button_opens_whatsapp_with_the_formation_and_the_step(): void
     {
         $formation = Formation::factory()->create(['title' => 'ChatGPT au quotidien', 'price' => 15000]);
 
-        $message = 'Bonjour Lomé IA School, j\'ai besoin d\'aide pour payer la formation « ChatGPT au quotidien » (montant : '."15\u{00A0}000\u{00A0}FCFA".').';
+        $message = fn (string $step): string => 'https://wa.me/'.config('site.whatsapp.number').'?text='.rawurlencode('Bonjour Coach Joseph, j\'ai besoin d\'aide pour payer la formation « ChatGPT au quotidien » (étape : '.$step.'). Mon problème : ');
 
-        $this->page($formation)
+        $page = $this->page($formation)
             ->assertSee('Besoin d\'aide pour payer ?', false)
-            ->assertSee('https://wa.me/'.config('site.whatsapp.number').'?text='.rawurlencode($message), false);
+            ->assertSee('href="'.$message('choix du pays').'"', false);
+
+        // Un lien par étape : le bouton suit l'étape affichée (et les boutons WhatsApp de l'en-tête aussi).
+        foreach (['choix du pays', 'choix de l\'opérateur', 'envoi de l\'argent', 'envoi de la capture'] as $step) {
+            $page->assertSee(rawurlencode('(étape : '.$step.'). Mon problème : '), false);
+        }
+        $page->assertSee('data-whatsapp-page', false);
     }
 
     public function test_admin_sets_checks_and_clears_the_ussd_code(): void

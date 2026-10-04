@@ -11,7 +11,7 @@
     };
 @endphp
 
-<x-layouts::site title="Mon achat" variant="student">
+<x-layouts::site title="Mon achat" variant="student" :whatsapp-message="$purchase->status === \App\Enums\PurchaseStatus::Rejected ? \App\Support\WhatsAppMessages::purchaseRefused($purchase) : null">
     <div class="mx-auto max-w-2xl px-4 pt-6 pb-12 sm:px-6 sm:pt-10">
         <a href="{{ route('student.purchases.index') }}" class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
             <flux:icon.arrow-left class="size-4" /> Mes achats
@@ -36,7 +36,7 @@
                     <a href="{{ route('student.purchases.receipt', $purchase) }}" class="btn-ghost"><flux:icon.document-text class="size-5" /> Voir mon reçu</a>
                 @endif
                 @if ($status === PurchaseStatus::Rejected)
-                    <a href="{{ \App\Support\WhatsApp::url('Bonjour Lomé IA School, mon paiement '.$purchase->receipt_number.' a été refusé. Pouvez-vous m\'aider ?') }}" target="_blank" rel="noopener" class="btn-ghost">
+                    <a href="{{ \App\Support\WhatsApp::url(\App\Support\WhatsAppMessages::purchaseRefused($purchase)) }}" target="_blank" rel="noopener" class="btn-ghost">
                         <x-site.whatsapp-icon class="size-5 text-[#25D366]" /> Nous contacter
                     </a>
                 @endif

@@ -23,7 +23,7 @@
     $registerIcon = str_contains($registerUrl, '#') ? 'arrow-down' : 'arrow-right';
     // Compte créé mais pas encore inscrit : rappel bien visible en haut de la page.
     $showPendingReminder = $user && $registration === null && ! $closed && $availableOptions->isNotEmpty();
-    $whatsappMessage = 'Bonjour Lomé IA School, j\'ai une question sur la formation gratuite « '.$formation->title.' ».';
+    $whatsappMessage = \App\Support\WhatsAppMessages::free($formation);
     $trainer = config('site.trainer');
     $date = $formation->eventDateLabel();
     $hasOnsite = $options->contains(fn ($option) => $option->isOnsite());

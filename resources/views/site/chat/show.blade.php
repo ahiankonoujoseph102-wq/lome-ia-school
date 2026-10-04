@@ -31,6 +31,7 @@
             'destroy' => route('chat.messages.destroy', [$formation, $placeholder]),
             'pin' => route('chat.messages.pin', [$formation, $placeholder]),
             'report' => route('chat.messages.report', [$formation, $placeholder]),
+            'react' => route('chat.messages.react', [$formation, $placeholder]),
             'mute' => route('chat.members.mute', [$formation, $placeholder]),
             'exclude' => route('chat.members.exclude', [$formation, $placeholder]),
             'broadcastAuth' => url('/broadcasting/auth'),

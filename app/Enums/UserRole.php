@@ -18,18 +18,6 @@ enum UserRole: string
     }
 
     /**
-     * Badge affiché à côté du nom dans les groupes de discussion.
-     */
-    public function chatBadge(): ?string
-    {
-        return match ($this) {
-            self::Student => null,
-            self::Moderator => 'Équipe',
-            self::Admin => 'Formateur',
-        };
-    }
-
-    /**
      * Admin et modérateurs : membres de tous les groupes, avec les outils de modération.
      */
     public function isStaff(): bool

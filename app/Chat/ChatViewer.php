@@ -68,6 +68,15 @@ class ChatViewer
         return ! $message->isDeleted() && $this->isStaff();
     }
 
+    /**
+     * Réagir par emoji : membres actifs (un membre retiré n'arrive jamais ici), sauf en sourdine.
+     * Le mode « annonces seulement » n'empêche pas de réagir. Jamais sur un message supprimé.
+     */
+    public function canReact(ChatMessage $message): bool
+    {
+        return ! $message->isDeleted() && ($this->isStaff() || ! $this->member->isMuted());
+    }
+
     public function canReport(ChatMessage $message): bool
     {
         return ! $message->isDeleted() && ! $this->owns($message) && ! $this->isStaff();

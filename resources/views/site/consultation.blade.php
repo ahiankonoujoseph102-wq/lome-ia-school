@@ -3,13 +3,13 @@
     use App\Support\WhatsApp;
 
     $consultation = config('site.consultation');
-    $whatsappUrl = WhatsApp::url(config('site.whatsapp.consultation_message'));
+    $whatsappUrl = WhatsApp::url(\App\Support\WhatsAppMessages::consultation());
 @endphp
 
 <x-layouts::site
     title="Consultation gratuite"
     description="Réservez une consultation gratuite avec Lomé IA School pour faire le point sur vos objectifs et choisir la formation en intelligence artificielle adaptée."
-    :whatsapp-message="config('site.whatsapp.consultation_message')"
+    :whatsapp-message="\App\Support\WhatsAppMessages::consultation()"
 >
     <section class="relative isolate overflow-hidden">
         <div class="glow pointer-events-none absolute inset-0 -z-10"></div>

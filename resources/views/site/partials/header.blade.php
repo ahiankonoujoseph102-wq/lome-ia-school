@@ -41,6 +41,7 @@
                 {{-- WhatsApp dans l'en-tête sur téléphone et tablette (le bouton flottant n'apparaît que sur grand écran). --}}
                 <a
                     href="{{ \App\Support\WhatsApp::url($whatsappMessage ?? null) }}"
+                    data-whatsapp-page
                     target="_blank"
                     rel="noopener"
                     class="grid size-10 place-items-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/30 transition active:scale-95 lg:hidden"
@@ -159,7 +160,7 @@
 
             <div class="mt-auto pt-10 text-sm text-slate-400">
                 <p>Une question ? Écrivez-nous :</p>
-                <a href="{{ \App\Support\WhatsApp::url() }}" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-2 font-semibold text-[#25D366]">
+                <a href="{{ \App\Support\WhatsApp::url($whatsappMessage ?? null) }}" data-whatsapp-page target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-2 font-semibold text-[#25D366]">
                     <x-site.whatsapp-icon class="size-5" /> {{ config('site.contact.phones.0') }}
                 </a>
             </div>

@@ -46,6 +46,21 @@
     <template x-if="menu">
         <div>
             <p class="line-clamp-2 px-4 pb-3 text-sm text-slate-400"><span class="font-semibold text-slate-200" x-text="menu.author"></span> : <span x-text="menu.preview"></span></p>
+            {{-- Réactions : un toucher réagit, un autre emoji remplace, le même retire. --}}
+            <div x-show="menu.canReact" class="chat-reaction-bar" role="group" aria-label="Réagir à ce message" data-test="reaction-bar">
+                @foreach (\App\Enums\ChatReaction::cases() as $reaction)
+                    <button
+                        type="button"
+                        class="chat-reaction-choice"
+                        :class="menu.myReaction === @js($reaction->value) && 'chat-reaction-choice-mine'"
+                        :aria-pressed="menu.myReaction === @js($reaction->value) ? 'true' : 'false'"
+                        :disabled="busy"
+                        @click="react(@js($reaction->value))"
+                        aria-label="{{ $reaction->label() }}"
+                        data-test="react-{{ $reaction->value }}"
+                    ><span aria-hidden="true">{{ $reaction->emoji() }}</span></button>
+                @endforeach
+            </div>
             <button type="button" class="chat-sheet-item" x-show="canPost" @click="reply()"><flux:icon.arrow-uturn-left class="size-5 text-slate-400" /> Répondre</button>
             <button type="button" class="chat-sheet-item" x-show="menu.text" @click="copyText()"><flux:icon.document-duplicate class="size-5 text-slate-400" /> Copier le texte</button>
             <button type="button" class="chat-sheet-item" x-show="menu.canPin" @click="togglePin()"><flux:icon.bookmark class="size-5 text-gold-300" /> <span x-text="menu.pinned ? 'Désépingler' : 'Épingler en haut du groupe'"></span></button>

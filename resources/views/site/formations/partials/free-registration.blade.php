@@ -13,7 +13,7 @@
     $user = auth()->user();
     $date = $formation->eventDateLabel();
     $whatsappNumber = PhoneNumber::format('+'.config('site.whatsapp.number'));
-    $fullMessage = 'Bonjour Lomé IA School, la formation gratuite « '.$formation->title.' » est complète. Puis-je être prévenu(e) si une place se libère ?';
+    $fullMessage = \App\Support\WhatsAppMessages::freeFull($formation);
 @endphp
 
 <div class="card p-5 sm:p-6" data-test="free-registration">

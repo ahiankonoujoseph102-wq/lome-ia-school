@@ -19,7 +19,7 @@ class ConversationLoader
     {
         return ChatMessage::query()
             ->where('chat_group_id', $group->id)
-            ->with(['author', 'replyTo.author']);
+            ->with(['author', 'replyTo.author', 'reactions']);
     }
 
     /**

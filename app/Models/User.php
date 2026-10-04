@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Chat\ChatBadges;
 use App\Enums\EnrollmentSource;
 use App\Enums\UserRole;
 use App\Support\PhoneNumber;
@@ -209,9 +210,21 @@ class User extends Authenticatable implements PasskeyUser
         return $this->role->isStaff();
     }
 
+    /**
+     * Étiquette à côté du nom dans les groupes : « Formateur principal », « Administrateur » ou « Équipe »
+     * (rôle du compte uniquement, voir App\Chat\ChatBadges).
+     */
     public function chatBadge(): ?string
     {
-        return $this->role->chatBadge();
+        return ChatBadges::label($this);
+    }
+
+    /**
+     * Sorte d'étiquette (principal, admin, team) ou null pour un élève.
+     */
+    public function chatBadgeKind(): ?string
+    {
+        return ChatBadges::kind($this);
     }
 
     public function isEnrolledIn(Formation $formation): bool

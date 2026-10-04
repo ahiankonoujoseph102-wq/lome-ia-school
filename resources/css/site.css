@@ -10,6 +10,7 @@
 @source '../views/components/admin';
 @source '../../app/Enums';
 @source '../../app/Admin';
+@source '../../app/Chat/ChatBadges.php';
 @source '../js/site.js';
 @source '../js/chat.js';
 
@@ -162,8 +163,7 @@ html.force-dark {
     filter: invert(1) brightness(0.75);
 }
 
-.force-dark .bg-gold-400.text-night-950,
-.force-dark .chat-badge-trainer {
+.force-dark .bg-gold-400.text-night-950 {
     filter: invert(1);
     background-color: #0440db;
     --tw-ring-color: #032cb2;
@@ -572,8 +572,14 @@ body {
     @apply shrink-0 rounded-full px-1.5 py-px text-[10px] leading-4 font-bold tracking-wide uppercase;
 }
 
-@utility chat-badge-trainer {
-    @apply bg-gold-400 text-night-950;
+/* « Formateur principal » (doré) et « Administrateur » (violet) : fond translucide, texte clair et contour,
+   stables face au mode sombre forcé (aucune double inversion nécessaire). */
+@utility chat-badge-principal {
+    @apply bg-gold-500/20 text-gold-100 ring-1 ring-gold-500;
+}
+
+@utility chat-badge-admin {
+    @apply bg-violet-500/25 text-violet-100 ring-1 ring-violet-400;
 }
 
 @utility chat-badge-team {
@@ -601,6 +607,36 @@ body {
 
 @utility chat-meta {
     @apply mt-0.5 flex items-center justify-end gap-1 text-[11px] leading-4 text-slate-300/70 tabular-nums;
+}
+
+/* Réactions sous une bulle (pastilles qui débordent du bas, comme sur WhatsApp) et barre des six emojis du menu.
+   Style stable face au mode sombre forcé : fond foncé, texte clair, contours en « ring ». */
+@utility chat-reactions {
+    @apply relative -mx-1 mt-1 -mb-4 flex flex-wrap gap-1;
+}
+
+@utility chat-reaction {
+    @apply inline-flex h-7 min-w-11 items-center justify-center gap-1 rounded-full bg-night-800 px-2 text-xs font-semibold text-slate-100 shadow-md shadow-black/40 ring-1 ring-night-600 transition active:scale-95 disabled:cursor-default;
+}
+
+@utility chat-reaction-mine {
+    @apply bg-night-700 text-white ring-gold-500;
+}
+
+@utility chat-reaction-emoji {
+    @apply text-sm leading-none;
+}
+
+@utility chat-reaction-bar {
+    @apply mx-4 mb-3 flex items-center justify-between gap-1 rounded-full bg-night-800 p-1.5 ring-1 ring-night-600;
+}
+
+@utility chat-reaction-choice {
+    @apply grid size-11 place-items-center rounded-full text-[26px] leading-none transition hover:bg-night-700 active:scale-90 disabled:opacity-60;
+}
+
+@utility chat-reaction-choice-mine {
+    @apply bg-night-700 ring-2 ring-gold-500;
 }
 
 @utility chat-media {
