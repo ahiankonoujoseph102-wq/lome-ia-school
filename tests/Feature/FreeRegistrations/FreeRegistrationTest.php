@@ -103,17 +103,22 @@ class FreeRegistrationTest extends TestCase
             ->assertSee('"isAccessibleForFree":true', false);
     }
 
-    public function test_a_visitor_must_create_an_account_and_comes_back_to_the_page(): void
+    public function test_a_visitor_can_choose_an_option_right_away_and_sees_the_three_steps(): void
     {
         $formation = $this->freeFormation();
 
-        $this->get(route('formations.show', $formation))
+        $response = $this->get(route('formations.show', $formation))
             ->assertOk()
-            ->assertSee('Créer mon compte')
-            ->assertSee('J\'ai déjà un compte', false)
-            ->assertDontSee('data-test="free-submit"', false)
+            ->assertSee('data-test="free-steps"', false)
+            ->assertSeeInOrder(['Choisissez votre option', 'Créez votre compte (1 minute)', 'Confirmez votre e-mail : vous êtes inscrit', 'Présentiel journée', 'Je m\'inscris gratuitement', 'J\'ai déjà un compte'], false)
+            ->assertSee('data-test="free-submit"', false)
+            ->assertSee('action="'.route('free-registration.choose', $formation).'"', false)
             ->assertSessionHas('url.intended', route('formations.show', $formation).'#inscription');
 
+        // Options sélectionnables sans compte : aucun bouton radio désactivé.
+        $this->assertDoesNotMatchRegularExpression('/<input type="radio"[^>]*disabled/', $response->getContent());
+
+        // L'inscription elle-même demande toujours un compte.
         $this->post(route('free-registration.store', $formation), ['option' => $this->option($formation, 'Présentiel journée')->id])
             ->assertRedirect(route('login'));
 
@@ -127,8 +132,8 @@ class FreeRegistrationTest extends TestCase
 
         $this->actingAs($student)->get(route('formations.show', $formation))
             ->assertOk()
-            ->assertSee('data-test="email-confirmation-required"', false)
-            ->assertDontSee('data-test="free-submit"', false);
+            ->assertSee('data-test="free-unconfirmed"', false)
+            ->assertSee('action="'.route('free-registration.choose', $formation).'"', false);
 
         $this->actingAs($student)->post(route('free-registration.store', $formation), ['option' => $this->option($formation, 'Présentiel journée')->id])
             ->assertRedirect(route('email-confirmation.show'));

@@ -736,6 +736,29 @@ body {
 }
 
 /*
+ * Bouton rond d'Ama effacé (opacité et transformation seulement) le temps qu'un élément marqué data-ama-clear
+ * passe dessous : options et bouton de l'inscription gratuite (site.js, initAmaClearance).
+ */
+[data-ama-launcher] {
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.15s ease;
+}
+
+.ama-clear [data-ama-launcher] {
+    opacity: 0;
+    transform: scale(0.7);
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-ama-launcher] {
+        transition: none;
+    }
+}
+
+/*
  * Bannière « Installer l'application » (partiel install-banner) affichée : place réservée en bas de page (le bas de
  * la page reste accessible) et, sur téléphone et tablette, bouton d'Ama remonté au-dessus d'elle. Fenêtre d'Ama
  * ouverte : la bannière s'efface. --install-banner-space = hauteur de la bannière + sa distance au bas de l'écran.

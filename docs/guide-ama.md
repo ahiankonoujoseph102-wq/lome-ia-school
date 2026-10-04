@@ -120,9 +120,11 @@ En bref : bouton « Parler avec Ama » (téléphone) ; toucher le cercle coupe l
 
 ## 13. S'inscrire à une formation gratuite
 
-En bref : formation affichée « Gratuit » ; « Je m'inscris gratuitement » sur sa page, avec un compte et une adresse e-mail confirmée ; une seule option ; aucun paiement.
+En bref : formation affichée « Gratuit » ; sur sa page, choisir une seule option puis « Je m'inscris gratuitement » ; sans compte : créer son compte puis confirmer son e-mail par code, l'inscription se termine alors toute seule ; aucun paiement.
 
 - Sur la page de la formation, partie « Je m'inscris gratuitement » : choisir une seule option (par exemple présentiel ou en ligne, journée ou soir), chacune avec ses horaires et ses places restantes. Une option pleine n'est plus proposée ; tout est plein : « Complet », avec le numéro WhatsApp de l'école.
-- Sans compte : « Créer mon compte » ou « J'ai déjà un compte », puis retour sur la page. Adresse e-mail pas encore confirmée : « Confirmer mon adresse » d'abord.
+- Sans compte, trois étapes : 1. choisir son option (possible tout de suite, sans compte), puis toucher « Je m'inscris gratuitement » ; 2. créer son compte (environ une minute ; un rappel en haut redit la formation et l'option choisies), ou « J'ai déjà un compte » pour se connecter ; 3. confirmer son e-mail avec le code à 6 chiffres reçu : l'inscription se termine alors toute seule, sans revenir choisir. Bouton touché sans option : un message demande de choisir une option.
+- Compte déjà créé mais adresse e-mail pas encore confirmée : choisir son option, toucher « Je m'inscris gratuitement », puis saisir le code : inscription automatique ensuite.
+- La place n'est réservée qu'à la fin de l'inscription (après la confirmation de l'e-mail). Si l'option est devenue pleine entre-temps, la page s'ouvre avec un message : choisir une autre option parmi celles qui restent.
 - Après l'inscription : « Vous êtes inscrit(e) », e-mail de confirmation (option, date, horaires, adresse du présentiel ; en ligne, le lien Google Meet est publié dans le groupe des inscrits), accès au groupe des inscrits (« Ouvrir le groupe des inscrits », aussi dans « Groupes »).
 - Changer d'option ou ne plus venir : « Annuler mon inscription » sur la page de la formation (la place est libérée et l'on quitte le groupe), puis se réinscrire s'il reste des places. Aucun paiement, aucune capture, rien à rembourser.

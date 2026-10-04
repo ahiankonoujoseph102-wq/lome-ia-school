@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Student;
 
 use App\Accounts\EmailConfirmation;
 use App\Concerns\ProfileValidationRules;
+use App\FreeRegistrations\PendingFreeChoice;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Site\FreeRegistrationController;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +25,7 @@ class EmailConfirmationController extends Controller
 
     public const string CONFIRMED = 'Merci, votre adresse e-mail est confirmée.';
 
-    public function __construct(private EmailConfirmation $confirmation) {}
+    public function __construct(private EmailConfirmation $confirmation, private PendingFreeChoice $choices) {}
 
     public function show(Request $request): View|RedirectResponse
     {
@@ -40,12 +42,18 @@ class EmailConfirmationController extends Controller
             $request->session()->put('url.intended', url($back));
         }
 
+        // Option d'une formation gratuite choisie avant la création du compte : gardée aussi au nom de la
+        // personne (bouton de l'e-mail ouvert sur un autre appareil).
+        $this->choices->keepFor($request, $user);
+        $choice = $this->choices->current($request, $user);
+
         return view('site.student.email-confirmation', [
             'user' => $user,
             'hasPendingCode' => $this->confirmation->pending($user) !== null,
             'resendIn' => $this->confirmation->secondsBeforeNextSend($user),
             'lockedFor' => $this->confirmation->lockoutSeconds($user),
             'minutes' => EmailConfirmation::LIFETIME_MINUTES,
+            'freeChoice' => $choice,
         ]);
     }
 
@@ -61,7 +69,7 @@ class EmailConfirmationController extends Controller
 
         $this->confirmation->confirmWithCode($user, $request->string('code')->toString());
 
-        return redirect()->intended(route('dashboard'))->with('status', self::CONFIRMED);
+        return $this->afterConfirmation($request, $user);
     }
 
     public function resend(Request $request): RedirectResponse
@@ -128,11 +136,43 @@ class EmailConfirmationController extends Controller
 
         if ($current instanceof User) {
             return $current->is($confirmed)
-                ? redirect()->intended(route('dashboard'))->with('status', self::CONFIRMED)
+                ? $this->afterConfirmation($request, $confirmed)
                 : to_route('dashboard')->with('status', 'L\'adresse '.$confirmed->email.' est confirmée.');
         }
 
+        // Bouton ouvert sur un autre appareil : l'inscription gratuite choisie avant se termine quand même.
+        $result = $this->choices->complete(null, $confirmed);
+
+        if ($result !== null && $result['error'] === null) {
+            $request->session()->put('url.intended', route('formations.show', $result['formation']).'#inscription');
+
+            return to_route('login')->with('status', 'Merci, votre adresse e-mail est confirmée et vous êtes inscrit(e) à « '.$result['formation']->title.' ». Connectez-vous pour voir votre inscription.');
+        }
+
+        if ($result !== null) {
+            $request->session()->put('url.intended', route('formations.show', $result['formation']).'#inscription');
+
+            return to_route('login')->with('warning', 'Votre adresse e-mail est confirmée. '.$result['error'].' Connectez-vous pour choisir.');
+        }
+
         return to_route('login')->with('status', 'Merci, votre adresse e-mail est confirmée. Connectez-vous pour continuer.');
+    }
+
+    /**
+     * Adresse confirmée : une inscription gratuite choisie avant se termine aussitôt (place prise maintenant,
+     * entrée dans le groupe, écran « Vous êtes inscrit(e) ») ; sinon, retour à la page d'où venait l'élève.
+     */
+    private function afterConfirmation(Request $request, User $user): RedirectResponse
+    {
+        $result = $this->choices->complete($request, $user);
+
+        if ($result !== null) {
+            $request->session()->forget('url.intended');
+
+            return FreeRegistrationController::redirectAfter($result);
+        }
+
+        return redirect()->intended(route('dashboard'))->with('status', self::CONFIRMED);
     }
 
     private function user(Request $request): User

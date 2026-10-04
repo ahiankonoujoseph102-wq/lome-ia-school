@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Site;
 
 use App\Enums\FormationCategory;
 use App\FreeRegistrations\FreeRegistrar;
+use App\FreeRegistrations\PendingFreeChoice;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\LiveSession;
@@ -69,9 +70,16 @@ class FormationController extends Controller
         /** @var User|null $user */
         $user = $request->user();
 
+        // Option déjà choisie avant la création du compte : présélectionnée, et l'inscription se terminera
+        // toute seule après la connexion ou la confirmation de l'e-mail.
+        $choice = app(PendingFreeChoice::class)->current($request, $user);
+        $choice = $choice !== null && $choice['formation']->is($formation) ? $choice : null;
+
         // Un visiteur qui crée son compte ou se connecte depuis cette page y revient ensuite automatiquement.
         if (! $user) {
-            $request->session()->put('url.intended', route('formations.show', $formation).'#inscription');
+            $request->session()->put('url.intended', $choice !== null
+                ? route('free-registration.complete')
+                : route('formations.show', $formation).'#inscription');
         }
 
         $options = $formation->freeOptions()->withTakenCount()->get();
@@ -83,6 +91,7 @@ class FormationController extends Controller
             'availableOptions' => $options->reject->isFull()->values(),
             'registration' => $registrar->activeFor($user, $formation),
             'closed' => $formation->freeRegistrationsClosed(),
+            'chosenOptionId' => $choice !== null ? $choice['option']?->id : null,
         ]);
     }
 }

@@ -4,6 +4,10 @@
     </x-slot:head>
 
     <x-site.auth-card title="Bon retour parmi nous" subtitle="Connectez-vous pour retrouver vos formations.">
+        <x-slot:notice>
+            @include('site.partials.free-choice-reminder', ['step' => 'login'])
+        </x-slot:notice>
+
         @if (session('status'))
             <x-site.alert class="mb-5">{{ session('status') }}</x-site.alert>
         @endif

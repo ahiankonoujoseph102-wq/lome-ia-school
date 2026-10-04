@@ -70,6 +70,7 @@
         <button
             type="button"
             x-ref="launcher"
+            data-ama-launcher
             @click="open()"
             :disabled="loading"
             :aria-busy="loading"
