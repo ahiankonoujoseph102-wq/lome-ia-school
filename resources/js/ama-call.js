@@ -442,6 +442,10 @@ export function createVoiceCall({
         speaking = true;
         setState('speaking');
         amaSpoken = `${amaSpoken} ${text}`;
+        // Voix naturelle : les phrases suivantes peuvent être dites d'un bloc avec celle-ci (filtre de l'écho).
+        if (synth.prepare) {
+            amaSpoken = `${amaSpoken} ${queue.map((queued) => speakable(queued)).join(' ')}`;
+        }
 
         const utterance = new Utterance(text);
         utterance.lang = 'fr-FR';
