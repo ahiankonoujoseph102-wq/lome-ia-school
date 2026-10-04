@@ -19,6 +19,6 @@
     </p>
 
     <p style="margin:22px 0 0;font-size:13px;line-height:1.5;color:#7a8099;">
-        Vous recevez cet e-mail parce que vous êtes membre de ce groupe. L'équipe ne l'utilise que pour les annonces importantes.
+        Vous recevez cet e-mail car vous êtes inscrit à ce groupe sur Lomé IA School.
     </p>
 @endsection

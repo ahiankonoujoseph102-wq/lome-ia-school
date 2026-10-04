@@ -108,6 +108,7 @@ class EmailAnnouncementsTest extends ChatTestCase
         $mail->assertSeeInHtml('Automatisation avec l\'IA');
         $mail->assertSeeInHtml(route('chat.show', $this->formation));
         $mail->assertSeeInHtml('Ouvrir le groupe');
+        $mail->assertSeeInHtml('Vous recevez cet e-mail car vous êtes inscrit à ce groupe sur Lomé IA School.');
 
         $announcement = ChatEmailAnnouncement::query()->sole();
         $this->assertSame([2, 2, 0, 0], [$announcement->recipients, $announcement->sent, $announcement->failed, $announcement->skipped]);
