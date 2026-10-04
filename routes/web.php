@@ -69,6 +69,9 @@ Route::middleware(['no-store', 'throttle:60,1'])->prefix('consultation-gratuite/
 Route::post('assistante/message', [AssistantController::class, 'message'])->middleware('throttle:30,1')->name('assistant.message');
 Route::post('assistante/appel', [AssistantController::class, 'call'])->middleware('throttle:30,1')->name('assistant.call');
 Route::post('assistante/duree', [AssistantController::class, 'timing'])->middleware('throttle:30,1')->name('assistant.timing');
+// Voix naturelle d'Ama (modèles « TTS » de Gemini) : audio d'un morceau de réponse, ou voix du téléphone en secours.
+Route::post('assistante/voix', [AssistantController::class, 'voice'])->middleware('throttle:60,1')->name('assistant.voice');
+Route::post('assistante/voix/secours', [AssistantController::class, 'voiceFallback'])->middleware('throttle:30,1')->name('assistant.voice.fallback');
 // « Transmettre au fondateur » : question transmise à Coach Joseph, au toucher de « Envoyer » (App\Assistant\FounderHandoff).
 Route::post('assistante/transmettre', [AssistantController::class, 'handoff'])->middleware('throttle:10,1')->name('assistant.handoff');
 Route::get('a-propos', [PageController::class, 'about'])->name('about');
@@ -304,6 +307,8 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::get('reglages', [SiteSettingsController::class, 'index'])->name('settings.index');
     Route::get('reglages/{section}', [SiteSettingsController::class, 'edit'])->name('settings.edit');
     Route::put('reglages/{section}', [SiteSettingsController::class, 'update'])->name('settings.update');
+    // Voix naturelle d'Ama : bouton « Écouter » (phrase d'exemple lue par la voix et le modèle choisis).
+    Route::post('reglages/assistante/ecouter', [SiteSettingsController::class, 'previewVoice'])->middleware(['throttle:10,1', 'no-store'])->name('settings.voice-preview');
     Route::get('temoignages', [TestimonialController::class, 'index'])->name('testimonials.index');
     Route::get('temoignages/nouveau', [TestimonialController::class, 'create'])->name('testimonials.create');
     Route::post('temoignages', [TestimonialController::class, 'store'])->name('testimonials.store');

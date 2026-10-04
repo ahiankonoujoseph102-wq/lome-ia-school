@@ -26,6 +26,7 @@ class FileStorage
         'payment_proofs' => 'payment-proofs',
         'lesson_resources' => 'lesson-resources',
         'chat_media' => 'chat',
+        'ama_voice' => 'ama-voice',
     ];
 
     /**

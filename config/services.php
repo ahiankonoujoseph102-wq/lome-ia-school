@@ -53,6 +53,9 @@ return [
         // Réflexion du modèle avant de répondre, au plus bas pour répondre vite : « minimal » (Gemini 3 et suivants :
         // niveau le plus bas, la réflexion ne peut pas être coupée ; Gemini 2.5 Flash : budget 0). Vide = rien envoyé.
         'thinking' => env('GEMINI_THINKING', 'minimal'),
+        // Voix naturelle d'Ama (modèles « TTS ») : secondes d'attente au maximum côté serveur. Le navigateur, lui,
+        // reprend la voix du téléphone après 4 secondes ; l'audio d'une phrase écrite à l'avance est quand même gardé.
+        'tts_timeout' => (int) env('GEMINI_TTS_TIMEOUT', 8),
     ],
 
 ];

@@ -153,7 +153,7 @@ function hasVisitorWords(heard, amaText) {
 /**
  * @param {object} options
  * @param {Function} options.Recognition  constructeur de la reconnaissance vocale du navigateur
- * @param {object} options.synth  synthèse vocale (speak, cancel, getVoices)
+ * @param {object} options.synth  synthèse vocale (speak, cancel, getVoices ; prepare facultatif : voix naturelle, ama-voice.js)
  * @param {Function} options.Utterance  constructeur d'une phrase à lire
  * @param {Function} options.ask  (texte, { onText, signal, interrupted }) → Promise<{ reply, fallback, notice } | null>
  * @param {object} [options.timers]  { setTimeout, clearTimeout }
@@ -506,6 +506,8 @@ export function createVoiceCall({
         }
 
         queue.push(...sentences);
+        // Voix naturelle (ama-voice.js) : les phrases à venir sont annoncées pour être demandées d'un bloc.
+        synth.prepare?.(sentences.map((sentence) => speakable(sentence)).filter((text) => text !== ''));
 
         if (!speaking) {
             speakNext(turn);
