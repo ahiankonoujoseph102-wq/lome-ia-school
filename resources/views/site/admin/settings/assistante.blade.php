@@ -217,7 +217,9 @@
                     <p class="text-sm text-amber-200" x-show="message" x-text="message" x-cloak role="status"></p>
                 </div>
 
-                <x-admin.field name="natural_voice_minute_limit" label="Demandes de voix par minute pour tout le site" type="number" unit="demandes" min="{{ NaturalVoice::MINUTE_LIMIT[1] }}" max="{{ NaturalVoice::MINUTE_LIMIT[2] }}" :value="NaturalVoice::minuteLimit()" hint="3 par défaut, comme l'offre gratuite de Google pour ces modèles (à vérifier dans Google AI Studio). Au-delà, Ama parle avec la voix du téléphone jusqu'à la minute suivante. Une réponse longue utilise 2 demandes (la première phrase, puis la suite) ; les phrases écrites à l'avance n'en utilisent aucune une fois gardées." />
+                <x-admin.field name="natural_voice_minute_limit" label="Demandes de voix par minute pour tout le site" type="number" unit="demandes" min="{{ NaturalVoice::MINUTE_LIMIT[1] }}" max="{{ NaturalVoice::MINUTE_LIMIT[2] }}" :value="NaturalVoice::minuteLimit()" hint="3 par défaut, comme l'offre gratuite de Google pour ces modèles (à vérifier dans Google AI Studio). Au-delà, Ama parle avec la voix du téléphone jusqu'à la minute suivante. Les phrases écrites à l'avance n'utilisent aucune demande une fois gardées." />
+
+                <x-admin.field name="natural_voice_split_length" label="Longueur à partir de laquelle une réponse est lue en deux demandes" type="number" unit="caractères" min="{{ NaturalVoice::SPLIT_LENGTH[1] }}" max="{{ NaturalVoice::SPLIT_LENGTH[2] }}" :value="NaturalVoice::splitLength()" hint="300 par défaut (environ trois phrases courtes). Une réponse plus courte utilise UNE seule demande. Une réponse plus longue en utilise deux : la première phrase seule, pour que la voix commence vite, puis la suite. Plus le nombre est grand, moins il y a de demandes, mais plus la voix met de temps à commencer sur les longues réponses." />
 
                 <div class="space-y-2" data-test="natural-voice-usage">
                     <h3 class="text-sm font-semibold text-slate-200">Aujourd'hui (journée de Google)</h3>

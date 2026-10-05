@@ -116,6 +116,8 @@ class AmaNaturalVoiceTest extends TestCase
         $config = VoiceAssistant::browserConfig($this->pageRequest());
         $this->assertSame(route('assistant.voice'), $config['naturalVoice']['endpoint']);
         $this->assertSame(4000, $config['naturalVoice']['timeoutMs']);
+        // Réponse courte : une seule demande ; deux au-delà de 300 caractères par défaut (réglable dans l'admin).
+        $this->assertSame(300, $config['naturalVoice']['splitLength']);
         $this->assertStringNotContainsString(self::KEY, (string) json_encode($config));
 
         $response = $this->voice('La formation coûte 25 000 FCFA.');
@@ -329,6 +331,7 @@ class AmaNaturalVoiceTest extends TestCase
             ->assertSee('Lectures avec la voix naturelle')
             ->assertSee('Refus de Google')
             ->assertSee('Passages à la voix du téléphone')
+            ->assertSee('Longueur à partir de laquelle une réponse est lue en deux demandes')
             ->assertDontSee(self::KEY);
 
         $this->assertFalse((bool) config('site.voice_assistant.natural_voice.enabled', false));
@@ -340,10 +343,16 @@ class AmaNaturalVoiceTest extends TestCase
             'natural_voice_name' => 'Aoede',
             'natural_voice_model' => 'gemini-3.8-flash-tts',
             'natural_voice_minute_limit' => '2',
+            'natural_voice_split_length' => '450',
         ])->assertRedirect();
 
-        $this->assertSame(['enabled' => true, 'voice' => 'Aoede', 'model' => 'gemini-3.8-flash-tts', 'minute_limit' => 2], ((array) SiteSettings::get('site.voice_assistant'))['natural_voice']);
-        $this->assertStringContainsString('voix naturelle : oui (Aoede, gemini-3.8-flash-tts, 2 par minute)', (string) AdminActivity::query()->latest('id')->value('description'));
+        $this->assertSame(['enabled' => true, 'voice' => 'Aoede', 'model' => 'gemini-3.8-flash-tts', 'minute_limit' => 2, 'split_length' => 450], ((array) SiteSettings::get('site.voice_assistant'))['natural_voice']);
+        $this->assertStringContainsString('voix naturelle : oui (Aoede, gemini-3.8-flash-tts, 2 par minute, deux demandes au-delà de 450 caractères)', (string) AdminActivity::query()->latest('id')->value('description'));
+
+        // Longueur transmise au navigateur ; hors limites, refusée.
+        $this->assertSame(450, NaturalVoice::splitLength());
+        $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['provider' => 'gemini', 'natural_voice_split_length' => '20'])
+            ->assertSessionHasErrors('natural_voice_split_length');
 
         // Voix inconnue refusée.
         $this->actingAs($admin)->put(route('admin.settings.update', 'assistante'), ['provider' => 'gemini', 'natural_voice_name' => 'Puck'])

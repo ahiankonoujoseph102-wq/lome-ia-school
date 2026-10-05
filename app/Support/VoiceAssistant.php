@@ -617,6 +617,7 @@ class VoiceAssistant
                 'endpoint' => route('assistant.voice'),
                 'fallbackEndpoint' => route('assistant.voice.fallback'),
                 'timeoutMs' => NaturalVoice::BROWSER_TIMEOUT_MS,
+                'splitLength' => NaturalVoice::splitLength(),
             ] : null,
             // Mode appel : mesure des durées (sans donnée personnelle), voir AssistantController::timing.
             'timingEndpoint' => $gemini ? route('assistant.timing') : null,

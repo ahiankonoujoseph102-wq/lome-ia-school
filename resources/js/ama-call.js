@@ -727,6 +727,8 @@ export function createVoiceCall({
         queue = [];
         speaking = false;
         streamDone = false;
+        // Voix naturelle (ama-voice.js) : une réponse commence à arriver.
+        synth.begin?.();
         afterSpeech = 'listen';
         amaSpoken = '';
         bargeRestarts = 0;
@@ -806,6 +808,7 @@ export function createVoiceCall({
         }
 
         streamDone = true;
+        synth.finish?.();
 
         if (!speaking) {
             finishSpeech();

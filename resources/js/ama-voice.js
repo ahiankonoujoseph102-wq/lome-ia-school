@@ -7,8 +7,9 @@
  *
  * - Chaque texte est demandé au serveur du site (jamais à Google : la clé reste sur le serveur). Le prénom du visiteur
  *   est retiré du texte envoyé ; la voix du téléphone, elle, lit le texte complet.
- * - Démarrage rapide : la première phrase d'une réponse est demandée seule ; la suite (phrases déjà connues) est
- *   demandée d'un bloc dès que la première commence, pour ne pas dépasser la limite de demandes de Google.
+ * - Une réponse courte (jusqu'à « splitLength » caractères, réglable dans l'admin) part en UNE seule demande : la limite
+ *   de Google est de quelques demandes par minute. Plus longue : la première phrase seule (la voix commence vite), puis
+ *   la suite d'un bloc dès que la première commence. En mode appel, la fin de la réponse est attendue au plus 1,5 s.
  * - Secours automatique : refus du serveur (quota, limite, erreur), audio pas prêt après « timeoutMs » (4 s) ou lecture
  *   impossible → la phrase est lue aussitôt par la voix du téléphone, et le reste de la réponse aussi (une seule voix
  *   par réponse). Jamais de silence ni de message d'erreur.
@@ -19,6 +20,13 @@
 import { createSentenceSplitter } from './ama.js';
 
 export const NATURAL_TIMEOUT_MS = 4000;
+
+// Réponse courte (jusqu'à ce nombre de caractères) : une seule demande. Plus longue : la première phrase, puis la suite.
+// Réglable dans l'admin (App\Assistant\NaturalVoice::SPLIT_LENGTH).
+export const SPLIT_LENGTH = 300;
+
+// Mode appel : attente maximale de la fin de la réponse avant de décider « une ou deux demandes ».
+export const STREAM_WAIT_MS = 1500;
 
 // Écart (ms) au-delà duquel une nouvelle phrase commence une nouvelle réponse (la précédente est finie).
 export const NEW_ANSWER_GAP_MS = 1000;
@@ -177,6 +185,7 @@ export function createElementPlayer(element, { setTimer = (callback, delay) => s
  * @param {object} [options.timers]  { setTimeout, clearTimeout }
  * @param {Function} [options.now]  horloge en millisecondes
  * @param {number} [options.timeoutMs]  délai avant la voix du téléphone
+ * @param {number} [options.splitLength]  au-delà de ce nombre de caractères, une réponse est demandée en deux fois
  * @param {string[]} [options.privateWords]  mots jamais envoyés au serveur (prénom du visiteur)
  * @param {Function} [options.onFallback]  le navigateur reprend de lui-même la voix du téléphone : 'timeout' ou 'playback'
  */
@@ -188,6 +197,7 @@ export function createNaturalSynth({
     timers = { setTimeout: (callback, delay) => setTimeout(callback, delay), clearTimeout: (id) => clearTimeout(id) },
     now = () => Date.now(),
     timeoutMs = NATURAL_TIMEOUT_MS,
+    splitLength = SPLIT_LENGTH,
     privateWords = [],
     onFallback = () => {},
 }) {
@@ -202,6 +212,9 @@ export function createNaturalSynth({
     let lastEndAt = null;
     // Une seule voix par réponse : après un passage à la voix du téléphone, la suite de la réponse la garde.
     let answerFallback = false;
+    // Mode appel : la réponse arrive encore (begin… finish), et la phrase en attente de la décision « une ou deux demandes ».
+    let streaming = false;
+    let waiter = null;
 
     const request = (text) => {
         const controller = typeof AbortController === 'function' ? new AbortController() : null;
@@ -298,6 +311,8 @@ export function createNaturalSynth({
         if (index !== -1) {
             pending.splice(0, index + 1);
         }
+
+        return index !== -1;
     };
 
     function speak(utterance) {
@@ -371,7 +386,7 @@ export function createNaturalSynth({
         };
 
         // Joue l'audio d'une demande (en l'attendant au plus timeoutMs), sinon la voix du téléphone pour « part ».
-        const play = (entry, part, then) => {
+        const play = (entry, part, then, budget = timeoutMs) => {
             const go = () => {
                 if (myGeneration !== generation) {
                     return;
@@ -416,7 +431,7 @@ export function createNaturalSynth({
                     onFallback('timeout');
                     abandon(entry);
                 }
-            }, timeoutMs);
+            }, budget);
             entry.waiters.push(() => {
                 timers.clearTimeout(timer);
                 go();
@@ -445,7 +460,7 @@ export function createNaturalSynth({
             return;
         }
 
-        takePending(text);
+        const announced = takePending(text);
 
         if (answerFallback) {
             phone(text, end);
@@ -453,28 +468,75 @@ export function createNaturalSynth({
             return;
         }
 
-        // Texte long (lecture à voix haute) : la première phrase, puis tout le reste d'un bloc.
-        const parts = fresh && pending.length === 0 ? splitForSpeech(text) : [text];
-
-        if (parts.length === 2) {
-            const first = request(parts[0]);
-            const rest = request(parts[1]);
-            play(first, parts[0], () => (answerFallback ? phone(parts[1], end) : play(rest, parts[1], end)));
-
-            return;
-        }
-
-        // Première phrase d'une réponse : seule (démarrage rapide). Sinon, avec les phrases déjà annoncées.
-        if (fresh) {
-            play(request(text), text, end);
+        // Une phrase arrivée après les autres (réponse déjà commencée) : demandée avec celles qui restent.
+        if (!fresh) {
+            pending.unshift(text);
+            requestPending();
+            const head = takeCovered(text);
+            play(head.request, text, end);
 
             return;
         }
 
-        pending.unshift(text);
-        requestPending();
-        const head = takeCovered(text);
-        play(head.request, text, end);
+        // Début d'une réponse. Courte (jusqu'à « splitLength » caractères) : UNE seule demande pour toute la réponse.
+        // Longue : la première phrase seule (la voix commence vite), puis tout le reste d'un bloc.
+        const decide = (waited) => {
+            if (myGeneration !== generation) {
+                return;
+            }
+            const budget = Math.max(1000, timeoutMs - waited);
+
+            if (!announced) {
+                // Lecture à voix haute d'une réponse écrite : le texte entier est déjà connu.
+                const parts = text.length > splitLength ? splitForSpeech(text) : [text];
+
+                if (parts.length === 2) {
+                    const first = request(parts[0]);
+                    const rest = request(parts[1]);
+                    play(first, parts[0], () => (answerFallback ? phone(parts[1], end) : play(rest, parts[1], end)), budget);
+                } else {
+                    play(request(text), text, end, budget);
+                }
+
+                return;
+            }
+
+            if ([text, ...pending].join(' ').length <= splitLength) {
+                pending.unshift(text);
+                requestPending();
+                play(takeCovered(text).request, text, end, budget);
+
+                return;
+            }
+
+            play(request(text), text, end, budget);
+        };
+
+        // Mode appel : la réponse arrive encore. On attend sa fin (au plus STREAM_WAIT_MS) pour savoir si elle est courte.
+        if (announced && streaming && [text, ...pending].join(' ').length <= splitLength) {
+            const startedAt = now();
+            const timer = timers.setTimeout(() => {
+                waiter = null;
+                decide(now() - startedAt);
+            }, STREAM_WAIT_MS);
+            waiter = () => {
+                if (myGeneration !== generation) {
+                    waiter = null;
+                    timers.clearTimeout(timer);
+
+                    return;
+                }
+                if (!streaming || [text, ...pending].join(' ').length > splitLength) {
+                    waiter = null;
+                    timers.clearTimeout(timer);
+                    decide(now() - startedAt);
+                }
+            };
+
+            return;
+        }
+
+        decide(0);
     }
 
     return {
@@ -483,9 +545,20 @@ export function createNaturalSynth({
         // Phrases que le mode appel va lire (pour les demander d'un bloc).
         prepare(texts) {
             pending.push(...(texts ?? []).map((text) => String(text ?? '')).filter((text) => text.trim() !== ''));
+            waiter?.();
+        },
+        // Mode appel : une réponse commence à arriver, puis elle est complète.
+        begin() {
+            streaming = true;
+        },
+        finish() {
+            streaming = false;
+            waiter?.();
         },
         cancel() {
             generation += 1;
+            waiter = null;
+            streaming = false;
             pending = [];
             covered = [];
             busy = false;

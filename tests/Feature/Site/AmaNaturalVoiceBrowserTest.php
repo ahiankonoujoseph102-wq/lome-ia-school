@@ -45,11 +45,11 @@ class AmaNaturalVoiceBrowserTest extends TestCase
      * Faux serveur (réponses tenues en attente puis libérées), faux lecteur, fausse voix du téléphone, fausses minuteries.
      */
     private const string SETUP = <<<'JS'
-        const { createNaturalSynth, NaturalUtterance, hidePrivateWords, splitForSpeech, NATURAL_TIMEOUT_MS } = await import(__VOICE__);
+        const { createNaturalSynth, NaturalUtterance, hidePrivateWords, splitForSpeech, NATURAL_TIMEOUT_MS, SPLIT_LENGTH, STREAM_WAIT_MS } = await import(__VOICE__);
         const { createVoiceCall } = await import(__CALL__);
         const tick = async () => { for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setImmediate(resolve)); };
 
-        function setup({ privateWords = [] } = {}) {
+        function setup({ privateWords = [], splitLength = SPLIT_LENGTH } = {}) {
             const env = { log: [], fetched: [], pending: [], aborted: [], playing: null, phone: null, phoneSaid: [], fallbacks: [], now: 0, timers: [], events: [] };
             env.timersApi = {
                 setTimeout(callback, delay) { const id = Symbol(); env.timers.push({ id, at: env.now + delay, callback }); return id; },
@@ -101,6 +101,7 @@ class AmaNaturalVoiceBrowserTest extends TestCase
                 timers: env.timersApi,
                 now: () => env.now,
                 privateWords,
+                splitLength,
                 onFallback: (reason) => env.fallbacks.push(reason),
             });
             env.utterance = (text) => {
@@ -115,13 +116,25 @@ class AmaNaturalVoiceBrowserTest extends TestCase
 
         JS;
 
-    public function test_a_long_reply_is_split_and_played_with_the_natural_voice(): void
+    public function test_a_short_reply_makes_one_request_and_a_long_one_two(): void
     {
         $out = $this->runNode(<<<'JS'
+            // 1. Réponse courte (sous la longueur réglée) : UNE seule demande pour tout le texte.
             {
                 const env = setup();
                 env.synth.speak(env.utterance('Phrase un. Phrase deux. Phrase trois.'));
-                // Première phrase seule (démarrage rapide), puis le reste d'un bloc : deux demandes seulement.
+                out.shortFetched = [...env.fetched];
+                await env.answer('Phrase un. Phrase deux. Phrase trois.');
+                out.shortPlaying = env.playing?.url;
+                env.startAudio();
+                env.endAudio();
+                out.shortEvents = env.events;
+                out.defaultLength = SPLIT_LENGTH;
+            }
+            // 2. Réponse plus longue que la longueur réglée : la première phrase seule, puis tout le reste d'un bloc.
+            {
+                const env = setup({ splitLength: 20 });
+                env.synth.speak(env.utterance('Phrase un. Phrase deux. Phrase trois.'));
                 out.fetched = [...env.fetched];
                 await env.answer('Phrase un.');
                 out.firstPlaying = env.playing?.url;
@@ -138,6 +151,11 @@ class AmaNaturalVoiceBrowserTest extends TestCase
             }
             console.log(JSON.stringify(out));
             JS);
+
+        $this->assertSame(300, $out['defaultLength']);
+        $this->assertSame(['Phrase un. Phrase deux. Phrase trois.'], $out['shortFetched']);
+        $this->assertSame('blob:Phrase un. Phrase deux. Phrase trois.', $out['shortPlaying']);
+        $this->assertSame(['début', 'fin'], $out['shortEvents']);
 
         $this->assertSame(['Phrase un.', 'Phrase deux. Phrase trois.'], $out['fetched']);
         $this->assertSame('blob:Phrase un.', $out['firstPlaying']);
@@ -220,7 +238,7 @@ class AmaNaturalVoiceBrowserTest extends TestCase
         $this->assertSame('Merci !', $out['hidden']);
     }
 
-    public function test_the_call_mode_uses_the_natural_voice_with_two_requests_and_keeps_interruption_and_hang_up(): void
+    public function test_the_call_mode_makes_one_request_for_a_short_answer_and_keeps_interruption_and_hang_up(): void
     {
         $out = $this->runNode(<<<'JS'
             function call(env, askImpl) {
@@ -249,51 +267,93 @@ class AmaNaturalVoiceBrowserTest extends TestCase
                 mic.onend?.();
                 env.advance(2000);
             };
+            const reply = 'Elle coûte 25 000 FCFA. Vous payez par Mobile Money. Voulez-vous le lien ?';
+            const asker = (holder) => (text, options) => new Promise((resolve) => { holder.onText = options.onText; holder.finish = () => resolve({ reply, fallback: false }); });
 
-            // 1. Accueil puis réponse en trois phrases : la première seule, les deux autres d'un bloc dès qu'elle commence.
+            // 1. Réponse courte : l'accueil, puis une réponse de trois phrases, chacun en UNE seule demande.
             {
                 const env = setup();
-                let onText;
-                let finish;
-                const voiceCall = call(env, (text, options) => new Promise((resolve) => { onText = options.onText; finish = () => resolve({ reply: 'Elle coûte 25 000 FCFA. Vous payez par Mobile Money. Voulez-vous le lien ?', fallback: false }); }));
+                const holder = {};
+                const voiceCall = call(env, asker(holder));
                 voiceCall.start();
                 out.greetingFetched = [...env.fetched];
                 await env.answer(env.fetched[0]);
                 env.startAudio();
-                // Le reste de l'accueil est demandé d'un bloc pendant que la première phrase est lue.
-                out.greetingRest = env.fetched.slice(1);
+                env.endAudio();
+                env.advance(0);
+                await tick();
+                out.afterGreeting = voiceCall.state;
+                env.fetched = [];
+                say(env, 'Combien coûte la formation ?');
+                holder.onText(reply + ' ');
+                // La réponse arrive encore : on attend sa fin pour savoir si elle est courte.
+                out.beforeEnd = env.fetched.length;
+                holder.finish();
+                await tick();
+                out.replyFetched = [...env.fetched];
+                await env.answer(reply);
+                env.startAudio();
+                out.speaking = voiceCall.state;
+                env.endAudio();
+                for (let i = 0; i < 3; i += 1) {
+                    env.advance(0);
+                    await tick();
+                }
+                out.afterReply = { state: voiceCall.state, fetched: env.fetched.length, phone: env.phoneSaid };
+                out.mouth = env.mouth;
+                voiceCall.hangUp();
+            }
+
+            // 2. Réponse longue (au-delà de la longueur réglée) : la première phrase seule, puis la suite d'un bloc.
+            {
+                const env = setup({ splitLength: 40 });
+                const holder = {};
+                const voiceCall = call(env, asker(holder));
+                voiceCall.start();
+                out.longGreeting = [...env.fetched];
+                await env.answer(env.fetched[0]);
+                env.startAudio();
+                out.longGreetingRest = env.fetched.slice(1);
                 await env.answer(env.fetched[1]);
                 env.endAudio();
                 await tick();
                 env.startAudio();
                 env.endAudio();
                 await tick();
-                out.afterGreeting = voiceCall.state;
                 env.fetched = [];
                 say(env, 'Combien coûte la formation ?');
-                onText('Elle coûte 25 000 FCFA. Vous payez par Mobile Money. Voulez-vous le lien ? ');
-                finish();
+                holder.onText(reply + ' ');
+                out.longFirst = [...env.fetched];
+                holder.finish();
                 await tick();
-                out.replyFirstFetch = [...env.fetched];
                 await env.answer('Elle coûte 25 000 FCFA.');
                 env.startAudio();
-                out.replyFetched = [...env.fetched];
-                out.speaking = voiceCall.state;
-                await env.answer('Vous payez par Mobile Money. Voulez-vous le lien ?');
-                env.endAudio();
-                await tick();
-                out.secondAudio = env.playing?.url;
+                out.longFetched = [...env.fetched];
+                voiceCall.hangUp();
+            }
+
+            // 3. La fin de la réponse tarde : au bout de STREAM_WAIT_MS, ce qui est arrivé est demandé.
+            {
+                const env = setup();
+                const holder = {};
+                const voiceCall = call(env, asker(holder));
+                voiceCall.start();
+                await env.answer(env.fetched[0]);
                 env.startAudio();
                 env.endAudio();
                 env.advance(0);
                 await tick();
-                // La troisième phrase a été dite avec la deuxième : aucune nouvelle demande, micro rouvert.
-                out.afterReply = { state: voiceCall.state, fetched: env.fetched.length, phone: env.phoneSaid };
-                out.mouth = env.mouth;
+                env.fetched = [];
+                say(env, 'Combien coûte la formation ?');
+                holder.onText('Elle coûte 25 000 FCFA. ');
+                env.advance(STREAM_WAIT_MS - 1);
+                out.waiting = env.fetched.length;
+                env.advance(1);
+                out.afterWait = [...env.fetched];
                 voiceCall.hangUp();
             }
 
-            // 2. Interruption (toucher le cercle) pendant la voix naturelle, puis raccrocher.
+            // 4. Interruption (toucher le cercle) pendant la voix naturelle, puis raccrocher.
             {
                 const env = setup();
                 const voiceCall = call(env, () => new Promise(() => {}));
@@ -308,22 +368,28 @@ class AmaNaturalVoiceBrowserTest extends TestCase
             console.log(JSON.stringify(out));
             JS);
 
-        // Accueil : deux demandes (première phrase, puis la suite).
-        $this->assertSame(['Bonjour, je suis Ama, l\'assistante de Lomé IA School.'], $out['greetingFetched']);
-        $this->assertSame(['Je vous écoute.'], $out['greetingRest']);
+        // 1. Accueil et réponse courte : une seule demande chacun.
+        $this->assertSame(['Bonjour, je suis Ama, l\'assistante de Lomé IA School. Je vous écoute.'], $out['greetingFetched']);
         $this->assertSame('listening', $out['afterGreeting']);
-
-        // Réponse : la première phrase seule, puis le reste d'un bloc dès qu'elle commence.
-        $this->assertSame(['Elle coûte 25 000 FCFA.'], $out['replyFirstFetch']);
-        $this->assertSame(['Elle coûte 25 000 FCFA.', 'Vous payez par Mobile Money. Voulez-vous le lien ?'], $out['replyFetched']);
+        $this->assertSame(0, $out['beforeEnd']);
+        $this->assertSame(['Elle coûte 25 000 FCFA. Vous payez par Mobile Money. Voulez-vous le lien ?'], $out['replyFetched']);
         $this->assertSame('speaking', $out['speaking']);
-        $this->assertSame('blob:Vous payez par Mobile Money. Voulez-vous le lien ?', $out['secondAudio']);
-        $this->assertSame(['state' => 'listening', 'fetched' => 2, 'phone' => []], $out['afterReply']);
-        // La bouche bouge pendant chaque audio.
+        $this->assertSame(['state' => 'listening', 'fetched' => 1, 'phone' => []], $out['afterReply']);
+        // La bouche bouge pendant l'audio.
         $this->assertContains('start', $out['mouth']);
         $this->assertContains('end', $out['mouth']);
 
-        // Toucher le cercle coupe la voix naturelle et ouvre le micro ; raccrocher arrête tout.
+        // 2. Réponse longue : deux demandes (première phrase, puis la suite dès qu'elle commence).
+        $this->assertSame(['Bonjour, je suis Ama, l\'assistante de Lomé IA School.'], $out['longGreeting']);
+        $this->assertSame(['Je vous écoute.'], $out['longGreetingRest']);
+        $this->assertSame(['Elle coûte 25 000 FCFA.'], $out['longFirst']);
+        $this->assertSame(['Elle coûte 25 000 FCFA.', 'Vous payez par Mobile Money. Voulez-vous le lien ?'], $out['longFetched']);
+
+        // 3. Fin de réponse trop lente : pas d'attente au-delà de 1,5 s.
+        $this->assertSame(0, $out['waiting']);
+        $this->assertSame(['Elle coûte 25 000 FCFA.'], $out['afterWait']);
+
+        // 4. Toucher le cercle coupe la voix naturelle et ouvre le micro ; raccrocher arrête tout.
         $this->assertSame(['state' => 'listening', 'playing' => null, 'stopped' => true, 'aborted' => true], $out['interrupt']);
         $this->assertSame(['state' => 'ended', 'playing' => null], $out['hangUp']);
     }
@@ -335,7 +401,7 @@ class AmaNaturalVoiceBrowserTest extends TestCase
                 const env = setup();
                 env.synth.prepare(['Phrase un.', 'Phrase deux.']);
                 env.synth.speak(env.utterance('Phrase un.'));
-                await env.answer('Phrase un.', 'refus');
+                await env.answer('Phrase un. Phrase deux.', 'refus');
                 env.startPhone();
                 env.endPhone();
                 env.synth.speak(env.utterance('Phrase deux.'));
@@ -349,8 +415,8 @@ class AmaNaturalVoiceBrowserTest extends TestCase
             console.log(JSON.stringify(out));
             JS);
 
-        $this->assertSame(['phone' => ['Phrase un.', 'Phrase deux.'], 'fetched' => ['Phrase un.']], $out['sameAnswer']);
-        $this->assertSame(['Phrase un.', 'Nouvelle réponse.'], $out['nextAnswer']);
+        $this->assertSame(['phone' => ['Phrase un.', 'Phrase deux.'], 'fetched' => ['Phrase un. Phrase deux.']], $out['sameAnswer']);
+        $this->assertSame(['Phrase un. Phrase deux.', 'Nouvelle réponse.'], $out['nextAnswer']);
     }
 
     public function test_the_page_sends_the_natural_voice_settings_only_when_it_is_on(): void

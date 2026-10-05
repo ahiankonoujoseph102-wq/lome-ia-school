@@ -32,6 +32,9 @@ use Throwable;
  *    qu'une fois, puis gardée (disque « ama_voice ») et resservie sans demande à Google.
  * 3. Quota du jour épuisé (réponse de Google) : plus aucun essai jusqu'à la nouvelle journée de Google.
  * 4. Limite du site : « minute_limit » demandes par minute pour tout le site (3 par défaut, comme l'offre gratuite).
+ *
+ * Une réponse courte (jusqu'à « split_length » caractères, 300 par défaut) part en une seule demande ; plus longue, en deux
+ * (la première phrase, puis la suite) : le découpage est fait par le navigateur.
  */
 class NaturalVoice
 {
@@ -75,6 +78,15 @@ class NaturalVoice
      * @var array{0: int, 1: int, 2: int}
      */
     public const array MINUTE_LIMIT = [3, 1, 60];
+
+    /**
+     * Longueur (caractères) au-delà de laquelle une réponse est demandée en deux fois (la première phrase, puis la suite) :
+     * par défaut, minimum, maximum. En dessous, UNE seule demande pour toute la réponse (même valeur par défaut que
+     * SPLIT_LENGTH de resources/js/ama-voice.js).
+     *
+     * @var array{0: int, 1: int, 2: int}
+     */
+    public const array SPLIT_LENGTH = [300, 80, 1500];
 
     /**
      * Délai (millisecondes) après lequel le navigateur abandonne la voix naturelle pour la voix du téléphone.
@@ -149,6 +161,14 @@ class NaturalVoice
     {
         [$default, $min, $max] = self::MINUTE_LIMIT;
         $value = config('site.voice_assistant.natural_voice.minute_limit');
+
+        return is_numeric($value) ? max($min, min($max, (int) $value)) : $default;
+    }
+
+    public static function splitLength(): int
+    {
+        [$default, $min, $max] = self::SPLIT_LENGTH;
+        $value = config('site.voice_assistant.natural_voice.split_length');
 
         return is_numeric($value) ? max($min, min($max, (int) $value)) : $default;
     }

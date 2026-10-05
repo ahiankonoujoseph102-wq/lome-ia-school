@@ -803,6 +803,8 @@ function naturalVoiceFor(config) {
         FallbackUtterance: window.SpeechSynthesisUtterance,
         player,
         timeoutMs: settings.timeoutMs,
+        // Réponse courte : une seule demande ; au-delà de cette longueur, deux (réglage de l'admin).
+        splitLength: settings.splitLength,
         now: () => (window.performance?.now ? window.performance.now() : Date.now()),
         // Le prénom du visiteur n'est jamais envoyé (la voix du téléphone, elle, le dit).
         privateWords: [config.firstName ?? ''],

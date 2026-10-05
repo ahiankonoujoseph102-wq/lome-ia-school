@@ -707,6 +707,7 @@ class SiteSettingsController extends Controller
             'natural_voice_name' => ['nullable', Rule::in(array_keys(NaturalVoice::VOICES))],
             'natural_voice_model' => ['nullable', Rule::in(array_keys(NaturalVoice::MODELS))],
             'natural_voice_minute_limit' => ['nullable', 'integer', 'min:'.NaturalVoice::MINUTE_LIMIT[1], 'max:'.NaturalVoice::MINUTE_LIMIT[2]],
+            'natural_voice_split_length' => ['nullable', 'integer', 'min:'.NaturalVoice::SPLIT_LENGTH[1], 'max:'.NaturalVoice::SPLIT_LENGTH[2]],
         ];
         $messages = [
             'instructions.max' => 'Les instructions sont trop longues (12 000 caractères au maximum).',
@@ -724,6 +725,9 @@ class SiteSettingsController extends Controller
             'natural_voice_minute_limit.integer' => 'Écrivez un nombre entier, sans espace ni virgule.',
             'natural_voice_minute_limit.min' => 'Le nombre doit être d\'au moins '.NaturalVoice::MINUTE_LIMIT[1].'.',
             'natural_voice_minute_limit.max' => 'Le nombre ne peut pas dépasser '.NaturalVoice::MINUTE_LIMIT[2].'.',
+            'natural_voice_split_length.integer' => 'Écrivez un nombre entier, sans espace ni virgule.',
+            'natural_voice_split_length.min' => 'La longueur doit être d\'au moins '.NaturalVoice::SPLIT_LENGTH[1].' caractères.',
+            'natural_voice_split_length.max' => 'La longueur ne peut pas dépasser '.NaturalVoice::SPLIT_LENGTH[2].' caractères.',
         ];
 
         foreach (VoiceAssistant::LIMITS as $name => [, $min, $max]) {
@@ -774,6 +778,7 @@ class SiteSettingsController extends Controller
             'voice' => (string) ($validated['natural_voice_name'] ?? NaturalVoice::DEFAULT_VOICE),
             'model' => (string) ($validated['natural_voice_model'] ?? array_key_first(NaturalVoice::MODELS)),
             'minute_limit' => (int) ($validated['natural_voice_minute_limit'] ?? NaturalVoice::MINUTE_LIMIT[0]),
+            'split_length' => (int) ($validated['natural_voice_split_length'] ?? NaturalVoice::SPLIT_LENGTH[0]),
         ];
         // Instructions vidées : retour au texte d'origine.
         $instructions = AmaPrompt::effectiveInstructions($validated['instructions'] ?? '');
@@ -814,7 +819,7 @@ class SiteSettingsController extends Controller
             ? 'Ama (Gemini), '.$limits['visitor_daily_limit'].' messages par visiteur et par jour, '.$limits['daily_limit'].' demandes par jour pour le site'.($instructions !== (string) ($previous['instructions'] ?? AmaPrompt::DEFAULT_INSTRUCTIONS) ? ', instructions modifiées' : '').($knowledge !== ($previousKnowledge ?: ['school' => AmaKnowledge::DEFAULT_SCHOOL, 'faq' => [], 'other' => '']) ? ', base de connaissances modifiée' : '')
             : 'agent ElevenLabs '.$agentId;
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').', personnage animé : '.($character ? 'oui (visage '.$characterStyle.')' : 'non').', Ama se présente toute seule : '.($nudge ? 'oui' : 'non').', voix naturelle : '.($naturalVoice['enabled'] ? 'oui ('.$naturalVoice['voice'].', '.$naturalVoice['model'].', '.$naturalVoice['minute_limit'].' par minute)' : 'non').').');
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').', personnage animé : '.($character ? 'oui (visage '.$characterStyle.')' : 'non').', Ama se présente toute seule : '.($nudge ? 'oui' : 'non').', voix naturelle : '.($naturalVoice['enabled'] ? 'oui ('.$naturalVoice['voice'].', '.$naturalVoice['model'].', '.$naturalVoice['minute_limit'].' par minute, deux demandes au-delà de '.$naturalVoice['split_length'].' caractères)' : 'non').').');
     }
 
     private function updateLegal(Request $request): void
