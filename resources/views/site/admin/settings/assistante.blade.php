@@ -2,6 +2,7 @@
     use App\Assistant\AmaKnowledge;
     use App\Assistant\AmaPrompt;
     use App\Assistant\NaturalVoice;
+    use App\Assistant\VoicePronunciation;
     use App\Contracts\AssistantModel;
     use App\Models\AssistantUsage;
     use App\Models\AssistantVoiceEvent;
@@ -19,6 +20,8 @@
     $naturalOn = (bool) old('natural_voice', $natural['enabled'] ?? false);
     $naturalVoice = old('natural_voice_name', NaturalVoice::voice());
     $naturalModel = old('natural_voice_model', NaturalVoice::model());
+    // Table de prononciation (texte envoyé à la voix seulement) : celle enregistrée, sinon les valeurs de départ.
+    $pronunciations = array_values(array_map(fn ($row): array => ['written' => (string) ($row['written'] ?? ''), 'spoken' => (string) ($row['spoken'] ?? '')], (array) old('pronunciations', VoicePronunciation::table())));
     // Fournisseur de la voix : celui enregistré (Google si rien n'a jamais été choisi) ; clés lues sur le serveur, jamais affichées.
     $naturalProvider = old('natural_voice_provider', NaturalVoice::provider());
     $savedProvider = NaturalVoice::provider();
@@ -152,6 +155,8 @@
                     keys: @js($voiceKeys),
                     voice: @js($naturalVoice),
                     model: @js($naturalModel),
+                    rows: @js($pronunciations),
+                    sample: '',
                     loading: false,
                     message: '',
                     audio: null,
@@ -164,7 +169,7 @@
                             const response = await fetch(@js(route('admin.settings.voice-preview')), {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json', Accept: 'audio/*, application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '' },
-                                body: JSON.stringify({ provider: this.provider, voice: this.voice, model: this.model }),
+                                body: JSON.stringify({ provider: this.provider, voice: this.voice, model: this.model, text: this.sample, pronunciations: this.rows }),
                             });
                             if (!response.ok || !(response.headers.get('Content-Type') ?? '').startsWith('audio/')) {
                                 const data = await response.json().catch(() => ({}));
@@ -251,12 +256,37 @@
                     </div>
                 </fieldset>
 
+                <fieldset class="space-y-3" data-test="natural-voice-pronunciations">
+                    <legend class="font-semibold text-white">Table de prononciation</legend>
+                    <p class="text-sm text-slate-400">Pour corriger un mot mal prononcé par la voix naturelle : « ce qui est écrit » → « comment le dire ». Seule la voix change : le texte affiché à l'écran reste exactement le même, et la voix du téléphone n'est pas concernée. Mots entiers seulement (le « ia » de « confiance » n'est jamais touché). Un sigle (au moins deux majuscules, comme IA, FCFA ou ChatGPT) n'est remplacé que s'il est écrit exactement pareil ; les autres mots, avec ou sans majuscule. Les expressions les plus longues passent en premier (« Lomé IA School » avant « IA »). Vaut pour Cloudflare et pour Google. Après l'enregistrement, les phrases écrites à l'avance concernées sont fabriquées de nouveau.</p>
+                    <input type="hidden" name="pronunciations_sent" value="1">
+                    <template x-for="(row, index) in rows" :key="index">
+                        <div class="flex flex-col gap-2 rounded-2xl bg-veil/5 p-3 ring-1 ring-veil/10 sm:flex-row sm:items-center" data-test="natural-voice-pronunciation-row">
+                            <div class="grid min-w-0 flex-1 grid-cols-1 items-center gap-1.5 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-2">
+                                <input type="text" class="field-input" :name="`pronunciations[${index}][written]`" x-model="row.written" maxlength="{{ VoicePronunciation::MAX_LENGTH }}" placeholder="Ce qui est écrit" :aria-label="'Ce qui est écrit, ligne ' + (index + 1)" autocapitalize="none" autocorrect="off" spellcheck="false">
+                                <span class="text-sm text-slate-400" aria-hidden="true"><span class="sm:hidden">↓ se dit</span><span class="hidden sm:inline">→</span></span>
+                                <input type="text" class="field-input" :name="`pronunciations[${index}][spoken]`" x-model="row.spoken" maxlength="{{ VoicePronunciation::MAX_LENGTH }}" placeholder="Comment le dire" :aria-label="'Comment le dire, ligne ' + (index + 1)" autocapitalize="none" autocorrect="off" spellcheck="false">
+                            </div>
+                            <button type="button" class="self-end rounded-full px-3 py-1.5 text-sm font-semibold text-rose-200 ring-1 ring-rose-400/40 hover:bg-rose-400/10 sm:self-auto" @click="rows.splice(index, 1)">Retirer</button>
+                        </div>
+                    </template>
+                    <button type="button" class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-electric-200 ring-1 ring-electric-400/40 hover:bg-electric-500/10" @click="rows.push({ written: '', spoken: '' })" x-show="rows.length < {{ VoicePronunciation::MAX_ROWS }}" data-test="natural-voice-pronunciation-add">
+                        <flux:icon.plus class="size-4" /> Ajouter une ligne
+                    </button>
+                    @error('pronunciations')<p class="text-sm text-rose-300">{{ $message }}</p>@enderror
+                    @error('pronunciations.*')<p class="text-sm text-rose-300">{{ $message }}</p>@enderror
+                </fieldset>
+
                 <div class="space-y-2">
+                    <label class="block" data-test="natural-voice-sample">
+                        <span class="field-label">Phrase d'essai</span>
+                        <input type="text" class="field-input" x-model="sample" maxlength="{{ NaturalVoice::PREVIEW_MAX_LENGTH }}" placeholder="{{ NaturalVoice::SAMPLE }}" autocapitalize="sentences">
+                    </label>
                     <button type="button" class="btn-ghost w-full sm:w-auto" x-on:click="listen()" x-bind:disabled="loading || !keys[provider]" data-test="natural-voice-listen" @disabled(! $voiceKeys[$naturalProvider === NaturalVoice::CLOUDFLARE ? NaturalVoice::CLOUDFLARE : NaturalVoice::GEMINI])>
                         <flux:icon.speaker-wave class="size-5" />
                         <span x-text="loading ? 'Préparation…' : 'Écouter'">Écouter</span>
                     </button>
-                    <p class="text-sm text-slate-400">Lit « {{ NaturalVoice::SAMPLE }} » avec le fournisseur choisi ci-dessus (pour Google : avec la voix et le modèle choisis), même avant d'enregistrer. Chaque voix n'est demandée qu'une fois, puis gardée en mémoire.</p>
+                    <p class="text-sm text-slate-400">Lit la phrase d'essai (vide : « {{ NaturalVoice::SAMPLE }} ») avec le fournisseur choisi ci-dessus (pour Google : avec la voix et le modèle choisis) et la table de prononciation telle qu'elle est écrite ci-dessus, même avant d'enregistrer. Chaque phrase n'est demandée qu'une fois, puis gardée en mémoire ; avec Cloudflare, un nouvel essai compte dans les minutes du jour.</p>
                     <p class="text-sm text-amber-200" x-show="message" x-text="message" x-cloak role="status"></p>
                 </div>
 

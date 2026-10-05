@@ -212,6 +212,11 @@ class NaturalVoice
     public const int MAX_LENGTH = 1600;
 
     /**
+     * Longueur maximale de la « Phrase d'essai » du bouton « Écouter » de l'admin.
+     */
+    public const int PREVIEW_MAX_LENGTH = 300;
+
+    /**
      * Phrase lue par le bouton « Écouter » de l'admin.
      */
     public const string SAMPLE = VoiceAssistant::DEFAULT_GREETING;
@@ -450,12 +455,16 @@ class NaturalVoice
     /**
      * Bouton « Écouter » de l'admin : la phrase d'exemple lue par le fournisseur choisi dans le formulaire (Google : avec
      * la voix et le modèle choisis). Gardée en mémoire : une seule demande par fournisseur (et, pour Google, par voix et
-     * par modèle).
+     * par modèle). Phrase d'essai de l'admin à la place de la phrase d'exemple si elle est donnée, lue avec la table de
+     * prononciation en cours de saisie (celle enregistrée si aucune n'est envoyée).
+     *
+     * @param  list<array{written: string, spoken: string}>|null  $pronunciations
      */
-    public function preview(string $voice, string $model, ?string $provider = null): ?SpeechAudio
+    public function preview(string $voice, string $model, ?string $provider = null, ?string $text = null, ?array $pronunciations = null): ?SpeechAudio
     {
         $this->lastReason = null;
         $provider ??= self::GEMINI;
+        $text = self::normalizeSpaces((string) $text);
 
         if (! isset(self::PROVIDERS[$provider]) || ($provider === self::GEMINI && (! isset(self::VOICES[$voice]) || ! isset(self::MODELS[$model])))) {
             $this->lastReason = 'invalid_voice';
@@ -463,7 +472,13 @@ class NaturalVoice
             return null;
         }
 
-        return $this->produce(self::SAMPLE, $voice, $model, true, count: false, source: AssistantVoiceEvent::SOURCE_PREVIEW, provider: $provider);
+        if ($text !== '' && (mb_strlen($text) > self::PREVIEW_MAX_LENGTH || preg_match('/[\p{L}\p{N}]/u', $text) !== 1)) {
+            $this->lastReason = 'invalid_text';
+
+            return null;
+        }
+
+        return $this->produce($text !== '' ? $text : self::SAMPLE, $voice, $model, true, count: false, source: AssistantVoiceEvent::SOURCE_PREVIEW, provider: $provider, pronunciations: $pronunciations);
     }
 
     /**
@@ -493,12 +508,19 @@ class NaturalVoice
         );
     }
 
-    private function produce(string $text, string $voice, string $model, bool $cacheable, bool $count = true, string $source = AssistantVoiceEvent::SOURCE_SITE, ?string $provider = null): ?SpeechAudio
+    /**
+     * @param  list<array{written: string, spoken: string}>|null  $pronunciations  table de prononciation en cours de saisie
+     *                                                                             (bouton « Écouter »), sinon celle enregistrée
+     */
+    private function produce(string $text, string $voice, string $model, bool $cacheable, bool $count = true, string $source = AssistantVoiceEvent::SOURCE_SITE, ?string $provider = null, ?array $pronunciations = null): ?SpeechAudio
     {
         $provider ??= self::provider();
         $cloudflare = $provider === self::CLOUDFLARE;
         $this->provider = $provider;
-        $path = $cacheable ? $this->cachePath($text, $voice, $model, $provider) : null;
+        // Table de prononciation : seulement sur le texte envoyé à la voix (jamais sur le texte affiché). L'emplacement en
+        // mémoire suit le texte prononcé : une phrase touchée par un changement de la table est fabriquée de nouveau.
+        $spoken = VoicePronunciation::apply($text, $pronunciations);
+        $path = $cacheable ? $this->cachePath($text, $voice, $model, $provider, $spoken) : null;
 
         if ($path !== null) {
             $cached = $this->fromCache($path);
@@ -512,6 +534,7 @@ class NaturalVoice
             }
         }
 
+        $text = $spoken;
         $chars = mb_strlen($text);
         $synthesizer = $this->synthesizer($provider);
 
@@ -770,13 +793,17 @@ class NaturalVoice
      * Emplacement en mémoire, séparé par fournisseur : Google « modèle/voix/empreinte » (chemin d'origine, déjà rempli
      * sur le site), Cloudflare « cloudflare/melotts-fr/empreinte ».
      */
-    private function cachePath(string $text, string $voice, string $model, string $provider): string
+    private function cachePath(string $text, string $voice, string $model, string $provider, string $spoken): string
     {
+        // Texte non touché par la table : même emplacement qu'avant la table. Touché : emplacement du texte prononcé (majuscules
+        // comprises), pour qu'une nouvelle prononciation ne resserve jamais l'ancien audio.
+        $hash = $spoken === $text ? sha1(self::key($text)) : sha1('spoken:'.self::normalizeSpaces(str_replace('’', "'", $spoken)));
+
         if ($provider === self::CLOUDFLARE) {
-            return 'cloudflare/melotts-'.CloudflareSpeech::LANG.'/'.sha1(self::key($text));
+            return 'cloudflare/melotts-'.CloudflareSpeech::LANG.'/'.$hash;
         }
 
-        return Str::slug($model).'/'.Str::lower($voice).'/'.sha1(self::key($text));
+        return Str::slug($model).'/'.Str::lower($voice).'/'.$hash;
     }
 
     private function fromCache(string $path): ?SpeechAudio
@@ -817,7 +844,8 @@ class NaturalVoice
      */
     public function isCached(string $text, ?string $voice = null, ?string $model = null, ?string $provider = null): bool
     {
-        $path = $this->cachePath(self::normalizeSpaces($text), $voice ?? self::voice(), $model ?? self::model(), $provider ?? self::provider());
+        $text = self::normalizeSpaces($text);
+        $path = $this->cachePath($text, $voice ?? self::voice(), $model ?? self::model(), $provider ?? self::provider(), VoicePronunciation::apply($text));
 
         try {
             $disk = Storage::disk('ama_voice');
