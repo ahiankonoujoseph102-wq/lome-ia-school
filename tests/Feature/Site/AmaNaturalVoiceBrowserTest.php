@@ -11,7 +11,7 @@ use Tests\TestCase;
 /**
  * Voix naturelle d'Ama dans le navigateur (resources/js/ama-voice.js), exécutée avec Node.js, avec un faux serveur, un
  * faux lecteur audio, une fausse voix du téléphone et de fausses minuteries : lecture de l'audio, refus du serveur,
- * délai dépassé (4 s), lecture impossible, une seule voix par réponse, prénom jamais envoyé, et mode appel complet
+ * délai dépassé (réglable, 10 s par défaut), serveur injoignable, lecture impossible, audio arrivé trop tard jamais joué, une seule voix par réponse, prénom jamais envoyé, et mode appel complet
  * (ama-call.js) : première phrase seule puis la suite d'un bloc, bouche qui bouge, interruption et raccrocher.
  */
 class AmaNaturalVoiceBrowserTest extends TestCase
@@ -49,8 +49,8 @@ class AmaNaturalVoiceBrowserTest extends TestCase
         const { createVoiceCall } = await import(__CALL__);
         const tick = async () => { for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setImmediate(resolve)); };
 
-        function setup({ privateWords = [], splitLength = SPLIT_LENGTH } = {}) {
-            const env = { log: [], fetched: [], pending: [], aborted: [], playing: null, phone: null, phoneSaid: [], fallbacks: [], now: 0, timers: [], events: [] };
+        function setup({ privateWords = [], splitLength = SPLIT_LENGTH, timeoutMs = NATURAL_TIMEOUT_MS } = {}) {
+            const env = { log: [], fetched: [], pending: [], aborted: [], playing: null, phone: null, phoneSaid: [], fallbacks: [], waits: [], now: 0, timers: [], events: [] };
             env.timersApi = {
                 setTimeout(callback, delay) { const id = Symbol(); env.timers.push({ id, at: env.now + delay, callback }); return id; },
                 clearTimeout(id) { env.timers = env.timers.filter((timer) => timer.id !== id); },
@@ -79,6 +79,13 @@ class AmaNaturalVoiceBrowserTest extends TestCase
                 item.resolve(kind === 'audio' ? { url: 'blob:' + text, release: () => env.log.push('libéré : ' + text) } : null);
                 await tick();
             };
+            // Le serveur du site est injoignable (réseau coupé, erreur 500, session expirée).
+            env.unreachable = async (text) => {
+                const index = env.pending.findIndex((item) => item.text === text);
+                const [item] = env.pending.splice(index, 1);
+                item.resolve(Promise.reject(new Error('réseau')));
+                await tick();
+            };
             env.player = {
                 play(url, handlers) { env.playing = { url, handlers }; env.log.push('audio : ' + url.slice(5)); },
                 stop() { env.playing = null; env.log.push('audio arrêté'); },
@@ -102,7 +109,8 @@ class AmaNaturalVoiceBrowserTest extends TestCase
                 now: () => env.now,
                 privateWords,
                 splitLength,
-                onFallback: (reason) => env.fallbacks.push(reason),
+                timeoutMs,
+                onFallback: (reason, waited) => { env.fallbacks.push(reason); env.waits.push(waited); },
             });
             env.utterance = (text) => {
                 const utterance = new NaturalUtterance(text);
@@ -429,5 +437,149 @@ class AmaNaturalVoiceBrowserTest extends TestCase
         SiteSettings::save(['site.voice_assistant' => ['enabled' => true, 'provider' => 'gemini', 'natural_voice' => ['enabled' => true]]]);
 
         $this->get(route('home'))->assertOk()->assertSee('fallbackEndpoint', false)->assertDontSee('cle-de-test-page-voix');
+    }
+
+    public function test_the_delay_is_set_by_the_admin_and_late_audio_never_plays_over_the_phone_voice(): void
+    {
+        $out = $this->runNode(<<<'JS'
+            // 1. Délai réglé à 10 s : à 4 s la voix naturelle est encore attendue ; à 10 s, voix du téléphone, attente signalée.
+            {
+                const env = setup({ timeoutMs: 10000 });
+                env.synth.speak(env.utterance('Vous payez par Mobile Money.'));
+                env.advance(4000);
+                out.at4 = env.phoneSaid.length;
+                env.advance(6000);
+                out.at10 = { phone: env.phoneSaid, reported: env.fallbacks, waited: env.waits };
+                // L'audio arrive 50 ms trop tard, pendant que le téléphone parle : jamais joué, aussitôt libéré.
+                env.startPhone();
+                env.advance(50);
+                await env.answer('Vous payez par Mobile Money.');
+                out.lateWhilePhone = { playing: env.playing, log: env.log.filter((line) => line.startsWith('audio') || line.startsWith('libéré')) };
+                env.endPhone();
+                out.events = env.events;
+            }
+            // 2. Réponse lue en deux demandes : la première est trop lente, la suite arrive à temps. La suite garde la voix
+            //    du téléphone (une seule voix par réponse) : l'audio de la suite n'est jamais joué.
+            {
+                const env = setup({ splitLength: 20, timeoutMs: 5000 });
+                env.synth.speak(env.utterance('Phrase un. Phrase deux. Phrase trois.'));
+                await env.answer('Phrase deux. Phrase trois.');
+                env.advance(5000);
+                env.startPhone();
+                env.endPhone();
+                await env.answer('Phrase un.');
+                env.advance(0);
+                out.split = { phone: env.phoneSaid, playing: env.playing, audio: env.log.filter((line) => line.startsWith('audio : ')) };
+            }
+            // 3. Serveur injoignable : voix du téléphone tout de suite, cause « network » signalée.
+            {
+                const env = setup();
+                env.synth.speak(env.utterance('Vous payez par Mobile Money.'));
+                env.advance(300);
+                await env.unreachable('Vous payez par Mobile Money.');
+                out.network = { phone: env.phoneSaid, reported: env.fallbacks, waited: env.waits };
+            }
+            console.log(JSON.stringify(out));
+            JS);
+
+        $this->assertSame(0, $out['at4']);
+        $this->assertSame(['phone' => ['Vous payez par Mobile Money.'], 'reported' => ['timeout'], 'waited' => [10000]], $out['at10']);
+        $this->assertNull($out['lateWhilePhone']['playing']);
+        $this->assertSame(['libéré : Vous payez par Mobile Money.'], $out['lateWhilePhone']['log']);
+        $this->assertSame(['début', 'fin'], $out['events']);
+
+        $this->assertSame(['Phrase un.', 'Phrase deux. Phrase trois.'], $out['split']['phone']);
+        $this->assertNull($out['split']['playing']);
+        $this->assertSame([], $out['split']['audio']);
+
+        $this->assertSame(['phone' => ['Vous payez par Mobile Money.'], 'reported' => ['network'], 'waited' => [300]], $out['network']);
+    }
+
+    public function test_ama_shows_thinking_until_the_natural_voice_really_starts(): void
+    {
+        $out = $this->runNode(<<<'JS'
+            const env = setup();
+            const states = [];
+            env.recognitions = [];
+            const Recognition = function () {
+                this.start = () => {};
+                this.stop = () => this.onend?.();
+                this.abort = () => {};
+                env.recognitions.push(this);
+            };
+            let finish = null;
+            let onText = null;
+            const voiceCall = createVoiceCall({
+                Recognition,
+                synth: env.synth,
+                Utterance: NaturalUtterance,
+                ask: (text, options) => new Promise((resolve) => { onText = options.onText; finish = () => resolve({ reply: 'Elle coûte 25 000 FCFA.', fallback: false }); }),
+                timers: env.timersApi,
+                now: () => env.now,
+                onState: (state) => states.push(state),
+            });
+            voiceCall.start();
+            // Accueil demandé à Google : Ama « réfléchit » à l'écran tant que la voix n'a pas commencé.
+            out.greetingWaiting = [...states];
+            await env.answer(env.fetched[0]);
+            env.startAudio();
+            out.greetingSpeaking = states.at(-1);
+            env.endAudio();
+            env.advance(0);
+            await tick();
+            const mic = env.recognitions.at(-1);
+            mic.onspeechstart?.();
+            mic.onresult?.({ resultIndex: 0, results: [Object.assign([{ transcript: 'Combien coûte la formation ?' }], { isFinal: true })] });
+            mic.onend?.();
+            env.advance(2000);
+            out.asking = states.at(-1);
+            onText('Elle coûte 25 000 FCFA. ');
+            finish();
+            await tick();
+            // Texte reçu, voix en préparation chez Google : toujours « réfléchit », la voix est demandée tout de suite.
+            out.textReady = { state: states.at(-1), internal: voiceCall.state, fetched: env.fetched.length };
+            env.advance(3000);
+            out.stillThinking = states.at(-1);
+            await env.answer('Elle coûte 25 000 FCFA.');
+            env.startAudio();
+            out.replySpeaking = states.at(-1);
+            out.all = states;
+            console.log(JSON.stringify(out));
+            JS);
+
+        $this->assertSame(['thinking'], $out['greetingWaiting']);
+        $this->assertSame('speaking', $out['greetingSpeaking']);
+        $this->assertSame('thinking', $out['asking']);
+        $this->assertSame(['state' => 'thinking', 'internal' => 'speaking', 'fetched' => 2], $out['textReady']);
+        $this->assertSame('thinking', $out['stillThinking']);
+        $this->assertSame('speaking', $out['replySpeaking']);
+        // « Parle » n'apparaît jamais avant le vrai début d'une voix.
+        $this->assertSame(['thinking', 'speaking', 'listening', 'thinking', 'speaking'], $out['all']);
+    }
+
+    public function test_a_sound_that_never_ends_is_stopped_before_the_phone_voice_takes_over(): void
+    {
+        $out = $this->runNode(<<<'JS'
+            const { createElementPlayer } = await import(__VOICE__);
+            const listeners = {};
+            const log = [];
+            const element = {
+                src: '', duration: 1, ended: false,
+                addEventListener(name, callback) { listeners[name] = callback; },
+                play() { log.push('lecture'); return Promise.resolve(); },
+                pause() { log.push('pause'); listeners.pause?.(); },
+            };
+            const timers = [];
+            const player = createElementPlayer(element, { setTimer: (callback) => { timers.push(callback); return timers.length; }, clearTimer: () => {} });
+            player.play('blob:x', { onstart: () => log.push('début'), onend: () => log.push('fin'), onerror: () => log.push('voix du téléphone') });
+            element.src = 'blob:x';
+            listeners.playing();
+            timers.at(-1)();
+            out.log = log;
+            console.log(JSON.stringify(out));
+            JS);
+
+        // Le son est mis en pause AVANT que la voix du téléphone parle, et la pause ne déclenche pas un second secours.
+        $this->assertSame(['lecture', 'début', 'pause', 'voix du téléphone'], $out['log']);
     }
 }

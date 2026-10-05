@@ -13,8 +13,9 @@ class SpeechFailure extends RuntimeException
     /**
      * @param  bool  $quota  quota atteint (réponse 429 de Google)
      * @param  bool  $daily  quota du jour épuisé : plus aucun essai jusqu'à la nouvelle journée de Google
+     * @param  bool  $timeout  Google n'a pas répondu à temps (délai du serveur dépassé) ou connexion impossible
      */
-    public function __construct(string $detail = '', public readonly bool $quota = false, public readonly bool $daily = false)
+    public function __construct(string $detail = '', public readonly bool $quota = false, public readonly bool $daily = false, public readonly bool $timeout = false)
     {
         parent::__construct($detail);
     }

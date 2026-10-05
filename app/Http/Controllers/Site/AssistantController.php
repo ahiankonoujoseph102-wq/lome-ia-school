@@ -131,13 +131,19 @@ class AssistantController extends Controller
     }
 
     /**
-     * Le navigateur a repris la voix du téléphone de lui-même (audio pas prêt après 4 secondes, lecture impossible) :
-     * compté pour l'admin, sans aucun texte.
+     * Le navigateur a repris la voix du téléphone de lui-même : cause (« timeout » audio pas prêt avant le délai réglé,
+     * « playback » lecture refusée ou coupée, « network » serveur injoignable) et attente en millisecondes, comptées pour
+     * l'admin, sans aucun texte.
      */
-    public function voiceFallback(NaturalVoice $voice): JsonResponse
+    public function voiceFallback(Request $request, NaturalVoice $voice): JsonResponse
     {
         if ($voice->enabled()) {
-            NaturalVoice::recordBrowserFallback();
+            $cause = $request->input('cause');
+            $waited = $request->input('waited');
+            NaturalVoice::recordBrowserFallback(
+                is_string($cause) ? $cause : null,
+                is_numeric($waited) ? (int) $waited : null,
+            );
         }
 
         return $this->json(['ok' => true]);

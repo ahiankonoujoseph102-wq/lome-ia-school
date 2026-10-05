@@ -39,7 +39,7 @@ class GeminiSpeech implements SpeechSynthesizer
             $response = Http::withHeaders(['x-goog-api-key' => $this->key()])
                 ->acceptJson()
                 ->connectTimeout(3)
-                ->timeout(max(2, (int) config('services.gemini.tts_timeout', 8)))
+                ->timeout(self::timeoutSeconds())
                 ->post($url, [
                     'contents' => [['parts' => [['text' => $text]]]],
                     'generationConfig' => [
@@ -48,7 +48,7 @@ class GeminiSpeech implements SpeechSynthesizer
                     ],
                 ]);
         } catch (Throwable $exception) {
-            throw new SpeechFailure($this->hide('Délai dépassé ou connexion impossible : '.$exception->getMessage()));
+            throw new SpeechFailure($this->hide('Délai dépassé ou connexion impossible : '.$exception->getMessage()), timeout: true);
         }
 
         if ($response->failed()) {
@@ -68,6 +68,16 @@ class GeminiSpeech implements SpeechSynthesizer
         }
 
         throw new SpeechFailure('Réponse sans audio ('.((string) ($response->json('promptFeedback.blockReason') ?? $response->json('candidates.0.finishReason') ?? 'aucune raison donnée')).').');
+    }
+
+    /**
+     * Délai d'attente de Google côté serveur (secondes) : GEMINI_TTS_TIMEOUT (8 s par défaut), et toujours au moins
+     * 2 secondes de plus que le délai du téléphone réglé dans l'admin. Ainsi une voix qui arrive un peu tard est quand
+     * même mesurée (et gardée en mémoire si c'est une phrase écrite à l'avance) au lieu d'être coupée par le serveur.
+     */
+    public static function timeoutSeconds(): int
+    {
+        return max(2, (int) config('services.gemini.tts_timeout', 8), (int) ceil(NaturalVoice::timeoutMs() / 1000) + 2);
     }
 
     /**

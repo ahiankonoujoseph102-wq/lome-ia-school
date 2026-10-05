@@ -4,6 +4,7 @@
     use App\Assistant\NaturalVoice;
     use App\Contracts\AssistantModel;
     use App\Models\AssistantUsage;
+    use App\Models\AssistantVoiceEvent;
     use App\Models\AssistantVoiceUsage;
     use App\Settings\SiteSettings;
     use App\Support\VoiceAssistant;
@@ -19,6 +20,11 @@
     $naturalVoice = old('natural_voice_name', NaturalVoice::voice());
     $naturalModel = old('natural_voice_model', NaturalVoice::model());
     $voiceToday = AssistantVoiceUsage::today();
+    $voiceStats = AssistantVoiceEvent::todayStats();
+    $voiceSeconds = fn (?int $ms): string => $ms === null ? '—' : str_replace('.', ',', (string) round($ms / 1000, 1)).' s';
+    // Phrases écrites à l'avance déjà prêtes en mémoire pour la voix et le modèle enregistrés.
+    $preparedTotal = count(NaturalVoice::preparedTexts());
+    $preparedMissing = ($natural['enabled'] ?? false) && $keyPresent ? count(app(NaturalVoice::class)->missingPreparedTexts()) : null;
     $providers = [
         VoiceAssistant::GEMINI => ['Ama (Gemini)', 'Notre propre assistante : discussion écrite, micro et lecture à voix haute du navigateur. Réponses de l\'IA Gemini de Google (offre gratuite).'],
         VoiceAssistant::ELEVENLABS => ['ElevenLabs', 'L\'ancien agent vocal créé sur ElevenLabs (gardé, désactivé tant qu\'il n\'est pas choisi ici).'],
@@ -164,7 +170,7 @@
                 }">
                 <div>
                     <h2 class="font-semibold text-white">Voix naturelle</h2>
-                    <p class="mt-1 text-sm text-slate-400">Ama lit ses réponses avec une voix naturelle fabriquée par Google (modèles « TTS » de Gemini, même clé que les réponses). Si Google refuse (quota, erreur) ou si la voix n'est pas prête après {{ NaturalVoice::BROWSER_TIMEOUT_MS / 1000 }} secondes, Ama parle aussitôt avec la voix du téléphone : jamais de silence ni de message d'erreur. Fonctionne en mode appel et avec « Lire les réponses à voix haute ».</p>
+                    <p class="mt-1 text-sm text-slate-400">Ama lit ses réponses avec une voix naturelle fabriquée par Google (modèles « TTS » de Gemini, même clé que les réponses). Si Google refuse (quota, erreur) ou si la voix n'est pas prête après le délai réglé ci-dessous ({{ NaturalVoice::timeoutMs() / 1000 }} secondes), Ama parle aussitôt avec la voix du téléphone : jamais de silence ni de message d'erreur. Fonctionne en mode appel et avec « Lire les réponses à voix haute ».</p>
                 </div>
 
                 <label class="flex cursor-pointer items-start justify-between gap-4" data-test="natural-voice-toggle">
@@ -221,15 +227,41 @@
 
                 <x-admin.field name="natural_voice_split_length" label="Longueur à partir de laquelle une réponse est lue en deux demandes" type="number" unit="caractères" min="{{ NaturalVoice::SPLIT_LENGTH[1] }}" max="{{ NaturalVoice::SPLIT_LENGTH[2] }}" :value="NaturalVoice::splitLength()" hint="300 par défaut (environ trois phrases courtes). Une réponse plus courte utilise UNE seule demande. Une réponse plus longue en utilise deux : la première phrase seule, pour que la voix commence vite, puis la suite. Plus le nombre est grand, moins il y a de demandes, mais plus la voix met de temps à commencer sur les longues réponses." />
 
+                <x-admin.field name="natural_voice_timeout" label="Délai avant la voix du téléphone" type="number" unit="secondes" min="{{ NaturalVoice::TIMEOUT[1] }}" max="{{ NaturalVoice::TIMEOUT[2] }}" :value="NaturalVoice::timeoutMs() / 1000" hint="10 par défaut. Temps laissé à Google pour fabriquer la voix, compté dès que le texte de la réponse est prêt ; pendant l'attente, Ama « réfléchit » à l'écran. Google met environ 2,5 secondes pour 4 secondes de voix : une réponse de 200 caractères demande 6 à 8 secondes. Plus court : la voix du téléphone parle plus souvent. Comparez avec « Temps de Google » ci-dessous." />
+
                 <div class="space-y-2" data-test="natural-voice-usage">
                     <h3 class="text-sm font-semibold text-slate-200">Aujourd'hui (journée de Google)</h3>
                     <dl class="grid gap-2 text-sm sm:grid-cols-2">
-                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Lectures avec la voix naturelle</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-spoken">{{ $voiceToday['spoken'] }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Voix naturelles envoyées au téléphone</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-spoken">{{ $voiceToday['spoken'] }}</dd></div>
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">dont phrases gardées en mémoire</dt><dd class="text-slate-100">{{ $voiceToday['cached'] }}</dd></div>
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Demandes envoyées à Google</dt><dd class="text-slate-100">{{ $voiceToday['google_requests'] }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5" data-test="natural-voice-preview-requests"><dt class="text-slate-300">dont bouton « Écouter » et préparation</dt><dd class="text-slate-100">{{ ($voiceStats['by_source'][AssistantVoiceEvent::SOURCE_PREVIEW] ?? 0) + ($voiceStats['by_source'][AssistantVoiceEvent::SOURCE_PREPARE] ?? 0) }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5" data-test="natural-voice-google-average"><dt class="text-slate-300">Temps de Google en moyenne</dt><dd class="font-semibold text-slate-100">{{ $voiceSeconds($voiceStats['google_avg_ms']) }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5" data-test="natural-voice-google-max"><dt class="text-slate-300">Temps de Google au maximum</dt><dd class="font-semibold text-slate-100">{{ $voiceSeconds($voiceStats['google_max_ms']) }}</dd></div>
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Refus de Google</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-refusals">{{ $voiceToday['refusals'] }}</dd></div>
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5 sm:col-span-2"><dt class="text-slate-300">Passages à la voix du téléphone</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-fallbacks">{{ $voiceToday['fallbacks'] }}</dd></div>
                     </dl>
+                    <div class="space-y-1.5" data-test="natural-voice-causes">
+                        <h4 class="text-sm font-semibold text-slate-200">Passages à la voix du téléphone, par cause</h4>
+                        @if ($voiceStats['causes'] === [])
+                            <p class="text-sm text-slate-400">Aucun aujourd'hui.</p>
+                        @else
+                            <dl class="grid gap-2 text-sm">
+                                @foreach ($voiceStats['causes'] as $cause => $total)
+                                    <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">{{ NaturalVoice::CAUSES[$cause] ?? NaturalVoice::CAUSES['other'] }}</dt><dd class="font-semibold text-slate-100">{{ $total }}</dd></div>
+                                @endforeach
+                            </dl>
+                        @endif
+                        <p class="text-xs text-slate-400">« Voix pas prête avant le délai » : Google a été plus lent que le délai réglé. Si ce cas revient souvent, comparez le délai avec « Temps de Google au maximum ». Une voix arrivée trop tard n'est jamais jouée par-dessus la voix du téléphone.</p>
+                    </div>
+                    @if ($preparedMissing !== null)
+                        <p class="text-sm {{ $preparedMissing === 0 ? 'text-emerald-200' : 'text-slate-300' }}" data-test="natural-voice-prepared">
+                            Phrases écrites à l'avance prêtes en mémoire : {{ $preparedTotal - $preparedMissing }} sur {{ $preparedTotal }}@if ($preparedMissing > 0) (préparation en cours, quelques-unes par minute, sans jamais prendre la dernière demande de la minute à un visiteur)@endif.
+                        </p>
+                    @endif
+                    @if ($voiceStats['memory_errors'] > 0)
+                        <p class="flex items-start gap-2 text-sm text-amber-200" data-test="natural-voice-memory-error"><flux:icon.exclamation-triangle class="size-5 shrink-0" /> La mémoire des voix n'a pas pu être écrite {{ $voiceStats['memory_errors'] }} fois aujourd'hui : chaque phrase écrite à l'avance est alors refaite par Google. Prévenez Claude.</p>
+                    @endif
                     @if (NaturalVoice::dailyBlocked())
                         <p class="flex items-start gap-2 text-sm text-amber-200" data-test="natural-voice-daily-blocked"><flux:icon.exclamation-triangle class="size-5 shrink-0" /> Google a répondu que le quota de voix du jour est épuisé : Ama parle avec la voix du téléphone jusqu'à {{ AssistantUsage::nextReset()->translatedFormat('H \h i') }} (heure de Lomé), puis le site réessaie tout seul.</p>
                     @endif

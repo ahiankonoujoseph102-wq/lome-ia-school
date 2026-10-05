@@ -199,7 +199,8 @@ class AmaPresenceTest extends TestCase
         $this->assertSame(['start', 'boundary', 'boundary', 'end'], array_slice($out['after'], 0, 4));
         $this->assertSame('end', end($out['after']));
         $this->assertSame(count(array_keys($out['after'], 'start')), count(array_keys($out['after'], 'end')));
-        $this->assertSame(['speaking', 'listening'], array_slice($out['states'], 0, 2));
+        // « Réfléchit » à l'écran jusqu'au vrai début de la voix (ici immédiat), puis « parle », puis « écoute ».
+        $this->assertSame(['thinking', 'speaking', 'listening'], array_slice($out['states'], 0, 3));
         $this->assertSame(0, $out['late']);
     }
 
