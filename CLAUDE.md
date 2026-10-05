@@ -456,7 +456,7 @@ php artisan migrate
 
 **En cours sur la branche `claude/pensive-galileo-o0touc`** : table de prononciation de la voix naturelle d'Ama, avec « Phrase d'essai » (voir « Table de prononciation de la voix naturelle »). Rapport à lire par Joseph ; pull request seulement après son accord.
 
-**En cours sur la branche `claude/ecstatic-dirac-63bsrq`** : vidéo de présentation YouTube sur la page de la formation gratuite (voir « Vidéo de présentation »). Aperçu à valider ; pull request seulement après l'accord de Joseph. À faire de son côté après la fusion : coller le lien dans Formations > Inscriptions > « Vidéo de présentation », allumer « Afficher la vidéo », vérifier le format, puis regarder la page sur son téléphone.
+**En cours sur la branche `claude/ecstatic-dirac-63bsrq`** : vidéo de présentation YouTube sur la page de la formation gratuite (voir « Vidéo de présentation »). Aperçu validé par Joseph. Pull request « Vidéo de présentation de la formation gratuite ». À faire de son côté après la fusion : coller le lien dans Formations > Inscriptions > « Vidéo de présentation », allumer « Afficher la vidéo », vérifier le format, puis regarder la page sur son téléphone.
 
 **Prochaine étape** : fusion de la branche en cours ; Joseph colle le lien de sa vidéo et choisit son format (Réglages du site > Page Entreprises), saisit le contenu de ses formations (écran « Contenu des formations ») et son lien Google Meet (« Disponibilités »). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 
