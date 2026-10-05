@@ -27,6 +27,7 @@
     $voiceKeys = [NaturalVoice::CLOUDFLARE => $voiceService->isConfigured(NaturalVoice::CLOUDFLARE), NaturalVoice::GEMINI => $voiceService->isConfigured(NaturalVoice::GEMINI)];
     $cloudflareUsed = NaturalVoice::usedMinutes();
     $cloudflareCap = NaturalVoice::dailyMinutes();
+    $cloudflareRequests = \App\Models\AssistantVoiceQuota::requestsToday(NaturalVoice::CLOUDFLARE);
     $minutesText = fn (float $minutes): string => str_replace('.', ',', (string) round($minutes, 1));
     $voiceToday = AssistantVoiceUsage::today();
     $voiceStats = AssistantVoiceEvent::todayStats($savedProvider);
@@ -269,7 +270,7 @@
                     <x-admin.field name="natural_voice_daily_minutes" label="Plafond de minutes d'audio par jour (Cloudflare)" type="number" unit="minutes" min="{{ NaturalVoice::DAILY_MINUTES[1] }}" max="{{ NaturalVoice::DAILY_MINUTES[2] }}" :value="$cloudflareCap" hint="{{ NaturalVoice::DAILY_MINUTES[0] }} par défaut (environ {{ number_format(NaturalVoice::neurons(NaturalVoice::DAILY_MINUTES[0]), 0, ',', ' ') }} neurones sur les {{ number_format(NaturalVoice::CLOUDFLARE_FREE_NEURONS, 0, ',', ' ') }} gratuits par jour ; MeloTTS coûte {{ str_replace('.', ',', (string) NaturalVoice::CLOUDFLARE_NEURONS_PER_MINUTE) }} neurones par minute d'audio). Au-delà, Ama parle avec la voix du téléphone jusqu'à minuit (heure de Lomé, la journée de Cloudflare). Les phrases resservies de la mémoire ne comptent pas." />
 
                     <div class="space-y-2 text-sm" data-test="cloudflare-minutes">
-                        <p class="text-slate-300">Minutes d'audio fabriquées aujourd'hui avec Cloudflare : <span class="font-semibold text-slate-100" data-test="cloudflare-minutes-used">{{ $minutesText($cloudflareUsed) }}</span> sur {{ $cloudflareCap }} (environ {{ number_format(NaturalVoice::neurons($cloudflareUsed), 0, ',', ' ') }} neurones, {{ \App\Models\AssistantVoiceQuota::requestsToday(NaturalVoice::CLOUDFLARE) }} demandes). La journée de Cloudflare recommence à minuit, heure de Lomé.</p>
+                        <p class="text-slate-300">Minutes d'audio fabriquées aujourd'hui avec Cloudflare : <span class="font-semibold text-slate-100" data-test="cloudflare-minutes-used">{{ $minutesText($cloudflareUsed) }}</span> sur {{ $cloudflareCap }} (environ {{ number_format(NaturalVoice::neurons($cloudflareUsed), 0, ',', ' ') }} neurones, {{ $cloudflareRequests }} {{ $cloudflareRequests > 1 ? 'demandes' : 'demande' }}). La journée de Cloudflare recommence à minuit, heure de Lomé.</p>
                         @if (NaturalVoice::capReached())
                             <p class="flex items-start gap-2 text-amber-200" data-test="cloudflare-cap-reached"><flux:icon.exclamation-triangle class="size-5 shrink-0" /> Plafond du jour atteint : Ama parle avec la voix du téléphone jusqu'à minuit (heure de Lomé), puis la voix de Cloudflare revient toute seule.</p>
                         @endif
