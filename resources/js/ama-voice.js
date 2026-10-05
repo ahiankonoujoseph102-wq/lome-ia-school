@@ -331,6 +331,22 @@ export function createNaturalSynth({
     // Mode appel : la réponse arrive encore (begin… finish), et la phrase en attente de la décision « une ou deux demandes ».
     let streaming = false;
     let waiter = null;
+    // Son de Gemini coupé par le téléphone pendant qu'il parlait : gardé pour être relu tel quel (même voix, aucune
+    // nouvelle demande) si le mode appel relit la phrase (interruption à la voix abandonnée).
+    let replay = null;
+    // Une partie de la réponse ne sera pas dite : la page l'affiche en entier.
+    const notifySilent = () => {
+        try {
+            onSilent();
+            api.onsilent?.();
+        } catch {
+            // Affichage seulement.
+        }
+    };
+    const dropReplay = () => {
+        replay?.result.release?.();
+        replay = null;
+    };
 
     const request = (text, voiced = false) => {
         const controller = typeof AbortController === 'function' ? new AbortController() : null;
@@ -517,12 +533,7 @@ export function createNaturalSynth({
         const silent = (then) => {
             answerVoice = 'silent';
             player.stop();
-            try {
-                onSilent();
-                api.onsilent?.();
-            } catch {
-                // Affichage seulement.
-            }
+            notifySilent();
             timers.setTimeout(() => myGeneration === generation && then(), 0);
         };
         const fallBack = (part, then, cause = null) => {
@@ -572,10 +583,27 @@ export function createNaturalSynth({
                         }
                     },
                     onerror: (cause) => {
-                        result.release?.();
                         if (myGeneration !== generation) {
+                            result.release?.();
+
                             return;
                         }
+                        // Gemini parlait et le téléphone a coupé le son (souvent le micro de l'interruption à la voix) :
+                        // la partie est affichée, et le mode appel peut la faire relire par la même voix (même audio).
+                        if (cause === 'playback_paused' && answerVoice === 'natural' && utterance.onerror) {
+                            dropReplay();
+                            replay = { text: part, result };
+                            onFallback(cause, Math.round(now() - speakAt), 'silent');
+                            answerVoice = 'silent';
+                            notifySilent();
+                            finished = true;
+                            busy = false;
+                            lastEndAt = now();
+                            utterance.onerror({ error: 'interrupted' });
+
+                            return;
+                        }
+                        result.release?.();
                         fallBack(part, then, cause || 'playback_error');
                     },
                 });
@@ -603,6 +631,19 @@ export function createNaturalSynth({
             timers.setTimeout(end, 0);
 
             return;
+        }
+
+        // La phrase coupée par le téléphone est relue : même audio, même voix (jamais la voix du téléphone).
+        if (replay) {
+            const kept = replay;
+            replay = null;
+            if (kept.text === text && !fresh) {
+                answerVoice = 'natural';
+                play({ state: 'ready', result: kept.result, waiters: [] }, text, end);
+
+                return;
+            }
+            kept.result.release?.();
         }
 
         // Phrase déjà comprise dans une demande d'un bloc.
@@ -734,6 +775,7 @@ export function createNaturalSynth({
             covered = [];
             busy = false;
             answerVoice = null;
+            dropReplay();
             releaseAll();
             player.stop();
             try {

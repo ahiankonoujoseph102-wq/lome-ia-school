@@ -255,6 +255,46 @@ class AmaVoiceSingleSourceTest extends TestCase
         $this->assertFalse($out['cancel']['audible']);
     }
 
+    public function test_with_voice_interruption_a_cut_sentence_is_read_again_by_gemini_with_the_same_audio(): void
+    {
+        $out = $this->runNode(<<<'JS'
+            {
+                const env = setup();
+                const mics = [];
+                const Recognition = function () { this.start = () => {}; this.stop = () => this.onend?.(); this.abort = () => {}; mics.push(this); };
+                const voiceCall = createVoiceCall({
+                    Recognition,
+                    synth: env.synth,
+                    Utterance: NaturalUtterance,
+                    ask: () => new Promise(() => {}),
+                    timers: env.timersApi,
+                    now: () => env.now,
+                    bargeIn: true,
+                    onBargeInUnavailable: () => env.log.push('interruption à la voix abandonnée'),
+                });
+                voiceCall.start();
+                await env.answer(env.fetched[0]);
+                out.micDuringSpeech = mics.length;
+                // Le micro ouvert pendant la lecture coupe le son de Gemini sur ce téléphone, sans le relancer.
+                env.el.systemPause();
+                env.advance(PAUSE_GRACE_MS);
+                await tick();
+                out.after = { log: env.log, fetched: env.fetched.length, audible: env.el.audible, src: env.el.src, phone: env.phone };
+                voiceCall.hangUp();
+            }
+            console.log(JSON.stringify(out));
+            JS);
+
+        $this->assertSame(1, $out['micDuringSpeech']);
+        // Comme avant pour la voix du téléphone : interruption à la voix abandonnée et phrase relue… par la même voix de
+        // Gemini, avec le même audio : aucune nouvelle demande à Google, jamais la voix du téléphone.
+        $this->assertSame(['interruption à la voix abandonnée'], $out['after']['log']);
+        $this->assertSame(1, $out['after']['fetched']);
+        $this->assertTrue($out['after']['audible']);
+        $this->assertStringStartsWith('blob:', $out['after']['src']);
+        $this->assertNull($out['after']['phone']);
+    }
+
     public function test_the_rest_of_an_answer_started_by_gemini_is_never_read_by_the_phone_voice(): void
     {
         $out = $this->runNode(<<<'JS'
