@@ -107,27 +107,35 @@ class SiteSettingsController extends Controller
     }
 
     /**
-     * Bouton « Écouter » de la voix naturelle d'Ama : phrase d'exemple lue par la voix et le modèle choisis dans le
-     * formulaire (même avant d'enregistrer). Gardée en mémoire : une seule demande à Google par voix et par modèle.
+     * Bouton « Écouter » de la voix naturelle d'Ama : phrase d'exemple lue par le fournisseur choisi dans le formulaire
+     * (Google : avec la voix et le modèle choisis), même avant d'enregistrer. Gardée en mémoire : une seule demande par
+     * fournisseur (et, pour Google, par voix et par modèle). Sans fournisseur envoyé : Google (pages d'avant Cloudflare).
      */
     public function previewVoice(Request $request, NaturalVoice $voice): SymfonyResponse
     {
         $validated = $request->validate([
-            'voice' => ['required', Rule::in(array_keys(NaturalVoice::VOICES))],
-            'model' => ['required', Rule::in(array_keys(NaturalVoice::MODELS))],
+            'provider' => ['nullable', Rule::in(array_keys(NaturalVoice::PROVIDERS))],
+            'voice' => ['required_unless:provider,'.NaturalVoice::CLOUDFLARE, 'nullable', Rule::in(array_keys(NaturalVoice::VOICES))],
+            'model' => ['required_unless:provider,'.NaturalVoice::CLOUDFLARE, 'nullable', Rule::in(array_keys(NaturalVoice::MODELS))],
         ]);
+        $provider = (string) ($validated['provider'] ?? NaturalVoice::GEMINI);
+        $cloudflare = $provider === NaturalVoice::CLOUDFLARE;
 
-        if (! $voice->isConfigured()) {
-            return response()->json(['message' => 'Clé Gemini absente sur le serveur : ajoutez la variable GEMINI_API_KEY.'], 422);
+        if (! $voice->isConfigured($provider)) {
+            return response()->json(['message' => $cloudflare
+                ? 'Clé Cloudflare absente sur le serveur : ajoutez les variables CLOUDFLARE_ACCOUNT_ID et CLOUDFLARE_API_TOKEN.'
+                : 'Clé Gemini absente sur le serveur : ajoutez la variable GEMINI_API_KEY.'], 422);
         }
 
-        $audio = $voice->preview((string) $validated['voice'], (string) $validated['model']);
+        $audio = $voice->preview((string) ($validated['voice'] ?? ''), (string) ($validated['model'] ?? ''), $provider);
 
         if ($audio === null) {
             $message = match ($voice->lastReason) {
                 'daily_quota' => 'Google a épuisé le quota de voix du jour. Réessayez après '.AssistantUsage::nextReset()->translatedFormat('H \\h i').' (heure de Lomé).',
-                'site_minute_limit', 'google_quota' => 'Limite de demandes par minute atteinte. Réessayez dans une minute.',
-                default => 'Google n\'a pas pu fabriquer la voix pour le moment (refus ou délai dépassé). Réessayez plus tard.',
+                'cloudflare_daily_quota' => 'L\'offre gratuite de Cloudflare est épuisée pour aujourd\'hui. Réessayez après '.NaturalVoice::nextReset(NaturalVoice::CLOUDFLARE)->translatedFormat('H \\h i').' (heure de Lomé).',
+                'cloudflare_cap' => 'Le plafond de minutes du jour est atteint. Réessayez après '.NaturalVoice::nextReset(NaturalVoice::CLOUDFLARE)->translatedFormat('H \\h i').' (heure de Lomé), ou augmentez le plafond.',
+                'site_minute_limit', 'google_quota', 'cloudflare_quota' => 'Limite de demandes par minute atteinte. Réessayez dans une minute.',
+                default => NaturalVoice::providerName($provider).' n\'a pas pu fabriquer la voix pour le moment (refus ou délai dépassé). Réessayez plus tard.',
             };
 
             return response()->json(['message' => $message], 422);
@@ -844,6 +852,9 @@ class SiteSettingsController extends Controller
             'natural_voice_split_length' => ['nullable', 'integer', 'min:'.NaturalVoice::SPLIT_LENGTH[1], 'max:'.NaturalVoice::SPLIT_LENGTH[2]],
             'natural_voice_timeout' => ['nullable', 'integer', 'min:'.NaturalVoice::TIMEOUT[1], 'max:'.NaturalVoice::TIMEOUT[2]],
             'natural_voice_phone_fallback' => ['nullable', 'boolean'],
+            'natural_voice_provider' => ['nullable', Rule::in(array_keys(NaturalVoice::PROVIDERS))],
+            'natural_voice_cloudflare_minute_limit' => ['nullable', 'integer', 'min:'.NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[1], 'max:'.NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[2]],
+            'natural_voice_daily_minutes' => ['nullable', 'integer', 'min:'.NaturalVoice::DAILY_MINUTES[1], 'max:'.NaturalVoice::DAILY_MINUTES[2]],
         ];
         $messages = [
             'instructions.max' => 'Les instructions sont trop longues (12 000 caractères au maximum).',
@@ -858,6 +869,13 @@ class SiteSettingsController extends Controller
             'help_delay.max' => 'Le délai ne peut pas dépasser '.VoiceAssistant::MAX_HELP_DELAY.' secondes.',
             'natural_voice_name.in' => 'Choisissez une des voix proposées.',
             'natural_voice_model.in' => 'Choisissez un des modèles proposés.',
+            'natural_voice_provider.in' => 'Choisissez un des fournisseurs de voix proposés.',
+            'natural_voice_cloudflare_minute_limit.integer' => 'Écrivez un nombre entier, sans espace ni virgule.',
+            'natural_voice_cloudflare_minute_limit.min' => 'Le nombre doit être d\'au moins '.NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[1].'.',
+            'natural_voice_cloudflare_minute_limit.max' => 'Le nombre ne peut pas dépasser '.NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[2].'.',
+            'natural_voice_daily_minutes.integer' => 'Écrivez un nombre entier de minutes, sans espace ni virgule.',
+            'natural_voice_daily_minutes.min' => 'Le plafond doit être d\'au moins '.NaturalVoice::DAILY_MINUTES[1].' minute.',
+            'natural_voice_daily_minutes.max' => 'Le plafond ne peut pas dépasser '.NaturalVoice::DAILY_MINUTES[2].' minutes (au-delà, l\'offre gratuite de Cloudflare serait dépassée).',
             'natural_voice_minute_limit.integer' => 'Écrivez un nombre entier, sans espace ni virgule.',
             'natural_voice_minute_limit.min' => 'Le nombre doit être d\'au moins '.NaturalVoice::MINUTE_LIMIT[1].'.',
             'natural_voice_minute_limit.max' => 'Le nombre ne peut pas dépasser '.NaturalVoice::MINUTE_LIMIT[2].'.',
@@ -911,9 +929,12 @@ class SiteSettingsController extends Controller
             }
         }
         $delay = (int) ($validated['help_delay'] ?? VoiceAssistant::DEFAULT_HELP_DELAY);
-        // Voix naturelle (modèles « TTS » de Gemini) : éteinte par défaut.
+        // Voix naturelle : éteinte par défaut ; fournisseur (Cloudflare ou Google) gardé s'il n'est pas envoyé, Google si
+        // rien n'a jamais été choisi.
+        $previousNatural = (array) ($previous['natural_voice'] ?? []);
         $naturalVoice = [
             'enabled' => (bool) ($validated['natural_voice'] ?? false),
+            'provider' => (string) ($validated['natural_voice_provider'] ?? (isset(NaturalVoice::PROVIDERS[$previousNatural['provider'] ?? '']) ? $previousNatural['provider'] : NaturalVoice::GEMINI)),
             'voice' => (string) ($validated['natural_voice_name'] ?? NaturalVoice::DEFAULT_VOICE),
             'model' => (string) ($validated['natural_voice_model'] ?? array_key_first(NaturalVoice::MODELS)),
             'minute_limit' => (int) ($validated['natural_voice_minute_limit'] ?? NaturalVoice::MINUTE_LIMIT[0]),
@@ -921,6 +942,9 @@ class SiteSettingsController extends Controller
             'timeout' => (int) ($validated['natural_voice_timeout'] ?? NaturalVoice::TIMEOUT[0]),
             // « Voix du téléphone en secours » : allumé par défaut ; éteint, une réponse non dite par Gemini est affichée.
             'phone_fallback' => (bool) ($validated['natural_voice_phone_fallback'] ?? true),
+            // Cloudflare : limite par minute propre (celle de Google ne s'applique pas) et plafond de minutes d'audio du jour.
+            'cloudflare_minute_limit' => (int) ($validated['natural_voice_cloudflare_minute_limit'] ?? $previousNatural['cloudflare_minute_limit'] ?? NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[0]),
+            'daily_minutes' => (int) ($validated['natural_voice_daily_minutes'] ?? $previousNatural['daily_minutes'] ?? NaturalVoice::DAILY_MINUTES[0]),
         ];
         // Instructions vidées : retour au texte d'origine.
         $instructions = AmaPrompt::effectiveInstructions($validated['instructions'] ?? '');
@@ -967,7 +991,7 @@ class SiteSettingsController extends Controller
             PrepareAmaVoicePhrases::dispatch();
         }
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').', personnage animé : '.($character ? 'oui (visage '.$characterStyle.')' : 'non').', Ama se présente toute seule : '.($nudge ? 'oui' : 'non').', voix naturelle : '.($naturalVoice['enabled'] ? 'oui ('.$naturalVoice['voice'].', '.$naturalVoice['model'].', '.$naturalVoice['minute_limit'].' par minute, deux demandes au-delà de '.$naturalVoice['split_length'].' caractères, '.($naturalVoice['phone_fallback'] ? 'voix du téléphone après '.$naturalVoice['timeout'].' s' : 'sans voix du téléphone en secours, réponse affichée après '.$naturalVoice['timeout'].' s').')' : 'non').').');
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').', personnage animé : '.($character ? 'oui (visage '.$characterStyle.')' : 'non').', Ama se présente toute seule : '.($nudge ? 'oui' : 'non').', voix naturelle : '.($naturalVoice['enabled'] ? 'oui ('.($naturalVoice['provider'] === NaturalVoice::CLOUDFLARE ? 'Cloudflare MeloTTS, '.$naturalVoice['cloudflare_minute_limit'].' par minute, plafond de '.$naturalVoice['daily_minutes'].' minutes par jour' : 'Google, '.$naturalVoice['voice'].', '.$naturalVoice['model'].', '.$naturalVoice['minute_limit'].' par minute').', deux demandes au-delà de '.$naturalVoice['split_length'].' caractères, '.($naturalVoice['phone_fallback'] ? 'voix du téléphone après '.$naturalVoice['timeout'].' s' : 'sans voix du téléphone en secours, réponse affichée après '.$naturalVoice['timeout'].' s').')' : 'non').').');
     }
 
     private function updateLegal(Request $request): void

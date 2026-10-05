@@ -21,6 +21,8 @@
         <env name="APP_ENV" value="testing"/>
         <!-- Jamais de vraie clé Gemini pendant les tests (faux Gemini : Http::fake). -->
         <env name="GEMINI_API_KEY" value=""/>
+        <env name="CLOUDFLARE_ACCOUNT_ID" value=""/>
+        <env name="CLOUDFLARE_API_TOKEN" value=""/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
