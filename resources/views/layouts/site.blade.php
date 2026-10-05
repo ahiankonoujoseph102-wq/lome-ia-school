@@ -1,5 +1,7 @@
 @props([
     'title' => null,
+    // Titre utilisé tel quel dans <title>, sans « | Lomé IA School » (page de Joseph Ahiankonou).
+    'exactTitle' => false,
     'description' => null,
     'image' => null,
     'imageType' => null,
@@ -13,7 +15,8 @@
 
 @php
     $siteName = config('app.name');
-    $fullTitle = $title ? $title.' | '.$siteName : $siteName.' | Formations en intelligence artificielle à Lomé et en ligne';
+    $fullTitle = $title && $exactTitle ? $title : null;
+    $fullTitle ??= $title ? $title.' | '.$siteName : $siteName.' | Formations en intelligence artificielle à Lomé et en ligne';
     // Description toujours présente, même si celle d'une page est vide.
     $description = filled($description) ? $description : 'Formations pratiques en intelligence artificielle, en français : ChatGPT, création visuelle et vidéo, sites web, automatisation, agents IA. Paiement par Mobile Money.';
     // Aperçus de partage : adresses absolues fondées sur APP_URL (voir App\Support\AppUrl).
@@ -70,6 +73,7 @@
         @if ($robots)
             <meta name="robots" content="{{ $robots }}">
         @endif
+        @include('site.partials.google-verification')
 
         {{-- Aperçus de partage (WhatsApp, Facebook, LinkedIn) --}}
         <meta property="og:site_name" content="{{ $siteName }}">

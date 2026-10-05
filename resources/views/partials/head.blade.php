@@ -4,6 +4,7 @@
 <title>
     {{ filled($title ?? null) ? __($title).' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
 </title>
+@include('site.partials.google-verification')
 
 <link rel="icon" href="{{ \App\Support\Brand::icon('favicon.ico') }}" sizes="48x48">
 <link rel="icon" href="{{ \App\Support\Brand::icon('favicon-32.png') }}" type="image/png" sizes="32x32">
