@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Site;
 use App\Assistant\AmaChat;
 use App\Assistant\AmaPrompt;
 use App\Assistant\FounderHandoff;
+use App\Assistant\NaturalVoice;
 use App\Enums\AssistantIncidentType;
 use App\Http\Controllers\Controller;
 use App\Models\AssistantIncident;
@@ -14,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -99,6 +101,46 @@ class AssistantController extends Controller
             hash_hmac('sha256', $visitor, (string) config('app.key')),
             hash_hmac('sha256', (string) $request->ip(), (string) config('app.key')),
         ));
+    }
+
+    /**
+     * Voix naturelle d'Ama : audio d'un morceau de sa réponse (fabriqué par Google avec la clé du serveur, ou tiré de la
+     * mémoire pour une phrase écrite à l'avance). Sinon {"fallback": true} : le navigateur lit aussitôt avec la voix du
+     * téléphone. Jamais d'erreur : toujours une réponse 200.
+     */
+    public function voice(Request $request, NaturalVoice $voice): Response
+    {
+        if (! VoiceAssistant::enabled() || ! $voice->enabled()) {
+            return $this->json(['fallback' => true]);
+        }
+
+        $text = $request->input('text');
+        $visitor = $request->cookie(self::VISITOR_COOKIE);
+        $visitorHash = is_string($visitor) && $visitor !== '' ? hash_hmac('sha256', $visitor, (string) config('app.key')) : null;
+        $audio = is_string($text) ? $voice->speak($text, $request->user(), $visitorHash) : null;
+
+        if ($audio === null) {
+            return $this->json(['fallback' => true]);
+        }
+
+        return response($audio->bytes, 200, [
+            'Content-Type' => $audio->mime,
+            'Content-Length' => (string) strlen($audio->bytes),
+            'Cache-Control' => 'no-store, private',
+        ]);
+    }
+
+    /**
+     * Le navigateur a repris la voix du téléphone de lui-même (audio pas prêt après 4 secondes, lecture impossible) :
+     * compté pour l'admin, sans aucun texte.
+     */
+    public function voiceFallback(NaturalVoice $voice): JsonResponse
+    {
+        if ($voice->enabled()) {
+            NaturalVoice::recordBrowserFallback();
+        }
+
+        return $this->json(['ok' => true]);
     }
 
     /**

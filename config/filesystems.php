@@ -78,6 +78,15 @@ return [
 
         // Fichiers des groupes de discussion (images, notes vocales, vidéos, documents) : jamais servis
         // publiquement, lus uniquement par App\Http\Controllers\Chat\AttachmentController (membres du groupe).
+        // Voix naturelle d'Ama : phrases écrites à l'avance, fabriquées une fois puis gardées (App\Assistant\NaturalVoice).
+        'ama_voice' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/ama-voice'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'chat_media' => [
             'driver' => 'local',
             'root' => storage_path('app/private/chat'),

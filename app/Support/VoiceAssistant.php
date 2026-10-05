@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Assistant\NaturalVoice;
 use App\Contracts\AssistantModel;
 use App\Models\Formation;
 use App\Models\LiveSession;
@@ -610,6 +611,14 @@ class VoiceAssistant
                 : null,
             // Mode appel : interruption à la voix (expérimental, éteinte par défaut, réglée dans l'admin).
             'voiceInterrupt' => $gemini && self::voiceInterrupt(),
+            // Voix naturelle (modèles « TTS » de Gemini, éteinte par défaut) : adresses du serveur seulement, jamais la clé.
+            // Voix du téléphone en secours si l'audio n'est pas prêt après quelques secondes.
+            'naturalVoice' => $gemini && app(NaturalVoice::class)->enabled() ? [
+                'endpoint' => route('assistant.voice'),
+                'fallbackEndpoint' => route('assistant.voice.fallback'),
+                'timeoutMs' => NaturalVoice::BROWSER_TIMEOUT_MS,
+                'splitLength' => NaturalVoice::splitLength(),
+            ] : null,
             // Mode appel : mesure des durées (sans donnée personnelle), voir AssistantController::timing.
             'timingEndpoint' => $gemini ? route('assistant.timing') : null,
             'helpDelay' => self::helpDelay(),

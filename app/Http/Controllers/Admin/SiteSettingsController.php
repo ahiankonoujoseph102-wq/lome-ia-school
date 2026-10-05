@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Admin\ActivityLog;
 use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
+use App\Assistant\NaturalVoice;
 use App\Branding\BrandAssets;
 use App\Enums\AdminAction;
 use App\Http\Controllers\Controller;
+use App\Models\AssistantUsage;
 use App\Services\ImageUploader;
 use App\Settings\SiteSettings;
 use App\Support\HomeVideo;
@@ -24,6 +26,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
  * « Réglages du site » (admin uniquement) : tout ce qui était dans les fichiers de configuration se
@@ -94,6 +97,36 @@ class SiteSettingsController extends Controller
         };
 
         return to_route('admin.settings.edit', $section)->with('status', 'Réglages enregistrés : ils sont déjà visibles sur le site.');
+    }
+
+    /**
+     * Bouton « Écouter » de la voix naturelle d'Ama : phrase d'exemple lue par la voix et le modèle choisis dans le
+     * formulaire (même avant d'enregistrer). Gardée en mémoire : une seule demande à Google par voix et par modèle.
+     */
+    public function previewVoice(Request $request, NaturalVoice $voice): SymfonyResponse
+    {
+        $validated = $request->validate([
+            'voice' => ['required', Rule::in(array_keys(NaturalVoice::VOICES))],
+            'model' => ['required', Rule::in(array_keys(NaturalVoice::MODELS))],
+        ]);
+
+        if (! $voice->isConfigured()) {
+            return response()->json(['message' => 'Clé Gemini absente sur le serveur : ajoutez la variable GEMINI_API_KEY.'], 422);
+        }
+
+        $audio = $voice->preview((string) $validated['voice'], (string) $validated['model']);
+
+        if ($audio === null) {
+            $message = match ($voice->lastReason) {
+                'quota du jour épuisé' => 'Google a épuisé le quota de voix du jour. Réessayez après '.AssistantUsage::nextReset()->translatedFormat('H \\h i').' (heure de Lomé).',
+                'limite par minute du site', 'quota atteint' => 'Limite de demandes par minute atteinte. Réessayez dans une minute.',
+                default => 'Google n\'a pas pu fabriquer la voix pour le moment (refus ou délai dépassé). Réessayez plus tard.',
+            };
+
+            return response()->json(['message' => $message], 422);
+        }
+
+        return response($audio->bytes, 200, ['Content-Type' => $audio->mime, 'Cache-Control' => 'no-store, private']);
     }
 
     private function updateContact(Request $request): void
@@ -670,6 +703,11 @@ class SiteSettingsController extends Controller
             'nudges' => ['array'],
             'nudges.*' => ['nullable', 'string', 'max:'.VoiceAssistant::NUDGE_MAX_LENGTH],
             'help_delay' => ['nullable', 'integer', 'min:'.VoiceAssistant::MIN_HELP_DELAY, 'max:'.VoiceAssistant::MAX_HELP_DELAY],
+            'natural_voice' => ['nullable', 'boolean'],
+            'natural_voice_name' => ['nullable', Rule::in(array_keys(NaturalVoice::VOICES))],
+            'natural_voice_model' => ['nullable', Rule::in(array_keys(NaturalVoice::MODELS))],
+            'natural_voice_minute_limit' => ['nullable', 'integer', 'min:'.NaturalVoice::MINUTE_LIMIT[1], 'max:'.NaturalVoice::MINUTE_LIMIT[2]],
+            'natural_voice_split_length' => ['nullable', 'integer', 'min:'.NaturalVoice::SPLIT_LENGTH[1], 'max:'.NaturalVoice::SPLIT_LENGTH[2]],
         ];
         $messages = [
             'instructions.max' => 'Les instructions sont trop longues (12 000 caractères au maximum).',
@@ -682,6 +720,14 @@ class SiteSettingsController extends Controller
             'help_delay.integer' => 'Le délai s\'écrit en secondes, sans virgule (par exemple 90).',
             'help_delay.min' => 'Le délai doit être d\'au moins '.VoiceAssistant::MIN_HELP_DELAY.' secondes.',
             'help_delay.max' => 'Le délai ne peut pas dépasser '.VoiceAssistant::MAX_HELP_DELAY.' secondes.',
+            'natural_voice_name.in' => 'Choisissez une des voix proposées.',
+            'natural_voice_model.in' => 'Choisissez un des modèles proposés.',
+            'natural_voice_minute_limit.integer' => 'Écrivez un nombre entier, sans espace ni virgule.',
+            'natural_voice_minute_limit.min' => 'Le nombre doit être d\'au moins '.NaturalVoice::MINUTE_LIMIT[1].'.',
+            'natural_voice_minute_limit.max' => 'Le nombre ne peut pas dépasser '.NaturalVoice::MINUTE_LIMIT[2].'.',
+            'natural_voice_split_length.integer' => 'Écrivez un nombre entier, sans espace ni virgule.',
+            'natural_voice_split_length.min' => 'La longueur doit être d\'au moins '.NaturalVoice::SPLIT_LENGTH[1].' caractères.',
+            'natural_voice_split_length.max' => 'La longueur ne peut pas dépasser '.NaturalVoice::SPLIT_LENGTH[2].' caractères.',
         ];
 
         foreach (VoiceAssistant::LIMITS as $name => [, $min, $max]) {
@@ -726,6 +772,14 @@ class SiteSettingsController extends Controller
             }
         }
         $delay = (int) ($validated['help_delay'] ?? VoiceAssistant::DEFAULT_HELP_DELAY);
+        // Voix naturelle (modèles « TTS » de Gemini) : éteinte par défaut.
+        $naturalVoice = [
+            'enabled' => (bool) ($validated['natural_voice'] ?? false),
+            'voice' => (string) ($validated['natural_voice_name'] ?? NaturalVoice::DEFAULT_VOICE),
+            'model' => (string) ($validated['natural_voice_model'] ?? array_key_first(NaturalVoice::MODELS)),
+            'minute_limit' => (int) ($validated['natural_voice_minute_limit'] ?? NaturalVoice::MINUTE_LIMIT[0]),
+            'split_length' => (int) ($validated['natural_voice_split_length'] ?? NaturalVoice::SPLIT_LENGTH[0]),
+        ];
         // Instructions vidées : retour au texte d'origine.
         $instructions = AmaPrompt::effectiveInstructions($validated['instructions'] ?? '');
 
@@ -758,13 +812,14 @@ class SiteSettingsController extends Controller
             'nudge' => $nudge,
             'nudges' => $nudges,
             'help_delay' => $delay,
+            'natural_voice' => $naturalVoice,
         ]]);
 
         $summary = $provider === VoiceAssistant::GEMINI
             ? 'Ama (Gemini), '.$limits['visitor_daily_limit'].' messages par visiteur et par jour, '.$limits['daily_limit'].' demandes par jour pour le site'.($instructions !== (string) ($previous['instructions'] ?? AmaPrompt::DEFAULT_INSTRUCTIONS) ? ', instructions modifiées' : '').($knowledge !== ($previousKnowledge ?: ['school' => AmaKnowledge::DEFAULT_SCHOOL, 'faq' => [], 'other' => '']) ? ', base de connaissances modifiée' : '')
             : 'agent ElevenLabs '.$agentId;
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').', personnage animé : '.($character ? 'oui (visage '.$characterStyle.')' : 'non').', Ama se présente toute seule : '.($nudge ? 'oui' : 'non').').');
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').', personnage animé : '.($character ? 'oui (visage '.$characterStyle.')' : 'non').', Ama se présente toute seule : '.($nudge ? 'oui' : 'non').', voix naturelle : '.($naturalVoice['enabled'] ? 'oui ('.$naturalVoice['voice'].', '.$naturalVoice['model'].', '.$naturalVoice['minute_limit'].' par minute, deux demandes au-delà de '.$naturalVoice['split_length'].' caractères)' : 'non').').');
     }
 
     private function updateLegal(Request $request): void

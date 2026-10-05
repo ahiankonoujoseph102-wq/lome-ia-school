@@ -153,7 +153,7 @@ function hasVisitorWords(heard, amaText) {
 /**
  * @param {object} options
  * @param {Function} options.Recognition  constructeur de la reconnaissance vocale du navigateur
- * @param {object} options.synth  synthèse vocale (speak, cancel, getVoices)
+ * @param {object} options.synth  synthèse vocale (speak, cancel, getVoices ; prepare facultatif : voix naturelle, ama-voice.js)
  * @param {Function} options.Utterance  constructeur d'une phrase à lire
  * @param {Function} options.ask  (texte, { onText, signal, interrupted }) → Promise<{ reply, fallback, notice } | null>
  * @param {object} [options.timers]  { setTimeout, clearTimeout }
@@ -442,6 +442,10 @@ export function createVoiceCall({
         speaking = true;
         setState('speaking');
         amaSpoken = `${amaSpoken} ${text}`;
+        // Voix naturelle : les phrases suivantes peuvent être dites d'un bloc avec celle-ci (filtre de l'écho).
+        if (synth.prepare) {
+            amaSpoken = `${amaSpoken} ${queue.map((queued) => speakable(queued)).join(' ')}`;
+        }
 
         const utterance = new Utterance(text);
         utterance.lang = 'fr-FR';
@@ -506,6 +510,8 @@ export function createVoiceCall({
         }
 
         queue.push(...sentences);
+        // Voix naturelle (ama-voice.js) : les phrases à venir sont annoncées pour être demandées d'un bloc.
+        synth.prepare?.(sentences.map((sentence) => speakable(sentence)).filter((text) => text !== ''));
 
         if (!speaking) {
             speakNext(turn);
@@ -721,6 +727,8 @@ export function createVoiceCall({
         queue = [];
         speaking = false;
         streamDone = false;
+        // Voix naturelle (ama-voice.js) : une réponse commence à arriver.
+        synth.begin?.();
         afterSpeech = 'listen';
         amaSpoken = '';
         bargeRestarts = 0;
@@ -800,6 +808,7 @@ export function createVoiceCall({
         }
 
         streamDone = true;
+        synth.finish?.();
 
         if (!speaking) {
             finishSpeech();

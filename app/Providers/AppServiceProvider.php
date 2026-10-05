@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Assistant\GeminiModel;
+use App\Assistant\GeminiSpeech;
 use App\Contracts\AssistantModel;
 use App\Contracts\PushSender;
+use App\Contracts\SpeechSynthesizer;
 use App\Models\User;
 use App\Push\NullPushSender;
 use App\Push\WebPushSender;
@@ -46,6 +48,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Assistante « Ama » : API Gemini de Google, appelée uniquement par le serveur.
         $this->app->bind(AssistantModel::class, GeminiModel::class);
+        // Voix naturelle d'Ama : modèles « TTS » de Gemini (voix du téléphone en secours, dans le navigateur).
+        $this->app->bind(SpeechSynthesizer::class, GeminiSpeech::class);
     }
 
     /**

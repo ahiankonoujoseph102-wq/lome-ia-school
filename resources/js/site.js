@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import { CALL_GREETING, createVoiceCall } from './ama-call.js';
+import { createElementPlayer, createNaturalSynth, NaturalUtterance } from './ama-voice.js';
 import {
     NUDGE_AVOID,
     NUDGE_VISIBLE_MS,
@@ -776,6 +777,67 @@ const widgetIsVisible = (widget) =>
  *   seulement le panneau d'Ama : l'appel et le micro ne démarrent jamais sans que le visiteur touche
  *   lui-même « Démarrer l'appel » dans le widget.
  */
+// Voix naturelle d'Ama (ama-voice.js) : créée au premier besoin, gardée hors de l'état d'Alpine (un élément <audio> ne
+// doit pas passer par ses objets réactifs).
+let naturalVoice = null;
+
+function naturalVoiceFor(config) {
+    if (!config.naturalVoice?.endpoint || typeof window.Audio !== 'function') {
+        return null;
+    }
+
+    if (naturalVoice) {
+        return naturalVoice;
+    }
+
+    const settings = config.naturalVoice;
+    const player = createElementPlayer(new window.Audio());
+    const headers = {
+        'Content-Type': 'application/json',
+        Accept: 'audio/*, application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+    };
+    const synth = createNaturalSynth({
+        fallback: window.speechSynthesis,
+        FallbackUtterance: window.SpeechSynthesisUtterance,
+        player,
+        timeoutMs: settings.timeoutMs,
+        // Réponse courte : une seule demande ; au-delà de cette longueur, deux (réglage de l'admin).
+        splitLength: settings.splitLength,
+        now: () => (window.performance?.now ? window.performance.now() : Date.now()),
+        // Le prénom du visiteur n'est jamais envoyé (la voix du téléphone, elle, le dit).
+        privateWords: [config.firstName ?? ''],
+        // Seul le texte de la réponse d'Ama part, vers le serveur du site (qui, seul, appelle Google).
+        fetchAudio: async (text, { signal }) => {
+            const response = await fetch(settings.endpoint, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers,
+                body: JSON.stringify({ text }),
+                signal,
+            });
+            if (!response.ok || !(response.headers.get('Content-Type') ?? '').startsWith('audio/')) {
+                return null;
+            }
+            const url = URL.createObjectURL(await response.blob());
+
+            return { url, release: () => URL.revokeObjectURL(url) };
+        },
+        // Voix du téléphone reprise par le navigateur (audio trop lent, lecture refusée) : comptée pour l'admin.
+        onFallback: () => {
+            try {
+                fetch(settings.fallbackEndpoint, { method: 'POST', credentials: 'same-origin', headers, body: '{}', keepalive: true }).catch(() => {});
+            } catch {
+                // Rien à compter.
+            }
+        },
+    });
+    naturalVoice = { synth, player };
+
+    return naturalVoice;
+}
+
 Alpine.data('voiceAssistant', (config) => ({
     loading: false,
     opened: false,
@@ -1237,9 +1299,7 @@ Alpine.data('voiceAssistant', (config) => ({
         this.callEnd = null;
         this.recognition?.abort();
         this.listening = false;
-        if (this.canSpeak) {
-            window.speechSynthesis.cancel();
-        }
+        this.stopVoice();
         this.opened = false;
         document.documentElement.classList.remove('ama-open');
         this.persist();
@@ -1285,6 +1345,9 @@ Alpine.data('voiceAssistant', (config) => ({
 
         this.notice = '';
         this.draft = '';
+        if (this.speakReplies) {
+            this.unlockVoice();
+        }
         this.messages.push({ from: 'visitor', text: message, fallback: false });
         this.sending = true;
         this.persist();
@@ -1352,9 +1415,8 @@ Alpine.data('voiceAssistant', (config) => ({
             return;
         }
 
-        if (this.canSpeak) {
-            window.speechSynthesis.cancel();
-        }
+        this.stopVoice();
+        this.unlockVoice();
 
         const recognition = new Recognition();
         recognition.lang = 'fr-FR';
@@ -1399,8 +1461,8 @@ Alpine.data('voiceAssistant', (config) => ({
 
     setSpeak(on) {
         this.speakReplies = on && this.canSpeak;
-        if (!this.speakReplies && this.canSpeak) {
-            window.speechSynthesis.cancel();
+        if (!this.speakReplies) {
+            this.stopVoice();
         }
         try {
             this.storage?.setItem('ama-voix', this.speakReplies ? '1' : '0');
@@ -1414,9 +1476,11 @@ Alpine.data('voiceAssistant', (config) => ({
             return;
         }
 
-        const synth = window.speechSynthesis;
+        // Voix naturelle (si l'admin l'a allumée, voix du téléphone en secours), sinon voix du téléphone.
+        const synth = this.voiceSynth();
+        const Utterance = synth === window.speechSynthesis ? window.SpeechSynthesisUtterance : NaturalUtterance;
         synth.cancel();
-        const utterance = new window.SpeechSynthesisUtterance(speakable(text));
+        const utterance = new Utterance(speakable(text));
         utterance.lang = 'fr-FR';
         utterance.rate = SPEECH_RATE;
         const voice = pickFrenchVoice(synth.getVoices());
@@ -1446,6 +1510,7 @@ Alpine.data('voiceAssistant', (config) => ({
         }
 
         const { Recognition } = speechSupport(window);
+        this.unlockVoice();
         this.recognition?.abort();
         this.listening = false;
         this.notice = '';
@@ -1458,8 +1523,9 @@ Alpine.data('voiceAssistant', (config) => ({
         this.call = createVoiceCall({
             greeting: callGreeting,
             Recognition,
-            synth: window.speechSynthesis,
-            Utterance: window.SpeechSynthesisUtterance,
+            // Voix naturelle (si l'admin l'a allumée, voix du téléphone en secours), sinon voix du téléphone.
+            synth: this.voiceSynth(),
+            Utterance: this.voiceSynth() === window.speechSynthesis ? window.SpeechSynthesisUtterance : NaturalUtterance,
             ask: (text, options) => this.askAloud(text, options),
             now: () => (window.performance?.now ? window.performance.now() : Date.now()),
             // Interruption à la voix : seulement si l'admin l'a activée (expérimental).
@@ -1586,6 +1652,24 @@ Alpine.data('voiceAssistant', (config) => ({
 
     hangUp() {
         this.call?.hangUp();
+    },
+
+    // Synthèse vocale utilisée : voix naturelle (si l'admin l'a allumée), sinon celle du téléphone.
+    voiceSynth() {
+        return naturalVoiceFor(config)?.synth ?? window.speechSynthesis;
+    },
+
+    stopVoice() {
+        if (this.canSpeak) {
+            this.voiceSynth().cancel();
+        }
+    },
+
+    // Au toucher d'un bouton : autorise la lecture de la voix naturelle qui arrivera plus tard (iPhone).
+    unlockVoice() {
+        if (this.canSpeak) {
+            naturalVoiceFor(config)?.player.unlock();
+        }
     },
 
     closeCallEnd() {

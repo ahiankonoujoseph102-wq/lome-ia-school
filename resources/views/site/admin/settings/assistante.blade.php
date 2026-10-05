@@ -1,8 +1,10 @@
 @php
     use App\Assistant\AmaKnowledge;
     use App\Assistant\AmaPrompt;
+    use App\Assistant\NaturalVoice;
     use App\Contracts\AssistantModel;
     use App\Models\AssistantUsage;
+    use App\Models\AssistantVoiceUsage;
     use App\Settings\SiteSettings;
     use App\Support\VoiceAssistant;
 
@@ -12,6 +14,11 @@
     $size = AmaPrompt::stats();
     $sizeLimit = AmaPrompt::GOOGLE_TOKENS_PER_MINUTE;
     $keyPresent = app(AssistantModel::class)->isConfigured();
+    $natural = (array) ($assistant['natural_voice'] ?? []);
+    $naturalOn = (bool) old('natural_voice', $natural['enabled'] ?? false);
+    $naturalVoice = old('natural_voice_name', NaturalVoice::voice());
+    $naturalModel = old('natural_voice_model', NaturalVoice::model());
+    $voiceToday = AssistantVoiceUsage::today();
     $providers = [
         VoiceAssistant::GEMINI => ['Ama (Gemini)', 'Notre propre assistante : discussion écrite, micro et lecture à voix haute du navigateur. Réponses de l\'IA Gemini de Google (offre gratuite).'],
         VoiceAssistant::ELEVENLABS => ['ElevenLabs', 'L\'ancien agent vocal créé sur ElevenLabs (gardé, désactivé tant qu\'il n\'est pas choisi ici).'],
@@ -121,6 +128,113 @@
                 @endif
                 <p class="text-slate-400">Modèle utilisé : <span class="font-mono text-slate-200">{{ config('services.gemini.model') }}</span> (variable GEMINI_MODEL, modifiable sur le serveur). La clé n'est jamais affichée ici ni envoyée au navigateur.</p>
                 <p class="text-slate-400">Demandes envoyées à Google aujourd'hui : <span class="font-semibold text-slate-200">{{ AssistantUsage::requestsToday() }}</span>. La journée de Google recommence à {{ AssistantUsage::nextReset()->translatedFormat('H \h i') }}, heure de Lomé.</p>
+            </section>
+
+            <section class="card space-y-5 p-5 sm:p-6" data-test="natural-voice"
+                x-data="{
+                    voice: @js($naturalVoice),
+                    model: @js($naturalModel),
+                    loading: false,
+                    message: '',
+                    audio: null,
+                    async listen() {
+                        if (this.loading) return;
+                        this.loading = true;
+                        this.message = '';
+                        this.audio?.pause();
+                        try {
+                            const response = await fetch(@js(route('admin.settings.voice-preview')), {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', Accept: 'audio/*, application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '' },
+                                body: JSON.stringify({ voice: this.voice, model: this.model }),
+                            });
+                            if (!response.ok || !(response.headers.get('Content-Type') ?? '').startsWith('audio/')) {
+                                const data = await response.json().catch(() => ({}));
+                                this.message = data.message ?? 'La voix n\'a pas pu être fabriquée pour le moment. Réessayez plus tard.';
+                                return;
+                            }
+                            this.audio = new Audio(URL.createObjectURL(await response.blob()));
+                            await this.audio.play();
+                        } catch {
+                            this.message = 'La voix n\'a pas pu être jouée. Vérifiez le volume du téléphone, puis réessayez.';
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+                }">
+                <div>
+                    <h2 class="font-semibold text-white">Voix naturelle</h2>
+                    <p class="mt-1 text-sm text-slate-400">Ama lit ses réponses avec une voix naturelle fabriquée par Google (modèles « TTS » de Gemini, même clé que les réponses). Si Google refuse (quota, erreur) ou si la voix n'est pas prête après {{ NaturalVoice::BROWSER_TIMEOUT_MS / 1000 }} secondes, Ama parle aussitôt avec la voix du téléphone : jamais de silence ni de message d'erreur. Fonctionne en mode appel et avec « Lire les réponses à voix haute ».</p>
+                </div>
+
+                <label class="flex cursor-pointer items-start justify-between gap-4" data-test="natural-voice-toggle">
+                    <span class="min-w-0">
+                        <span class="block font-semibold text-white">Voix naturelle</span>
+                        <span class="block text-sm text-slate-400">Éteinte : Ama parle avec la voix du téléphone, comme avant.</span>
+                    </span>
+                    <input type="hidden" name="natural_voice" value="0">
+                    <input type="checkbox" name="natural_voice" value="1" @checked($naturalOn) class="peer sr-only">
+                    <span class="relative mt-0.5 h-7 w-12 shrink-0 rounded-full bg-veil/10 ring-1 ring-veil/20 transition peer-checked:bg-emerald-500/30 peer-checked:ring-emerald-400 peer-focus-visible:outline-2 peer-focus-visible:outline-gold-300 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-slate-400 after:transition peer-checked:after:translate-x-5 peer-checked:after:bg-emerald-300" aria-hidden="true"></span>
+                </label>
+
+                <fieldset class="space-y-2" data-test="natural-voice-name">
+                    <legend class="font-semibold text-white">Voix d'Ama</legend>
+                    <p class="text-sm text-slate-400">Voix féminines de Google (description de Google). Toutes parlent français : la langue est reconnue d'après le texte.</p>
+                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        @foreach (NaturalVoice::VOICES as $name => $description)
+                            <label class="flex cursor-pointer items-start gap-2 rounded-2xl bg-veil/5 px-3 py-2.5 ring-1 ring-veil/15 transition hover:bg-veil/10 has-[:checked]:bg-gold-400/10 has-[:checked]:ring-2 has-[:checked]:ring-gold-400 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold-300">
+                                <input type="radio" name="natural_voice_name" value="{{ $name }}" x-model="voice" class="mt-1 size-4 accent-gold-400" @checked($naturalVoice === $name)>
+                                <span class="min-w-0">
+                                    <span class="block text-sm font-semibold text-slate-100">{{ $name }}</span>
+                                    <span class="block text-xs text-slate-400">{{ $description }}</span>
+                                </span>
+                            </label>
+                        @endforeach
+                    </div>
+                </fieldset>
+
+                <fieldset class="space-y-2" data-test="natural-voice-model">
+                    <legend class="font-semibold text-white">Modèle</legend>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        @foreach (NaturalVoice::MODELS as $value => $label)
+                            <label class="flex cursor-pointer items-start gap-3 rounded-2xl bg-veil/5 px-4 py-3 ring-1 ring-veil/15 transition hover:bg-veil/10 has-[:checked]:bg-gold-400/10 has-[:checked]:ring-2 has-[:checked]:ring-gold-400 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold-300">
+                                <input type="radio" name="natural_voice_model" value="{{ $value }}" x-model="model" class="mt-1 size-4 accent-gold-400" @checked($naturalModel === $value)>
+                                <span class="min-w-0">
+                                    <span class="block text-sm font-semibold text-slate-100">{{ $label }}</span>
+                                    <span class="block font-mono text-xs text-slate-400">{{ $value }}</span>
+                                </span>
+                            </label>
+                        @endforeach
+                    </div>
+                </fieldset>
+
+                <div class="space-y-2">
+                    <button type="button" class="btn-ghost w-full sm:w-auto" x-on:click="listen()" x-bind:disabled="loading" data-test="natural-voice-listen" @disabled(! $keyPresent)>
+                        <flux:icon.speaker-wave class="size-5" />
+                        <span x-text="loading ? 'Préparation…' : 'Écouter'">Écouter</span>
+                    </button>
+                    <p class="text-sm text-slate-400">Lit « {{ NaturalVoice::SAMPLE }} » avec la voix et le modèle choisis ci-dessus, même avant d'enregistrer. Chaque voix n'est demandée à Google qu'une fois, puis gardée en mémoire.</p>
+                    <p class="text-sm text-amber-200" x-show="message" x-text="message" x-cloak role="status"></p>
+                </div>
+
+                <x-admin.field name="natural_voice_minute_limit" label="Demandes de voix par minute pour tout le site" type="number" unit="demandes" min="{{ NaturalVoice::MINUTE_LIMIT[1] }}" max="{{ NaturalVoice::MINUTE_LIMIT[2] }}" :value="NaturalVoice::minuteLimit()" hint="3 par défaut, comme l'offre gratuite de Google pour ces modèles (à vérifier dans Google AI Studio). Au-delà, Ama parle avec la voix du téléphone jusqu'à la minute suivante. Les phrases écrites à l'avance n'utilisent aucune demande une fois gardées." />
+
+                <x-admin.field name="natural_voice_split_length" label="Longueur à partir de laquelle une réponse est lue en deux demandes" type="number" unit="caractères" min="{{ NaturalVoice::SPLIT_LENGTH[1] }}" max="{{ NaturalVoice::SPLIT_LENGTH[2] }}" :value="NaturalVoice::splitLength()" hint="300 par défaut (environ trois phrases courtes). Une réponse plus courte utilise UNE seule demande. Une réponse plus longue en utilise deux : la première phrase seule, pour que la voix commence vite, puis la suite. Plus le nombre est grand, moins il y a de demandes, mais plus la voix met de temps à commencer sur les longues réponses." />
+
+                <div class="space-y-2" data-test="natural-voice-usage">
+                    <h3 class="text-sm font-semibold text-slate-200">Aujourd'hui (journée de Google)</h3>
+                    <dl class="grid gap-2 text-sm sm:grid-cols-2">
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Lectures avec la voix naturelle</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-spoken">{{ $voiceToday['spoken'] }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">dont phrases gardées en mémoire</dt><dd class="text-slate-100">{{ $voiceToday['cached'] }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Demandes envoyées à Google</dt><dd class="text-slate-100">{{ $voiceToday['google_requests'] }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Refus de Google</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-refusals">{{ $voiceToday['refusals'] }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5 sm:col-span-2"><dt class="text-slate-300">Passages à la voix du téléphone</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-fallbacks">{{ $voiceToday['fallbacks'] }}</dd></div>
+                    </dl>
+                    @if (NaturalVoice::dailyBlocked())
+                        <p class="flex items-start gap-2 text-sm text-amber-200" data-test="natural-voice-daily-blocked"><flux:icon.exclamation-triangle class="size-5 shrink-0" /> Google a répondu que le quota de voix du jour est épuisé : Ama parle avec la voix du téléphone jusqu'à {{ AssistantUsage::nextReset()->translatedFormat('H \h i') }} (heure de Lomé), puis le site réessaie tout seul.</p>
+                    @endif
+                    <p class="text-xs text-slate-400">Seul le texte de la réponse d'Ama est envoyé à Google : jamais le prénom du visiteur. Une phrase qui contient un numéro, une adresse e-mail, un lien ou un nom donné par le visiteur est toujours lue par la voix du téléphone.</p>
+                </div>
             </section>
 
             <section class="card space-y-4 p-5 sm:p-6">
