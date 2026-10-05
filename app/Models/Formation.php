@@ -6,6 +6,7 @@ use App\Enums\FormationCategory;
 use App\Enums\FormationFormat;
 use App\Services\ImageUploader;
 use App\Support\Money;
+use App\Support\YouTube;
 use Database\Factories\FormationFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -40,6 +41,9 @@ use Illuminate\Support\Collection;
  * @property list<string> $bonuses Bonus facultatifs, saisis dans l'admin (vides par défaut).
  * @property Carbon|null $event_date Date de l'événement d'une formation gratuite.
  * @property string|null $event_location Adresse du présentiel d'une formation gratuite.
+ * @property string|null $presentation_video_url Lien YouTube de la vidéo de présentation (formation gratuite).
+ * @property bool $presentation_video_enabled Interrupteur « Afficher la vidéo » de la vidéo de présentation.
+ * @property string|null $presentation_video_format Format choisi (horizontal, vertical) ; vide = automatique.
  * @property-read string $formatted_price
  * @property-read string|null $image_url
  * @property-read EloquentCollection<int, Enrollment> $enrollments
@@ -71,6 +75,9 @@ class Formation extends Model
         'bonuses',
         'event_date',
         'event_location',
+        'presentation_video_url',
+        'presentation_video_enabled',
+        'presentation_video_format',
     ];
 
     /**
@@ -83,6 +90,7 @@ class Formation extends Model
         'is_featured' => false,
         'is_active' => true,
         'sort_order' => 0,
+        'presentation_video_enabled' => false,
     ];
 
     /**
@@ -100,6 +108,7 @@ class Formation extends Model
             'outcomes' => 'array',
             'audience' => 'array',
             'event_date' => 'date',
+            'presentation_video_enabled' => 'boolean',
         ];
     }
 
@@ -251,6 +260,27 @@ class Formation extends Model
     public function isFree(): bool
     {
         return $this->price === 0;
+    }
+
+    /**
+     * Identifiant YouTube de la vidéo de présentation, seulement pour une formation gratuite, interrupteur allumé
+     * et lien reconnu (watch, youtu.be, shorts…). Sinon null : la page s'affiche sans vidéo.
+     */
+    public function presentationVideoId(): ?string
+    {
+        if (! $this->isFree() || ! $this->presentation_video_enabled) {
+            return null;
+        }
+
+        return YouTube::id($this->presentation_video_url);
+    }
+
+    /**
+     * Vidéo de présentation verticale (9:16) ? Format choisi dans l'admin, sinon vertical pour un lien Shorts.
+     */
+    public function presentationVideoIsVertical(): bool
+    {
+        return YouTube::format($this->presentation_video_url, $this->presentation_video_format) === 'vertical';
     }
 
     /**

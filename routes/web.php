@@ -254,6 +254,7 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::put('formations/{formation}', [AdminFormationController::class, 'update'])->name('formations.update');
     Route::get('formations/{formation}/inscriptions', [AdminFreeRegistrationController::class, 'show'])->name('free-registrations.show');
     Route::put('formations/{formation}/inscriptions', [AdminFreeRegistrationController::class, 'update'])->name('free-registrations.update');
+    Route::put('formations/{formation}/inscriptions/video', [AdminFreeRegistrationController::class, 'updateVideo'])->name('free-registrations.video');
     Route::get('formations/{formation}/inscriptions/export', [AdminFreeRegistrationController::class, 'export'])->name('free-registrations.export');
     Route::post('formations/{formation}/deplacer/{direction}', [AdminFormationController::class, 'move'])->whereIn('direction', ['up', 'down'])->name('formations.move');
     Route::get('eleves', [StudentController::class, 'index'])->name('students.index');

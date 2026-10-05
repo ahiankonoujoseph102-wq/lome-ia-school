@@ -138,10 +138,13 @@ class HomeVideoPosterTest extends TestCase
         // Une seule adresse d'image (le navigateur ne la télécharge qu'une fois) : fond flouté + miniature en 16:9.
         $this->assertSame(2, substr_count($html, 'https://i.ytimg.com/vi/'.self::ID.'/hqdefault.jpg'));
 
-        $partial = (string) file_get_contents(resource_path('views/site/partials/home-video.blade.php'));
+        // Cadre de la vidéo : lecteur commun x-site.lazy-youtube (aussi utilisé par la vidéo de présentation d'une formation gratuite).
+        $partial = (string) file_get_contents(resource_path('views/components/site/lazy-youtube.blade.php'));
         $this->assertStringContainsString('blur-xl', $partial);
         // La miniature tient toute la largeur du cadre (rien n'est coupé sur les côtés) et les bandes noires du 4:3 sont retirées.
         $this->assertStringContainsString('aspect-video w-full overflow-hidden', $partial);
-        $this->assertSame(1, substr_count($partial, 'x-on:error="fail()"'));
+        // Une miniature surveillée par format (vertical ou horizontal), une seule dans la page.
+        $this->assertSame(2, substr_count($partial, 'x-on:error="fail()"'));
+        $this->assertSame(1, substr_count($html, 'x-on:error="fail()"'));
     }
 }

@@ -152,10 +152,14 @@
 
     <div class="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_380px] lg:py-20">
         <div class="min-w-0 space-y-16">
-            {{-- Inscription : choix de l'option, places restantes --}}
-            <section id="inscription" class="scroll-mt-2">
-                @include('site.formations.partials.free-registration')
-            </section>
+            {{-- Vidéo de présentation (si réglée dans l'admin), puis inscription : choix de l'option, places restantes --}}
+            <div>
+                @include('site.formations.partials.free-video')
+
+                <section id="inscription" class="scroll-mt-2">
+                    @include('site.formations.partials.free-registration')
+                </section>
+            </div>
 
             {{-- Présentation --}}
             <section data-reveal>

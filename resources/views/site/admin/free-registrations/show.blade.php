@@ -2,7 +2,16 @@
     Inscriptions d'une formation gratuite : inscrits par option (nom, WhatsApp, e-mail), places prises, export CSV,
     puis réglages (date, adresse du présentiel, options : libellé, horaires, déroulement, places).
 --}}
-@php use App\Support\PhoneNumber; @endphp
+@php
+    use App\Support\PhoneNumber;
+    use App\Support\YouTube;
+
+    $videoUrl = (string) $formation->presentation_video_url;
+    $videoEnabled = (bool) old('presentation_video_enabled', $formation->presentation_video_enabled);
+    $videoFormat = old('presentation_video_format', YouTube::format($videoUrl, $formation->presentation_video_format));
+    $videoFormats = ['horizontal' => ['Horizontal', 'Filmée à l\'horizontale (16:9)'], 'vertical' => ['Vertical (téléphone)', 'Filmée au téléphone, tenu droit (9:16)']];
+    $videoShown = $formation->presentationVideoId() !== null;
+@endphp
 
 <x-admin.page :title="'Inscriptions : '.$formation->title" subtitle="Formation gratuite : inscrits par option, places prises et réglages de l'inscription." :back="route('admin.formations.index')" back-label="Formations" width="max-w-4xl">
     <x-slot:actions>
@@ -19,6 +28,57 @@
         ])>{{ $formation->is_active ? 'Visible' : 'Masquée' }}</span>
         <a href="{{ route('formations.show', $formation) }}" class="font-semibold text-electric-300 hover:text-white">Voir la page</a>
     </div>
+
+    {{-- Vidéo de présentation : au-dessus du bloc d'inscription de la page publique. Un lien Shorts choisit « Vertical ». --}}
+    <form method="POST" action="{{ route('admin.free-registrations.video', $formation) }}" class="card space-y-5 p-5 sm:p-6" x-data="{ format: @js($videoFormat) }" data-test="free-video-settings">
+        @csrf
+        @method('PUT')
+        <div>
+            <h2 class="text-lg font-semibold text-white">Vidéo de présentation</h2>
+            <p class="mt-1 text-sm text-slate-400">Affichée sur la page, juste au-dessus du bloc d'inscription, avec le titre « Coach Joseph vous présente la formation ». Seule l'image d'aperçu se charge ; YouTube ne démarre que si le visiteur touche lecture.</p>
+        </div>
+
+        @if ($errors->has('presentation_video_url') || $errors->has('presentation_video_format'))
+            <x-site.alert type="error">{{ $errors->first('presentation_video_url') ?: $errors->first('presentation_video_format') }}</x-site.alert>
+        @endif
+
+        <label class="flex cursor-pointer items-start justify-between gap-4" data-test="free-video-toggle">
+            <span class="min-w-0">
+                <span class="block font-semibold text-white">Afficher la vidéo</span>
+                <span class="block text-sm text-slate-400">Éteint : la page s'affiche sans vidéo, le lien reste enregistré.</span>
+            </span>
+            <input type="hidden" name="presentation_video_enabled" value="0">
+            <input type="checkbox" name="presentation_video_enabled" value="1" @checked($videoEnabled) class="peer sr-only">
+            <span class="relative mt-0.5 h-7 w-12 shrink-0 rounded-full bg-veil/10 ring-1 ring-veil/20 transition peer-checked:bg-emerald-500/30 peer-checked:ring-emerald-400 peer-focus-visible:outline-2 peer-focus-visible:outline-gold-300 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-slate-400 after:transition peer-checked:after:translate-x-5 peer-checked:after:bg-emerald-300" aria-hidden="true"></span>
+        </label>
+
+        <x-admin.field name="presentation_video_url" label="Vidéo de présentation (lien YouTube)" type="url" :value="$videoUrl" placeholder="https://youtu.be/…" hint="Accepte youtube.com/watch, youtu.be et youtube.com/shorts. Vidéo publique ou non répertoriée, intégration autorisée. Laissez vide pour ne pas afficher de vidéo." x-on:input="format = /youtube\.com\/shorts\//i.test($event.target.value) ? 'vertical' : 'horizontal'" />
+
+        <fieldset class="space-y-2" data-test="free-video-format">
+            <legend class="field-label">Format de la vidéo</legend>
+            <div class="grid gap-2 sm:grid-cols-2">
+                @foreach ($videoFormats as $value => [$label, $hint])
+                    <label class="group flex cursor-pointer items-center gap-3 rounded-2xl bg-veil/5 px-4 py-3 ring-1 ring-veil/15 transition hover:bg-veil/10 has-[:checked]:bg-gold-400/10 has-[:checked]:ring-2 has-[:checked]:ring-gold-400 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold-300">
+                        <input type="radio" name="presentation_video_format" value="{{ $value }}" x-model="format" class="sr-only" @checked($videoFormat === $value)>
+                        <span @class(['grid shrink-0 place-items-center rounded-md ring-1 ring-veil/30 group-has-[:checked]:ring-gold-400', 'h-5 w-8' => $value === 'horizontal', 'h-8 w-5' => $value === 'vertical'])>
+                            <flux:icon.play class="size-3 text-slate-400 group-has-[:checked]:text-gold-300" variant="solid" />
+                        </span>
+                        <span class="min-w-0">
+                            <span class="block text-sm font-semibold text-slate-100">{{ $label }}</span>
+                            <span class="block text-xs text-slate-400">{{ $hint }}</span>
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+            <p class="text-xs text-slate-400">Un lien YouTube Shorts (…/shorts/…) choisit automatiquement « Vertical ».</p>
+        </fieldset>
+
+        <p @class(['text-sm', 'text-emerald-200' => $videoShown, 'text-slate-400' => ! $videoShown]) data-test="free-video-state">
+            {{ $videoShown ? 'La vidéo est affichée sur la page.' : 'Aucune vidéo affichée sur la page pour le moment.' }}
+        </p>
+
+        <button type="submit" class="btn-gold w-full sm:w-auto" data-test="free-video-save">Enregistrer la vidéo</button>
+    </form>
 
     {{-- Inscrits par option --}}
     @php
