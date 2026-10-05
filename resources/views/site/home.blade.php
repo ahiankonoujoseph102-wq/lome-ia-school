@@ -11,6 +11,7 @@
     $organization = [
         '@context' => 'https://schema.org',
         '@type' => 'EducationalOrganization',
+        '@id' => \App\Support\Founder::organizationId(),
         'name' => config('app.name'),
         'url' => \App\Support\AppUrl::to(route('home')),
         'email' => config('site.contact.email'),
@@ -21,6 +22,8 @@
             'addressLocality' => 'Lomé',
             'addressCountry' => 'TG',
         ],
+        // Fondateur : fiche Person complète sur la page de Joseph Ahiankonou (même @id).
+        'founder' => \App\Support\Founder::personReference(),
     ];
 @endphp
 
@@ -308,7 +311,7 @@
                             </li>
                         @endforeach
                     </ul>
-                    <a href="{{ route('about') }}" class="btn-ghost mt-6">
+                    <a href="{{ route('founder') }}" class="btn-ghost mt-6" data-test="home-founder-link">
                         Découvrir son parcours <flux:icon.arrow-right class="size-5" />
                     </a>
                 </div>

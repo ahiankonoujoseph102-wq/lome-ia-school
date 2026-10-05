@@ -22,7 +22,7 @@
                 <div class="flex justify-center">
                     @include('site.partials.trainer-photo', ['size' => 'size-48', 'loading' => 'eager'])
                 </div>
-                <p class="mt-5 text-xl font-bold text-white">{{ $trainer['name'] }}</p>
+                <p class="mt-5 text-xl font-bold text-white"><a href="{{ route('founder') }}" class="hover:text-gold-200">{{ $trainer['name'] }}</a></p>
                 <p class="mt-1 text-sm text-electric-300">{{ $trainer['role'] }}</p>
                 <ul class="mt-6 space-y-2 text-left text-sm">
                     @foreach ($trainer['highlights'] as $highlight)
@@ -42,6 +42,9 @@
                         <p>{{ Placeholder::highlight($paragraph) }}</p>
                     @endforeach
                 </div>
+                <a href="{{ route('founder') }}" class="inline-flex items-center gap-2 font-semibold text-gold-300 hover:text-gold-200" data-test="about-founder-link">
+                    Son parcours, ses livres et ses services <flux:icon.arrow-right class="size-4" />
+                </a>
                 <div class="flex flex-col gap-3 pt-2 sm:flex-row">
                     <a href="{{ route('formations.index') }}" class="btn-gold">Découvrir ses formations</a>
                     <a href="{{ route('consultation') }}" class="btn-ghost">Échanger gratuitement avec lui</a>

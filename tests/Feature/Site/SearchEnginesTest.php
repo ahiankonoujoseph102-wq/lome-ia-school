@@ -50,6 +50,7 @@ class SearchEnginesTest extends TestCase
             route('formations.index') => 'Toutes nos formations en intelligence artificielle | Lomé IA School',
             route('formations.show', $this->agents) => 'Agents IA | Lomé IA School',
             route('about') => 'À propos de Lomé IA School',
+            route('founder') => 'Joseph Ahiankonou (Coach Joseph) : formateur et consultant en IA à Lomé',
             route('business') => 'Entreprises et centres de formation | Lomé IA School',
             route('contact') => 'Contact | Lomé IA School',
             route('consultation') => 'Consultation gratuite | Lomé IA School',
@@ -189,7 +190,7 @@ class SearchEnginesTest extends TestCase
         preg_match_all('#<loc>(.*?)</loc>#', $xml, $matches);
         $locs = $matches[1];
 
-        $expected = ['', '/formations', '/a-propos', '/entreprises', '/contact', '/consultation-gratuite', '/devenir-affilie', '/mentions-legales', '/conditions-generales-de-vente', '/politique-de-confidentialite', '/formations/creation-agents-ia'];
+        $expected = ['', '/formations', '/a-propos', '/joseph-ahiankonou', '/entreprises', '/contact', '/consultation-gratuite', '/devenir-affilie', '/mentions-legales', '/conditions-generales-de-vente', '/politique-de-confidentialite', '/formations/creation-agents-ia'];
         foreach ($expected as $path) {
             $this->assertContains(self::DOMAIN.$path, $locs, $path ?: '/');
         }

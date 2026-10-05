@@ -56,8 +56,11 @@
     </div>
 
     <div class="border-t border-veil/10">
-        <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-xs text-slate-500 sm:px-6 md:flex-row md:items-center md:justify-between">
-            <p>© {{ now()->year }} {{ config('app.name') }}. Tous droits réservés.</p>
+        <div class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-xs text-slate-400 sm:px-6 md:flex-row md:items-center md:justify-between" data-test="footer-bottom">
+            <div class="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3">
+                <p>© {{ now()->year }} {{ config('app.name') }}. Tous droits réservés.</p>
+                <p class="whitespace-nowrap"><a href="{{ route('founder') }}" class="hover:text-white" data-test="footer-signature">Dev by Joseph Ahiankonou</a></p>
+            </div>
             <ul class="flex flex-wrap gap-x-5 gap-y-2">
                 <li><a href="{{ route('legal.notice') }}" class="hover:text-white">Mentions légales</a></li>
                 <li><a href="{{ route('legal.terms') }}" class="hover:text-white">Conditions générales de vente</a></li>

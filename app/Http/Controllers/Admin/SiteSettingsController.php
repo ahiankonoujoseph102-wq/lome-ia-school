@@ -12,9 +12,11 @@ use App\Http\Controllers\Controller;
 use App\Models\AssistantUsage;
 use App\Services\ImageUploader;
 use App\Settings\SiteSettings;
+use App\Support\Founder;
 use App\Support\HomeVideo;
 use App\Support\PastedLink;
 use App\Support\PhoneNumber;
+use App\Support\SearchConsole;
 use App\Support\VoiceAssistant;
 use App\Support\WhatsAppMessages;
 use App\Support\YouTube;
@@ -48,6 +50,8 @@ class SiteSettingsController extends Controller
         'video-accueil' => ['title' => 'Vidéo d\'accueil', 'text' => 'Vidéo YouTube verticale de l\'accueil : lien, image d\'aperçu, titre, phrase, bouton TikTok et interrupteur.', 'icon' => 'play-circle'],
         'fond-anime' => ['title' => 'Fond animé', 'text' => 'Halo lumineux, réseau de points et icônes qui bougent doucement derrière le haut de l\'accueil et du catalogue : interrupteur.', 'icon' => 'sparkles'],
         'messages-whatsapp' => ['title' => 'Messages WhatsApp', 'text' => 'Message prérempli de chaque bouton WhatsApp selon la page : formation, paiement, formation gratuite, consultation, autres pages.', 'icon' => 'chat-bubble-left-right'],
+        'page-joseph' => ['title' => 'Page Joseph Ahiankonou', 'text' => 'Votre page personnelle (/joseph-ahiankonou) : textes, photo, parcours, services, liens YouTube, TikTok, Facebook et chaînes WhatsApp, contact.', 'icon' => 'user-circle'],
+        'google' => ['title' => 'Référencement Google', 'text' => 'Code de vérification Google Search Console et adresse du plan du site à déclarer.', 'icon' => 'magnifying-glass'],
         'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
         'assistante' => ['title' => 'Assistante Ama', 'text' => 'Bouton « Parler avec notre assistante » : activation, Ama (Gemini) ou ElevenLabs, instructions, limites, lecteur de cours et aide proactive.', 'icon' => 'chat-bubble-oval-left-ellipsis'],
         'emails' => ['title' => 'E-mails envoyés', 'text' => 'Quota quotidien du fournisseur d\'e-mails (Brevo), réserve gardée pour les codes et les paiements, e-mails partis aujourd\'hui.', 'icon' => 'envelope'],
@@ -90,6 +94,8 @@ class SiteSettingsController extends Controller
             'video-accueil' => $this->updateHomeVideo($request, $images),
             'fond-anime' => $this->updateAnimatedBackground($request),
             'messages-whatsapp' => $this->updateWhatsAppMessages($request),
+            'page-joseph' => $this->updateFounder($request, $images),
+            'google' => $this->updateSearchConsole($request),
             'entreprises' => $this->updateBusiness($request),
             'assistante' => $this->updateVoiceAssistant($request),
             'emails' => $this->updateMailQuota($request),
@@ -678,6 +684,133 @@ class SiteSettingsController extends Controller
         ]]);
 
         ActivityLog::record(AdminAction::SettingsUpdated, 'Page « Entreprises et centres de formation » modifiée'.($video === '' ? ' (sans vidéo).' : ' (vidéo au format '.YouTube::format($video, $validated['video_format'] ?? null).').'));
+    }
+
+    /**
+     * Page personnelle de Joseph Ahiankonou. Liens nettoyés (PastedLink) puis vérifiés : chaque réseau doit
+     * pointer vers son propre site ; un lien vide est masqué. Photo recadrée en carré (800 × 800).
+     */
+    private function updateFounder(Request $request, ImageUploader $images): void
+    {
+        PastedLink::cleanRequest($request, ['links.*', 'whatsapp_channels.*']);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:80'],
+            'nickname' => ['nullable', 'string', 'max:60'],
+            'title' => ['required', 'string', 'max:160'],
+            'description' => ['required', 'string', 'max:300'],
+            'job_title' => ['required', 'string', 'max:120'],
+            'tagline' => ['nullable', 'string', 'max:300'],
+            'intro' => ['array', 'max:10'],
+            'intro.*' => ['nullable', 'string', 'max:1500'],
+            'journey' => ['array', 'max:15'],
+            'journey.*' => ['nullable', 'string', 'max:600'],
+            'services' => ['array', 'max:10'],
+            'services.*.question' => ['nullable', 'string', 'max:120'],
+            'services.*.answer' => ['nullable', 'string', 'max:600'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
+            'remove_photo' => ['nullable', 'boolean'],
+            'photo_alt' => ['nullable', 'string', 'max:200'],
+            'links' => ['array'],
+            'links.*' => ['nullable', 'string', 'max:500'],
+            'whatsapp_channels' => ['array', 'max:5'],
+            'whatsapp_channels.*' => ['nullable', 'string', 'max:500'],
+            'contact.whatsapp' => ['nullable', 'string', 'max:30'],
+            'contact.email' => ['nullable', 'email', 'max:150'],
+            'contact.office' => ['nullable', 'string', 'max:200'],
+        ], [
+            'title.required' => 'Indiquez le titre de la page.',
+            'description.required' => 'Indiquez la description (texte affiché par Google sous le titre).',
+            'photo.image' => 'La photo doit être une image (JPEG, PNG ou WebP).',
+            'photo.mimes' => 'La photo doit être une image (JPEG, PNG ou WebP).',
+            'photo.max' => 'La photo est trop lourde (8 Mo au maximum).',
+        ]);
+
+        $links = [];
+
+        foreach (array_keys(Founder::NETWORKS) as $network) {
+            $url = trim((string) ($validated['links'][$network] ?? ''));
+
+            if ($url !== '' && ! Founder::isValidLink($network, $url)) {
+                throw ValidationException::withMessages(['links.'.$network => Founder::invalidLinkMessage($network)]);
+            }
+
+            $links[$network] = $url;
+        }
+
+        $channels = self::lines($validated['whatsapp_channels'] ?? []);
+
+        foreach ($channels as $index => $url) {
+            if (! Founder::isValidLink('whatsapp_channel', $url)) {
+                throw ValidationException::withMessages(['whatsapp_channels' => 'Chaîne WhatsApp '.($index + 1).' : '.Founder::invalidLinkMessage('whatsapp_channel')]);
+            }
+        }
+
+        // Photo : gardée, remplacée par un nouvel envoi (l'ancienne est effacée) ou retirée.
+        $photo = (string) (((array) SiteSettings::get('site.founder'))['photo'] ?? '');
+        $photoChange = null;
+
+        if ($request->hasFile('photo')) {
+            $new = $images->cover($request->file('photo'), Founder::PHOTO_DIRECTORY, Founder::PHOTO_SIZE, Founder::PHOTO_SIZE, field: 'photo');
+            $this->deleteUploaded('photo', $photo, $images);
+            $photo = $new;
+            $photoChange = 'nouvelle photo';
+        } elseif ($request->boolean('remove_photo') && $photo !== '') {
+            $this->deleteUploaded('photo', $photo, $images);
+            $photo = '';
+            $photoChange = 'photo retirée';
+        }
+
+        $services = [];
+
+        foreach ($validated['services'] ?? [] as $service) {
+            $title = trim((string) ($service['question'] ?? ''));
+
+            if ($title !== '') {
+                $services[] = ['title' => $title, 'text' => trim((string) ($service['answer'] ?? ''))];
+            }
+        }
+
+        SiteSettings::save(['site.founder' => [
+            'name' => trim((string) $validated['name']),
+            'nickname' => trim((string) ($validated['nickname'] ?? '')),
+            'title' => trim((string) $validated['title']),
+            'description' => trim((string) $validated['description']),
+            'job_title' => trim((string) $validated['job_title']),
+            'tagline' => trim((string) ($validated['tagline'] ?? '')),
+            'intro' => self::lines($validated['intro'] ?? []),
+            'journey' => self::lines($validated['journey'] ?? []),
+            'services' => $services,
+            'photo' => $photo,
+            'photo_alt' => trim((string) ($validated['photo_alt'] ?? '')) ?: (string) SiteSettings::default('site.founder.photo_alt'),
+            'links' => $links,
+            'whatsapp_channels' => $channels,
+            'contact' => [
+                'whatsapp' => trim((string) ($validated['contact']['whatsapp'] ?? '')),
+                'email' => trim((string) ($validated['contact']['email'] ?? '')),
+                'office' => trim((string) ($validated['contact']['office'] ?? '')),
+            ],
+        ]]);
+
+        $count = count(array_filter($links)) + count($channels);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Page « Joseph Ahiankonou » modifiée ('.$count.' lien'.($count > 1 ? 's' : '').($photoChange ? ', '.$photoChange : '').').');
+    }
+
+    /**
+     * Code de vérification de Google Search Console : la balise entière ou le code seul sont acceptés.
+     */
+    private function updateSearchConsole(Request $request): void
+    {
+        $code = SearchConsole::clean(is_string($request->input('google_verification')) ? $request->input('google_verification') : '');
+
+        if ($code !== '' && ! SearchConsole::isValid($code)) {
+            throw ValidationException::withMessages(['google_verification' => SearchConsole::invalidMessage()]);
+        }
+
+        SiteSettings::save(['site.seo' => ['google_verification' => $code]]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, $code === '' ? 'Code de vérification Google Search Console retiré.' : 'Code de vérification Google Search Console enregistré.');
     }
 
     private function updateVoiceAssistant(Request $request): void

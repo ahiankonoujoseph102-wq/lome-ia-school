@@ -25,6 +25,14 @@ class PageController extends Controller
         ]);
     }
 
+    /**
+     * Page personnelle de Joseph Ahiankonou (textes et liens : App\Support\Founder).
+     */
+    public function founder(): View
+    {
+        return view('site.founder');
+    }
+
     public function contact(): View
     {
         return view('site.contact');
