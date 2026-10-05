@@ -15,7 +15,8 @@ use Illuminate\Foundation\Queue\Queueable;
  *
  * Lancée quand l'admin enregistre les réglages de l'assistante et chaque heure par le planificateur (sans effet quand
  * tout est prêt). Jamais plus d'une phrase quand il ne reste que deux demandes libres dans la minute : la dernière est
- * toujours laissée aux visiteurs. Ce qui reste est repris une minute plus tard.
+ * toujours laissée aux visiteurs, et rien du tout tant qu'un visiteur a utilisé la voix (appel, lecture à voix haute)
+ * dans les deux dernières minutes. Ce qui reste est repris plus tard.
  */
 class PrepareAmaVoicePhrases implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
@@ -50,7 +51,8 @@ class PrepareAmaVoicePhrases implements ShouldBeUniqueUntilProcessing, ShouldQue
         }
 
         if ($missing > 0) {
-            self::dispatch()->delay(now()->addMinute());
+            // Pendant un appel (ou juste après), on attend que les deux minutes de calme soient passées.
+            self::dispatch()->delay(now()->addSeconds(NaturalVoice::callRecentlyActive() ? NaturalVoice::CALL_QUIET_SECONDS : 60));
         }
     }
 }

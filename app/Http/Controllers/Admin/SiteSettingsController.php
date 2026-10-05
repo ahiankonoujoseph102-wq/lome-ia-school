@@ -843,6 +843,7 @@ class SiteSettingsController extends Controller
             'natural_voice_minute_limit' => ['nullable', 'integer', 'min:'.NaturalVoice::MINUTE_LIMIT[1], 'max:'.NaturalVoice::MINUTE_LIMIT[2]],
             'natural_voice_split_length' => ['nullable', 'integer', 'min:'.NaturalVoice::SPLIT_LENGTH[1], 'max:'.NaturalVoice::SPLIT_LENGTH[2]],
             'natural_voice_timeout' => ['nullable', 'integer', 'min:'.NaturalVoice::TIMEOUT[1], 'max:'.NaturalVoice::TIMEOUT[2]],
+            'natural_voice_phone_fallback' => ['nullable', 'boolean'],
         ];
         $messages = [
             'instructions.max' => 'Les instructions sont trop longues (12 000 caractères au maximum).',
@@ -918,6 +919,8 @@ class SiteSettingsController extends Controller
             'minute_limit' => (int) ($validated['natural_voice_minute_limit'] ?? NaturalVoice::MINUTE_LIMIT[0]),
             'split_length' => (int) ($validated['natural_voice_split_length'] ?? NaturalVoice::SPLIT_LENGTH[0]),
             'timeout' => (int) ($validated['natural_voice_timeout'] ?? NaturalVoice::TIMEOUT[0]),
+            // « Voix du téléphone en secours » : allumé par défaut ; éteint, une réponse non dite par Gemini est affichée.
+            'phone_fallback' => (bool) ($validated['natural_voice_phone_fallback'] ?? true),
         ];
         // Instructions vidées : retour au texte d'origine.
         $instructions = AmaPrompt::effectiveInstructions($validated['instructions'] ?? '');
@@ -964,7 +967,7 @@ class SiteSettingsController extends Controller
             PrepareAmaVoicePhrases::dispatch();
         }
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').', personnage animé : '.($character ? 'oui (visage '.$characterStyle.')' : 'non').', Ama se présente toute seule : '.($nudge ? 'oui' : 'non').', voix naturelle : '.($naturalVoice['enabled'] ? 'oui ('.$naturalVoice['voice'].', '.$naturalVoice['model'].', '.$naturalVoice['minute_limit'].' par minute, deux demandes au-delà de '.$naturalVoice['split_length'].' caractères, voix du téléphone après '.$naturalVoice['timeout'].' s)' : 'non').').');
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').', personnage animé : '.($character ? 'oui (visage '.$characterStyle.')' : 'non').', Ama se présente toute seule : '.($nudge ? 'oui' : 'non').', voix naturelle : '.($naturalVoice['enabled'] ? 'oui ('.$naturalVoice['voice'].', '.$naturalVoice['model'].', '.$naturalVoice['minute_limit'].' par minute, deux demandes au-delà de '.$naturalVoice['split_length'].' caractères, '.($naturalVoice['phone_fallback'] ? 'voix du téléphone après '.$naturalVoice['timeout'].' s' : 'sans voix du téléphone en secours, réponse affichée après '.$naturalVoice['timeout'].' s').')' : 'non').').');
     }
 
     private function updateLegal(Request $request): void

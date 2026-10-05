@@ -10,7 +10,8 @@ use Throwable;
 
 /**
  * Mesure de la voix naturelle d'Ama, une ligne par événement (jamais de texte) : demande envoyée à Google (temps mis,
- * réussite ou cause de l'échec), passage à la voix du téléphone (cause exacte), mémoire impossible à écrire. Même
+ * réussite ou cause de l'échec), passage à la voix du téléphone (cause exacte), réponse affichée sans voix (cause
+ * exacte), mémoire impossible à écrire. Même
  * journée que AssistantUsage (celle de Google). Effacée après 90 jours (model:prune).
  *
  * @property int $id
@@ -29,6 +30,10 @@ class AssistantVoiceEvent extends Model
     public const string GOOGLE = 'google';
 
     public const string FALLBACK = 'fallback';
+
+    // Partie de réponse que la voix de Gemini n'a pas dite et qui est restée affichée sans voix (voix du téléphone en
+    // secours éteinte, ou voix de Gemini déjà entendue dans cette réponse).
+    public const string SILENT = 'silent';
 
     public const string MEMORY = 'memory';
 
@@ -72,7 +77,7 @@ class AssistantVoiceEvent extends Model
     /**
      * Mesures de la journée de Google en cours, pour l'admin.
      *
-     * @return array{google_count: int, google_ok: int, google_avg_ms: int|null, google_max_ms: int|null, by_source: array<string, int>, causes: array<string, int>, memory_errors: int}
+     * @return array{google_count: int, google_ok: int, google_avg_ms: int|null, google_max_ms: int|null, by_source: array<string, int>, causes: array<string, int>, silent_causes: array<string, int>, silent: int, memory_errors: int}
      */
     public static function todayStats(): array
     {
@@ -85,10 +90,8 @@ class AssistantVoiceEvent extends Model
             // Une demande sans origine (clé vide) vient d'un visiteur.
             ->mapWithKeys(fn ($total, $source): array => [(string) $source !== '' ? (string) $source : self::SOURCE_SITE => (int) $total])->all();
 
-        /** @var array<string, int> $causes */
-        $causes = static::query()->where('day', $day)->where('kind', self::FALLBACK)
-            ->selectRaw('cause, count(*) as total')->groupBy('cause')->orderByDesc('total')->pluck('total', 'cause')
-            ->mapWithKeys(fn ($total, $cause): array => [(string) $cause => (int) $total])->all();
+        $causes = self::causesOf($day, self::FALLBACK);
+        $silentCauses = self::causesOf($day, self::SILENT);
 
         $average = (clone $timed)->avg('duration_ms');
         $max = (clone $timed)->max('duration_ms');
@@ -100,8 +103,25 @@ class AssistantVoiceEvent extends Model
             'google_max_ms' => $max === null ? null : (int) $max,
             'by_source' => $bySource,
             'causes' => $causes,
+            'silent_causes' => $silentCauses,
+            'silent' => array_sum($silentCauses),
             'memory_errors' => static::query()->where('day', $day)->where('kind', self::MEMORY)->count(),
         ];
+    }
+
+    /**
+     * Nombre d'événements d'un type par cause, pour une journée, du plus fréquent au moins fréquent.
+     *
+     * @return array<string, int>
+     */
+    private static function causesOf(string $day, string $kind): array
+    {
+        /** @var array<string, int> $causes */
+        $causes = static::query()->where('day', $day)->where('kind', $kind)
+            ->selectRaw('cause, count(*) as total')->groupBy('cause')->orderByDesc('total')->pluck('total', 'cause')
+            ->mapWithKeys(fn ($total, $cause): array => [(string) $cause => (int) $total])->all();
+
+        return $causes;
     }
 
     /**

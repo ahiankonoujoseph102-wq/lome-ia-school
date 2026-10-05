@@ -170,7 +170,7 @@
                 }">
                 <div>
                     <h2 class="font-semibold text-white">Voix naturelle</h2>
-                    <p class="mt-1 text-sm text-slate-400">Ama lit ses réponses avec une voix naturelle fabriquée par Google (modèles « TTS » de Gemini, même clé que les réponses). Si Google refuse (quota, erreur) ou si la voix n'est pas prête après le délai réglé ci-dessous ({{ NaturalVoice::timeoutMs() / 1000 }} secondes), Ama parle aussitôt avec la voix du téléphone : jamais de silence ni de message d'erreur. Fonctionne en mode appel et avec « Lire les réponses à voix haute ».</p>
+                    <p class="mt-1 text-sm text-slate-400">Ama lit ses réponses avec une voix naturelle fabriquée par Google (modèles « TTS » de Gemini, même clé que les réponses). Si Google refuse (quota, erreur) ou si la voix n'est pas prête après le délai réglé ci-dessous ({{ NaturalVoice::timeoutMs() / 1000 }} secondes), Ama parle aussitôt avec la voix du téléphone (si « Voix du téléphone en secours » est allumé). Une seule voix par réponse : dès que la voix de Gemini a été entendue, la voix du téléphone ne parle plus pour cette réponse (une suite qui échoue reste écrite à l'écran), et dès que la voix du téléphone parle, plus aucun son de Gemini pour cette réponse. Fonctionne en mode appel et avec « Lire les réponses à voix haute ».</p>
                 </div>
 
                 <label class="flex cursor-pointer items-start justify-between gap-4" data-test="natural-voice-toggle">
@@ -227,6 +227,16 @@
 
                 <x-admin.field name="natural_voice_split_length" label="Longueur à partir de laquelle une réponse est lue en deux demandes" type="number" unit="caractères" min="{{ NaturalVoice::SPLIT_LENGTH[1] }}" max="{{ NaturalVoice::SPLIT_LENGTH[2] }}" :value="NaturalVoice::splitLength()" hint="300 par défaut (environ trois phrases courtes). Une réponse plus courte utilise UNE seule demande. Une réponse plus longue en utilise deux : la première phrase seule, pour que la voix commence vite, puis la suite. Plus le nombre est grand, moins il y a de demandes, mais plus la voix met de temps à commencer sur les longues réponses." />
 
+                <label class="flex cursor-pointer items-start justify-between gap-4" data-test="natural-voice-phone-fallback">
+                    <span class="min-w-0">
+                        <span class="block font-semibold text-white">Voix du téléphone en secours</span>
+                        <span class="block text-sm text-slate-400">Allumé (conseillé) : si la voix de Gemini échoue avant d'avoir commencé, la voix du téléphone dit la réponse. Éteint (pour tester) : Ama n'utilise QUE la voix de Gemini ; si elle échoue, la réponse est seulement écrite à l'écran, et l'appel continue normalement.</span>
+                    </span>
+                    <input type="hidden" name="natural_voice_phone_fallback" value="0">
+                    <input type="checkbox" name="natural_voice_phone_fallback" value="1" @checked(NaturalVoice::phoneFallback()) class="peer sr-only">
+                    <span class="relative mt-0.5 h-7 w-12 shrink-0 rounded-full bg-veil/10 ring-1 ring-veil/20 transition peer-checked:bg-emerald-500/30 peer-checked:ring-emerald-400 peer-focus-visible:outline-2 peer-focus-visible:outline-gold-300 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-slate-400 after:transition peer-checked:after:translate-x-5 peer-checked:after:bg-emerald-300" aria-hidden="true"></span>
+                </label>
+
                 <x-admin.field name="natural_voice_timeout" label="Délai avant la voix du téléphone" type="number" unit="secondes" min="{{ NaturalVoice::TIMEOUT[1] }}" max="{{ NaturalVoice::TIMEOUT[2] }}" :value="NaturalVoice::timeoutMs() / 1000" hint="10 par défaut. Temps laissé à Google pour fabriquer la voix, compté dès que le texte de la réponse est prêt ; pendant l'attente, Ama « réfléchit » à l'écran. Google met environ 2,5 secondes pour 4 secondes de voix : une réponse de 200 caractères demande 6 à 8 secondes. Plus court : la voix du téléphone parle plus souvent. Comparez avec « Temps de Google » ci-dessous." />
 
                 <div class="space-y-2" data-test="natural-voice-usage">
@@ -239,7 +249,8 @@
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5" data-test="natural-voice-google-average"><dt class="text-slate-300">Temps de Google en moyenne</dt><dd class="font-semibold text-slate-100">{{ $voiceSeconds($voiceStats['google_avg_ms']) }}</dd></div>
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5" data-test="natural-voice-google-max"><dt class="text-slate-300">Temps de Google au maximum</dt><dd class="font-semibold text-slate-100">{{ $voiceSeconds($voiceStats['google_max_ms']) }}</dd></div>
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Refus de Google</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-refusals">{{ $voiceToday['refusals'] }}</dd></div>
-                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5 sm:col-span-2"><dt class="text-slate-300">Passages à la voix du téléphone</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-fallbacks">{{ $voiceToday['fallbacks'] }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Passages à la voix du téléphone</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-fallbacks">{{ $voiceToday['fallbacks'] }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Parties de réponse affichées sans voix</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-silent">{{ $voiceStats['silent'] }}</dd></div>
                     </dl>
                     <div class="space-y-1.5" data-test="natural-voice-causes">
                         <h4 class="text-sm font-semibold text-slate-200">Passages à la voix du téléphone, par cause</h4>
@@ -248,9 +259,18 @@
                         @else
                             <dl class="grid gap-2 text-sm">
                                 @foreach ($voiceStats['causes'] as $cause => $total)
-                                    <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">{{ NaturalVoice::CAUSES[$cause] ?? NaturalVoice::CAUSES['other'] }}</dt><dd class="font-semibold text-slate-100">{{ $total }}</dd></div>
+                                    <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">{{ NaturalVoice::CAUSES[$cause] ?? 'Code « '.$cause.' »' }}</dt><dd class="font-semibold text-slate-100">{{ $total }}</dd></div>
                                 @endforeach
                             </dl>
+                        @endif
+                        @if ($voiceStats['silent_causes'] !== [])
+                            <h4 class="pt-1 text-sm font-semibold text-slate-200">Parties de réponse affichées sans voix, par cause</h4>
+                            <dl class="grid gap-2 text-sm" data-test="natural-voice-silent-causes">
+                                @foreach ($voiceStats['silent_causes'] as $cause => $total)
+                                    <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">{{ NaturalVoice::CAUSES[$cause] ?? 'Code « '.$cause.' »' }}</dt><dd class="font-semibold text-slate-100">{{ $total }}</dd></div>
+                                @endforeach
+                            </dl>
+                            <p class="text-xs text-slate-400">Sans voix : soit « Voix du téléphone en secours » est éteint, soit la voix de Gemini avait déjà parlé dans cette réponse (jamais deux voix pour une même réponse).</p>
                         @endif
                         <p class="text-xs text-slate-400">« Voix pas prête avant le délai » : Google a été plus lent que le délai réglé. Si ce cas revient souvent, comparez le délai avec « Temps de Google au maximum ». Une voix arrivée trop tard n'est jamais jouée par-dessus la voix du téléphone.</p>
                     </div>

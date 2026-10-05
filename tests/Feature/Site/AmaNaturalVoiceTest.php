@@ -348,7 +348,8 @@ class AmaNaturalVoiceTest extends TestCase
             'natural_voice_timeout' => '12',
         ])->assertRedirect();
 
-        $this->assertSame(['enabled' => true, 'voice' => 'Aoede', 'model' => 'gemini-3.8-flash-tts', 'minute_limit' => 2, 'split_length' => 450, 'timeout' => 12], ((array) SiteSettings::get('site.voice_assistant'))['natural_voice']);
+        // « Voix du téléphone en secours » absent du formulaire : allumé (valeur par défaut).
+        $this->assertSame(['enabled' => true, 'voice' => 'Aoede', 'model' => 'gemini-3.8-flash-tts', 'minute_limit' => 2, 'split_length' => 450, 'timeout' => 12, 'phone_fallback' => true], ((array) SiteSettings::get('site.voice_assistant'))['natural_voice']);
         $this->assertStringContainsString('voix naturelle : oui (Aoede, gemini-3.8-flash-tts, 2 par minute, deux demandes au-delà de 450 caractères, voix du téléphone après 12 s)', (string) AdminActivity::query()->latest('id')->value('description'));
         // Délai transmis au navigateur ; le serveur attend Google au moins 2 s de plus.
         $this->assertSame(12000, NaturalVoice::timeoutMs());

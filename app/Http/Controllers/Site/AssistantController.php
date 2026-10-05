@@ -47,6 +47,8 @@ class AssistantController extends Controller
     public function call(Request $request, AmaChat $chat): StreamedResponse
     {
         $visitor = $this->visitor();
+        // Appel en cours : la préparation des phrases de la voix naturelle laisse les demandes de Google aux visiteurs.
+        NaturalVoice::markCallActivity();
 
         return response()->stream(function () use ($request, $chat, $visitor): void {
             // Le visiteur coupe la parole à Ama (connexion fermée) : la réponse est quand même enregistrée,
@@ -114,10 +116,12 @@ class AssistantController extends Controller
             return $this->json(['fallback' => true]);
         }
 
+        NaturalVoice::markCallActivity();
         $text = $request->input('text');
         $visitor = $request->cookie(self::VISITOR_COOKIE);
         $visitorHash = is_string($visitor) && $visitor !== '' ? hash_hmac('sha256', $visitor, (string) config('app.key')) : null;
-        $audio = is_string($text) ? $voice->speak($text, $request->user(), $visitorHash) : null;
+        // « voiced » : la voix de Gemini a déjà été entendue dans cette réponse ; un échec sera affiché sans voix.
+        $audio = is_string($text) ? $voice->speak($text, $request->user(), $visitorHash, $request->boolean('voiced')) : null;
 
         if ($audio === null) {
             return $this->json(['fallback' => true]);
@@ -131,18 +135,20 @@ class AssistantController extends Controller
     }
 
     /**
-     * Le navigateur a repris la voix du téléphone de lui-même : cause (« timeout » audio pas prêt avant le délai réglé,
-     * « playback » lecture refusée ou coupée, « network » serveur injoignable) et attente en millisecondes, comptées pour
-     * l'admin, sans aucun texte.
+     * Le navigateur a abandonné la voix de Gemini de lui-même : cause exacte (NaturalVoice::BROWSER_CAUSES : délai
+     * dépassé, serveur injoignable, lecture refusée, son mis en pause par le téléphone, fichier illisible, son bloqué),
+     * attente en millisecondes et issue (« phone » ou « silent »), comptées pour l'admin, sans aucun texte.
      */
     public function voiceFallback(Request $request, NaturalVoice $voice): JsonResponse
     {
         if ($voice->enabled()) {
             $cause = $request->input('cause');
             $waited = $request->input('waited');
+            $outcome = $request->input('outcome');
             NaturalVoice::recordBrowserFallback(
                 is_string($cause) ? $cause : null,
                 is_numeric($waited) ? (int) $waited : null,
+                is_string($outcome) ? $outcome : null,
             );
         }
 
