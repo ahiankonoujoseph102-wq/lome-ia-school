@@ -6,6 +6,7 @@ use App\Admin\ActivityLog;
 use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
 use App\Assistant\NaturalVoice;
+use App\Assistant\VoicePronunciation;
 use App\Branding\BrandAssets;
 use App\Enums\AdminAction;
 use App\Http\Controllers\Controller;
@@ -117,8 +118,20 @@ class SiteSettingsController extends Controller
             'provider' => ['nullable', Rule::in(array_keys(NaturalVoice::PROVIDERS))],
             'voice' => ['required_unless:provider,'.NaturalVoice::CLOUDFLARE, 'nullable', Rule::in(array_keys(NaturalVoice::VOICES))],
             'model' => ['required_unless:provider,'.NaturalVoice::CLOUDFLARE, 'nullable', Rule::in(array_keys(NaturalVoice::MODELS))],
+            // Phrase d'essai et table de prononciation en cours de saisie (pas encore enregistrées).
+            'text' => ['nullable', 'string', 'max:'.NaturalVoice::PREVIEW_MAX_LENGTH],
+            'pronunciations' => ['nullable', 'array', 'max:'.VoicePronunciation::MAX_ROWS],
+            'pronunciations.*.written' => ['nullable', 'string', 'max:'.VoicePronunciation::MAX_LENGTH],
+            'pronunciations.*.spoken' => ['nullable', 'string', 'max:'.VoicePronunciation::MAX_LENGTH],
+        ], [
+            'text.max' => 'La phrase d\'essai est trop longue ('.NaturalVoice::PREVIEW_MAX_LENGTH.' caractères au maximum).',
+            'pronunciations.max' => 'La table de prononciation a trop de lignes ('.VoicePronunciation::MAX_ROWS.' au maximum).',
+            'pronunciations.*.written.max' => 'Une ligne de la table de prononciation est trop longue ('.VoicePronunciation::MAX_LENGTH.' caractères au maximum).',
+            'pronunciations.*.spoken.max' => 'Une ligne de la table de prononciation est trop longue ('.VoicePronunciation::MAX_LENGTH.' caractères au maximum).',
         ]);
         $provider = (string) ($validated['provider'] ?? NaturalVoice::GEMINI);
+        // Sans table envoyée (page ouverte avant la mise à jour) : table enregistrée.
+        $pronunciations = array_key_exists('pronunciations', $validated) ? VoicePronunciation::clean((array) $validated['pronunciations']) : null;
         $cloudflare = $provider === NaturalVoice::CLOUDFLARE;
 
         if (! $voice->isConfigured($provider)) {
@@ -127,7 +140,7 @@ class SiteSettingsController extends Controller
                 : 'Clé Gemini absente sur le serveur : ajoutez la variable GEMINI_API_KEY.'], 422);
         }
 
-        $audio = $voice->preview((string) ($validated['voice'] ?? ''), (string) ($validated['model'] ?? ''), $provider);
+        $audio = $voice->preview((string) ($validated['voice'] ?? ''), (string) ($validated['model'] ?? ''), $provider, (string) ($validated['text'] ?? ''), $pronunciations);
 
         if ($audio === null) {
             $message = match ($voice->lastReason) {
@@ -135,6 +148,7 @@ class SiteSettingsController extends Controller
                 'cloudflare_daily_quota' => 'L\'offre gratuite de Cloudflare est épuisée pour aujourd\'hui. Réessayez après '.NaturalVoice::nextReset(NaturalVoice::CLOUDFLARE)->translatedFormat('H \\h i').' (heure de Lomé).',
                 'cloudflare_cap' => 'Le plafond de minutes du jour est atteint. Réessayez après '.NaturalVoice::nextReset(NaturalVoice::CLOUDFLARE)->translatedFormat('H \\h i').' (heure de Lomé), ou augmentez le plafond.',
                 'site_minute_limit', 'google_quota', 'cloudflare_quota' => 'Limite de demandes par minute atteinte. Réessayez dans une minute.',
+                'invalid_text' => 'Écrivez une phrase d\'essai avec au moins une lettre ou un chiffre.',
                 default => NaturalVoice::providerName($provider).' n\'a pas pu fabriquer la voix pour le moment (refus ou délai dépassé). Réessayez plus tard.',
             };
 
@@ -855,6 +869,10 @@ class SiteSettingsController extends Controller
             'natural_voice_provider' => ['nullable', Rule::in(array_keys(NaturalVoice::PROVIDERS))],
             'natural_voice_cloudflare_minute_limit' => ['nullable', 'integer', 'min:'.NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[1], 'max:'.NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[2]],
             'natural_voice_daily_minutes' => ['nullable', 'integer', 'min:'.NaturalVoice::DAILY_MINUTES[1], 'max:'.NaturalVoice::DAILY_MINUTES[2]],
+            'pronunciations_sent' => ['nullable', 'boolean'],
+            'pronunciations' => ['nullable', 'array', 'max:'.VoicePronunciation::MAX_ROWS],
+            'pronunciations.*.written' => ['nullable', 'string', 'max:'.VoicePronunciation::MAX_LENGTH],
+            'pronunciations.*.spoken' => ['nullable', 'string', 'max:'.VoicePronunciation::MAX_LENGTH],
         ];
         $messages = [
             'instructions.max' => 'Les instructions sont trop longues (12 000 caractères au maximum).',
@@ -885,6 +903,9 @@ class SiteSettingsController extends Controller
             'natural_voice_timeout.integer' => 'Écrivez un nombre entier de secondes, sans virgule.',
             'natural_voice_timeout.min' => 'Le délai doit être d\'au moins '.NaturalVoice::TIMEOUT[1].' secondes.',
             'natural_voice_timeout.max' => 'Le délai ne peut pas dépasser '.NaturalVoice::TIMEOUT[2].' secondes.',
+            'pronunciations.max' => 'La table de prononciation a trop de lignes ('.VoicePronunciation::MAX_ROWS.' au maximum).',
+            'pronunciations.*.written.max' => 'Une ligne de la table de prononciation est trop longue ('.VoicePronunciation::MAX_LENGTH.' caractères au maximum).',
+            'pronunciations.*.spoken.max' => 'Une ligne de la table de prononciation est trop longue ('.VoicePronunciation::MAX_LENGTH.' caractères au maximum).',
         ];
 
         foreach (VoiceAssistant::LIMITS as $name => [, $min, $max]) {
@@ -946,6 +967,14 @@ class SiteSettingsController extends Controller
             'cloudflare_minute_limit' => (int) ($validated['natural_voice_cloudflare_minute_limit'] ?? $previousNatural['cloudflare_minute_limit'] ?? NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[0]),
             'daily_minutes' => (int) ($validated['natural_voice_daily_minutes'] ?? $previousNatural['daily_minutes'] ?? NaturalVoice::DAILY_MINUTES[0]),
         ];
+        // Table de prononciation (texte envoyé à la voix seulement) : gardée telle quelle si le formulaire ne l'envoie pas
+        // (page ouverte avant la mise à jour) ; rien d'enregistré = valeurs de départ.
+        if ($validated['pronunciations_sent'] ?? false) {
+            $naturalVoice['pronunciations'] = VoicePronunciation::clean((array) ($validated['pronunciations'] ?? []));
+        } elseif (is_array($previousNatural['pronunciations'] ?? null)) {
+            $naturalVoice['pronunciations'] = $previousNatural['pronunciations'];
+        }
+        $pronunciationsChanged = isset($naturalVoice['pronunciations']) && $naturalVoice['pronunciations'] !== VoicePronunciation::table();
         // Instructions vidées : retour au texte d'origine.
         $instructions = AmaPrompt::effectiveInstructions($validated['instructions'] ?? '');
 
@@ -984,9 +1013,11 @@ class SiteSettingsController extends Controller
         $summary = $provider === VoiceAssistant::GEMINI
             ? 'Ama (Gemini), '.$limits['visitor_daily_limit'].' messages par visiteur et par jour, '.$limits['daily_limit'].' demandes par jour pour le site'.($instructions !== (string) ($previous['instructions'] ?? AmaPrompt::DEFAULT_INSTRUCTIONS) ? ', instructions modifiées' : '').($knowledge !== ($previousKnowledge ?: ['school' => AmaKnowledge::DEFAULT_SCHOOL, 'faq' => [], 'other' => '']) ? ', base de connaissances modifiée' : '')
             : 'agent ElevenLabs '.$agentId;
+        $summary .= $pronunciationsChanged ? ', table de prononciation modifiée ('.count($naturalVoice['pronunciations']).' lignes)' : '';
 
         // Voix naturelle allumée : les phrases écrites à l'avance sont préparées en mémoire en arrière-plan (sans effet si
-        // elles le sont déjà pour cette voix et ce modèle).
+        // elles le sont déjà pour cette voix et ce modèle). Table de prononciation changée : les phrases qu'elle touche n'ont
+        // plus d'audio en mémoire (emplacement selon le texte prononcé), elles sont donc fabriquées de nouveau.
         if ($naturalVoice['enabled'] && $enabled && $provider === VoiceAssistant::GEMINI) {
             PrepareAmaVoicePhrases::dispatch();
         }

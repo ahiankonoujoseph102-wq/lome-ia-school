@@ -7,6 +7,7 @@ use App\Assistant\CloudflareSpeech;
 use App\Assistant\NaturalVoice;
 use App\Assistant\SpeechAudio;
 use App\Assistant\SpeechFailure;
+use App\Assistant\VoicePronunciation;
 use App\Models\AdminActivity;
 use App\Models\AssistantVoiceEvent;
 use App\Models\AssistantVoiceQuota;
@@ -424,7 +425,7 @@ class AmaCloudflareVoiceTest extends TestCase
         $this->actingAs($admin)->postJson(route('admin.settings.voice-preview'), ['provider' => 'cloudflare'])->assertOk();
         // (L'enregistrement a aussi lancé la préparation des phrases écrites à l'avance : seules les demandes de la phrase
         // d'exemple sont comptées ici.)
-        $this->assertCount(1, Http::recorded(fn (Request $request): bool => $request['prompt'] === NaturalVoice::SAMPLE && $request['lang'] === 'fr'));
+        $this->assertCount(1, Http::recorded(fn (Request $request): bool => $request['prompt'] === VoicePronunciation::apply(NaturalVoice::SAMPLE) && $request['lang'] === 'fr'));
         $this->assertSame(1, AssistantVoiceEvent::query()->where('kind', AssistantVoiceEvent::GOOGLE)->where('source', AssistantVoiceEvent::SOURCE_PREVIEW)->where('provider', 'cloudflare')->count());
 
         // Offre du jour épuisée : message clair.

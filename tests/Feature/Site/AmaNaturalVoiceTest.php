@@ -4,6 +4,7 @@ namespace Tests\Feature\Site;
 
 use App\Assistant\GeminiSpeech;
 use App\Assistant\NaturalVoice;
+use App\Assistant\VoicePronunciation;
 use App\Models\AdminActivity;
 use App\Models\AssistantConversation;
 use App\Models\AssistantMessage;
@@ -132,7 +133,8 @@ class AmaNaturalVoiceTest extends TestCase
             return $request->url() === 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash-lite-tts:generateContent'
                 && $request->header('x-goog-api-key') === [self::KEY]
                 && ! str_contains($request->url(), self::KEY)
-                && $request['contents'] === [['parts' => [['text' => 'La formation coûte 25 000 FCFA.']]]]
+                // Table de prononciation : « FCFA » dit « francs C F A » (texte envoyé à la voix seulement).
+                && $request['contents'] === [['parts' => [['text' => 'La formation coûte 25 000 francs C F A.']]]]
                 && $request['generationConfig'] === [
                     'responseModalities' => ['AUDIO'],
                     'speechConfig' => ['voiceConfig' => ['prebuiltVoiceConfig' => ['voiceName' => 'Sulafat']]],
@@ -279,7 +281,7 @@ class AmaNaturalVoiceTest extends TestCase
 
         $this->voice('Bonsoir Kossi, je suis Ama, l\'assistante de Lomé IA School.', $user)->assertOk()->assertHeader('Content-Type', 'audio/wav');
 
-        Http::assertSent(fn (Request $request): bool => $request['contents'][0]['parts'][0]['text'] === 'Bonsoir, je suis Ama, l\'assistante de Lomé IA School.');
+        Http::assertSent(fn (Request $request): bool => $request['contents'][0]['parts'][0]['text'] === 'Bonsoir, je suis Ama, l\'assistante de Lomé i a Scoul.');
         Http::assertNotSent(fn (Request $request): bool => str_contains(json_encode($request->data()) ?: '', 'Kossi'));
     }
 
@@ -382,7 +384,7 @@ class AmaNaturalVoiceTest extends TestCase
         $this->actingAs($admin)->postJson(route('admin.settings.voice-preview'), ['voice' => 'Leda', 'model' => 'gemini-3.8-flash-lite-tts'])->assertOk();
 
         Http::assertSentCount(1);
-        Http::assertSent(fn (Request $request): bool => $request['contents'][0]['parts'][0]['text'] === NaturalVoice::SAMPLE
+        Http::assertSent(fn (Request $request): bool => $request['contents'][0]['parts'][0]['text'] === VoicePronunciation::apply(NaturalVoice::SAMPLE)
             && $request['generationConfig']['speechConfig']['voiceConfig']['prebuiltVoiceConfig']['voiceName'] === 'Leda');
 
         // Refus de Google : message clair pour l'admin.
