@@ -10,7 +10,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\FreeRegistration;
 use App\Models\FreeRegistrationOption;
+use App\Support\PastedLink;
 use App\Support\PhoneNumber;
+use App\Support\YouTube;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\RedirectResponse;
@@ -144,6 +146,50 @@ class FreeRegistrationController extends Controller
         ActivityLog::record(AdminAction::FreeRegistrationUpdated, 'Inscription gratuite modifiée : '.$formation->title.' (date, lieu et options).', $formation);
 
         return to_route('admin.free-registrations.show', $formation)->with('status', 'Inscription gratuite enregistrée.');
+    }
+
+    /**
+     * Vidéo de présentation : lien YouTube (watch, youtu.be, shorts…), interrupteur et format.
+     * Aucun lien n'est inventé : vide = la page s'affiche sans vidéo.
+     */
+    public function updateVideo(Request $request, Formation $formation): RedirectResponse
+    {
+        abort_unless($formation->isFree(), 404);
+
+        PastedLink::cleanRequest($request, ['presentation_video_url']);
+
+        $validated = $request->validate([
+            'presentation_video_url' => ['nullable', 'string', 'max:500'],
+            'presentation_video_enabled' => ['nullable', 'boolean'],
+            'presentation_video_format' => ['nullable', Rule::in(YouTube::FORMATS)],
+        ]);
+
+        $url = trim((string) ($validated['presentation_video_url'] ?? ''));
+        $enabled = (bool) ($validated['presentation_video_enabled'] ?? false);
+
+        if ($url !== '' && YouTube::id($url) === null) {
+            throw ValidationException::withMessages(['presentation_video_url' => YouTube::invalidMessage().' Un lien Shorts (https://www.youtube.com/shorts/…) fonctionne aussi.']);
+        }
+
+        if ($enabled && $url === '') {
+            throw ValidationException::withMessages(['presentation_video_url' => 'Collez le lien YouTube de la vidéo, ou éteignez « Afficher la vidéo ».']);
+        }
+
+        $formation->forceFill([
+            'presentation_video_url' => $url !== '' ? $url : null,
+            'presentation_video_enabled' => $enabled,
+            'presentation_video_format' => $url !== '' ? YouTube::format($url, $validated['presentation_video_format'] ?? null) : null,
+        ])->save();
+
+        $detail = match (true) {
+            $url === '' => 'sans lien',
+            ! $enabled => 'masquée',
+            default => 'affichée, format '.($formation->presentationVideoIsVertical() ? 'vertical' : 'horizontal'),
+        };
+
+        ActivityLog::record(AdminAction::FreeRegistrationUpdated, 'Vidéo de présentation modifiée : '.$formation->title.' ('.$detail.').', $formation);
+
+        return to_route('admin.free-registrations.show', $formation)->with('status', 'Vidéo de présentation enregistrée.');
     }
 
     public function export(Formation $formation): StreamedResponse

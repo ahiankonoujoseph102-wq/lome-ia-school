@@ -39,6 +39,15 @@ class HomeVideoTest extends TestCase
         ], $overrides);
     }
 
+    /**
+     * Section de l'accueil et lecteur commun (x-site.lazy-youtube), qu'elle utilise pour le cadre de la vidéo.
+     */
+    private function partial(): string
+    {
+        return file_get_contents(resource_path('views/site/partials/home-video.blade.php'))
+            .file_get_contents(resource_path('views/components/site/lazy-youtube.blade.php'));
+    }
+
     private function save(array $overrides = []): void
     {
         $admin = User::factory()->admin()->create();
@@ -117,7 +126,7 @@ class HomeVideoTest extends TestCase
     {
         $this->save();
 
-        $partial = file_get_contents(resource_path('views/site/partials/home-video.blade.php'));
+        $partial = $this->partial();
 
         // L'unique <iframe> est dans le modèle « playing » (rien n'est chargé avant le toucher).
         $this->assertSame(1, substr_count($partial, '<iframe'));
@@ -256,7 +265,7 @@ class HomeVideoTest extends TestCase
 
     public function test_the_section_is_short_on_phones_and_the_frame_widens_only_when_the_visitor_plays(): void
     {
-        $partial = file_get_contents(resource_path('views/site/partials/home-video.blade.php'));
+        $partial = $this->partial();
 
         // Aperçu étroit (10 rem) en 9:16, section compacte, titre et boutons réduits sur téléphone.
         $this->assertStringContainsString('mt-4 w-40', $partial);
@@ -281,7 +290,7 @@ class HomeVideoTest extends TestCase
     {
         $this->save();
 
-        $partial = file_get_contents(resource_path('views/site/partials/home-video.blade.php'));
+        $partial = $this->partial();
 
         $this->assertStringContainsString('<template x-if="failed">', $partial);
         $this->assertStringContainsString('x-on:error="fail()"', $partial);
@@ -293,7 +302,7 @@ class HomeVideoTest extends TestCase
 
     public function test_the_style_does_not_depend_on_forced_dark_mode(): void
     {
-        $partial = file_get_contents(resource_path('views/site/partials/home-video.blade.php'));
+        $partial = $this->partial();
 
         $this->assertStringNotContainsString('dark:', $partial);
         $this->assertStringNotContainsString('bg-white/', $partial);
