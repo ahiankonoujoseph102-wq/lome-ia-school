@@ -7,6 +7,7 @@ use App\Enums\AssistantIncidentType;
 use App\Models\AssistantConversation;
 use App\Models\AssistantMessage;
 use App\Models\AssistantUsage;
+use App\Models\AssistantVoiceEvent;
 use App\Models\AssistantVoiceUsage;
 use App\Models\Formation;
 use App\Models\User;
@@ -35,6 +36,13 @@ use Throwable;
  *
  * Une réponse courte (jusqu'à « split_length » caractères, 300 par défaut) part en une seule demande ; plus longue, en deux
  * (la première phrase, puis la suite) : le découpage est fait par le navigateur.
+ *
+ * Mesure (table assistant_voice_events, jamais de texte) : temps mis par Google pour chaque demande, et cause exacte de
+ * chaque passage à la voix du téléphone (CAUSES), décidé ici ou par le navigateur (délai dépassé, lecture refusée…).
+ *
+ * Phrases écrites à l'avance (accueil du mode appel en « Bonjour » et « Bonsoir », au revoir, demande de répéter,
+ * messages de limite, « C'est transmis ! ») : préparées en arrière-plan par PrepareAmaVoicePhrases, exactement dans les
+ * morceaux que le navigateur demandera, sans jamais prendre la dernière demande de la minute à un visiteur.
  */
 class NaturalVoice
 {
@@ -89,9 +97,45 @@ class NaturalVoice
     public const array SPLIT_LENGTH = [300, 80, 1500];
 
     /**
-     * Délai (millisecondes) après lequel le navigateur abandonne la voix naturelle pour la voix du téléphone.
+     * Délai (secondes) après lequel le navigateur abandonne la voix naturelle pour la voix du téléphone : par défaut,
+     * minimum, maximum. Réglable dans l'admin. 10 s par défaut : Gemini 3.8 Flash TTS fabrique environ 4 secondes de voix
+     * en 2,5 secondes (source non officielle), soit 6 à 8 s pour une réponse du mode appel (150 à 250 caractères) ; les
+     * anciennes 4 secondes ne suffisaient qu'aux phrases très courtes, comme l'accueil.
+     *
+     * @var array{0: int, 1: int, 2: int}
      */
-    public const int BROWSER_TIMEOUT_MS = 4000;
+    public const array TIMEOUT = [10, 3, 20];
+
+    /**
+     * Causes d'un passage à la voix du téléphone (code enregistré => libellé de l'admin). Les quatre dernières sont
+     * décidées par le navigateur (BROWSER_CAUSES).
+     *
+     * @var array<string, string>
+     */
+    public const array CAUSES = [
+        'empty' => 'Texte vide ou trop long',
+        'private' => 'Numéro, e-mail, lien ou prénom dans la phrase (voulu)',
+        'no_key' => 'Clé Gemini absente',
+        'daily_quota' => 'Quota du jour de Google épuisé',
+        'site_minute_limit' => 'Limite de demandes par minute du site',
+        'google_quota' => 'Limite de Google atteinte (refus 429)',
+        'google_timeout' => 'Google trop lent (délai du serveur dépassé)',
+        'google_error' => 'Erreur ou réponse sans audio de Google',
+        'timeout' => 'Voix pas prête avant le délai du téléphone',
+        'playback' => 'Lecture refusée ou coupée par le téléphone',
+        'network' => 'Réseau ou serveur du site injoignable',
+        'other' => 'Autre',
+    ];
+
+    /**
+     * Causes que le navigateur peut signaler (POST /assistante/voix/secours).
+     */
+    public const array BROWSER_CAUSES = ['timeout', 'playback', 'network'];
+
+    /**
+     * Préparation en arrière-plan : nombre maximal de phrases écrites à l'avance (garde-fou).
+     */
+    public const int PREPARE_MAX = 30;
 
     /**
      * Longueur maximale d'un texte à lire (la réponse la plus longue d'Ama fait 1 500 caractères).
@@ -110,6 +154,8 @@ class NaturalVoice
 
     public const string CALL_GOODBYE = 'Je ne vous entends plus. Merci pour votre appel, et à bientôt sur Lomé IA School !';
 
+    public const string CALL_ERROR = 'Ama ne peut pas répondre pour le moment. Notre équipe vous répond sur WhatsApp.';
+
     /**
      * Noms propres du site qu'Ama peut dire sans risque (jamais pris pour le prénom d'un visiteur).
      */
@@ -122,7 +168,7 @@ class NaturalVoice
     private const string MINUTE_LIMITER = 'ama-voice:site-minute';
 
     /**
-     * Dernière raison d'un passage à la voix du téléphone (pour l'admin et les tests).
+     * Dernière cause d'un passage à la voix du téléphone (code de CAUSES, pour l'admin et les tests).
      */
     public ?string $lastReason = null;
 
@@ -165,6 +211,14 @@ class NaturalVoice
         return is_numeric($value) ? max($min, min($max, (int) $value)) : $default;
     }
 
+    public static function timeoutMs(): int
+    {
+        [$default, $min, $max] = self::TIMEOUT;
+        $value = config('site.voice_assistant.natural_voice.timeout');
+
+        return 1000 * (is_numeric($value) ? max($min, min($max, (int) $value)) : $default);
+    }
+
     public static function splitLength(): int
     {
         [$default, $min, $max] = self::SPLIT_LENGTH;
@@ -191,11 +245,11 @@ class NaturalVoice
         $text = $this->prepare($text, $user);
 
         if ($text === null) {
-            return $this->fallback('texte vide ou trop long');
+            return $this->fallback('empty');
         }
 
         if (! $this->isPrivate($text, $visitorHash)) {
-            return $this->fallback('donnée personnelle');
+            return $this->fallback('private', chars: mb_strlen($text));
         }
 
         return $this->produce($text, self::voice(), self::model(), $this->isPrewritten($text));
@@ -210,23 +264,29 @@ class NaturalVoice
         $this->lastReason = null;
 
         if (! isset(self::VOICES[$voice]) || ! isset(self::MODELS[$model])) {
-            $this->lastReason = 'voix ou modèle inconnu';
+            $this->lastReason = 'other';
 
             return null;
         }
 
-        return $this->produce(self::SAMPLE, $voice, $model, true, count: false);
+        return $this->produce(self::SAMPLE, $voice, $model, true, count: false, source: AssistantVoiceEvent::SOURCE_PREVIEW);
     }
 
     /**
-     * Le navigateur a lui-même repris la voix du téléphone (audio pas prêt à temps, lecture impossible).
+     * Le navigateur a lui-même repris la voix du téléphone : cause (délai dépassé, lecture refusée, réseau) et temps
+     * d'attente du téléphone. Aucun texte.
      */
-    public static function recordBrowserFallback(): void
+    public static function recordBrowserFallback(?string $cause = null, ?int $waitedMs = null): void
     {
         AssistantVoiceUsage::bump('fallbacks');
+        AssistantVoiceEvent::record(
+            AssistantVoiceEvent::FALLBACK,
+            in_array($cause, self::BROWSER_CAUSES, true) ? $cause : 'other',
+            $waitedMs === null ? null : min($waitedMs, 600000),
+        );
     }
 
-    private function produce(string $text, string $voice, string $model, bool $cacheable, bool $count = true): ?SpeechAudio
+    private function produce(string $text, string $voice, string $model, bool $cacheable, bool $count = true, string $source = AssistantVoiceEvent::SOURCE_SITE): ?SpeechAudio
     {
         $path = $cacheable ? $this->cachePath($text, $voice, $model) : null;
 
@@ -242,19 +302,22 @@ class NaturalVoice
             }
         }
 
+        $chars = mb_strlen($text);
+
         if (! $this->synthesizer->isConfigured()) {
-            return $this->fallback('clé absente', $count);
+            return $this->fallback('no_key', $count, $chars);
         }
 
         if (self::dailyBlocked()) {
-            return $this->fallback('quota du jour épuisé', $count);
+            return $this->fallback('daily_quota', $count, $chars);
         }
 
         if (! RateLimiter::attempt(self::MINUTE_LIMITER, self::minuteLimit(), fn () => true, 60)) {
-            return $this->fallback('limite par minute du site', $count);
+            return $this->fallback('site_minute_limit', $count, $chars);
         }
 
         AssistantVoiceUsage::bump('google_requests');
+        $started = hrtime(true);
 
         try {
             $audio = $this->synthesizer->synthesize($text, $voice, $model);
@@ -263,11 +326,25 @@ class NaturalVoice
                 Cache::put(self::DAILY_BLOCK_CACHE, true, AssistantUsage::nextReset());
             }
 
+            $cause = match (true) {
+                $failure->daily => 'daily_quota',
+                $failure->quota => 'google_quota',
+                $failure->timeout => 'google_timeout',
+                default => 'google_error',
+            };
             AssistantVoiceUsage::bump('refusals', ...($count ? ['fallbacks'] : []));
-            $this->lastReason = $failure->daily ? 'quota du jour épuisé' : ($failure->quota ? 'quota atteint' : 'refus de Google');
+            AssistantVoiceEvent::record(AssistantVoiceEvent::GOOGLE, $cause, self::elapsedMs($started), $chars, $source);
+
+            if ($count) {
+                AssistantVoiceEvent::record(AssistantVoiceEvent::FALLBACK, $cause, chars: $chars);
+            }
+
+            $this->lastReason = $cause;
 
             return null;
         }
+
+        AssistantVoiceEvent::record(AssistantVoiceEvent::GOOGLE, null, self::elapsedMs($started), $chars, $source);
 
         if ($path !== null) {
             $this->toCache($path, $audio);
@@ -280,15 +357,21 @@ class NaturalVoice
         return $audio;
     }
 
-    private function fallback(string $reason, bool $count = true): null
+    private function fallback(string $cause, bool $count = true, ?int $chars = null): null
     {
-        $this->lastReason = $reason;
+        $this->lastReason = $cause;
 
         if ($count) {
             AssistantVoiceUsage::bump('fallbacks');
+            AssistantVoiceEvent::record(AssistantVoiceEvent::FALLBACK, $cause, chars: $chars);
         }
 
         return null;
+    }
+
+    private static function elapsedMs(int|float $started): int
+    {
+        return (int) round((hrtime(true) - $started) / 1_000_000);
     }
 
     /**
@@ -428,6 +511,7 @@ class NaturalVoice
             VoiceAssistant::DEFAULT_GREETING,
             self::CALL_GREETING,
             self::CALL_GOODBYE,
+            self::CALL_ERROR,
             AmaPrompt::MISHEARD_REPLY,
             FounderHandoff::confirmation(),
             ...array_map(fn (array $difficulty): string => $difficulty[1], VoiceAssistant::DIFFICULTIES),
@@ -481,9 +565,155 @@ class NaturalVoice
     private function toCache(string $path, SpeechAudio $audio): void
     {
         try {
-            Storage::disk('ama_voice')->put($path.'.'.$audio->extension(), $audio->bytes);
+            $written = Storage::disk('ama_voice')->put($path.'.'.$audio->extension(), $audio->bytes);
         } catch (Throwable) {
-            // Mémoire impossible à écrire : l'audio sera refait la prochaine fois.
+            $written = false;
         }
+
+        if ($written === false) {
+            // Mémoire impossible à écrire : l'audio sera refait la prochaine fois. Signalé dans l'admin.
+            AssistantVoiceEvent::record(AssistantVoiceEvent::MEMORY, 'write_failed');
+        }
+    }
+
+    /**
+     * Phrase déjà gardée en mémoire pour cette voix et ce modèle ?
+     */
+    public function isCached(string $text, ?string $voice = null, ?string $model = null): bool
+    {
+        $path = $this->cachePath(self::normalizeSpaces($text), $voice ?? self::voice(), $model ?? self::model());
+
+        try {
+            $disk = Storage::disk('ama_voice');
+
+            foreach (['wav', 'mp3', 'ogg'] as $extension) {
+                if ($disk->exists($path.'.'.$extension)) {
+                    return true;
+                }
+            }
+        } catch (Throwable) {
+            // Mémoire illisible : considérée comme vide.
+        }
+
+        return false;
+    }
+
+    /**
+     * Textes exacts que le navigateur demandera pour les phrases écrites à l'avance lues à voix haute : accueil du mode
+     * appel (« Bonjour » et « Bonsoir » ; le prénom n'est jamais envoyé, il est retiré avant), au revoir, demande de
+     * répéter, messages de limite et d'indisponibilité, « C'est transmis ! ». Découpés comme le navigateur (pieces).
+     *
+     * @return list<string>
+     */
+    public static function preparedTexts(): array
+    {
+        $greetings = [];
+
+        foreach (['Bonjour', 'Bonsoir'] as $word) {
+            $greetings[] = (string) preg_replace('/^bonjour\b\s*,?\s*/iu', $word.', ', self::CALL_GREETING);
+        }
+
+        $phrases = [
+            ...$greetings,
+            self::CALL_GOODBYE,
+            AmaPrompt::MISHEARD_REPLY,
+            self::CALL_ERROR,
+            ...array_map(fn (AssistantIncidentType $type): string => $type->visitorMessage(), AssistantIncidentType::cases()),
+            FounderHandoff::confirmation(),
+        ];
+
+        $texts = [];
+
+        foreach (array_unique($phrases) as $phrase) {
+            foreach (self::pieces($phrase) as $piece) {
+                $texts[self::key($piece)] = $piece;
+            }
+        }
+
+        return array_slice(array_values($texts), 0, self::PREPARE_MAX);
+    }
+
+    /**
+     * Phrases d'un texte, découpées comme createSentenceSplitter de resources/js/ama.js (fin de phrase suivie d'un espace).
+     *
+     * @return list<string>
+     */
+    public static function sentences(string $text): array
+    {
+        $parts = preg_split('/(?<=[.!?…:;])[»")\]]*\s+|\n+/u', trim($text)) ?: [];
+        $sentences = [];
+
+        foreach ($parts as $part) {
+            $part = trim($part);
+
+            if ($part !== '' && preg_replace('/[\s.!?…:;•-]/u', '', $part) !== '') {
+                $sentences[] = $part;
+            }
+        }
+
+        return $sentences;
+    }
+
+    /**
+     * Morceaux demandés par le navigateur pour un texte lu en mode appel (resources/js/ama-voice.js) : le texte entier
+     * s'il ne dépasse pas « split_length » caractères, sinon la première phrase, puis toute la suite d'un bloc.
+     *
+     * @return list<string>
+     */
+    public static function pieces(string $text): array
+    {
+        $sentences = self::sentences($text);
+
+        if ($sentences === []) {
+            return [];
+        }
+
+        $whole = implode(' ', $sentences);
+
+        if (count($sentences) === 1 || mb_strlen($whole) <= self::splitLength()) {
+            return [$whole];
+        }
+
+        return [$sentences[0], implode(' ', array_slice($sentences, 1))];
+    }
+
+    /**
+     * Phrases écrites à l'avance pas encore gardées en mémoire pour la voix et le modèle choisis.
+     *
+     * @return list<string>
+     */
+    public function missingPreparedTexts(): array
+    {
+        return array_values(array_filter(self::preparedTexts(), fn (string $text): bool => ! $this->isCached($text)));
+    }
+
+    /**
+     * Préparation en arrière-plan : fabrique UNE phrase écrite à l'avance qui manque encore, seulement s'il reste au
+     * moins deux demandes libres dans la minute (la dernière reste pour un visiteur). Renvoie le nombre de phrases qui
+     * manquent encore, ou null s'il faut s'arrêter (voix éteinte, quota du jour épuisé, refus de Google).
+     */
+    public function prepareNext(): ?int
+    {
+        if (! $this->enabled() || self::dailyBlocked()) {
+            return null;
+        }
+
+        $missing = $this->missingPreparedTexts();
+
+        if ($missing === []) {
+            return 0;
+        }
+
+        if (RateLimiter::remaining(self::MINUTE_LIMITER, self::minuteLimit()) < 2) {
+            return count($missing);
+        }
+
+        $audio = $this->produce($missing[0], self::voice(), self::model(), true, count: false, source: AssistantVoiceEvent::SOURCE_PREPARE);
+
+        if ($audio === null && $this->lastReason !== 'site_minute_limit' && $this->lastReason !== 'google_quota' && $this->lastReason !== 'google_timeout') {
+            return null;
+        }
+
+        return count($missing) - ($audio !== null ? 1 : 0);
     }
 }

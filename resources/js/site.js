@@ -817,17 +817,29 @@ function naturalVoiceFor(config) {
                 body: JSON.stringify({ text }),
                 signal,
             });
-            if (!response.ok || !(response.headers.get('Content-Type') ?? '').startsWith('audio/')) {
+            const type = response.headers.get('Content-Type') ?? '';
+            if (response.ok && !type.startsWith('audio/')) {
+                // Refus du serveur ({"fallback": true}) : déjà compté par le serveur avec sa cause.
                 return null;
+            }
+            if (!response.ok) {
+                // Serveur du site en erreur (session expirée, limite, panne) : signalé comme « network ».
+                throw new Error('voice-unavailable');
             }
             const url = URL.createObjectURL(await response.blob());
 
             return { url, release: () => URL.revokeObjectURL(url) };
         },
-        // Voix du téléphone reprise par le navigateur (audio trop lent, lecture refusée) : comptée pour l'admin.
-        onFallback: () => {
+        // Voix du téléphone reprise par le navigateur : cause exacte (délai, lecture refusée, réseau) et attente, sans texte.
+        onFallback: (cause, waited) => {
             try {
-                fetch(settings.fallbackEndpoint, { method: 'POST', credentials: 'same-origin', headers, body: '{}', keepalive: true }).catch(() => {});
+                fetch(settings.fallbackEndpoint, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers,
+                    body: JSON.stringify({ cause, waited }),
+                    keepalive: true,
+                }).catch(() => {});
             } catch {
                 // Rien à compter.
             }

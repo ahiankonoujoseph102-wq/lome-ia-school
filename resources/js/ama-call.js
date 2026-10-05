@@ -46,6 +46,9 @@ export const CALL_GREETING = 'Bonjour, je suis Ama, l\'assistante de Lomé IA Sc
 
 export const CALL_GOODBYE = 'Je ne vous entends plus. Merci pour votre appel, et à bientôt sur Lomé IA School !';
 
+// Attente (ms) entre deux phrases avant d'afficher « Ama réfléchit… » (évite un clignotement entre deux phrases).
+export const WAITING_SHOWN_MS = 400;
+
 export const CALL_ERROR = 'Ama ne peut pas répondre pour le moment. Notre équipe vous répond sur WhatsApp.';
 
 // Même phrase que App\Assistant\AmaPrompt::MISHEARD_REPLY.
@@ -217,10 +220,58 @@ export function createVoiceCall({
     let bargeResults = 0;
     let measure = null;
 
-    const setState = (next) => {
-        if (state !== next) {
-            state = next;
+    // État affiché (onState) : tant que la voix d'une phrase n'a pas réellement commencé (voix naturelle encore en
+    // préparation chez Google), Ama « réfléchit » à l'écran, même si l'appel est déjà dans l'état « parle ».
+    let shown = 'idle';
+    let audible = false;
+    let shownTimer = null;
+
+    const show = (next) => {
+        if (shown !== next) {
+            shown = next;
             onState(next);
+        }
+    };
+
+    const setState = (next) => {
+        state = next;
+
+        if (next !== 'speaking') {
+            audible = false;
+            if (shownTimer !== null) {
+                timers.clearTimeout(shownTimer);
+                shownTimer = null;
+            }
+            show(next);
+        } else if (audible) {
+            show('speaking');
+        } else if (shown !== 'speaking') {
+            show('thinking');
+        }
+    };
+
+    // La voix d'une phrase commence vraiment : Ama « parle » à l'écran.
+    const voiceStarted = () => {
+        audible = true;
+        if (shownTimer !== null) {
+            timers.clearTimeout(shownTimer);
+            shownTimer = null;
+        }
+        if (state === 'speaking') {
+            show('speaking');
+        }
+    };
+
+    // Phrase suivante pas encore audible : si l'attente dure (voix naturelle en préparation), Ama « réfléchit ».
+    const voiceWaiting = () => {
+        audible = false;
+        if (shown === 'speaking' && shownTimer === null) {
+            shownTimer = timers.setTimeout(() => {
+                shownTimer = null;
+                if (!audible && state === 'speaking') {
+                    show('thinking');
+                }
+            }, WAITING_SHOWN_MS);
         }
     };
 
@@ -440,6 +491,7 @@ export function createVoiceCall({
         }
 
         speaking = true;
+        voiceWaiting();
         setState('speaking');
         amaSpoken = `${amaSpoken} ${text}`;
         // Voix naturelle : les phrases suivantes peuvent être dites d'un bloc avec celle-ci (filtre de l'écho).
@@ -469,6 +521,7 @@ export function createVoiceCall({
         utterance.onboundary = () => myTurn === turn && onSpeech('boundary');
         utterance.onstart = () => {
             if (myTurn === turn) {
+                voiceStarted();
                 onSpeech('start');
             }
             if (myTurn === turn && measure && measure.voice === null) {

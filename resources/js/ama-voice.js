@@ -10,16 +10,20 @@
  * - Une réponse courte (jusqu'à « splitLength » caractères, réglable dans l'admin) part en UNE seule demande : la limite
  *   de Google est de quelques demandes par minute. Plus longue : la première phrase seule (la voix commence vite), puis
  *   la suite d'un bloc dès que la première commence. En mode appel, la fin de la réponse est attendue au plus 1,5 s.
- * - Secours automatique : refus du serveur (quota, limite, erreur), audio pas prêt après « timeoutMs » (4 s) ou lecture
- *   impossible → la phrase est lue aussitôt par la voix du téléphone, et le reste de la réponse aussi (une seule voix
- *   par réponse). Jamais de silence ni de message d'erreur.
+ * - Secours automatique : refus du serveur (quota, limite, erreur), audio pas prêt après « timeoutMs » (réglé dans
+ *   l'admin, 10 s par défaut), serveur injoignable ou lecture impossible → la phrase est lue aussitôt par la voix du
+ *   téléphone, et le reste de la réponse aussi (une seule voix par réponse). Jamais de silence ni de message d'erreur.
+ *   Un audio arrivé après le délai n'est jamais joué (ni par-dessus la voix du téléphone, ni après elle).
+ * - Chaque passage décidé par le navigateur est signalé avec sa cause exacte (onFallback : 'timeout', 'playback',
+ *   'network') et l'attente en millisecondes ; les refus du serveur sont déjà comptés par le serveur.
  *
  * Aucune dépendance au navigateur : lecture audio, envoi au serveur et minuteries sont fournis (tests avec Node.js).
  */
 
 import { createSentenceSplitter } from './ama.js';
 
-export const NATURAL_TIMEOUT_MS = 4000;
+// Délai par défaut avant la voix du téléphone (même valeur que App\Assistant\NaturalVoice::TIMEOUT, réglable dans l'admin).
+export const NATURAL_TIMEOUT_MS = 10000;
 
 // Réponse courte (jusqu'à ce nombre de caractères) : une seule demande. Plus longue : la première phrase, puis la suite.
 // Réglable dans l'admin (App\Assistant\NaturalVoice::SPLIT_LENGTH).
@@ -124,7 +128,14 @@ export function createElementPlayer(element, { setTimer = (callback, delay) => s
         watchdog = setTimer(() => {
             watchdog = null;
             if (mine()) {
-                take()?.onerror?.();
+                // Le son est arrêté avant que la voix du téléphone prenne le relais : jamais deux voix à la fois.
+                const current = take();
+                try {
+                    element.pause();
+                } catch {
+                    // Déjà arrêté.
+                }
+                current?.onerror?.();
             }
         }, seconds * 1000 + 3000);
     });
@@ -187,7 +198,9 @@ export function createElementPlayer(element, { setTimer = (callback, delay) => s
  * @param {number} [options.timeoutMs]  délai avant la voix du téléphone
  * @param {number} [options.splitLength]  au-delà de ce nombre de caractères, une réponse est demandée en deux fois
  * @param {string[]} [options.privateWords]  mots jamais envoyés au serveur (prénom du visiteur)
- * @param {Function} [options.onFallback]  le navigateur reprend de lui-même la voix du téléphone : 'timeout' ou 'playback'
+ * @param {Function} [options.onFallback]  le navigateur reprend de lui-même la voix du téléphone : (cause, attente en ms),
+ *   cause 'timeout' (audio pas prêt avant le délai), 'playback' (lecture refusée ou coupée) ou 'network' (serveur
+ *   injoignable : fetchAudio a échoué au lieu de répondre null)
  */
 export function createNaturalSynth({
     fallback,
@@ -245,7 +258,13 @@ export function createNaturalSynth({
             }
             sent
                 .then((result) => settle(result?.url ? 'ready' : 'failed', result?.url ? result : null))
-                .catch(() => settle('failed', null));
+                .catch(() => {
+                    // Serveur injoignable ou réponse inattendue (pas un refus du serveur, qui répond null).
+                    if (entry.state === 'loading') {
+                        entry.network = true;
+                    }
+                    settle('failed', null);
+                });
         }
         requests.push(entry);
 
@@ -317,6 +336,7 @@ export function createNaturalSynth({
 
     function speak(utterance) {
         const myGeneration = generation;
+        const speakAt = now();
         const text = String(utterance?.text ?? '');
         const fresh = !busy && covered.length === 0 && (lastEndAt === null || now() - lastEndAt > NEW_ANSWER_GAP_MS);
 
@@ -391,7 +411,12 @@ export function createNaturalSynth({
                 if (myGeneration !== generation) {
                     return;
                 }
-                if (entry.state !== 'ready') {
+                if (entry.state !== 'ready' || answerFallback) {
+                    // Pas d'audio (ou la voix du téléphone a déjà pris le relais dans cette réponse) : jamais les deux.
+                    if (entry.network && !entry.reported) {
+                        entry.reported = true;
+                        onFallback('network', Math.round(now() - speakAt));
+                    }
                     phone(part, then);
 
                     return;
@@ -414,7 +439,7 @@ export function createNaturalSynth({
                         if (myGeneration !== generation) {
                             return;
                         }
-                        onFallback('playback');
+                        onFallback('playback', Math.round(now() - speakAt));
                         phone(part, then);
                     },
                 });
@@ -428,7 +453,7 @@ export function createNaturalSynth({
 
             const timer = timers.setTimeout(() => {
                 if (entry.state === 'loading' && myGeneration === generation) {
-                    onFallback('timeout');
+                    onFallback('timeout', Math.round(now() - speakAt));
                     abandon(entry);
                 }
             }, budget);

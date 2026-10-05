@@ -1,9 +1,12 @@
 <?php
 
+use App\Assistant\NaturalVoice;
+use App\Jobs\PrepareAmaVoicePhrases;
 use App\Models\AssistantConversation;
 use App\Models\AssistantHandoff;
 use App\Models\AssistantIncident;
 use App\Models\AssistantUsage;
+use App\Models\AssistantVoiceEvent;
 use App\Models\AssistantVoiceUsage;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -27,7 +30,9 @@ Artisan::command('inspire', function () {
 | - Affiliation : commissions devenues disponibles après le délai prévu (toutes les heures).
 | - Consultations gratuites : rappels (veille et 1 h avant) et suppression des anciens rendez-vous (toutes les 5 min).
 | - Illustration d'« Agents IA » : posée dès le 8 octobre 2026 (fin du direct), si la formation n'a pas d'image (chaque nuit).
-| - Assistante Ama : conversations, demandes transmises au fondateur, incidents et compteurs effacés après 90 jours (chaque nuit).
+| - Assistante Ama : conversations, demandes transmises au fondateur, incidents, compteurs et mesures de la voix effacés
+|   après 90 jours (chaque nuit).
+| - Voix naturelle d'Ama : phrases écrites à l'avance préparées en mémoire si l'une manque (chaque heure, sans effet sinon).
 |
 */
 
@@ -62,7 +67,11 @@ Schedule::command('app:process-consultations')
     ->everyFiveMinutes()
     ->withoutOverlapping();
 
-Schedule::command('model:prune', ['--model' => [AssistantConversation::class, AssistantHandoff::class, AssistantIncident::class, AssistantUsage::class, AssistantVoiceUsage::class]])
+Schedule::command('model:prune', ['--model' => [AssistantConversation::class, AssistantHandoff::class, AssistantIncident::class, AssistantUsage::class, AssistantVoiceUsage::class, AssistantVoiceEvent::class]])
     ->dailyAt('03:30')
     ->timezone('Africa/Lome')
     ->withoutOverlapping();
+
+Schedule::job(new PrepareAmaVoicePhrases)
+    ->hourly()
+    ->when(fn (): bool => app(NaturalVoice::class)->enabled());
