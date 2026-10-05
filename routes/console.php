@@ -7,6 +7,7 @@ use App\Models\AssistantHandoff;
 use App\Models\AssistantIncident;
 use App\Models\AssistantUsage;
 use App\Models\AssistantVoiceEvent;
+use App\Models\AssistantVoiceQuota;
 use App\Models\AssistantVoiceUsage;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -67,7 +68,7 @@ Schedule::command('app:process-consultations')
     ->everyFiveMinutes()
     ->withoutOverlapping();
 
-Schedule::command('model:prune', ['--model' => [AssistantConversation::class, AssistantHandoff::class, AssistantIncident::class, AssistantUsage::class, AssistantVoiceUsage::class, AssistantVoiceEvent::class]])
+Schedule::command('model:prune', ['--model' => [AssistantConversation::class, AssistantHandoff::class, AssistantIncident::class, AssistantUsage::class, AssistantVoiceUsage::class, AssistantVoiceEvent::class, AssistantVoiceQuota::class]])
     ->dailyAt('03:30')
     ->timezone('Africa/Lome')
     ->withoutOverlapping();
