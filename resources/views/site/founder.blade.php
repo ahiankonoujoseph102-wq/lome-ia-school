@@ -6,7 +6,6 @@
     $photo = Founder::photoUrl();
     $intro = Founder::lines('intro');
     $journey = Founder::lines('journey');
-    $books = Founder::lines('books');
     $services = Founder::services();
     $links = Founder::links();
     $whatsappUrl = Founder::whatsappUrl();
@@ -73,43 +72,23 @@
             <div class="section">
                 <div class="mx-auto max-w-3xl" data-reveal>
                     <span class="eyebrow">Parcours</span>
-                    <h2 id="parcours" class="mt-4 text-2xl font-bold text-white sm:text-3xl">Parti de zéro</h2>
-                    <ol class="mt-8 space-y-6 border-l border-electric-400/30 pl-6">
-                        @foreach ($journey as $step)
-                            <li class="relative">
-                                <span class="absolute top-1.5 -left-[31px] size-3 rounded-full bg-gold-500 shadow-[0_0_0_4px_var(--color-night-950)]" aria-hidden="true"></span>
-                                <p class="text-base leading-relaxed text-slate-200 sm:text-lg">{{ Founder::display($step) }}</p>
+                    <h2 id="parcours" class="mt-4 text-2xl font-bold text-white sm:text-3xl">Son parcours</h2>
+                    <ul class="mt-8 grid gap-3 sm:grid-cols-2">
+                        @foreach ($journey as $fact)
+                            <li class="card flex items-start gap-3 p-4">
+                                <flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-400" />
+                                <span class="text-base leading-relaxed text-slate-200">{{ Founder::display($fact) }}</span>
                             </li>
                         @endforeach
-                    </ol>
+                    </ul>
                 </div>
-            </div>
-        </section>
-    @endif
-
-    {{-- Livres --}}
-    @if ($books)
-        <section class="section" aria-labelledby="livres" data-test="founder-books">
-            <div class="mx-auto max-w-5xl">
-                <div class="max-w-3xl" data-reveal>
-                    <span class="eyebrow">Livres</span>
-                    <h2 id="livres" class="mt-4 text-2xl font-bold text-white sm:text-3xl">Ses livres</h2>
-                </div>
-                <ul class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    @foreach ($books as $book)
-                        <li class="card flex items-center gap-4 p-4" data-reveal style="--reveal-delay: {{ $loop->index * 60 }}ms">
-                            <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-electric-200 ring-1 ring-electric-400/30"><flux:icon.book-open class="size-5" /></span>
-                            <span class="font-semibold text-white">{{ $book }}</span>
-                        </li>
-                    @endforeach
-                </ul>
             </div>
         </section>
     @endif
 
     {{-- Services --}}
     @if ($services)
-        <section class="border-y border-veil/10 bg-veil/[0.02]" aria-labelledby="services" data-test="founder-services">
+        <section aria-labelledby="services" data-test="founder-services">
             <div class="section">
                 <div class="mx-auto max-w-5xl">
                     <div class="max-w-3xl" data-reveal>

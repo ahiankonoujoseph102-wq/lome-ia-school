@@ -245,7 +245,7 @@ class Founder
             'telephone' => self::contact('whatsapp') ?: null,
             'homeLocation' => ['@type' => 'Place', 'name' => 'Lomé, Togo', 'address' => ['@type' => 'PostalAddress', 'addressLocality' => 'Lomé', 'addressCountry' => 'TG']],
             'workLocation' => ['@type' => 'Place', 'name' => self::contact('office') ?: 'Lomé, Togo', 'address' => ['@type' => 'PostalAddress', 'streetAddress' => self::contact('office') ?: null, 'addressLocality' => 'Lomé', 'addressCountry' => 'TG']],
-            'knowsAbout' => ['Intelligence artificielle', 'Création de sites web', 'Écriture de livres', 'Importation depuis la Chine'],
+            'knowsAbout' => ['Intelligence artificielle', 'Création de sites web', 'Création d\'applications', 'Écriture de livres'],
             'worksFor' => ['@id' => self::organizationId()],
             'sameAs' => array_column(self::links(), 'url') ?: null,
         ], fn ($value): bool => $value !== null);

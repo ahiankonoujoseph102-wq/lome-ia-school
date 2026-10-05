@@ -55,12 +55,11 @@
         <section class="card space-y-4 p-5 sm:p-6">
             <h2 class="font-semibold text-white">Présentation et parcours</h2>
             <x-admin.list-editor name="intro" label="Présentation (un paragraphe par ligne)" :items="$founder['intro'] ?? []" add-label="Ajouter un paragraphe" multiline />
-            <x-admin.list-editor name="journey" label="Parcours (une étape par ligne)" :items="$founder['journey'] ?? []" add-label="Ajouter une étape" multiline />
+            <x-admin.list-editor name="journey" label="Son parcours (un fait par ligne)" :items="$founder['journey'] ?? []" add-label="Ajouter un fait" multiline />
         </section>
 
         <section class="card space-y-4 p-5 sm:p-6">
-            <h2 class="font-semibold text-white">Livres et services</h2>
-            <x-admin.list-editor name="books" label="Livres (un titre par ligne)" :items="$founder['books'] ?? []" add-label="Ajouter un livre" />
+            <h2 class="font-semibold text-white">Services</h2>
             <x-admin.questions-editor name="services" label="Services" :items="$services" question-label="Service" answer-label="Description" add-label="Ajouter un service" />
         </section>
 

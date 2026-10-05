@@ -51,7 +51,6 @@ class FounderPageTest extends TestCase
             'tagline' => $founder['tagline'],
             'intro' => $founder['intro'],
             'journey' => $founder['journey'],
-            'books' => $founder['books'],
             'services' => array_map(fn (array $service): array => ['question' => $service['title'], 'answer' => $service['text']], $founder['services']),
             'photo_alt' => $founder['photo_alt'],
             'links' => ['youtube' => '', 'tiktok' => '', 'facebook' => ''],
@@ -78,34 +77,41 @@ class FounderPageTest extends TestCase
 
         $response->assertSee('<title>'.e(self::TITLE).'</title>', false)
             ->assertSee('<h1', false)
-            ->assertSeeInOrder(['data-test="founder-hero"', 'data-test="founder-intro"', 'data-test="founder-journey"', 'data-test="founder-books"', 'data-test="founder-services"', 'data-test="founder-contact"'], false)
+            ->assertSeeInOrder(['data-test="founder-hero"', 'data-test="founder-intro"', 'data-test="founder-journey"', 'data-test="founder-services"', 'data-test="founder-contact"'], false)
             ->assertSee('Coach Joseph')
             ->assertSee('Agoè-Nyivé')
             ->assertSee('formateur depuis 2023')
             ->assertSee("plus de 1\u{00A0}000 personnes")
             ->assertSee('Joseph Academy')
             ->assertSee('écriture de livres pour les autres')
-            ->assertSee('importation depuis la Chine')
             ->assertSee('sites web et des applications pour des entreprises')
-            ->assertSee('redouble deux fois le CP')
-            ->assertSee('du CE1 jusqu\'au bac, qu\'il obtient avec mention')
-            ->assertSee('enseigne les SVT')
-            ->assertSee('aide-maçon pour acheter son premier téléphone')
+            ->assertSee('>Son parcours</h2>', false)
+            ->assertDontSee('Parti de zéro')
+            ->assertDontSee('data-test="founder-books"', false)
             ->assertSee('+228 72 24 02 31')
             ->assertSee('academyjoseph71@gmail.com')
             ->assertSee('Adidogomé, Lycée moderne 2, Lomé')
             ->assertSee('https://wa.me/22872240231?text=', false);
 
-        foreach (['Prompt Power', 'Créer ton propre emploi', '70 idées de business rentable en 2026', 'Gagner de l&#039;argent sur WhatsApp', 'Licenciez votre patron en 10 semaines', 'Le fils du pays béni'] as $book) {
-            $response->assertSee($book, false);
-        }
+        // Parcours strictement professionnel : uniquement les cinq faits donnés par Joseph, dans cet ordre.
+        $response->assertSeeInOrder([
+            'Formateur en intelligence artificielle depuis 2023.',
+            "Plus de 1\u{00A0}000 personnes formées.",
+            'Auteur de 6 livres.',
+            'Fondateur de Lomé IA School et de Joseph Academy.',
+            'Créateur de sites web et d&#039;applications pour des entreprises.',
+        ], false);
+
+        // Services : formations en IA, sites web et applications, écriture de livres pour les autres (Joseph Academy).
+        $response->assertSeeInOrder(['Formations en intelligence artificielle', 'Création de sites web et d&#039;applications', 'Écriture de livres pour les autres'], false);
 
         // Aucun lien inventé : sans lien saisi, la rubrique « Le suivre » est absente.
         $response->assertDontSee('data-test="founder-links"', false);
 
         // Règles : rien de certifié, aucun diplôme, aucune école agréée, aucun témoignage ; l'école n'est pas présentée comme créée en 2023.
         $text = mb_strtolower(strip_tags($html));
-        foreach (['certifi', 'diplôme', 'agréé', 'témoignage', 'créée en 2023', 'fondée en 2023', 'ancien nom'] as $forbidden) {
+        // Ni enfance, ni redoublement, ni aide-maçon, ni premier téléphone ; aucune liste de livres, aucune boutique.
+        foreach (['certifi', 'diplôme', 'agréé', 'témoignage', 'créée en 2023', 'fondée en 2023', 'ancien nom', 'redoubl', 'cp.', 'ce1', 'aide-maçon', 'premier téléphone', 'parti de zéro', 'svt', 'importation', 'ses livres', 'prompt power', 'créer ton propre emploi', '70 idées', 'gagner de l\'argent', 'licenciez votre patron', 'pays béni', 'acheter le livre', 'boutique'] as $forbidden) {
             $this->assertStringNotContainsString($forbidden, $text, $forbidden);
         }
     }
@@ -220,7 +226,6 @@ class FounderPageTest extends TestCase
             'title' => 'Joseph Ahiankonou, formateur en IA',
             'intro' => ['Premier paragraphe modifié.'],
             'journey' => ['Étape modifiée.'],
-            'books' => ['Prompt Power'],
             'services' => [['question' => 'Formations', 'answer' => 'Texte du service.'], ['question' => '', 'answer' => 'ignoré']],
         ]))->assertSessionHasNoErrors();
         auth()->logout();
@@ -230,7 +235,7 @@ class FounderPageTest extends TestCase
             ->assertSee('Premier paragraphe modifié.')
             ->assertSee('Étape modifiée.')
             ->assertSee('Texte du service.')
-            ->assertDontSee('Le fils du pays béni')
+            ->assertDontSee('Auteur de 6 livres.')
             ->assertDontSee('ignoré');
     }
 

@@ -264,7 +264,8 @@ return [
     |----------------------------------------------------------------------
     | Page personnelle de Joseph Ahiankonou (/joseph-ahiankonou)
     |----------------------------------------------------------------------
-    | Faits fournis par Joseph (octobre 2026) : ne rien ajouter qui ne vienne pas de lui (ni témoignage, ni
+    | Page strictement professionnelle, centrée sur l'IA (parcours professionnel seulement, aucune liste de
+    | livres). Faits fournis par Joseph (octobre 2026) : ne rien ajouter qui ne vienne pas de lui (ni témoignage, ni
     | client, ni récompense, ni chiffre). Tout se modifie dans l'admin (Réglages du site > Page Joseph
     | Ahiankonou) ; lecture : App\Support\Founder. « title » sert aussi de balise <title>, sans suffixe.
     | Photo vide : la photo du formateur (trainer.photo) est utilisée, sinon ses initiales.
@@ -281,26 +282,19 @@ return [
         'intro' => [
             'Joseph Ahiankonou, que l\'on appelle aussi « Coach Joseph », est originaire d\'Agoè-Nyivé, à Lomé (Togo). Expert et consultant en intelligence artificielle, il forme depuis 2023 et a déjà formé plus de 1 000 personnes.',
             'Il est le fondateur de Lomé IA School, qui propose des formations en intelligence artificielle, et de Joseph Academy, son activité d\'écriture de livres pour les autres.',
-            'Il crée aussi des sites web et des applications pour des entreprises avec l\'intelligence artificielle, et il forme à l\'importation depuis la Chine.',
+            'Il crée aussi des sites web et des applications pour des entreprises avec l\'intelligence artificielle.',
         ],
         'journey' => [
-            'Enfant, il redouble deux fois le CP.',
-            'Puis il devient premier de sa classe, du CE1 jusqu\'au bac, qu\'il obtient avec mention.',
-            'Dès sa première année d\'université, il enseigne les SVT.',
-            'Parti de zéro, il travaille comme aide-maçon pour acheter son premier téléphone.',
-        ],
-        'books' => [
-            'Prompt Power',
-            'Créer ton propre emploi',
-            '70 idées de business rentable en 2026',
-            'Gagner de l\'argent sur WhatsApp',
-            'Licenciez votre patron en 10 semaines',
-            'Le fils du pays béni',
+            'Formateur en intelligence artificielle depuis 2023.',
+            'Plus de 1 000 personnes formées.',
+            'Auteur de 6 livres.',
+            'Fondateur de Lomé IA School et de Joseph Academy.',
+            'Créateur de sites web et d\'applications pour des entreprises.',
         ],
         'services' => [
-            ['title' => 'Formations en intelligence artificielle', 'text' => 'Avec Lomé IA School : des formations pratiques en français, en ligne et à Lomé. Il forme aussi à l\'importation depuis la Chine.'],
+            ['title' => 'Formations en intelligence artificielle', 'text' => 'Avec Lomé IA School : des formations pratiques en intelligence artificielle, en français, en ligne et à Lomé.'],
             ['title' => 'Création de sites web et d\'applications', 'text' => 'Des sites web et des applications pour les entreprises, créés avec l\'intelligence artificielle.'],
-            ['title' => 'Écriture de livres', 'text' => 'Avec Joseph Academy, il écrit des livres pour les autres.'],
+            ['title' => 'Écriture de livres pour les autres', 'text' => 'Avec Joseph Academy, il écrit des livres pour les autres.'],
         ],
         // Photo envoyée depuis l'admin (disque « public », dossier site/founder/), vide au départ.
         'photo' => '',
