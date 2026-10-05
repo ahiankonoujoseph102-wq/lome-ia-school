@@ -58,4 +58,15 @@ return [
         'tts_timeout' => (int) env('GEMINI_TTS_TIMEOUT', 8),
     ],
 
+    // Voix naturelle d'Ama avec Cloudflare Workers AI (modèle MeloTTS, en français), appelé uniquement par le serveur
+    // (App\Assistant\CloudflareSpeech). Numéro de compte et jeton d'API (droits « Workers AI - Read » et « Edit ») :
+    // seulement dans les variables d'environnement, jamais dans le dépôt ni dans le navigateur.
+    'cloudflare' => [
+        'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
+        'api_token' => env('CLOUDFLARE_API_TOKEN'),
+        'endpoint' => env('CLOUDFLARE_AI_ENDPOINT', 'https://api.cloudflare.com/client/v4'),
+        // Secondes d'attente au maximum côté serveur (toujours au moins 2 de plus que le délai du téléphone de l'admin).
+        'tts_timeout' => (int) env('CLOUDFLARE_TTS_TIMEOUT', 8),
+    ],
+
 ];

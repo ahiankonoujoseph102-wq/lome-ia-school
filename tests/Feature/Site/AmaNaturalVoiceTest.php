@@ -330,7 +330,7 @@ class AmaNaturalVoiceTest extends TestCase
             ->assertSee('Écouter')
             ->assertSee('Voix naturelles envoyées au téléphone')
             ->assertSee('Délai avant la voix du téléphone')
-            ->assertSee('Refus de Google')
+            ->assertSee('Refus du fournisseur')
             ->assertSee('Passages à la voix du téléphone')
             ->assertSee('Longueur à partir de laquelle une réponse est lue en deux demandes')
             ->assertDontSee(self::KEY);
@@ -349,8 +349,9 @@ class AmaNaturalVoiceTest extends TestCase
         ])->assertRedirect();
 
         // « Voix du téléphone en secours » absent du formulaire : allumé (valeur par défaut).
-        $this->assertSame(['enabled' => true, 'voice' => 'Aoede', 'model' => 'gemini-3.8-flash-tts', 'minute_limit' => 2, 'split_length' => 450, 'timeout' => 12, 'phone_fallback' => true], ((array) SiteSettings::get('site.voice_assistant'))['natural_voice']);
-        $this->assertStringContainsString('voix naturelle : oui (Aoede, gemini-3.8-flash-tts, 2 par minute, deux demandes au-delà de 450 caractères, voix du téléphone après 12 s)', (string) AdminActivity::query()->latest('id')->value('description'));
+        // Aucun fournisseur choisi auparavant : Google (comme avant Cloudflare) ; limite et plafond de Cloudflare par défaut.
+        $this->assertSame(['enabled' => true, 'provider' => 'gemini', 'voice' => 'Aoede', 'model' => 'gemini-3.8-flash-tts', 'minute_limit' => 2, 'split_length' => 450, 'timeout' => 12, 'phone_fallback' => true, 'cloudflare_minute_limit' => 20, 'daily_minutes' => 400], ((array) SiteSettings::get('site.voice_assistant'))['natural_voice']);
+        $this->assertStringContainsString('voix naturelle : oui (Google, Aoede, gemini-3.8-flash-tts, 2 par minute, deux demandes au-delà de 450 caractères, voix du téléphone après 12 s)', (string) AdminActivity::query()->latest('id')->value('description'));
         // Délai transmis au navigateur ; le serveur attend Google au moins 2 s de plus.
         $this->assertSame(12000, NaturalVoice::timeoutMs());
         $this->assertSame(14, GeminiSpeech::timeoutSeconds());

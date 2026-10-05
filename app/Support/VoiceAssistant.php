@@ -611,7 +611,8 @@ class VoiceAssistant
                 : null,
             // Mode appel : interruption à la voix (expérimental, éteinte par défaut, réglée dans l'admin).
             'voiceInterrupt' => $gemini && self::voiceInterrupt(),
-            // Voix naturelle (modèles « TTS » de Gemini, éteinte par défaut) : adresses du serveur seulement, jamais la clé.
+            // Voix naturelle (Cloudflare MeloTTS ou modèles « TTS » de Gemini, éteinte par défaut) : adresses du serveur
+            // seulement, jamais la clé ni le fournisseur choisi (le navigateur joue l'audio reçu, MP3 ou WAV).
             // Voix du téléphone en secours si l'audio n'est pas prêt après quelques secondes.
             'naturalVoice' => $gemini && app(NaturalVoice::class)->enabled() ? [
                 'endpoint' => route('assistant.voice'),

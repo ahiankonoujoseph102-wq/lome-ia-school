@@ -19,12 +19,21 @@
     $naturalOn = (bool) old('natural_voice', $natural['enabled'] ?? false);
     $naturalVoice = old('natural_voice_name', NaturalVoice::voice());
     $naturalModel = old('natural_voice_model', NaturalVoice::model());
+    // Fournisseur de la voix : celui enregistré (Google si rien n'a jamais été choisi) ; clés lues sur le serveur, jamais affichées.
+    $naturalProvider = old('natural_voice_provider', NaturalVoice::provider());
+    $savedProvider = NaturalVoice::provider();
+    $savedProviderName = NaturalVoice::providerName($savedProvider);
+    $voiceService = app(NaturalVoice::class);
+    $voiceKeys = [NaturalVoice::CLOUDFLARE => $voiceService->isConfigured(NaturalVoice::CLOUDFLARE), NaturalVoice::GEMINI => $voiceService->isConfigured(NaturalVoice::GEMINI)];
+    $cloudflareUsed = NaturalVoice::usedMinutes();
+    $cloudflareCap = NaturalVoice::dailyMinutes();
+    $minutesText = fn (float $minutes): string => str_replace('.', ',', (string) round($minutes, 1));
     $voiceToday = AssistantVoiceUsage::today();
-    $voiceStats = AssistantVoiceEvent::todayStats();
+    $voiceStats = AssistantVoiceEvent::todayStats($savedProvider);
     $voiceSeconds = fn (?int $ms): string => $ms === null ? '—' : str_replace('.', ',', (string) round($ms / 1000, 1)).' s';
     // Phrases écrites à l'avance déjà prêtes en mémoire pour la voix et le modèle enregistrés.
     $preparedTotal = count(NaturalVoice::preparedTexts());
-    $preparedMissing = ($natural['enabled'] ?? false) && $keyPresent ? count(app(NaturalVoice::class)->missingPreparedTexts()) : null;
+    $preparedMissing = ($natural['enabled'] ?? false) && $voiceKeys[$savedProvider] ? count($voiceService->missingPreparedTexts()) : null;
     $providers = [
         VoiceAssistant::GEMINI => ['Ama (Gemini)', 'Notre propre assistante : discussion écrite, micro et lecture à voix haute du navigateur. Réponses de l\'IA Gemini de Google (offre gratuite).'],
         VoiceAssistant::ELEVENLABS => ['ElevenLabs', 'L\'ancien agent vocal créé sur ElevenLabs (gardé, désactivé tant qu\'il n\'est pas choisi ici).'],
@@ -138,6 +147,8 @@
 
             <section class="card space-y-5 p-5 sm:p-6" data-test="natural-voice"
                 x-data="{
+                    provider: @js($naturalProvider),
+                    keys: @js($voiceKeys),
                     voice: @js($naturalVoice),
                     model: @js($naturalModel),
                     loading: false,
@@ -152,7 +163,7 @@
                             const response = await fetch(@js(route('admin.settings.voice-preview')), {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json', Accept: 'audio/*, application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '' },
-                                body: JSON.stringify({ voice: this.voice, model: this.model }),
+                                body: JSON.stringify({ provider: this.provider, voice: this.voice, model: this.model }),
                             });
                             if (!response.ok || !(response.headers.get('Content-Type') ?? '').startsWith('audio/')) {
                                 const data = await response.json().catch(() => ({}));
@@ -170,7 +181,7 @@
                 }">
                 <div>
                     <h2 class="font-semibold text-white">Voix naturelle</h2>
-                    <p class="mt-1 text-sm text-slate-400">Ama lit ses réponses avec une voix naturelle fabriquée par Google (modèles « TTS » de Gemini, même clé que les réponses). Si Google refuse (quota, erreur) ou si la voix n'est pas prête après le délai réglé ci-dessous ({{ NaturalVoice::timeoutMs() / 1000 }} secondes), Ama parle aussitôt avec la voix du téléphone (si « Voix du téléphone en secours » est allumé). Une seule voix par réponse : dès que la voix de Gemini a été entendue, la voix du téléphone ne parle plus pour cette réponse (une suite qui échoue reste écrite à l'écran), et dès que la voix du téléphone parle, plus aucun son de Gemini pour cette réponse. Fonctionne en mode appel et avec « Lire les réponses à voix haute ».</p>
+                    <p class="mt-1 text-sm text-slate-400">Ama lit ses réponses avec une voix naturelle fabriquée par notre serveur, chez le fournisseur choisi ci-dessous : Cloudflare (modèle MeloTTS, en français) ou Google (modèles « TTS » de Gemini, même clé que les réponses). Si le fournisseur refuse (quota, plafond, erreur) ou si la voix n'est pas prête après le délai réglé ci-dessous ({{ NaturalVoice::timeoutMs() / 1000 }} secondes), Ama parle aussitôt avec la voix du téléphone (si « Voix du téléphone en secours » est allumé). Une seule voix par réponse : dès que la voix naturelle a été entendue, la voix du téléphone ne parle plus pour cette réponse (une suite qui échoue reste écrite à l'écran), et dès que la voix du téléphone parle, plus aucun son de la voix naturelle pour cette réponse. Fonctionne en mode appel et avec « Lire les réponses à voix haute ».</p>
                 </div>
 
                 <label class="flex cursor-pointer items-start justify-between gap-4" data-test="natural-voice-toggle">
@@ -183,7 +194,32 @@
                     <span class="relative mt-0.5 h-7 w-12 shrink-0 rounded-full bg-veil/10 ring-1 ring-veil/20 transition peer-checked:bg-emerald-500/30 peer-checked:ring-emerald-400 peer-focus-visible:outline-2 peer-focus-visible:outline-gold-300 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-slate-400 after:transition peer-checked:after:translate-x-5 peer-checked:after:bg-emerald-300" aria-hidden="true"></span>
                 </label>
 
-                <fieldset class="space-y-2" data-test="natural-voice-name">
+                <fieldset class="space-y-2" data-test="natural-voice-provider">
+                    <legend class="font-semibold text-white">Fournisseur de voix</legend>
+                    <div class="grid gap-2 sm:grid-cols-2">
+                        @foreach (NaturalVoice::PROVIDERS as $value => $label)
+                            <label class="flex cursor-pointer items-start gap-3 rounded-2xl bg-veil/5 px-4 py-3 ring-1 ring-veil/15 transition hover:bg-veil/10 has-[:checked]:bg-gold-400/10 has-[:checked]:ring-2 has-[:checked]:ring-gold-400 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold-300">
+                                <input type="radio" name="natural_voice_provider" value="{{ $value }}" x-model="provider" class="mt-1 size-4 accent-gold-400" @checked($naturalProvider === $value)>
+                                <span class="min-w-0">
+                                    <span class="block text-sm font-semibold text-slate-100">{{ $label }}</span>
+                                    @if ($value === NaturalVoice::CLOUDFLARE)
+                                        <span class="block text-xs text-slate-400">Voix française de Cloudflare Workers AI. Offre gratuite d'environ {{ number_format(NaturalVoice::CLOUDFLARE_FREE_NEURONS, 0, ',', ' ') }} neurones par jour (environ {{ (int) floor(NaturalVoice::CLOUDFLARE_FREE_NEURONS / NaturalVoice::CLOUDFLARE_NEURONS_PER_MINUTE) }} minutes d'audio).</span>
+                                        <span class="mt-1 block text-xs font-semibold {{ $voiceKeys[$value] ? 'text-emerald-200' : 'text-amber-200' }}" data-test="cloudflare-key-status">{{ $voiceKeys[$value] ? 'Clé Cloudflare présente sur le serveur' : 'Clé Cloudflare absente' }}</span>
+                                    @else
+                                        <span class="block text-xs text-slate-400">Voix de Gemini (14 voix au choix). Offre gratuite très limitée par jour.</span>
+                                        <span class="mt-1 block text-xs font-semibold {{ $voiceKeys[$value] ? 'text-emerald-200' : 'text-amber-200' }}" data-test="gemini-key-status">{{ $voiceKeys[$value] ? 'Clé Gemini présente sur le serveur' : 'Clé Gemini absente' }}</span>
+                                    @endif
+                                </span>
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-sm text-amber-200" x-show="!keys[provider]" x-cloak data-test="natural-voice-key-missing">
+                        <span x-show="provider === 'cloudflare'">Clé Cloudflare absente : ajoutez les variables CLOUDFLARE_ACCOUNT_ID et CLOUDFLARE_API_TOKEN dans Laravel Cloud, puis « Save » et « Deploy ». En attendant, Ama parle avec la voix du téléphone.</span>
+                        <span x-show="provider === 'gemini'">Clé Gemini absente : ajoutez la variable GEMINI_API_KEY. En attendant, Ama parle avec la voix du téléphone.</span>
+                    </p>
+                </fieldset>
+
+                <fieldset class="space-y-2" data-test="natural-voice-name" x-show="provider === 'gemini'" @if ($naturalProvider !== NaturalVoice::GEMINI) x-cloak @endif>
                     <legend class="font-semibold text-white">Voix d'Ama</legend>
                     <p class="text-sm text-slate-400">Voix féminines de Google (description de Google). Toutes parlent français : la langue est reconnue d'après le texte.</p>
                     <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -199,7 +235,7 @@
                     </div>
                 </fieldset>
 
-                <fieldset class="space-y-2" data-test="natural-voice-model">
+                <fieldset class="space-y-2" data-test="natural-voice-model" x-show="provider === 'gemini'" @if ($naturalProvider !== NaturalVoice::GEMINI) x-cloak @endif>
                     <legend class="font-semibold text-white">Modèle</legend>
                     <div class="grid gap-2 sm:grid-cols-2">
                         @foreach (NaturalVoice::MODELS as $value => $label)
@@ -215,15 +251,33 @@
                 </fieldset>
 
                 <div class="space-y-2">
-                    <button type="button" class="btn-ghost w-full sm:w-auto" x-on:click="listen()" x-bind:disabled="loading" data-test="natural-voice-listen" @disabled(! $keyPresent)>
+                    <button type="button" class="btn-ghost w-full sm:w-auto" x-on:click="listen()" x-bind:disabled="loading || !keys[provider]" data-test="natural-voice-listen" @disabled(! $voiceKeys[$naturalProvider === NaturalVoice::CLOUDFLARE ? NaturalVoice::CLOUDFLARE : NaturalVoice::GEMINI])>
                         <flux:icon.speaker-wave class="size-5" />
                         <span x-text="loading ? 'Préparation…' : 'Écouter'">Écouter</span>
                     </button>
-                    <p class="text-sm text-slate-400">Lit « {{ NaturalVoice::SAMPLE }} » avec la voix et le modèle choisis ci-dessus, même avant d'enregistrer. Chaque voix n'est demandée à Google qu'une fois, puis gardée en mémoire.</p>
+                    <p class="text-sm text-slate-400">Lit « {{ NaturalVoice::SAMPLE }} » avec le fournisseur choisi ci-dessus (pour Google : avec la voix et le modèle choisis), même avant d'enregistrer. Chaque voix n'est demandée qu'une fois, puis gardée en mémoire.</p>
                     <p class="text-sm text-amber-200" x-show="message" x-text="message" x-cloak role="status"></p>
                 </div>
 
-                <x-admin.field name="natural_voice_minute_limit" label="Demandes de voix par minute pour tout le site" type="number" unit="demandes" min="{{ NaturalVoice::MINUTE_LIMIT[1] }}" max="{{ NaturalVoice::MINUTE_LIMIT[2] }}" :value="NaturalVoice::minuteLimit()" hint="3 par défaut, comme l'offre gratuite de Google pour ces modèles (à vérifier dans Google AI Studio). Au-delà, Ama parle avec la voix du téléphone jusqu'à la minute suivante. Les phrases écrites à l'avance n'utilisent aucune demande une fois gardées." />
+                <div x-show="provider === 'gemini'" @if ($naturalProvider !== NaturalVoice::GEMINI) x-cloak @endif>
+                    <x-admin.field name="natural_voice_minute_limit" label="Demandes de voix par minute pour tout le site (Google)" type="number" unit="demandes" min="{{ NaturalVoice::MINUTE_LIMIT[1] }}" max="{{ NaturalVoice::MINUTE_LIMIT[2] }}" :value="NaturalVoice::minuteLimit(NaturalVoice::GEMINI)" hint="3 par défaut, comme l'offre gratuite de Google pour ces modèles (à vérifier dans Google AI Studio). Au-delà, Ama parle avec la voix du téléphone jusqu'à la minute suivante. Les phrases écrites à l'avance n'utilisent aucune demande une fois gardées." />
+                </div>
+
+                <div class="space-y-5" x-show="provider === 'cloudflare'" @if ($naturalProvider !== NaturalVoice::CLOUDFLARE) x-cloak @endif data-test="cloudflare-settings">
+                    <x-admin.field name="natural_voice_cloudflare_minute_limit" label="Demandes de voix par minute pour tout le site (Cloudflare)" type="number" unit="demandes" min="{{ NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[1] }}" max="{{ NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[2] }}" :value="NaturalVoice::minuteLimit(NaturalVoice::CLOUDFLARE)" hint="{{ NaturalVoice::CLOUDFLARE_MINUTE_LIMIT[0] }} par défaut. Limite séparée de celle de Google. La documentation de Cloudflare ne donne pas de limite par minute pour la voix : celle-ci protège surtout les minutes du jour contre un abus. Au-delà, Ama parle avec la voix du téléphone jusqu'à la minute suivante." />
+
+                    <x-admin.field name="natural_voice_daily_minutes" label="Plafond de minutes d'audio par jour (Cloudflare)" type="number" unit="minutes" min="{{ NaturalVoice::DAILY_MINUTES[1] }}" max="{{ NaturalVoice::DAILY_MINUTES[2] }}" :value="$cloudflareCap" hint="{{ NaturalVoice::DAILY_MINUTES[0] }} par défaut (environ {{ number_format(NaturalVoice::neurons(NaturalVoice::DAILY_MINUTES[0]), 0, ',', ' ') }} neurones sur les {{ number_format(NaturalVoice::CLOUDFLARE_FREE_NEURONS, 0, ',', ' ') }} gratuits par jour ; MeloTTS coûte {{ str_replace('.', ',', (string) NaturalVoice::CLOUDFLARE_NEURONS_PER_MINUTE) }} neurones par minute d'audio). Au-delà, Ama parle avec la voix du téléphone jusqu'à minuit (heure de Lomé, la journée de Cloudflare). Les phrases resservies de la mémoire ne comptent pas." />
+
+                    <div class="space-y-2 text-sm" data-test="cloudflare-minutes">
+                        <p class="text-slate-300">Minutes d'audio fabriquées aujourd'hui avec Cloudflare : <span class="font-semibold text-slate-100" data-test="cloudflare-minutes-used">{{ $minutesText($cloudflareUsed) }}</span> sur {{ $cloudflareCap }} (environ {{ number_format(NaturalVoice::neurons($cloudflareUsed), 0, ',', ' ') }} neurones, {{ \App\Models\AssistantVoiceQuota::requestsToday(NaturalVoice::CLOUDFLARE) }} demandes). La journée de Cloudflare recommence à minuit, heure de Lomé.</p>
+                        @if (NaturalVoice::capReached())
+                            <p class="flex items-start gap-2 text-amber-200" data-test="cloudflare-cap-reached"><flux:icon.exclamation-triangle class="size-5 shrink-0" /> Plafond du jour atteint : Ama parle avec la voix du téléphone jusqu'à minuit (heure de Lomé), puis la voix de Cloudflare revient toute seule.</p>
+                        @endif
+                        @if (NaturalVoice::dailyBlocked(NaturalVoice::CLOUDFLARE))
+                            <p class="flex items-start gap-2 text-amber-200" data-test="cloudflare-daily-blocked"><flux:icon.exclamation-triangle class="size-5 shrink-0" /> Cloudflare a répondu que l'offre gratuite du jour est épuisée : Ama parle avec la voix du téléphone jusqu'à minuit (heure de Lomé), puis le site réessaie tout seul.</p>
+                        @endif
+                    </div>
+                </div>
 
                 <x-admin.field name="natural_voice_split_length" label="Longueur à partir de laquelle une réponse est lue en deux demandes" type="number" unit="caractères" min="{{ NaturalVoice::SPLIT_LENGTH[1] }}" max="{{ NaturalVoice::SPLIT_LENGTH[2] }}" :value="NaturalVoice::splitLength()" hint="300 par défaut (environ trois phrases courtes). Une réponse plus courte utilise UNE seule demande. Une réponse plus longue en utilise deux : la première phrase seule, pour que la voix commence vite, puis la suite. Plus le nombre est grand, moins il y a de demandes, mais plus la voix met de temps à commencer sur les longues réponses." />
 
@@ -237,18 +291,18 @@
                     <span class="relative mt-0.5 h-7 w-12 shrink-0 rounded-full bg-veil/10 ring-1 ring-veil/20 transition peer-checked:bg-emerald-500/30 peer-checked:ring-emerald-400 peer-focus-visible:outline-2 peer-focus-visible:outline-gold-300 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-slate-400 after:transition peer-checked:after:translate-x-5 peer-checked:after:bg-emerald-300" aria-hidden="true"></span>
                 </label>
 
-                <x-admin.field name="natural_voice_timeout" label="Délai avant la voix du téléphone" type="number" unit="secondes" min="{{ NaturalVoice::TIMEOUT[1] }}" max="{{ NaturalVoice::TIMEOUT[2] }}" :value="NaturalVoice::timeoutMs() / 1000" hint="10 par défaut. Temps laissé à Google pour fabriquer la voix, compté dès que le texte de la réponse est prêt ; pendant l'attente, Ama « réfléchit » à l'écran. Google met environ 2,5 secondes pour 4 secondes de voix : une réponse de 200 caractères demande 6 à 8 secondes. Plus court : la voix du téléphone parle plus souvent. Comparez avec « Temps de Google » ci-dessous." />
+                <x-admin.field name="natural_voice_timeout" label="Délai avant la voix du téléphone" type="number" unit="secondes" min="{{ NaturalVoice::TIMEOUT[1] }}" max="{{ NaturalVoice::TIMEOUT[2] }}" :value="NaturalVoice::timeoutMs() / 1000" hint="10 par défaut. Temps laissé au fournisseur pour fabriquer la voix, compté dès que le texte de la réponse est prêt ; pendant l'attente, Ama « réfléchit » à l'écran. Google met environ 2,5 secondes pour 4 secondes de voix : une réponse de 200 caractères demande 6 à 8 secondes ; le temps de Cloudflare sera mesuré sur le site. Plus court : la voix du téléphone parle plus souvent. Comparez avec « Temps de {{ $savedProviderName }} » ci-dessous." />
 
                 <div class="space-y-2" data-test="natural-voice-usage">
-                    <h3 class="text-sm font-semibold text-slate-200">Aujourd'hui (journée de Google)</h3>
+                    <h3 class="text-sm font-semibold text-slate-200">Aujourd'hui (journée de Google, qui recommence à {{ AssistantUsage::nextReset()->translatedFormat('H \h i') }}, heure de Lomé)</h3>
                     <dl class="grid gap-2 text-sm sm:grid-cols-2">
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Voix naturelles envoyées au téléphone</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-spoken">{{ $voiceToday['spoken'] }}</dd></div>
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">dont phrases gardées en mémoire</dt><dd class="text-slate-100">{{ $voiceToday['cached'] }}</dd></div>
-                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Demandes envoyées à Google</dt><dd class="text-slate-100">{{ $voiceToday['google_requests'] }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Demandes envoyées au fournisseur (Google ou Cloudflare)</dt><dd class="text-slate-100">{{ $voiceToday['google_requests'] }}</dd></div>
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5" data-test="natural-voice-preview-requests"><dt class="text-slate-300">dont bouton « Écouter » et préparation</dt><dd class="text-slate-100">{{ ($voiceStats['by_source'][AssistantVoiceEvent::SOURCE_PREVIEW] ?? 0) + ($voiceStats['by_source'][AssistantVoiceEvent::SOURCE_PREPARE] ?? 0) }}</dd></div>
-                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5" data-test="natural-voice-google-average"><dt class="text-slate-300">Temps de Google en moyenne</dt><dd class="font-semibold text-slate-100">{{ $voiceSeconds($voiceStats['google_avg_ms']) }}</dd></div>
-                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5" data-test="natural-voice-google-max"><dt class="text-slate-300">Temps de Google au maximum</dt><dd class="font-semibold text-slate-100">{{ $voiceSeconds($voiceStats['google_max_ms']) }}</dd></div>
-                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Refus de Google</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-refusals">{{ $voiceToday['refusals'] }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5" data-test="natural-voice-google-average"><dt class="text-slate-300">Temps de {{ $savedProviderName }} en moyenne</dt><dd class="font-semibold text-slate-100">{{ $voiceSeconds($voiceStats['google_avg_ms']) }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5" data-test="natural-voice-google-max"><dt class="text-slate-300">Temps de {{ $savedProviderName }} au maximum</dt><dd class="font-semibold text-slate-100">{{ $voiceSeconds($voiceStats['google_max_ms']) }}</dd></div>
+                        <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Refus du fournisseur</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-refusals">{{ $voiceToday['refusals'] }}</dd></div>
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Passages à la voix du téléphone</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-fallbacks">{{ $voiceToday['fallbacks'] }}</dd></div>
                         <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">Parties de réponse affichées sans voix</dt><dd class="font-semibold text-slate-100" data-test="natural-voice-silent">{{ $voiceStats['silent'] }}</dd></div>
                     </dl>
@@ -270,9 +324,9 @@
                                     <div class="flex justify-between gap-3 rounded-lg bg-veil/5 px-3 py-1.5"><dt class="text-slate-300">{{ NaturalVoice::CAUSES[$cause] ?? 'Code « '.$cause.' »' }}</dt><dd class="font-semibold text-slate-100">{{ $total }}</dd></div>
                                 @endforeach
                             </dl>
-                            <p class="text-xs text-slate-400">Sans voix : soit « Voix du téléphone en secours » est éteint, soit la voix de Gemini avait déjà parlé dans cette réponse (jamais deux voix pour une même réponse).</p>
+                            <p class="text-xs text-slate-400">Sans voix : soit « Voix du téléphone en secours » est éteint, soit la voix naturelle avait déjà parlé dans cette réponse (jamais deux voix pour une même réponse).</p>
                         @endif
-                        <p class="text-xs text-slate-400">« Voix pas prête avant le délai » : Google a été plus lent que le délai réglé. Si ce cas revient souvent, comparez le délai avec « Temps de Google au maximum ». Une voix arrivée trop tard n'est jamais jouée par-dessus la voix du téléphone.</p>
+                        <p class="text-xs text-slate-400">« Voix pas prête avant le délai » : le fournisseur a été plus lent que le délai réglé. Si ce cas revient souvent, comparez le délai avec « Temps de {{ $savedProviderName }} au maximum ». Une voix arrivée trop tard n'est jamais jouée par-dessus la voix du téléphone.</p>
                     </div>
                     @if ($preparedMissing !== null)
                         <p class="text-sm {{ $preparedMissing === 0 ? 'text-emerald-200' : 'text-slate-300' }}" data-test="natural-voice-prepared">
@@ -282,10 +336,10 @@
                     @if ($voiceStats['memory_errors'] > 0)
                         <p class="flex items-start gap-2 text-sm text-amber-200" data-test="natural-voice-memory-error"><flux:icon.exclamation-triangle class="size-5 shrink-0" /> La mémoire des voix n'a pas pu être écrite {{ $voiceStats['memory_errors'] }} fois aujourd'hui : chaque phrase écrite à l'avance est alors refaite par Google. Prévenez Claude.</p>
                     @endif
-                    @if (NaturalVoice::dailyBlocked())
+                    @if (NaturalVoice::dailyBlocked(NaturalVoice::GEMINI))
                         <p class="flex items-start gap-2 text-sm text-amber-200" data-test="natural-voice-daily-blocked"><flux:icon.exclamation-triangle class="size-5 shrink-0" /> Google a répondu que le quota de voix du jour est épuisé : Ama parle avec la voix du téléphone jusqu'à {{ AssistantUsage::nextReset()->translatedFormat('H \h i') }} (heure de Lomé), puis le site réessaie tout seul.</p>
                     @endif
-                    <p class="text-xs text-slate-400">Seul le texte de la réponse d'Ama est envoyé à Google : jamais le prénom du visiteur. Une phrase qui contient un numéro, une adresse e-mail, un lien ou un nom donné par le visiteur est toujours lue par la voix du téléphone.</p>
+                    <p class="text-xs text-slate-400">Seul le texte de la réponse d'Ama est envoyé au fournisseur ({{ $savedProviderName }}) : jamais le prénom du visiteur. Une phrase qui contient un numéro, une adresse e-mail, un lien ou un nom donné par le visiteur est toujours lue par la voix du téléphone.</p>
                 </div>
             </section>
 

@@ -8,10 +8,12 @@ use App\Models\AssistantConversation;
 use App\Models\AssistantMessage;
 use App\Models\AssistantUsage;
 use App\Models\AssistantVoiceEvent;
+use App\Models\AssistantVoiceQuota;
 use App\Models\AssistantVoiceUsage;
 use App\Models\Formation;
 use App\Models\User;
 use App\Support\VoiceAssistant;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
@@ -19,20 +21,30 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Voix naturelle d'Ama : le texte de sa réponse est lu par une voix des modèles « TTS » de Gemini, fabriquée par le
- * serveur ; le navigateur reprend aussitôt la voix du téléphone si l'audio n'arrive pas (voir resources/js/ama-voice.js).
+ * Voix naturelle d'Ama : le texte de sa réponse est lu par une voix fabriquée par le serveur, chez le fournisseur choisi
+ * dans l'admin (PROVIDERS) : Cloudflare Workers AI (MeloTTS, en français, App\Assistant\CloudflareSpeech) ou Google
+ * (modèles « TTS » de Gemini, App\Assistant\GeminiSpeech, lié à l'interface SpeechSynthesizer). Le navigateur reprend
+ * aussitôt la voix du téléphone si l'audio n'arrive pas (voir resources/js/ama-voice.js), quel que soit le fournisseur.
  *
  * Réglages (admin > Réglages du site > Assistante Ama, clé « site.voice_assistant.natural_voice ») : interrupteur
- * (éteint par défaut), voix féminine, modèle (Flash Lite TTS par défaut), demandes par minute pour tout le site.
+ * (éteint par défaut), fournisseur (« provider », Google si rien n'est enregistré), voix féminine et modèle (Google
+ * seulement), demandes par minute pour tout le site (une limite par fournisseur), plafond de minutes d'audio par jour
+ * (Cloudflare seulement).
  *
- * Avant chaque demande à Google, dans cet ordre :
+ * Avant chaque demande au fournisseur, dans cet ordre (« Google » ci-dessous vaut aussi pour Cloudflare) :
  * 1. Vie privée : seul le texte de la réponse d'Ama est envoyé. Le prénom de la personne connectée en est retiré ; un
  *    texte qui contient une adresse e-mail, un lien, un numéro ou un code, ou un nom propre que le visiteur a lui-même
  *    écrit (son prénom donné à Ama, par exemple), n'est jamais envoyé : la voix du téléphone le lit.
  * 2. Mémoire : une phrase écrite à l'avance (accueil, bulles, aides, demande de répéter, au revoir…) n'est fabriquée
  *    qu'une fois, puis gardée (disque « ama_voice ») et resservie sans demande à Google.
- * 3. Quota du jour épuisé (réponse de Google) : plus aucun essai jusqu'à la nouvelle journée de Google.
- * 4. Limite du site : « minute_limit » demandes par minute pour tout le site (3 par défaut, comme l'offre gratuite).
+ * 3. Quota du jour épuisé (réponse du fournisseur) : plus aucun essai jusqu'à sa nouvelle journée (Google : minuit,
+ *    heure du Pacifique ; Cloudflare : 0 h 00 UTC, soit 0 h 00 à Lomé).
+ * 4. Cloudflare seulement : plafond de minutes d'audio du jour (« daily_minutes », 400 par défaut) ; au-delà, voix du
+ *    téléphone jusqu'au lendemain. Les minutes sont mesurées dans chaque fichier reçu (AudioDuration).
+ * 5. Limite du site : demandes par minute pour tout le site, une par fournisseur (« minute_limit » pour Google, 3 par
+ *    défaut comme son offre gratuite ; « cloudflare_minute_limit » pour Cloudflare, 20 par défaut).
+ *
+ * Mémoire séparée par fournisseur (dossiers différents du disque « ama_voice »).
  *
  * Une réponse courte (jusqu'à « split_length » caractères, 300 par défaut) part en une seule demande ; plus longue, en deux
  * (la première phrase, puis la suite) : le découpage est fait par le navigateur.
@@ -46,6 +58,43 @@ use Throwable;
  */
 class NaturalVoice
 {
+    public const string GEMINI = 'gemini';
+
+    public const string CLOUDFLARE = 'cloudflare';
+
+    /**
+     * Fournisseurs de la voix proposés dans l'admin (code enregistré => libellé).
+     *
+     * @var array<string, string>
+     */
+    public const array PROVIDERS = [
+        self::CLOUDFLARE => 'Cloudflare (MeloTTS)',
+        self::GEMINI => 'Google (Gemini)',
+    ];
+
+    /**
+     * Cloudflare : demandes par minute pour tout le site (par défaut, minimum, maximum). La documentation de Cloudflare
+     * ne donne aucune limite par minute pour la synthèse vocale (les autres tâches vont de 300 à 3 000 demandes par
+     * minute) : la vraie limite est l'offre gratuite du jour. 20 par minute laisse parler plusieurs visiteurs à la fois
+     * sans qu'un abus ne vide les minutes du jour en quelques instants.
+     *
+     * @var array{0: int, 1: int, 2: int}
+     */
+    public const array CLOUDFLARE_MINUTE_LIMIT = [20, 1, 120];
+
+    /**
+     * Cloudflare : plafond de minutes d'audio fabriquées par jour (par défaut, minimum, maximum). Offre gratuite :
+     * 10 000 neurones par jour ; MeloTTS : 18,63 neurones par minute d'audio, soit environ 536 minutes. 400 minutes
+     * (environ 7 450 neurones) laissent une marge ; le maximum (520, environ 9 690 neurones) reste sous l'offre gratuite.
+     *
+     * @var array{0: int, 1: int, 2: int}
+     */
+    public const array DAILY_MINUTES = [400, 1, 520];
+
+    public const float CLOUDFLARE_NEURONS_PER_MINUTE = 18.63;
+
+    public const int CLOUDFLARE_FREE_NEURONS = 10000;
+
     /**
      * Modèles proposés dans l'admin (identifiants de Google), le premier par défaut.
      *
@@ -131,6 +180,12 @@ class NaturalVoice
         'playback_stalled' => 'Son bloqué : commencé mais jamais terminé',
         'playback' => 'Lecture refusée ou coupée par le téléphone (ancienne mesure, avant le détail des causes)',
         'old_page' => 'Page ouverte avant la mise à jour du site (cause non transmise)',
+        'cloudflare_no_key' => 'Clé Cloudflare absente',
+        'cloudflare_cap' => 'Plafond de minutes du jour atteint (Cloudflare, réglé dans l\'admin)',
+        'cloudflare_daily_quota' => 'Offre gratuite du jour de Cloudflare épuisée (refus 3036)',
+        'cloudflare_quota' => 'Cloudflare occupé ou limite atteinte (refus 429)',
+        'cloudflare_timeout' => 'Cloudflare trop lent (délai du serveur dépassé)',
+        'cloudflare_error' => 'Erreur ou réponse sans audio de Cloudflare',
     ];
 
     /**
@@ -177,6 +232,7 @@ class NaturalVoice
         'mobile', 'money', 'togo', 'bénin', 'benin', 'burkina', 'faso', 'flooz', 'moov', 'mixx', 'yas', 'orange', 'wave', 'mtn', 'momo',
         'celtiis', 'cash', 'fcfa', 'ia', 'youtube', 'tiktok', 'facebook', 'chatgpt', 'claude', 'adidogomé', 'afrique'];
 
+    // Google : noms d'origine gardés ; Cloudflare : suffixe « :cloudflare ».
     private const string DAILY_BLOCK_CACHE = 'ama-voice:daily-exhausted';
 
     private const string MINUTE_LIMITER = 'ama-voice:site-minute';
@@ -188,26 +244,57 @@ class NaturalVoice
     public ?string $lastReason = null;
 
     /**
+     * Fournisseur de la dernière demande (pour les mesures).
+     */
+    private ?string $provider = null;
+
+    /**
      * La partie demandée ne sera pas lue par la voix du téléphone en cas d'échec (secours éteint dans l'admin, ou voix de
      * Gemini déjà entendue dans cette réponse) : l'échec est compté comme « réponse affichée sans voix ».
      */
     private bool $silentOnFailure = false;
 
-    public function __construct(private readonly SpeechSynthesizer $synthesizer) {}
+    /**
+     * @param  SpeechSynthesizer  $synthesizer  voix de Google (GeminiSpeech)
+     */
+    public function __construct(private readonly SpeechSynthesizer $synthesizer, private readonly CloudflareSpeech $cloudflare) {}
 
     /**
-     * Voix naturelle allumée dans l'admin, avec Ama (Gemini) et la clé présente sur le serveur.
+     * Voix naturelle allumée dans l'admin, avec Ama (Gemini) et la clé du fournisseur choisi présente sur le serveur.
      */
     public function enabled(): bool
     {
         return (bool) config('site.voice_assistant.natural_voice.enabled', false)
             && VoiceAssistant::usesGemini()
-            && $this->synthesizer->isConfigured();
+            && $this->isConfigured();
     }
 
-    public function isConfigured(): bool
+    /**
+     * Clé du fournisseur (celui choisi dans l'admin par défaut) présente sur le serveur ?
+     */
+    public function isConfigured(?string $provider = null): bool
     {
-        return $this->synthesizer->isConfigured();
+        return $this->synthesizer($provider)->isConfigured();
+    }
+
+    /**
+     * Fournisseur choisi dans l'admin ; Google si rien n'est enregistré (réglages d'avant Cloudflare).
+     */
+    public static function provider(): string
+    {
+        $provider = config('site.voice_assistant.natural_voice.provider');
+
+        return is_string($provider) && isset(self::PROVIDERS[$provider]) ? $provider : self::GEMINI;
+    }
+
+    public static function providerName(?string $provider = null): string
+    {
+        return ($provider ?? self::provider()) === self::CLOUDFLARE ? 'Cloudflare' : 'Google';
+    }
+
+    private function synthesizer(?string $provider = null): SpeechSynthesizer
+    {
+        return ($provider ?? self::provider()) === self::CLOUDFLARE ? $this->cloudflare : $this->synthesizer;
     }
 
     public static function voice(): string
@@ -224,12 +311,64 @@ class NaturalVoice
         return is_string($model) && isset(self::MODELS[$model]) ? $model : array_key_first(self::MODELS);
     }
 
-    public static function minuteLimit(): int
+    /**
+     * Demandes par minute pour tout le site, pour le fournisseur donné (celui choisi par défaut).
+     */
+    public static function minuteLimit(?string $provider = null): int
     {
-        [$default, $min, $max] = self::MINUTE_LIMIT;
-        $value = config('site.voice_assistant.natural_voice.minute_limit');
+        $cloudflare = ($provider ?? self::provider()) === self::CLOUDFLARE;
+        [$default, $min, $max] = $cloudflare ? self::CLOUDFLARE_MINUTE_LIMIT : self::MINUTE_LIMIT;
+        $value = config('site.voice_assistant.natural_voice.'.($cloudflare ? 'cloudflare_minute_limit' : 'minute_limit'));
 
         return is_numeric($value) ? max($min, min($max, (int) $value)) : $default;
+    }
+
+    /**
+     * Cloudflare : plafond de minutes d'audio par jour réglé dans l'admin.
+     */
+    public static function dailyMinutes(): int
+    {
+        [$default, $min, $max] = self::DAILY_MINUTES;
+        $value = config('site.voice_assistant.natural_voice.daily_minutes');
+
+        return is_numeric($value) ? max($min, min($max, (int) $value)) : $default;
+    }
+
+    /**
+     * Cloudflare : minutes d'audio déjà fabriquées aujourd'hui (journée UTC = journée de Lomé).
+     */
+    public static function usedMinutes(): float
+    {
+        return AssistantVoiceQuota::usedMs(self::CLOUDFLARE) / 60000;
+    }
+
+    /**
+     * Cloudflare : plafond du jour atteint (ou dépassé avec ce texte, si on le donne) ?
+     */
+    public static function capReached(string $text = ''): bool
+    {
+        $used = AssistantVoiceQuota::usedMs(self::CLOUDFLARE);
+        $next = $text === '' ? 0 : AudioDuration::estimate($text);
+
+        return $text === '' ? $used >= self::dailyMinutes() * 60000 : $used + $next > self::dailyMinutes() * 60000;
+    }
+
+    /**
+     * Neurones de Cloudflare estimés pour des minutes d'audio (MeloTTS : 18,63 par minute).
+     */
+    public static function neurons(float $minutes): int
+    {
+        return (int) round($minutes * self::CLOUDFLARE_NEURONS_PER_MINUTE);
+    }
+
+    private static function limiterKey(string $provider): string
+    {
+        return $provider === self::CLOUDFLARE ? self::MINUTE_LIMITER.':cloudflare' : self::MINUTE_LIMITER;
+    }
+
+    private static function dailyBlockKey(string $provider): string
+    {
+        return $provider === self::CLOUDFLARE ? self::DAILY_BLOCK_CACHE.':cloudflare' : self::DAILY_BLOCK_CACHE;
     }
 
     public static function timeoutMs(): int
@@ -271,11 +410,19 @@ class NaturalVoice
     }
 
     /**
-     * Quota du jour de Google épuisé : plus aucun essai avant la nouvelle journée de Google.
+     * Quota du jour du fournisseur épuisé (refus du fournisseur) : plus aucun essai avant sa nouvelle journée.
      */
-    public static function dailyBlocked(): bool
+    public static function dailyBlocked(?string $provider = null): bool
     {
-        return Cache::get(self::DAILY_BLOCK_CACHE) === true;
+        return Cache::get(self::dailyBlockKey($provider ?? self::provider())) === true;
+    }
+
+    /**
+     * Début de la prochaine journée du fournisseur, à l'heure de Lomé.
+     */
+    public static function nextReset(?string $provider = null): CarbonInterface
+    {
+        return ($provider ?? self::provider()) === self::CLOUDFLARE ? AssistantVoiceQuota::nextReset() : AssistantUsage::nextReset();
     }
 
     /**
@@ -285,6 +432,7 @@ class NaturalVoice
     public function speak(string $text, ?User $user = null, ?string $visitorHash = null, bool $voiced = false): ?SpeechAudio
     {
         $this->lastReason = null;
+        $this->provider = self::provider();
         $this->silentOnFailure = $voiced || ! self::phoneFallback();
         $text = $this->prepare($text, $user);
 
@@ -300,20 +448,22 @@ class NaturalVoice
     }
 
     /**
-     * Bouton « Écouter » de l'admin : la phrase d'exemple lue par la voix et le modèle choisis (gardée en mémoire,
-     * une seule demande à Google par voix et par modèle).
+     * Bouton « Écouter » de l'admin : la phrase d'exemple lue par le fournisseur choisi dans le formulaire (Google : avec
+     * la voix et le modèle choisis). Gardée en mémoire : une seule demande par fournisseur (et, pour Google, par voix et
+     * par modèle).
      */
-    public function preview(string $voice, string $model): ?SpeechAudio
+    public function preview(string $voice, string $model, ?string $provider = null): ?SpeechAudio
     {
         $this->lastReason = null;
+        $provider ??= self::GEMINI;
 
-        if (! isset(self::VOICES[$voice]) || ! isset(self::MODELS[$model])) {
+        if (! isset(self::PROVIDERS[$provider]) || ($provider === self::GEMINI && (! isset(self::VOICES[$voice]) || ! isset(self::MODELS[$model])))) {
             $this->lastReason = 'invalid_voice';
 
             return null;
         }
 
-        return $this->produce(self::SAMPLE, $voice, $model, true, count: false, source: AssistantVoiceEvent::SOURCE_PREVIEW);
+        return $this->produce(self::SAMPLE, $voice, $model, true, count: false, source: AssistantVoiceEvent::SOURCE_PREVIEW, provider: $provider);
     }
 
     /**
@@ -339,12 +489,16 @@ class NaturalVoice
             $silent ? AssistantVoiceEvent::SILENT : AssistantVoiceEvent::FALLBACK,
             $cause,
             $waitedMs === null ? null : min($waitedMs, 600000),
+            provider: self::provider(),
         );
     }
 
-    private function produce(string $text, string $voice, string $model, bool $cacheable, bool $count = true, string $source = AssistantVoiceEvent::SOURCE_SITE): ?SpeechAudio
+    private function produce(string $text, string $voice, string $model, bool $cacheable, bool $count = true, string $source = AssistantVoiceEvent::SOURCE_SITE, ?string $provider = null): ?SpeechAudio
     {
-        $path = $cacheable ? $this->cachePath($text, $voice, $model) : null;
+        $provider ??= self::provider();
+        $cloudflare = $provider === self::CLOUDFLARE;
+        $this->provider = $provider;
+        $path = $cacheable ? $this->cachePath($text, $voice, $model, $provider) : null;
 
         if ($path !== null) {
             $cached = $this->fromCache($path);
@@ -359,16 +513,22 @@ class NaturalVoice
         }
 
         $chars = mb_strlen($text);
+        $synthesizer = $this->synthesizer($provider);
 
-        if (! $this->synthesizer->isConfigured()) {
-            return $this->fallback('no_key', $count, $chars);
+        if (! $synthesizer->isConfigured()) {
+            return $this->fallback($cloudflare ? 'cloudflare_no_key' : 'no_key', $count, $chars);
         }
 
-        if (self::dailyBlocked()) {
-            return $this->fallback('daily_quota', $count, $chars);
+        if (self::dailyBlocked($provider)) {
+            return $this->fallback($cloudflare ? 'cloudflare_daily_quota' : 'daily_quota', $count, $chars);
         }
 
-        if (! RateLimiter::attempt(self::MINUTE_LIMITER, self::minuteLimit(), fn () => true, 60)) {
+        // Cloudflare : plafond de minutes du jour (offre gratuite), en comptant la durée estimée de ce texte.
+        if ($cloudflare && self::capReached($text)) {
+            return $this->fallback('cloudflare_cap', $count, $chars);
+        }
+
+        if (! RateLimiter::attempt(self::limiterKey($provider), self::minuteLimit($provider), fn () => true, 60)) {
             return $this->fallback('site_minute_limit', $count, $chars);
         }
 
@@ -376,10 +536,10 @@ class NaturalVoice
         $started = hrtime(true);
 
         try {
-            $audio = $this->synthesizer->synthesize($text, $voice, $model);
+            $audio = $synthesizer->synthesize($text, $voice, $model);
         } catch (SpeechFailure $failure) {
             if ($failure->daily) {
-                Cache::put(self::DAILY_BLOCK_CACHE, true, AssistantUsage::nextReset());
+                Cache::put(self::dailyBlockKey($provider), true, self::nextReset($provider));
             }
 
             $cause = match (true) {
@@ -388,11 +548,16 @@ class NaturalVoice
                 $failure->timeout => 'google_timeout',
                 default => 'google_error',
             };
+
+            if ($cloudflare) {
+                $cause = 'cloudflare_'.str_replace('google_', '', $cause);
+            }
+
             AssistantVoiceUsage::bump('refusals', ...($count && ! $this->silentOnFailure ? ['fallbacks'] : []));
-            AssistantVoiceEvent::record(AssistantVoiceEvent::GOOGLE, $cause, self::elapsedMs($started), $chars, $source);
+            AssistantVoiceEvent::record(AssistantVoiceEvent::GOOGLE, $cause, self::elapsedMs($started), $chars, $source, $provider);
 
             if ($count) {
-                AssistantVoiceEvent::record($this->silentOnFailure ? AssistantVoiceEvent::SILENT : AssistantVoiceEvent::FALLBACK, $cause, chars: $chars);
+                AssistantVoiceEvent::record($this->silentOnFailure ? AssistantVoiceEvent::SILENT : AssistantVoiceEvent::FALLBACK, $cause, chars: $chars, provider: $provider);
             }
 
             $this->lastReason = $cause;
@@ -400,7 +565,12 @@ class NaturalVoice
             return null;
         }
 
-        AssistantVoiceEvent::record(AssistantVoiceEvent::GOOGLE, null, self::elapsedMs($started), $chars, $source);
+        AssistantVoiceEvent::record(AssistantVoiceEvent::GOOGLE, null, self::elapsedMs($started), $chars, $source, $provider);
+
+        // Cloudflare : durée réelle de l'audio fabriqué, comptée dans les minutes du jour (mémoire jamais comptée).
+        if ($cloudflare) {
+            AssistantVoiceQuota::add(self::CLOUDFLARE, AudioDuration::milliseconds($audio, $text));
+        }
 
         if ($path !== null) {
             $this->toCache($path, $audio);
@@ -421,7 +591,7 @@ class NaturalVoice
             if (! $this->silentOnFailure) {
                 AssistantVoiceUsage::bump('fallbacks');
             }
-            AssistantVoiceEvent::record($this->silentOnFailure ? AssistantVoiceEvent::SILENT : AssistantVoiceEvent::FALLBACK, $cause, chars: $chars);
+            AssistantVoiceEvent::record($this->silentOnFailure ? AssistantVoiceEvent::SILENT : AssistantVoiceEvent::FALLBACK, $cause, chars: $chars, provider: $this->provider);
         }
 
         return null;
@@ -596,8 +766,16 @@ class NaturalVoice
         return mb_strtolower(self::normalizeSpaces(str_replace(['’', ' ', ' '], ["'", ' ', ' '], $text)));
     }
 
-    private function cachePath(string $text, string $voice, string $model): string
+    /**
+     * Emplacement en mémoire, séparé par fournisseur : Google « modèle/voix/empreinte » (chemin d'origine, déjà rempli
+     * sur le site), Cloudflare « cloudflare/melotts-fr/empreinte ».
+     */
+    private function cachePath(string $text, string $voice, string $model, string $provider): string
     {
+        if ($provider === self::CLOUDFLARE) {
+            return 'cloudflare/melotts-'.CloudflareSpeech::LANG.'/'.sha1(self::key($text));
+        }
+
         return Str::slug($model).'/'.Str::lower($voice).'/'.sha1(self::key($text));
     }
 
@@ -637,9 +815,9 @@ class NaturalVoice
     /**
      * Phrase déjà gardée en mémoire pour cette voix et ce modèle ?
      */
-    public function isCached(string $text, ?string $voice = null, ?string $model = null): bool
+    public function isCached(string $text, ?string $voice = null, ?string $model = null, ?string $provider = null): bool
     {
-        $path = $this->cachePath(self::normalizeSpaces($text), $voice ?? self::voice(), $model ?? self::model());
+        $path = $this->cachePath(self::normalizeSpaces($text), $voice ?? self::voice(), $model ?? self::model(), $provider ?? self::provider());
 
         try {
             $disk = Storage::disk('ama_voice');
@@ -753,7 +931,7 @@ class NaturalVoice
      */
     public function prepareNext(): ?int
     {
-        if (! $this->enabled() || self::dailyBlocked()) {
+        if (! $this->enabled() || self::dailyBlocked() || (self::provider() === self::CLOUDFLARE && self::capReached())) {
             return null;
         }
 
@@ -768,13 +946,13 @@ class NaturalVoice
             return count($missing);
         }
 
-        if (RateLimiter::remaining(self::MINUTE_LIMITER, self::minuteLimit()) < 2) {
+        if (RateLimiter::remaining(self::limiterKey(self::provider()), self::minuteLimit()) < 2) {
             return count($missing);
         }
 
         $audio = $this->produce($missing[0], self::voice(), self::model(), true, count: false, source: AssistantVoiceEvent::SOURCE_PREPARE);
 
-        if ($audio === null && $this->lastReason !== 'site_minute_limit' && $this->lastReason !== 'google_quota' && $this->lastReason !== 'google_timeout') {
+        if ($audio === null && ! in_array($this->lastReason, ['site_minute_limit', 'google_quota', 'google_timeout', 'cloudflare_quota', 'cloudflare_timeout'], true)) {
             return null;
         }
 

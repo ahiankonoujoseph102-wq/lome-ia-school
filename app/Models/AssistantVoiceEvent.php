@@ -17,6 +17,7 @@ use Throwable;
  * @property int $id
  * @property string $day
  * @property string $kind
+ * @property string|null $provider fournisseur de la voix (gemini, cloudflare) ; vide pour les anciennes mesures (Google)
  * @property string|null $cause
  * @property string|null $source
  * @property int|null $duration_ms
@@ -27,6 +28,8 @@ class AssistantVoiceEvent extends Model
 {
     use Prunable;
 
+    // Demande envoyée au fournisseur de la voix (Google ou Cloudflare, voir « provider ») ; nom gardé pour les
+    // mesures déjà enregistrées.
     public const string GOOGLE = 'google';
 
     public const string FALLBACK = 'fallback';
@@ -45,7 +48,7 @@ class AssistantVoiceEvent extends Model
 
     public const null UPDATED_AT = null;
 
-    protected $fillable = ['day', 'kind', 'cause', 'source', 'duration_ms', 'chars'];
+    protected $fillable = ['day', 'kind', 'provider', 'cause', 'source', 'duration_ms', 'chars'];
 
     /**
      * @return array<string, string>
@@ -58,12 +61,13 @@ class AssistantVoiceEvent extends Model
     /**
      * Enregistre un événement pour la journée de Google en cours. Une mesure ne doit jamais empêcher Ama de parler.
      */
-    public static function record(string $kind, ?string $cause = null, ?int $durationMs = null, ?int $chars = null, ?string $source = null): void
+    public static function record(string $kind, ?string $cause = null, ?int $durationMs = null, ?int $chars = null, ?string $source = null, ?string $provider = null): void
     {
         try {
             static::query()->create([
                 'day' => AssistantUsage::today(),
                 'kind' => $kind,
+                'provider' => $provider,
                 'cause' => $cause,
                 'source' => $source,
                 'duration_ms' => $durationMs === null ? null : max(0, $durationMs),
@@ -75,14 +79,17 @@ class AssistantVoiceEvent extends Model
     }
 
     /**
-     * Mesures de la journée de Google en cours, pour l'admin.
+     * Mesures de la journée de Google en cours, pour l'admin. Avec $provider, les demandes et leurs temps sont ceux de
+     * ce fournisseur seulement (une mesure sans fournisseur, enregistrée avant Cloudflare, vient de Google).
      *
      * @return array{google_count: int, google_ok: int, google_avg_ms: int|null, google_max_ms: int|null, by_source: array<string, int>, causes: array<string, int>, silent_causes: array<string, int>, silent: int, memory_errors: int}
      */
-    public static function todayStats(): array
+    public static function todayStats(?string $provider = null): array
     {
         $day = AssistantUsage::today();
-        $google = static::query()->where('day', $day)->where('kind', self::GOOGLE);
+        $google = static::query()->where('day', $day)->where('kind', self::GOOGLE)
+            ->when($provider === 'gemini', fn (Builder $query) => $query->where(fn (Builder $query) => $query->whereNull('provider')->orWhere('provider', 'gemini')))
+            ->when($provider !== null && $provider !== 'gemini', fn (Builder $query) => $query->where('provider', $provider));
         $timed = (clone $google)->whereNotNull('duration_ms');
 
         /** @var array<string, int> $bySource */
