@@ -262,6 +262,77 @@ return [
 
     /*
     |----------------------------------------------------------------------
+    | Page personnelle de Joseph Ahiankonou (/joseph-ahiankonou)
+    |----------------------------------------------------------------------
+    | Faits fournis par Joseph (octobre 2026) : ne rien ajouter qui ne vienne pas de lui (ni témoignage, ni
+    | client, ni récompense, ni chiffre). Tout se modifie dans l'admin (Réglages du site > Page Joseph
+    | Ahiankonou) ; lecture : App\Support\Founder. « title » sert aussi de balise <title>, sans suffixe.
+    | Photo vide : la photo du formateur (trainer.photo) est utilisée, sinon ses initiales.
+    | Liens vides : masqués (jamais inventés), et absents des données structurées.
+    */
+
+    'founder' => [
+        'name' => 'Joseph Ahiankonou',
+        'nickname' => 'Coach Joseph',
+        'title' => 'Joseph Ahiankonou (Coach Joseph) : formateur et consultant en IA à Lomé',
+        'description' => 'Joseph Ahiankonou, dit Coach Joseph : expert et consultant en IA à Lomé (Togo), formateur depuis 2023, fondateur de Lomé IA School et auteur de 6 livres.',
+        'job_title' => 'Formateur et consultant en intelligence artificielle',
+        'tagline' => 'Expert et consultant en intelligence artificielle, formateur depuis 2023, plus de 1 000 personnes formées.',
+        'intro' => [
+            'Joseph Ahiankonou, que l\'on appelle aussi « Coach Joseph », est originaire d\'Agoè-Nyivé, à Lomé (Togo). Expert et consultant en intelligence artificielle, il forme depuis 2023 et a déjà formé plus de 1 000 personnes.',
+            'Il est le fondateur de Lomé IA School, qui propose des formations en intelligence artificielle, et de Joseph Academy, son activité d\'écriture de livres pour les autres.',
+            'Il crée aussi des sites web et des applications pour des entreprises avec l\'intelligence artificielle, et il forme à l\'importation depuis la Chine.',
+        ],
+        'journey' => [
+            'Enfant, il redouble deux fois le CP.',
+            'Puis il devient premier de sa classe, du CE1 jusqu\'au bac, qu\'il obtient avec mention.',
+            'Dès sa première année d\'université, il enseigne les SVT.',
+            'Parti de zéro, il travaille comme aide-maçon pour acheter son premier téléphone.',
+        ],
+        'books' => [
+            'Prompt Power',
+            'Créer ton propre emploi',
+            '70 idées de business rentable en 2026',
+            'Gagner de l\'argent sur WhatsApp',
+            'Licenciez votre patron en 10 semaines',
+            'Le fils du pays béni',
+        ],
+        'services' => [
+            ['title' => 'Formations en intelligence artificielle', 'text' => 'Avec Lomé IA School : des formations pratiques en français, en ligne et à Lomé. Il forme aussi à l\'importation depuis la Chine.'],
+            ['title' => 'Création de sites web et d\'applications', 'text' => 'Des sites web et des applications pour les entreprises, créés avec l\'intelligence artificielle.'],
+            ['title' => 'Écriture de livres', 'text' => 'Avec Joseph Academy, il écrit des livres pour les autres.'],
+        ],
+        // Photo envoyée depuis l'admin (disque « public », dossier site/founder/), vide au départ.
+        'photo' => '',
+        'photo_alt' => 'Portrait de Joseph Ahiankonou (Coach Joseph), formateur et consultant en IA à Lomé',
+        // Liens saisis par Joseph dans l'admin (adresses https complètes). Vides au départ : rien n'est inventé.
+        'links' => [
+            'youtube' => '',
+            'tiktok' => '',
+            'facebook' => '',
+        ],
+        'whatsapp_channels' => [],
+        'contact' => [
+            'whatsapp' => '+228 72 24 02 31',
+            'email' => 'academyjoseph71@gmail.com',
+            'office' => 'Adidogomé, Lycée moderne 2, Lomé',
+        ],
+    ],
+
+    /*
+    |----------------------------------------------------------------------
+    | Référencement Google
+    |----------------------------------------------------------------------
+    | Code de la balise de vérification de Google Search Console (public, ce n'est pas un secret).
+    | Modifiable dans l'admin (Réglages du site > Référencement Google). Vide = aucune balise.
+    */
+
+    'seo' => [
+        'google_verification' => '',
+    ],
+
+    /*
+    |----------------------------------------------------------------------
     | À propos de Lomé IA School
     |----------------------------------------------------------------------
     */

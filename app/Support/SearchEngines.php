@@ -23,6 +23,7 @@ class SearchEngines
         'formations.index',
         'formations.show',
         'about',
+        'founder',
         'business',
         'contact',
         'consultation',
@@ -96,7 +97,7 @@ class SearchEngines
      */
     public static function sitemapUrls(): array
     {
-        $pages = collect(['home', 'formations.index', 'about', 'business', 'contact', 'consultation', 'affiliate.program', 'legal.notice', 'legal.terms', 'legal.privacy'])
+        $pages = collect(['home', 'formations.index', 'about', 'founder', 'business', 'contact', 'consultation', 'affiliate.program', 'legal.notice', 'legal.terms', 'legal.privacy'])
             ->map(fn (string $name): array => ['loc' => AppUrl::to(route($name)), 'lastmod' => null]);
 
         $formations = Formation::published()->get()->map(fn (Formation $formation): array => [

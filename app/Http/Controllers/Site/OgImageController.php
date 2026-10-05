@@ -38,6 +38,14 @@ class OgImageController extends Controller
         return $this->respond($this->generator->forSite());
     }
 
+    /**
+     * Image de partage de la page de Joseph Ahiankonou : nom, métier et photo (si elle existe).
+     */
+    public function founder(): BinaryFileResponse
+    {
+        return $this->respond($this->generator->forFounder(), 'image/jpeg');
+    }
+
     public function formation(Formation $formation): BinaryFileResponse
     {
         abort_unless($formation->is_active, 404);

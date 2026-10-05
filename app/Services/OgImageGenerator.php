@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Formation;
 use App\Support\Brand;
+use App\Support\Founder;
 use App\Support\LiveOffer;
 use GdImage;
 use Illuminate\Support\Facades\File;
@@ -123,6 +124,43 @@ class OgImageGenerator
     }
 
     /**
+     * Page de Joseph Ahiankonou : nom et surnom, métier, « Fondateur de Lomé IA School », photo ronde à droite
+     * (photo envoyée depuis l'admin, sinon celle du formateur ; sans photo, image sans portrait). JPEG.
+     */
+    public function forFounder(): string
+    {
+        $name = Founder::text('name');
+        $nickname = Founder::text('nickname');
+        $job = Founder::text('job_title');
+        $photo = Founder::text('photo') ?: (string) config('site.trainer.photo');
+        $trainer = public_path((string) config('site.trainer.photo'));
+        $key = 'founder-'.md5(implode('|', [self::VERSION, $name, $nickname, $job, $photo, is_file($trainer) ? filemtime($trainer) : 0]));
+        $path = storage_path('framework/cache/og/'.$key.'.jpg');
+
+        if (File::exists($path)) {
+            return $path;
+        }
+
+        $bytes = Founder::photoBytes();
+        $portrait = $bytes === null ? false : @imagecreatefromstring($bytes);
+
+        $image = $this->render(
+            // Métier en entier s'il tient à gauche du portrait, sinon sa forme courte.
+            eyebrow: $job !== '' && $this->textWidth(24, resource_path('fonts/InstrumentSans_500Medium.ttf'), mb_strtoupper($job)) <= 620 ? $job : 'Formateur et consultant en IA',
+            title: $nickname !== '' ? $name.' ('.$nickname.')' : $name,
+            badge: 'Fondateur de Lomé IA School',
+            footer: 'Lomé, Togo',
+            portrait: $portrait instanceof GdImage ? $portrait : null,
+        );
+
+        File::ensureDirectoryExists(dirname($path));
+        imagejpeg($image, $path, 85);
+        imagedestroy($image);
+
+        return $path;
+    }
+
+    /**
      * Contenu de l'image d'une formation : disque « public » (envoyée depuis l'admin, y compris sur un
      * stockage objet) ou ancien fichier de public/images/formations.
      */
@@ -155,7 +193,7 @@ class OgImageGenerator
         return $path;
     }
 
-    private function render(string $eyebrow, string $title, string $badge, string $footer): GdImage
+    private function render(string $eyebrow, string $title, string $badge, string $footer, ?GdImage $portrait = null): GdImage
     {
         $image = imagecreatetruecolor(self::WIDTH, self::HEIGHT);
 
@@ -167,6 +205,16 @@ class OgImageGenerator
         imageantialias($image, true);
 
         $this->drawBackground($image);
+
+        // Portrait rond à droite : le texte s'arrête avant lui.
+        $right = self::WIDTH - self::PADDING;
+
+        if ($portrait !== null) {
+            $size = 380;
+            $x = self::WIDTH - self::PADDING - $size;
+            $this->drawPortrait($image, $portrait, $x, intdiv(self::HEIGHT - $size, 2), $size);
+            $right = $x - 40;
+        }
 
         $bold = resource_path('fonts/InstrumentSans_700Bold.ttf');
         $medium = resource_path('fonts/InstrumentSans_500Medium.ttf');
@@ -185,11 +233,17 @@ class OgImageGenerator
             imagettftext($image, 26, 0, self::PADDING + 30, 100, $white, $bold, 'Lomé IA School');
         }
 
-        // Catégorie
-        imagettftext($image, 24, 0, self::PADDING, 190, $muted, $medium, mb_strtoupper($eyebrow));
+        // Catégorie (raccourcie si elle passerait sous le portrait)
+        $eyebrow = mb_strtoupper($eyebrow);
+
+        while (mb_strlen($eyebrow) > 10 && self::PADDING + $this->textWidth(24, $medium, $eyebrow) > $right) {
+            $eyebrow = rtrim(mb_substr($eyebrow, 0, -2), ' ,.·').'…';
+        }
+
+        imagettftext($image, 24, 0, self::PADDING, 190, $muted, $medium, $eyebrow);
 
         // Titre sur 3 lignes maximum, taille adaptée à la longueur
-        [$size, $lines] = $this->fitTitle($title, $bold);
+        [$size, $lines] = $this->fitTitle($title, $bold, $right - self::PADDING);
         $lineHeight = (int) round($size * 1.22);
         $y = 190 + 30 + $lineHeight;
 
@@ -207,7 +261,7 @@ class OgImageGenerator
         // Le texte du pied n'est affiché que s'il tient entièrement dans l'image.
         $footerX = self::PADDING + $badgeWidth + 88;
 
-        if ($footerX + $this->textWidth(22, $medium, $footer) <= self::WIDTH - self::PADDING) {
+        if ($footerX + $this->textWidth(22, $medium, $footer) <= $right) {
             imagettftext($image, 22, 0, $footerX, $badgeTop + 46, $soft, $medium, $footer);
         }
 
@@ -236,9 +290,8 @@ class OgImageGenerator
     /**
      * @return array{0: int, 1: list<string>}
      */
-    private function fitTitle(string $title, string $font): array
+    private function fitTitle(string $title, string $font, int $maxWidth = self::WIDTH - self::PADDING * 2): array
     {
-        $maxWidth = self::WIDTH - self::PADDING * 2;
         // Hauteur disponible entre la catégorie et le badge du bas.
         $maxHeight = 200;
         $lines = [];
@@ -318,6 +371,46 @@ class OgImageGenerator
         imageellipse($image, 1050, 470, 300, 300, $line);
         imageellipse($image, 1050, 470, 420, 420, $line);
         imagesetthickness($image, 1);
+    }
+
+    /**
+     * Photo recadrée en carré au centre, dessinée en rond avec un anneau doré et un bord adouci.
+     *
+     * @param  int<1, max>  $size
+     */
+    private function drawPortrait(GdImage $image, GdImage $source, int $x, int $y, int $size): void
+    {
+        $ring = 8;
+        imagefilledellipse($image, $x + intdiv($size, 2), $y + intdiv($size, 2), $size + $ring * 2, $size + $ring * 2, $this->color($image, '#F59E0B'));
+
+        $square = imagecreatetruecolor($size, $size);
+
+        if ($square === false) {
+            return;
+        }
+
+        $side = min(imagesx($source), imagesy($source));
+        imagecopyresampled($square, $source, 0, 0, intdiv(imagesx($source) - $side, 2), intdiv(imagesy($source) - $side, 2), $size, $size, $side, $side);
+
+        $radius = $size / 2;
+
+        for ($py = 0; $py < $size; $py++) {
+            for ($px = 0; $px < $size; $px++) {
+                $distance = sqrt(($px + 0.5 - $radius) ** 2 + ($py + 0.5 - $radius) ** 2);
+
+                if ($distance > $radius) {
+                    continue;
+                }
+
+                $rgb = imagecolorat($square, $px, $py);
+                // Dernier pixel du bord à moitié transparent : contour sans escalier.
+                $alpha = $distance > $radius - 1 ? (int) round(127 * ($distance - $radius + 1)) : 0;
+                imagesetpixel($image, $x + $px, $y + $py, (int) imagecolorallocatealpha($image, ($rgb >> 16) & 0xFF, ($rgb >> 8) & 0xFF, $rgb & 0xFF, max(0, min(127, $alpha))));
+            }
+        }
+
+        imagedestroy($square);
+        imagedestroy($source);
     }
 
     private function roundedRectangle(GdImage $image, int $x1, int $y1, int $x2, int $y2, int $radius, int $color): void
