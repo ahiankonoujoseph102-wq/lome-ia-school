@@ -192,12 +192,14 @@
                         </div>
                     </div>
 
-                    <div class="w-full max-w-sm space-y-1.5 py-4 text-sm leading-snug" aria-hidden="true">
+                    <div class="w-full max-w-sm space-y-1.5 py-4 text-sm leading-snug" aria-hidden="true" x-bind:aria-hidden="callUnspoken ? 'false' : 'true'">
                         <template x-for="(line, index) in callTranscript" :key="index">
-                            <p class="line-clamp-2" :class="line.from === 'visitor' ? 'text-slate-400' : 'text-slate-300'">
+                            <p :class="[line.from === 'visitor' ? 'text-slate-400' : 'text-slate-300', callUnspoken && line.from === 'ama' && index === callTranscript.length - 1 ? 'max-h-40 overflow-y-auto' : 'line-clamp-2']">
                                 <span class="font-semibold" x-text="line.from === 'visitor' ? 'Vous : ' : 'Ama : '"></span><span x-text="line.text"></span>
                             </p>
                         </template>
+                        {{-- Voix de Gemini indisponible (et voix du téléphone éteinte ou déjà exclue) : la réponse est écrite, l'appel continue. --}}
+                        <p x-show="callUnspoken" x-cloak class="pt-1 text-xs text-slate-400" role="status" data-test="ama-call-unspoken">Voix indisponible pour cette réponse : elle est écrite ci-dessus.</p>
                     </div>
 
                     <button

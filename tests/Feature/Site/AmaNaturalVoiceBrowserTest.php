@@ -92,7 +92,7 @@ class AmaNaturalVoiceBrowserTest extends TestCase
             };
             env.startAudio = () => env.playing.handlers.onstart();
             env.endAudio = () => { const playing = env.playing; env.playing = null; playing.handlers.onend(); };
-            env.failAudio = () => { const playing = env.playing; env.playing = null; playing.handlers.onerror(); };
+            env.failAudio = (cause = 'playback_refused') => { const playing = env.playing; env.playing = null; playing.handlers.onerror(cause); };
             env.fallback = {
                 speak(utterance) { env.phone = utterance; env.phoneSaid.push(utterance.text); env.log.push('téléphone : ' + utterance.text); },
                 cancel() { env.phone = null; env.log.push('téléphone arrêté'); },
@@ -139,14 +139,16 @@ class AmaNaturalVoiceBrowserTest extends TestCase
                 out.shortEvents = env.events;
                 out.defaultLength = SPLIT_LENGTH;
             }
-            // 2. Réponse plus longue que la longueur réglée : la première phrase seule, puis tout le reste d'un bloc.
+            // 2. Réponse plus longue que la longueur réglée : la première phrase seule, puis tout le reste d'un bloc, demandé
+            //    dès que la voix de la première commence.
             {
                 const env = setup({ splitLength: 20 });
                 env.synth.speak(env.utterance('Phrase un. Phrase deux. Phrase trois.'));
-                out.fetched = [...env.fetched];
+                out.firstFetched = [...env.fetched];
                 await env.answer('Phrase un.');
                 out.firstPlaying = env.playing?.url;
                 env.startAudio();
+                out.fetched = [...env.fetched];
                 await env.answer('Phrase deux. Phrase trois.');
                 env.endAudio();
                 await tick();
@@ -165,6 +167,7 @@ class AmaNaturalVoiceBrowserTest extends TestCase
         $this->assertSame('blob:Phrase un. Phrase deux. Phrase trois.', $out['shortPlaying']);
         $this->assertSame(['début', 'fin'], $out['shortEvents']);
 
+        $this->assertSame(['Phrase un.'], $out['firstFetched']);
         $this->assertSame(['Phrase un.', 'Phrase deux. Phrase trois.'], $out['fetched']);
         $this->assertSame('blob:Phrase un.', $out['firstPlaying']);
         $this->assertSame('blob:Phrase deux. Phrase trois.', $out['secondPlaying']);
@@ -224,7 +227,7 @@ class AmaNaturalVoiceBrowserTest extends TestCase
         $this->assertNull($out['lateAudio']);
         $this->assertSame(['début', 'fin'], $out['timeoutEvents']);
 
-        $this->assertSame(['phone' => ['Vous payez par Mobile Money.'], 'reported' => ['playback']], $out['playback']);
+        $this->assertSame(['phone' => ['Vous payez par Mobile Money.'], 'reported' => ['playback_refused']], $out['playback']);
     }
 
     public function test_the_first_name_is_never_sent_but_the_phone_voice_says_it(): void
@@ -458,18 +461,17 @@ class AmaNaturalVoiceBrowserTest extends TestCase
                 env.endPhone();
                 out.events = env.events;
             }
-            // 2. Réponse lue en deux demandes : la première est trop lente, la suite arrive à temps. La suite garde la voix
-            //    du téléphone (une seule voix par réponse) : l'audio de la suite n'est jamais joué.
+            // 2. Réponse lue en deux demandes : la première est trop lente. La suite garde la voix du téléphone (une seule
+            //    voix par réponse) : elle n'est même pas demandée, et l'audio tardif de la première n'est jamais joué.
             {
                 const env = setup({ splitLength: 20, timeoutMs: 5000 });
                 env.synth.speak(env.utterance('Phrase un. Phrase deux. Phrase trois.'));
-                await env.answer('Phrase deux. Phrase trois.');
                 env.advance(5000);
                 env.startPhone();
                 env.endPhone();
                 await env.answer('Phrase un.');
                 env.advance(0);
-                out.split = { phone: env.phoneSaid, playing: env.playing, audio: env.log.filter((line) => line.startsWith('audio : ')) };
+                out.split = { phone: env.phoneSaid, playing: env.playing, audio: env.log.filter((line) => line.startsWith('audio : ')), fetched: env.fetched };
             }
             // 3. Serveur injoignable : voix du téléphone tout de suite, cause « network » signalée.
             {
@@ -485,12 +487,14 @@ class AmaNaturalVoiceBrowserTest extends TestCase
         $this->assertSame(0, $out['at4']);
         $this->assertSame(['phone' => ['Vous payez par Mobile Money.'], 'reported' => ['timeout'], 'waited' => [10000]], $out['at10']);
         $this->assertNull($out['lateWhilePhone']['playing']);
-        $this->assertSame(['libéré : Vous payez par Mobile Money.'], $out['lateWhilePhone']['log']);
+        // Le lecteur est arrêté et vidé avant la voix du téléphone ; l'audio tardif est libéré sans jamais être joué.
+        $this->assertSame(['audio arrêté', 'libéré : Vous payez par Mobile Money.'], $out['lateWhilePhone']['log']);
         $this->assertSame(['début', 'fin'], $out['events']);
 
         $this->assertSame(['Phrase un.', 'Phrase deux. Phrase trois.'], $out['split']['phone']);
         $this->assertNull($out['split']['playing']);
         $this->assertSame([], $out['split']['audio']);
+        $this->assertSame(['Phrase un.'], $out['split']['fetched']);
 
         $this->assertSame(['phone' => ['Vous payez par Mobile Money.'], 'reported' => ['network'], 'waited' => [300]], $out['network']);
     }

@@ -15,6 +15,7 @@ use App\Settings\SiteSettings;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
@@ -118,20 +119,28 @@ class AmaVoiceMeasureTest extends TestCase
         $this->speech->failure = new SpeechFailure('500');
         $this->voice('Quatrième réponse de test.')->assertExactJson(['fallback' => true]);
 
-        // Passages décidés par le navigateur : délai dépassé (avec l'attente), lecture refusée, réseau, cause inconnue.
-        $this->postJson(route('assistant.voice.fallback'), ['cause' => 'timeout', 'waited' => 10000])->assertOk();
-        $this->postJson(route('assistant.voice.fallback'), ['cause' => 'timeout', 'waited' => 10001])->assertOk();
-        $this->postJson(route('assistant.voice.fallback'), ['cause' => 'playback', 'waited' => 300])->assertOk();
-        $this->postJson(route('assistant.voice.fallback'), ['cause' => 'network'])->assertOk();
+        // Passages décidés par le navigateur : délai dépassé (avec l'attente), lecture refusée, son coupé par le téléphone,
+        // réseau, page ouverte avant la mise à jour (sans cause) ; une cause inventée n'est pas comptée.
+        $this->postJson(route('assistant.voice.fallback'), ['cause' => 'timeout', 'waited' => 10000, 'outcome' => 'phone'])->assertOk();
+        $this->postJson(route('assistant.voice.fallback'), ['cause' => 'timeout', 'waited' => 10001, 'outcome' => 'phone'])->assertOk();
+        $this->postJson(route('assistant.voice.fallback'), ['cause' => 'playback_refused', 'waited' => 300, 'outcome' => 'phone'])->assertOk();
+        $this->postJson(route('assistant.voice.fallback'), ['cause' => 'playback_paused', 'waited' => 2100, 'outcome' => 'phone'])->assertOk();
+        $this->postJson(route('assistant.voice.fallback'), ['cause' => 'network', 'outcome' => 'phone'])->assertOk();
+        $this->postJson(route('assistant.voice.fallback'), [])->assertOk();
         $this->postJson(route('assistant.voice.fallback'), ['cause' => '<script>'])->assertOk();
 
         $this->assertSame([
-            'google_error' => 1, 'google_quota' => 1, 'google_timeout' => 1, 'network' => 1, 'other' => 1, 'playback' => 1,
-            'private' => 1, 'site_minute_limit' => 1, 'timeout' => 2,
+            'google_error' => 1, 'google_quota' => 1, 'google_timeout' => 1, 'network' => 1, 'old_page' => 1,
+            'playback_paused' => 1, 'playback_refused' => 1, 'private' => 1, 'site_minute_limit' => 1, 'timeout' => 2,
         ], collect(AssistantVoiceEvent::todayStats()['causes'])->sortKeys()->all());
+        // Aucune cause « Autre » : chaque passage enregistré a une cause précise, avec son libellé dans l'admin.
+        $this->assertArrayNotHasKey('other', NaturalVoice::CAUSES);
+        foreach (AssistantVoiceEvent::query()->pluck('cause')->filter() as $cause) {
+            $this->assertArrayHasKey($cause, NaturalVoice::CAUSES);
+        }
         $this->assertSame([10000, 10001], AssistantVoiceEvent::query()->where('cause', 'timeout')->orderBy('id')->pluck('duration_ms')->all());
-        // Les anciens compteurs restent justes : 10 passages au total.
-        $this->assertSame(10, AssistantVoiceUsage::today()['fallbacks']);
+        // Les anciens compteurs restent justes : 11 passages au total.
+        $this->assertSame(11, AssistantVoiceUsage::today()['fallbacks']);
 
         $admin = User::factory()->admin()->create();
         $this->actingAs($admin)->get(route('admin.settings.edit', 'assistante'))->assertOk()
@@ -140,7 +149,10 @@ class AmaVoiceMeasureTest extends TestCase
             ->assertSee('Limite de demandes par minute du site')
             ->assertSee('Limite de Google atteinte (refus 429)')
             ->assertSee('Google trop lent (délai du serveur dépassé)')
-            ->assertSee('Lecture refusée ou coupée par le téléphone')
+            ->assertSee('Lecture refusée par le navigateur du téléphone')
+            ->assertSee('Son mis en pause par le téléphone (micro, appel, notification, écouteurs) et pas repris')
+            ->assertSee('Page ouverte avant la mise à jour du site (cause non transmise)')
+            ->assertDontSee('>Autre<', false)
             ->assertSee('Réseau ou serveur du site injoignable')
             ->assertSee('Numéro, e-mail, lien ou prénom dans la phrase (voulu)');
     }
@@ -255,14 +267,16 @@ class AmaVoiceMeasureTest extends TestCase
         // Un visiteur vient d'utiliser deux demandes : il n'en reste qu'une, laissée aux visiteurs.
         $this->voice('Première réponse de test.')->assertOk();
         $this->voice('Deuxième réponse de test.')->assertOk();
+        // (Sans la pause de deux minutes après un appel, testée dans AmaVoicePhoneFallbackTest.)
+        Cache::forget('ama-voice:call-activity');
         Queue::fake();
         (new PrepareAmaVoicePhrases)->handle(app(NaturalVoice::class));
         $this->assertSame(2, $this->speech->calls);
         Queue::assertPushed(PrepareAmaVoicePhrases::class);
         $this->voice('Troisième réponse de test.')->assertOk()->assertHeader('Content-Type', 'audio/wav');
 
-        // Refus de Google (quota du jour) : la préparation s'arrête sans se relancer.
-        $this->travel(61)->seconds();
+        // Refus de Google (quota du jour) : la préparation s'arrête sans se relancer (deux minutes après l'appel).
+        $this->travel(NaturalVoice::CALL_QUIET_SECONDS + 1)->seconds();
         $this->speech->failure = new SpeechFailure('quota', quota: true, daily: true);
         Queue::fake();
         (new PrepareAmaVoicePhrases)->handle(app(NaturalVoice::class));

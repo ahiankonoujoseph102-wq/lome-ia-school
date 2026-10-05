@@ -808,13 +808,16 @@ function naturalVoiceFor(config) {
         now: () => (window.performance?.now ? window.performance.now() : Date.now()),
         // Le prénom du visiteur n'est jamais envoyé (la voix du téléphone, elle, le dit).
         privateWords: [config.firstName ?? ''],
+        // « Voix du téléphone en secours » (admin, allumé par défaut). Éteint : la réponse est affichée sans être dite.
+        phoneFallback: settings.phoneFallback !== false,
         // Seul le texte de la réponse d'Ama part, vers le serveur du site (qui, seul, appelle Google).
-        fetchAudio: async (text, { signal }) => {
+        // voiced : la voix de Gemini a déjà été entendue dans cette réponse (un refus sera affiché sans voix).
+        fetchAudio: async (text, { signal, voiced = false }) => {
             const response = await fetch(settings.endpoint, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers,
-                body: JSON.stringify({ text }),
+                body: JSON.stringify({ text, voiced }),
                 signal,
             });
             const type = response.headers.get('Content-Type') ?? '';
@@ -830,14 +833,15 @@ function naturalVoiceFor(config) {
 
             return { url, release: () => URL.revokeObjectURL(url) };
         },
-        // Voix du téléphone reprise par le navigateur : cause exacte (délai, lecture refusée, réseau) et attente, sans texte.
-        onFallback: (cause, waited) => {
+        // Voix de Gemini abandonnée par le navigateur : cause exacte (délai, réseau, lecture refusée, coupée, illisible ou
+        // bloquée), attente et issue (voix du téléphone ou réponse affichée sans voix), sans aucun texte.
+        onFallback: (cause, waited, outcome) => {
             try {
                 fetch(settings.fallbackEndpoint, {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers,
-                    body: JSON.stringify({ cause, waited }),
+                    body: JSON.stringify({ cause, waited, outcome }),
                     keepalive: true,
                 }).catch(() => {});
             } catch {
@@ -879,6 +883,8 @@ Alpine.data('voiceAssistant', (config) => ({
     canCall: false,
     call: null,
     callState: 'idle',
+    // Mode appel : la réponse en cours n'a pas été (entièrement) dite par la voix, elle est affichée en entier.
+    callUnspoken: false,
     callEnd: null,
     bargeInUnavailable: false,
     // « Transmettre au fondateur » : carte de confirmation (ou formulaire de relève) et fiche proposée pendant un appel.
@@ -1492,6 +1498,10 @@ Alpine.data('voiceAssistant', (config) => ({
         const synth = this.voiceSynth();
         const Utterance = synth === window.speechSynthesis ? window.SpeechSynthesisUtterance : NaturalUtterance;
         synth.cancel();
+        if (synth !== window.speechSynthesis) {
+            // Réponse écrite : déjà affichée en entier, rien de plus à montrer si elle n'est pas dite.
+            synth.onsilent = null;
+        }
         const utterance = new Utterance(speakable(text));
         utterance.lang = 'fr-FR';
         utterance.rate = SPEECH_RATE;
@@ -1531,6 +1541,14 @@ Alpine.data('voiceAssistant', (config) => ({
         let amaIndex = null;
 
         this.bargeInUnavailable = false;
+        this.callUnspoken = false;
+        // Voix naturelle : une partie de réponse qui n'est pas dite (voix de Gemini indisponible) reste affichée en entier.
+        const callSynth = this.voiceSynth();
+        if (callSynth !== window.speechSynthesis) {
+            callSynth.onsilent = () => {
+                this.callUnspoken = true;
+            };
+        }
         const callGreeting = this.greet(CALL_GREETING);
         this.call = createVoiceCall({
             greeting: callGreeting,
@@ -1570,6 +1588,7 @@ Alpine.data('voiceAssistant', (config) => ({
                 }
             },
             onVisitor: (text) => {
+                this.callUnspoken = false;
                 this.messages.push({ from: 'visitor', text, fallback: false });
                 amaIndex = null;
                 this.persist();

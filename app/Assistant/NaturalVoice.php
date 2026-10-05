@@ -107,8 +107,10 @@ class NaturalVoice
     public const array TIMEOUT = [10, 3, 20];
 
     /**
-     * Causes d'un passage à la voix du téléphone (code enregistré => libellé de l'admin). Les quatre dernières sont
-     * décidées par le navigateur (BROWSER_CAUSES).
+     * Causes pour lesquelles la voix de Gemini n'a pas dit une partie de réponse (code enregistré => libellé de l'admin),
+     * qu'elle ait été lue par la voix du téléphone ou seulement affichée. Celles de BROWSER_CAUSES sont décidées par le
+     * navigateur ; « old_page » : passage signalé sans cause par une page ouverte avant la mise à jour qui envoie la cause.
+     * Aucune cause « Autre » : chaque passage a une cause précise.
      *
      * @var array<string, string>
      */
@@ -122,15 +124,27 @@ class NaturalVoice
         'google_timeout' => 'Google trop lent (délai du serveur dépassé)',
         'google_error' => 'Erreur ou réponse sans audio de Google',
         'timeout' => 'Voix pas prête avant le délai du téléphone',
-        'playback' => 'Lecture refusée ou coupée par le téléphone',
         'network' => 'Réseau ou serveur du site injoignable',
-        'other' => 'Autre',
+        'playback_refused' => 'Lecture refusée par le navigateur du téléphone',
+        'playback_paused' => 'Son mis en pause par le téléphone (micro, appel, notification, écouteurs) et pas repris',
+        'playback_error' => 'Fichier audio illisible par le téléphone',
+        'playback_stalled' => 'Son bloqué : commencé mais jamais terminé',
+        'playback' => 'Lecture refusée ou coupée par le téléphone (ancienne mesure, avant le détail des causes)',
+        'old_page' => 'Page ouverte avant la mise à jour du site (cause non transmise)',
     ];
 
     /**
      * Causes que le navigateur peut signaler (POST /assistante/voix/secours).
      */
-    public const array BROWSER_CAUSES = ['timeout', 'playback', 'network'];
+    public const array BROWSER_CAUSES = ['timeout', 'network', 'playback_refused', 'playback_paused', 'playback_error', 'playback_stalled'];
+
+    /**
+     * Aucune préparation des phrases écrites à l'avance pendant un appel : il faut deux minutes sans aucune activité
+     * vocale d'un visiteur (message du mode appel ou demande de voix) avant de reprendre.
+     */
+    public const int CALL_QUIET_SECONDS = 120;
+
+    private const string CALL_ACTIVITY_CACHE = 'ama-voice:call-activity';
 
     /**
      * Préparation en arrière-plan : nombre maximal de phrases écrites à l'avance (garde-fou).
@@ -168,9 +182,16 @@ class NaturalVoice
     private const string MINUTE_LIMITER = 'ama-voice:site-minute';
 
     /**
-     * Dernière cause d'un passage à la voix du téléphone (code de CAUSES, pour l'admin et les tests).
+     * Dernière cause d'un passage à la voix du téléphone (code de CAUSES, ou « invalid_voice » pour un essai de l'admin
+     * avec une voix inconnue ; pour l'admin et les tests).
      */
     public ?string $lastReason = null;
+
+    /**
+     * La partie demandée ne sera pas lue par la voix du téléphone en cas d'échec (secours éteint dans l'admin, ou voix de
+     * Gemini déjà entendue dans cette réponse) : l'échec est compté comme « réponse affichée sans voix ».
+     */
+    private bool $silentOnFailure = false;
 
     public function __construct(private readonly SpeechSynthesizer $synthesizer) {}
 
@@ -219,6 +240,28 @@ class NaturalVoice
         return 1000 * (is_numeric($value) ? max($min, min($max, (int) $value)) : $default);
     }
 
+    /**
+     * « Voix du téléphone en secours » (admin, allumé par défaut). Éteint : seule la voix de Gemini parle ; si elle échoue,
+     * la réponse est affichée à l'écran sans être dite.
+     */
+    public static function phoneFallback(): bool
+    {
+        return (bool) config('site.voice_assistant.natural_voice.phone_fallback', true);
+    }
+
+    /**
+     * Un visiteur utilise la voix (appel ou lecture à voix haute) : la préparation en arrière-plan attend deux minutes.
+     */
+    public static function markCallActivity(): void
+    {
+        Cache::put(self::CALL_ACTIVITY_CACHE, true, self::CALL_QUIET_SECONDS);
+    }
+
+    public static function callRecentlyActive(): bool
+    {
+        return Cache::get(self::CALL_ACTIVITY_CACHE) === true;
+    }
+
     public static function splitLength(): int
     {
         [$default, $min, $max] = self::SPLIT_LENGTH;
@@ -239,9 +282,10 @@ class NaturalVoice
      * Audio d'un morceau de réponse d'Ama, ou null : le navigateur lit alors avec la voix du téléphone (raison dans
      * $lastReason). Chaque cas est compté pour l'admin.
      */
-    public function speak(string $text, ?User $user = null, ?string $visitorHash = null): ?SpeechAudio
+    public function speak(string $text, ?User $user = null, ?string $visitorHash = null, bool $voiced = false): ?SpeechAudio
     {
         $this->lastReason = null;
+        $this->silentOnFailure = $voiced || ! self::phoneFallback();
         $text = $this->prepare($text, $user);
 
         if ($text === null) {
@@ -264,7 +308,7 @@ class NaturalVoice
         $this->lastReason = null;
 
         if (! isset(self::VOICES[$voice]) || ! isset(self::MODELS[$model])) {
-            $this->lastReason = 'other';
+            $this->lastReason = 'invalid_voice';
 
             return null;
         }
@@ -273,15 +317,27 @@ class NaturalVoice
     }
 
     /**
-     * Le navigateur a lui-même repris la voix du téléphone : cause (délai dépassé, lecture refusée, réseau) et temps
-     * d'attente du téléphone. Aucun texte.
+     * Le navigateur a lui-même abandonné la voix de Gemini : cause exacte (BROWSER_CAUSES), temps d'attente du téléphone
+     * et issue (« phone » : voix du téléphone ; « silent » : réponse affichée sans voix). Aucun texte. Sans cause : page
+     * ouverte avant la mise à jour (« old_page ») ; une cause inconnue n'est pas comptée (jamais envoyée par le site).
      */
-    public static function recordBrowserFallback(?string $cause = null, ?int $waitedMs = null): void
+    public static function recordBrowserFallback(?string $cause = null, ?int $waitedMs = null, ?string $outcome = null): void
     {
-        AssistantVoiceUsage::bump('fallbacks');
+        if ($cause === null || $cause === '') {
+            $cause = 'old_page';
+        } elseif (! in_array($cause, self::BROWSER_CAUSES, true)) {
+            return;
+        }
+
+        $silent = $outcome === 'silent';
+
+        if (! $silent) {
+            AssistantVoiceUsage::bump('fallbacks');
+        }
+
         AssistantVoiceEvent::record(
-            AssistantVoiceEvent::FALLBACK,
-            in_array($cause, self::BROWSER_CAUSES, true) ? $cause : 'other',
+            $silent ? AssistantVoiceEvent::SILENT : AssistantVoiceEvent::FALLBACK,
+            $cause,
             $waitedMs === null ? null : min($waitedMs, 600000),
         );
     }
@@ -332,11 +388,11 @@ class NaturalVoice
                 $failure->timeout => 'google_timeout',
                 default => 'google_error',
             };
-            AssistantVoiceUsage::bump('refusals', ...($count ? ['fallbacks'] : []));
+            AssistantVoiceUsage::bump('refusals', ...($count && ! $this->silentOnFailure ? ['fallbacks'] : []));
             AssistantVoiceEvent::record(AssistantVoiceEvent::GOOGLE, $cause, self::elapsedMs($started), $chars, $source);
 
             if ($count) {
-                AssistantVoiceEvent::record(AssistantVoiceEvent::FALLBACK, $cause, chars: $chars);
+                AssistantVoiceEvent::record($this->silentOnFailure ? AssistantVoiceEvent::SILENT : AssistantVoiceEvent::FALLBACK, $cause, chars: $chars);
             }
 
             $this->lastReason = $cause;
@@ -362,8 +418,10 @@ class NaturalVoice
         $this->lastReason = $cause;
 
         if ($count) {
-            AssistantVoiceUsage::bump('fallbacks');
-            AssistantVoiceEvent::record(AssistantVoiceEvent::FALLBACK, $cause, chars: $chars);
+            if (! $this->silentOnFailure) {
+                AssistantVoiceUsage::bump('fallbacks');
+            }
+            AssistantVoiceEvent::record($this->silentOnFailure ? AssistantVoiceEvent::SILENT : AssistantVoiceEvent::FALLBACK, $cause, chars: $chars);
         }
 
         return null;
@@ -688,8 +746,9 @@ class NaturalVoice
     }
 
     /**
-     * Préparation en arrière-plan : fabrique UNE phrase écrite à l'avance qui manque encore, seulement s'il reste au
-     * moins deux demandes libres dans la minute (la dernière reste pour un visiteur). Renvoie le nombre de phrases qui
+     * Préparation en arrière-plan : fabrique UNE phrase écrite à l'avance qui manque encore, seulement si aucun visiteur
+     * n'a utilisé la voix depuis deux minutes (CALL_QUIET_SECONDS) et s'il reste au moins deux demandes libres dans la
+     * minute (la dernière reste pour un visiteur). Renvoie le nombre de phrases qui
      * manquent encore, ou null s'il faut s'arrêter (voix éteinte, quota du jour épuisé, refus de Google).
      */
     public function prepareNext(): ?int
@@ -702,6 +761,11 @@ class NaturalVoice
 
         if ($missing === []) {
             return 0;
+        }
+
+        // Un appel a eu lieu dans les deux dernières minutes : les demandes de la minute restent aux visiteurs.
+        if (self::callRecentlyActive()) {
+            return count($missing);
         }
 
         if (RateLimiter::remaining(self::MINUTE_LIMITER, self::minuteLimit()) < 2) {

@@ -618,6 +618,8 @@ class VoiceAssistant
                 'fallbackEndpoint' => route('assistant.voice.fallback'),
                 'timeoutMs' => NaturalVoice::timeoutMs(),
                 'splitLength' => NaturalVoice::splitLength(),
+                // « Voix du téléphone en secours » (allumé par défaut) ; éteint : réponse affichée sans voix si Gemini échoue.
+                'phoneFallback' => NaturalVoice::phoneFallback(),
             ] : null,
             // Mode appel : mesure des durées (sans donnée personnelle), voir AssistantController::timing.
             'timingEndpoint' => $gemini ? route('assistant.timing') : null,

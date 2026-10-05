@@ -35,6 +35,9 @@ export const STREAM_WAIT_MS = 1500;
 // Écart (ms) au-delà duquel une nouvelle phrase commence une nouvelle réponse (la précédente est finie).
 export const NEW_ANSWER_GAP_MS = 1000;
 
+// Pause imposée par le téléphone : temps laissé au navigateur pour relancer le son de lui-même avant de l'abandonner.
+export const PAUSE_GRACE_MS = 1500;
+
 // Un morceau de silence très court (WAV), joué au toucher d'un bouton pour autoriser ensuite la lecture (iPhone).
 export const SILENT_WAV = 'data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQIAAAAAAA==';
 
@@ -96,31 +99,90 @@ export class NaturalUtterance {
 }
 
 /**
- * Lecteur audio du navigateur (un seul élément <audio>, réutilisé : sur iPhone, il reste autorisé après le premier
- * toucher). play(adresse, { onstart, onend, onerror }), stop(), unlock().
+ * Lecteur audio du navigateur (un seul élément <audio>, réutilisé : il reste autorisé après le premier toucher, sur
+ * iPhone comme sur Android). play(adresse, { onstart, onend, onerror }), stop(), unlock().
+ *
+ * onerror(cause) donne la cause exacte : 'playback_refused' (lecture refusée par le navigateur : play() rejeté),
+ * 'playback_paused' (son mis en pause par le téléphone et pas repris de lui-même : micro, appel, notification, sortie
+ * audio changée), 'playback_error' (fichier illisible) ou 'playback_stalled' (son commencé qui ne finit jamais).
+ *
+ * Règle absolue : un son abandonné (arrêt, échec, passage à la voix du téléphone) est arrêté ET vidé (plus aucune source
+ * dans l'élément) : Chrome Android, qui relance de lui-même un son qu'il avait mis en pause quand il retrouve la main sur
+ * le haut-parleur, n'a plus rien à relancer. Et tout son qui démarre sans être la lecture en cours est coupé aussitôt.
  */
-export function createElementPlayer(element, { setTimer = (callback, delay) => setTimeout(callback, delay), clearTimer = (id) => clearTimeout(id) } = {}) {
+export function createElementPlayer(element, {
+    setTimer = (callback, delay) => setTimeout(callback, delay),
+    clearTimer = (id) => clearTimeout(id),
+    pauseGraceMs = PAUSE_GRACE_MS,
+} = {}) {
     let handlers = null;
     let watchdog = null;
-    const take = () => {
-        const current = handlers;
-        handlers = null;
+    let grace = null;
+    let unlocking = false;
+    const clearTimers = () => {
         if (watchdog !== null) {
             clearTimer(watchdog);
             watchdog = null;
         }
+        if (grace !== null) {
+            clearTimer(grace);
+            grace = null;
+        }
+    };
+    const take = () => {
+        const current = handlers;
+        handlers = null;
+        clearTimers();
 
         return current;
+    };
+    // Arrêt définitif : pause, retour au début et plus aucune source (rien ne peut reprendre, même relancé par le téléphone).
+    const reset = () => {
+        unlocking = false;
+        try {
+            element.pause();
+        } catch {
+            // Déjà arrêté.
+        }
+        try {
+            element.removeAttribute('src');
+            element.load();
+        } catch {
+            // Rien à vider.
+        }
+    };
+    // Abandon de la lecture en cours avec sa cause : le son est vidé AVANT que la suite (voix du téléphone) commence.
+    const fail = (cause) => {
+        const current = take();
+        reset();
+        current?.onerror?.(cause);
     };
     // Événement de la lecture en cours seulement (jamais celui, tardif, d'un son précédent ou du silence d'autorisation).
     const mine = () => handlers !== null && element.src === handlers.url;
 
+    // Garde : un son qui démarre sans être la lecture en cours (relance par le téléphone d'un son abandonné) est coupé.
+    const guard = () => {
+        if (!mine() && !unlocking) {
+            reset();
+        }
+    };
+    element.addEventListener('play', guard);
     element.addEventListener('playing', () => {
         if (!mine()) {
+            guard();
+
             return;
         }
-        handlers.onstart?.();
-        // Sécurité : un son qui ne finit jamais (téléphone qui le bloque) passe à la voix du téléphone.
+        // Son repris de lui-même après une courte pause du téléphone : la lecture continue, sans autre voix.
+        if (grace !== null) {
+            clearTimer(grace);
+            grace = null;
+        }
+        if (!handlers.started) {
+            handlers.started = true;
+            handlers.onstart?.();
+        }
+        // Sécurité : un son qui ne finit jamais (téléphone qui le bloque) est abandonné.
         const seconds = Number.isFinite(element.duration) && element.duration > 0 ? element.duration : 60;
         if (watchdog !== null) {
             clearTimer(watchdog);
@@ -128,26 +190,41 @@ export function createElementPlayer(element, { setTimer = (callback, delay) => s
         watchdog = setTimer(() => {
             watchdog = null;
             if (mine()) {
-                // Le son est arrêté avant que la voix du téléphone prenne le relais : jamais deux voix à la fois.
-                const current = take();
-                try {
-                    element.pause();
-                } catch {
-                    // Déjà arrêté.
-                }
-                current?.onerror?.();
+                fail('playback_stalled');
             }
         }, seconds * 1000 + 3000);
     });
-    element.addEventListener('ended', () => mine() && take()?.onend?.());
-    element.addEventListener('error', () => mine() && take()?.onerror?.());
-    // Pause imposée par le téléphone (micro ouvert, appel entrant…) : la phrase passe à la voix du téléphone.
-    element.addEventListener('pause', () => mine() && !element.ended && take()?.onerror?.());
+    element.addEventListener('ended', () => {
+        if (mine()) {
+            const current = take();
+            reset();
+            current?.onend?.();
+        }
+    });
+    element.addEventListener('error', () => mine() && fail('playback_error'));
+    // Pause imposée par le téléphone (micro, appel, notification, écouteurs débranchés…) : Chrome Android relance souvent
+    // le son de lui-même quelques instants plus tard. On l'attend un court moment ; sinon le son est abandonné et vidé.
+    element.addEventListener('pause', () => {
+        if (!mine() || element.ended || grace !== null) {
+            return;
+        }
+        if (watchdog !== null) {
+            clearTimer(watchdog);
+            watchdog = null;
+        }
+        grace = setTimer(() => {
+            grace = null;
+            if (mine() && element.paused) {
+                fail('playback_paused');
+            }
+        }, pauseGraceMs);
+    });
 
     return {
         play(url, next) {
             take();
-            handlers = { ...next, url };
+            unlocking = false;
+            handlers = { ...next, url, started: false };
             const current = handlers;
             try {
                 element.src = url;
@@ -155,33 +232,42 @@ export function createElementPlayer(element, { setTimer = (callback, delay) => s
                 const started = element.play();
                 started?.catch?.(() => {
                     if (handlers === current) {
-                        take()?.onerror?.();
+                        fail('playback_refused');
                     }
                 });
             } catch {
                 if (handlers === current) {
-                    take()?.onerror?.();
+                    fail('playback_refused');
                 }
             }
         },
         stop() {
             take();
-            try {
-                element.pause();
-            } catch {
-                // Rien à arrêter.
-            }
+            reset();
         },
-        // Au toucher d'un bouton : un silence très court autorise les lectures suivantes (iPhone, Safari).
+        // Au premier toucher (bouton « Parler avec Ama », « Envoyer ») : un silence très court autorise ce même lecteur
+        // pour les lectures suivantes (iPhone, Safari ; Chrome Android garde aussi l'autorisation sur cet élément).
         unlock() {
             if (handlers) {
                 return;
             }
             try {
+                unlocking = true;
                 element.src = SILENT_WAV;
-                element.play()?.catch?.(() => {});
+                const started = element.play();
+                const done = () => {
+                    if (!handlers) {
+                        reset();
+                    }
+                };
+                if (started?.then) {
+                    started.then(done, done);
+                } else {
+                    done();
+                }
             } catch {
-                // Lecture refusée : la voix du téléphone prendra le relais.
+                // Lecture refusée : la lecture suivante le dira (cause « lecture refusée »).
+                unlocking = false;
             }
         },
     };
@@ -191,16 +277,29 @@ export function createElementPlayer(element, { setTimer = (callback, delay) => s
  * @param {object} options
  * @param {object} options.fallback  synthèse vocale du téléphone (window.speechSynthesis)
  * @param {Function} options.FallbackUtterance  constructeur d'une phrase de la voix du téléphone
- * @param {Function} options.fetchAudio  (texte, { signal }) → Promise<{ url, release } | null>
+ * @param {Function} options.fetchAudio  (texte, { signal, voiced }) → Promise<{ url, release } | null> ; voiced : la voix
+ *   de Gemini a déjà été entendue dans cette réponse (un refus du serveur sera alors affiché sans voix, jamais lu par la
+ *   voix du téléphone)
  * @param {object} options.player  lecteur audio : play(url, handlers), stop()
  * @param {object} [options.timers]  { setTimeout, clearTimeout }
  * @param {Function} [options.now]  horloge en millisecondes
  * @param {number} [options.timeoutMs]  délai avant la voix du téléphone
  * @param {number} [options.splitLength]  au-delà de ce nombre de caractères, une réponse est demandée en deux fois
  * @param {string[]} [options.privateWords]  mots jamais envoyés au serveur (prénom du visiteur)
- * @param {Function} [options.onFallback]  le navigateur reprend de lui-même la voix du téléphone : (cause, attente en ms),
- *   cause 'timeout' (audio pas prêt avant le délai), 'playback' (lecture refusée ou coupée) ou 'network' (serveur
- *   injoignable : fetchAudio a échoué au lieu de répondre null)
+ * @param {boolean} [options.phoneFallback]  voix du téléphone en secours (réglage de l'admin, allumé par défaut).
+ *   Éteint : seule la voix de Gemini parle ; si elle échoue, la réponse reste affichée à l'écran sans être dite.
+ * @param {Function} [options.onFallback]  le navigateur abandonne de lui-même la voix de Gemini : (cause, attente en ms,
+ *   issue), cause 'timeout' (audio pas prêt avant le délai), 'network' (serveur injoignable : fetchAudio a échoué au lieu
+ *   de répondre null), 'playback_refused', 'playback_paused', 'playback_error' ou 'playback_stalled' (voir
+ *   createElementPlayer) ; issue 'phone' (voix du téléphone) ou 'silent' (réponse affichée sans voix)
+ * @param {Function} [options.onSilent]  une partie de la réponse n'est pas dite (elle reste affichée à l'écran) ; aussi
+ *   la propriété « onsilent » du moteur, que la page peut changer
+ *
+ * Une seule voix par réponse, toujours :
+ * - dès que la voix du téléphone parle pour une réponse, le son de Gemini est arrêté et vidé, et plus aucun son de
+ *   Gemini n'est joué pour cette réponse ;
+ * - dès que la voix de Gemini a été entendue pour une réponse, la voix du téléphone ne parle plus pour cette réponse :
+ *   si la suite de Gemini échoue, elle reste affichée à l'écran sans être dite.
  */
 export function createNaturalSynth({
     fallback,
@@ -212,7 +311,9 @@ export function createNaturalSynth({
     timeoutMs = NATURAL_TIMEOUT_MS,
     splitLength = SPLIT_LENGTH,
     privateWords = [],
+    phoneFallback = true,
     onFallback = () => {},
+    onSilent = () => {},
 }) {
     // Numéro de lecture : tout rappel d'une lecture arrêtée (cancel) est ignoré.
     let generation = 0;
@@ -223,13 +324,15 @@ export function createNaturalSynth({
     let requests = [];
     let busy = false;
     let lastEndAt = null;
-    // Une seule voix par réponse : après un passage à la voix du téléphone, la suite de la réponse la garde.
-    let answerFallback = false;
+    // Une seule voix par réponse : null (rien d'entendu encore), 'natural' (voix de Gemini entendue), 'phone' (voix du
+    // téléphone) ou 'silent' (le reste de la réponse est seulement affiché). Jamais de retour en arrière dans une réponse.
+    let answerVoice = null;
+    const api = {};
     // Mode appel : la réponse arrive encore (begin… finish), et la phrase en attente de la décision « une ou deux demandes ».
     let streaming = false;
     let waiter = null;
 
-    const request = (text) => {
+    const request = (text, voiced = false) => {
         const controller = typeof AbortController === 'function' ? new AbortController() : null;
         const entry = { state: 'loading', result: null, controller, waiters: [] };
         const settle = (state, result) => {
@@ -252,7 +355,7 @@ export function createNaturalSynth({
             let sent;
             try {
                 // Envoi immédiat : chaque milliseconde compte pour que la voix commence vite.
-                sent = Promise.resolve(fetchAudio(spoken, { signal: controller?.signal }));
+                sent = Promise.resolve(fetchAudio(spoken, { signal: controller?.signal, voiced }));
             } catch {
                 sent = Promise.resolve(null);
             }
@@ -302,10 +405,10 @@ export function createNaturalSynth({
 
     // Demande d'un bloc toutes les phrases annoncées (la première porte l'audio, les autres sont « comprises »).
     const requestPending = () => {
-        if (pending.length === 0 || answerFallback) {
+        if (pending.length === 0 || answerVoice === 'phone' || answerVoice === 'silent') {
             return;
         }
-        const entry = request(pending.join(' '));
+        const entry = request(pending.join(' '), answerVoice === 'natural');
         covered.push(...pending.map((text, index) => ({ text, request: entry, head: index === 0 })));
         pending = [];
     };
@@ -341,7 +444,7 @@ export function createNaturalSynth({
         const fresh = !busy && covered.length === 0 && (lastEndAt === null || now() - lastEndAt > NEW_ANSWER_GAP_MS);
 
         if (fresh) {
-            answerFallback = false;
+            answerVoice = null;
         }
 
         busy = true;
@@ -366,7 +469,9 @@ export function createNaturalSynth({
 
         // Voix du téléphone pour un morceau, puis then().
         const phone = (part, then) => {
-            answerFallback = true;
+            answerVoice = 'phone';
+            // Le son de Gemini est arrêté et vidé avant que la voix du téléphone commence : jamais deux voix.
+            player.stop();
             let native;
             try {
                 native = new FallbackUtterance(part);
@@ -392,6 +497,8 @@ export function createNaturalSynth({
                 if (['interrupted', 'canceled'].includes(event?.error) && utterance.onerror) {
                     finished = true;
                     busy = false;
+                    // Même réponse (la phrase est relue) : elle garde la voix du téléphone.
+                    lastEndAt = now();
                     utterance.onerror(event);
 
                     return;
@@ -405,25 +512,55 @@ export function createNaturalSynth({
             }
         };
 
-        // Joue l'audio d'une demande (en l'attendant au plus timeoutMs), sinon la voix du téléphone pour « part ».
+        // Partie qui ne sera pas dite par Gemini : la voix du téléphone (si elle est permise et que Gemini n'a pas encore
+        // été entendu dans cette réponse), sinon elle reste affichée à l'écran sans être dite.
+        const silent = (then) => {
+            answerVoice = 'silent';
+            player.stop();
+            try {
+                onSilent();
+                api.onsilent?.();
+            } catch {
+                // Affichage seulement.
+            }
+            timers.setTimeout(() => myGeneration === generation && then(), 0);
+        };
+        const fallBack = (part, then, cause = null) => {
+            const outcome = answerVoice === 'phone' || (answerVoice === null && phoneFallback) ? 'phone' : 'silent';
+            if (cause) {
+                onFallback(cause, Math.round(now() - speakAt), outcome);
+            }
+            if (outcome === 'phone') {
+                phone(part, then);
+            } else {
+                silent(then);
+            }
+        };
+
+        // Joue l'audio d'une demande (en l'attendant au plus timeoutMs), sinon fallBack pour « part ».
         const play = (entry, part, then, budget = timeoutMs) => {
             const go = () => {
                 if (myGeneration !== generation) {
                     return;
                 }
-                if (entry.state !== 'ready' || answerFallback) {
-                    // Pas d'audio (ou la voix du téléphone a déjà pris le relais dans cette réponse) : jamais les deux.
-                    if (entry.network && !entry.reported) {
+                if (entry.state !== 'ready' || answerVoice === 'phone' || answerVoice === 'silent') {
+                    // Pas d'audio (ou une autre issue a déjà été choisie pour cette réponse) : jamais deux voix.
+                    let cause = null;
+                    if (!entry.reported && entry.state !== 'ready') {
                         entry.reported = true;
-                        onFallback('network', Math.round(now() - speakAt));
+                        cause = entry.timedOut ? 'timeout' : (entry.network ? 'network' : null);
                     }
-                    phone(part, then);
+                    fallBack(part, then, cause);
 
                     return;
                 }
                 const result = entry.result;
                 player.play(result.url, {
                     onstart: () => {
+                        if (myGeneration !== generation) {
+                            return;
+                        }
+                        answerVoice = 'natural';
                         start();
                         // La première phrase commence : la suite de la réponse est demandée d'un bloc.
                         requestPending();
@@ -434,13 +571,12 @@ export function createNaturalSynth({
                             then();
                         }
                     },
-                    onerror: () => {
+                    onerror: (cause) => {
                         result.release?.();
                         if (myGeneration !== generation) {
                             return;
                         }
-                        onFallback('playback', Math.round(now() - speakAt));
-                        phone(part, then);
+                        fallBack(part, then, cause || 'playback_error');
                     },
                 });
             };
@@ -453,7 +589,7 @@ export function createNaturalSynth({
 
             const timer = timers.setTimeout(() => {
                 if (entry.state === 'loading' && myGeneration === generation) {
-                    onFallback('timeout', Math.round(now() - speakAt));
+                    entry.timedOut = true;
                     abandon(entry);
                 }
             }, budget);
@@ -473,8 +609,8 @@ export function createNaturalSynth({
         const item = takeCovered(text);
 
         if (item) {
-            if (item.request.state === 'failed' || answerFallback) {
-                phone(text, end);
+            if (answerVoice === 'phone' || answerVoice === 'silent' || item.request.state === 'failed') {
+                fallBack(text, end);
             } else if (item.head) {
                 play(item.request, text, end);
             } else {
@@ -487,8 +623,8 @@ export function createNaturalSynth({
 
         const announced = takePending(text);
 
-        if (answerFallback) {
-            phone(text, end);
+        if (answerVoice === 'phone' || answerVoice === 'silent') {
+            fallBack(text, end);
 
             return;
         }
@@ -516,9 +652,18 @@ export function createNaturalSynth({
                 const parts = text.length > splitLength ? splitForSpeech(text) : [text];
 
                 if (parts.length === 2) {
-                    const first = request(parts[0]);
-                    const rest = request(parts[1]);
-                    play(first, parts[0], () => (answerFallback ? phone(parts[1], end) : play(rest, parts[1], end)), budget);
+                    // La suite est demandée dès que la voix de la première phrase commence (comme en mode appel) : elle
+                    // sait alors que Gemini a été entendu, et rien n'est demandé si la première phrase échoue.
+                    pending = [parts[1]];
+                    play(request(parts[0]), parts[0], () => {
+                        const rest = takeCovered(parts[1]);
+                        if (rest) {
+                            play(rest.request, parts[1], end);
+                        } else {
+                            takePending(parts[1]);
+                            fallBack(parts[1], end);
+                        }
+                    }, budget);
                 } else {
                     play(request(text), text, end, budget);
                 }
@@ -564,8 +709,9 @@ export function createNaturalSynth({
         decide(0);
     }
 
-    return {
+    Object.assign(api, {
         Utterance: NaturalUtterance,
+        onsilent: null,
         speak,
         // Phrases que le mode appel va lire (pour les demander d'un bloc).
         prepare(texts) {
@@ -587,6 +733,7 @@ export function createNaturalSynth({
             pending = [];
             covered = [];
             busy = false;
+            answerVoice = null;
             releaseAll();
             player.stop();
             try {
@@ -602,8 +749,8 @@ export function createNaturalSynth({
                 return [];
             }
         },
-        get speaking() {
-            return busy;
-        },
-    };
+    });
+    Object.defineProperty(api, 'speaking', { get: () => busy, enumerable: true });
+
+    return api;
 }
