@@ -82,7 +82,8 @@ class AssistantVoiceEvent extends Model
 
         /** @var array<string, int> $bySource */
         $bySource = (clone $google)->selectRaw('source, count(*) as total')->groupBy('source')->pluck('total', 'source')
-            ->mapWithKeys(fn ($total, $source): array => [(string) ($source ?? self::SOURCE_SITE) => (int) $total])->all();
+            // Une demande sans origine (clé vide) vient d'un visiteur.
+            ->mapWithKeys(fn ($total, $source): array => [(string) $source !== '' ? (string) $source : self::SOURCE_SITE => (int) $total])->all();
 
         /** @var array<string, int> $causes */
         $causes = static::query()->where('day', $day)->where('kind', self::FALLBACK)
