@@ -44,7 +44,7 @@
                             @endif
                         </span>
                         <span class="min-w-0 flex-1 text-left text-sm leading-5 break-words text-white">{{ $option['label'] }}</span>
-                        <span class="shrink-0 text-xs leading-5 font-semibold text-slate-200 tabular-nums">{{ $option['votes'] }} · {{ $option['percent'] }} %</span>
+                        <span class="shrink-0 text-xs leading-5 font-semibold text-slate-200 tabular-nums">{{ $option['votes'] }} {{ $option['votes'] > 1 ? 'votes' : 'vote' }} · {{ $option['percent'] }} %</span>
                     </span>
                     <span class="chat-poll-track" aria-hidden="true"><span class="chat-poll-bar" style="width: {{ $option['percent'] }}%"></span></span>
                 </button>

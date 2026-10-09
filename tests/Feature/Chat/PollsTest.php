@@ -134,7 +134,7 @@ class PollsTest extends ChatTestCase
         $html = (string) $response->json('html');
         $this->assertStringContainsString('data-test="poll"', $html);
         $this->assertStringContainsString('2 votants', $html);
-        $this->assertStringContainsString('1 · 50 %', $html);
+        $this->assertStringContainsString('1 vote · 50 %', $html);
         $this->assertStringContainsString('style="width: 50%"', $html);
         $this->assertMatchesRegularExpression('/chat-poll-option chat-poll-option-mine"\s+data-poll-option="'.$second.'"/', $html);
         $this->assertStringContainsString('data-poll-mine="'.$second.'"', $html);
@@ -154,7 +154,7 @@ class PollsTest extends ChatTestCase
         // Les autres membres voient les résultats à jour par la mise à jour régulière (message modifié).
         $this->assertNotNull($poll->message->fresh()->updated_at);
         $page = $this->actingAs($this->student())->get($this->url('chat.show'))->assertOk();
-        $page->assertSee('1 votant')->assertSee('1 · 100 %');
+        $page->assertSee('1 votant')->assertSee('1 vote · 100 %');
 
         // Aucun vote ne prévient personne.
         Mail::assertNothingQueued();
@@ -173,7 +173,7 @@ class PollsTest extends ChatTestCase
         $this->assertSame(2, ChatPollVote::query()->count());
         $this->assertStringContainsString('1 votant', $html);
         // Pourcentage des votants : chaque choix coché par l'unique votant compte 100 %.
-        $this->assertSame(2, substr_count($html, '1 · 100 %'));
+        $this->assertSame(2, substr_count($html, '1 vote · 100 %'));
         $this->assertStringContainsString('Plusieurs réponses possibles', $html);
     }
 
@@ -223,7 +223,7 @@ class PollsTest extends ChatTestCase
 
         $this->assertTrue($poll->fresh()->isClosed());
         $this->assertStringContainsString('data-test="poll-closed"', $html);
-        $this->assertStringContainsString('1 · 100 %', $html);
+        $this->assertStringContainsString('1 vote · 100 %', $html);
         $this->assertStringNotContainsString('data-poll-option=', $html);
         $this->assertStringNotContainsString('data-test="poll-close"', $html);
 

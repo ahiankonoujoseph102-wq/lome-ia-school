@@ -9,7 +9,7 @@
         </h2>
 
         <label for="sondage-question" class="field-label mt-4">Question</label>
-        <textarea id="sondage-question" x-model="pollDraft.question" rows="2" maxlength="{{ \App\Models\ChatPoll::QUESTION_MAX_LENGTH }}" placeholder="Exemple : Quel horaire vous convient pour la prochaine session ?" class="field-input mt-1.5 !py-2.5" data-test="poll-question"></textarea>
+        <textarea id="sondage-question" x-model="pollDraft.question" rows="3" maxlength="{{ \App\Models\ChatPoll::QUESTION_MAX_LENGTH }}" placeholder="Exemple : Quel horaire vous convient pour la prochaine session ?" class="field-input mt-1.5 !py-2.5" data-test="poll-question"></textarea>
 
         <p class="field-label mt-4">Choix</p>
         <div class="mt-1.5 space-y-2">
