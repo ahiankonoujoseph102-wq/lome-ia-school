@@ -128,6 +128,14 @@
                     ></video>
                     @break
 
+                @case (ChatMessageType::Location)
+                    @include('site.chat.partials.location', ['location' => $message->location])
+                    @break
+
+                @case (ChatMessageType::Poll)
+                    @include('site.chat.partials.poll', ['poll' => $message->poll, 'message' => $message, 'viewer' => $viewer])
+                    @break
+
                 @case (ChatMessageType::File)
                     <a href="{{ $message->downloadUrl() }}" class="chat-file">
                         <span class="chat-file-icon">{{ $message->extension() }}</span>
@@ -140,7 +148,7 @@
                     @break
             @endswitch
 
-            @if (filled($message->body))
+            @if (filled($message->body) && ! in_array($message->type, [ChatMessageType::Location, ChatMessageType::Poll], true))
                 <div @class(['chat-text', 'mt-1.5' => $message->type !== ChatMessageType::Text])>{{ \App\Chat\MessageText::toHtml($message->body) }}</div>
             @endif
         @endif

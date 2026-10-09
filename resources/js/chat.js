@@ -6,6 +6,9 @@
  */
 
 import { createSwipeGesture } from './chat-swipe.js';
+import { cleanMapsLink, geolocationError } from './chat-location.js';
+import { nextPollChoice, parsePollMine } from './chat-poll.js';
+import { canPauseRecording, createRecordingClock } from './voice-recording.js';
 
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
@@ -154,7 +157,18 @@ export default function registerChat(Alpine) {
         recording: false,
         recordSeconds: 0,
 
+        // Pause des notes vocales (interrupteur de l'admin et navigateur capable de mettre en pause).
+        pauseMode: Boolean(config.voicePause) && canPauseRecording(window.MediaRecorder),
+        recordPaused: false,
+        voiceReview: null,
+        reviewPlaying: false,
+        reviewCurrent: 0,
+        reviewProgress: 0,
+
         attachMenu: false,
+        pollDraft: { question: '', options: ['', ''], multiple: false, error: '' },
+        pollToClose: null,
+        place: { mode: 'position', latitude: null, longitude: null, accuracy: null, url: '', name: '', address: '', locating: false, error: '' },
         groupMenu: false,
         menu: null,
         dialog: null,
@@ -475,6 +489,24 @@ export default function registerChat(Alpine) {
         /* ---------- Menu d'un message ---------- */
 
         onListClick(event) {
+            // Sondage : toucher un choix vote, change ou retire le vote ; « Clôturer le sondage » demande confirmation.
+            const pollOption = event.target.closest('[data-poll-option]');
+
+            if (pollOption) {
+                this.votePoll(pollOption);
+
+                return;
+            }
+
+            const pollClose = event.target.closest('[data-poll-close]');
+
+            if (pollClose) {
+                this.pollToClose = pollClose.dataset.pollClose;
+                this.dialog = 'poll-close';
+
+                return;
+            }
+
             // Pastille de réaction sous un message : réagir avec cet emoji (ou retirer sa réaction).
             const reaction = event.target.closest('[data-react]');
 
@@ -1131,9 +1163,227 @@ export default function registerChat(Alpine) {
             });
         },
 
+        /* ---------- Sondages (interrupteur « Sondages ») ---------- */
+
+        openPoll() {
+            this.attachMenu = false;
+            this.pollDraft = { question: '', options: ['', ''], multiple: false, error: '' };
+            this.dialog = 'poll';
+        },
+
+        async sendPoll() {
+            if (this.busy) {
+                return;
+            }
+
+            const question = this.pollDraft.question.trim();
+            const options = this.pollDraft.options.map((option) => option.trim()).filter((option) => option !== '');
+
+            if (!question) {
+                this.pollDraft.error = 'Écrivez la question du sondage.';
+
+                return;
+            }
+
+            if (options.length < 2) {
+                this.pollDraft.error = 'Ajoutez au moins 2 choix.';
+
+                return;
+            }
+
+            this.busy = true;
+            this.pollDraft.error = '';
+
+            try {
+                const body = { question, options, multiple: this.pollDraft.multiple };
+
+                if (this.replyTo) {
+                    body.reply_to_id = this.replyTo.id;
+                }
+
+                const response = await fetch(config.urls.polls, {
+                    method: 'POST',
+                    headers: { ...jsonHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    credentials: 'same-origin',
+                });
+                const json = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(errorForStatus(response.status, json));
+                }
+
+                this.dialog = null;
+                this.replyTo = null;
+                await this.poll({ scroll: true });
+            } catch (error) {
+                this.pollDraft.error = error.message;
+            } finally {
+                this.busy = false;
+            }
+        },
+
+        async votePoll(button) {
+            const card = button.closest('[data-poll]');
+            const row = button.closest('[data-message-id]');
+
+            if (!card || !row || this.busy) {
+                return;
+            }
+
+            const options = nextPollChoice(parsePollMine(card.dataset.pollMine), button.dataset.pollOption, card.dataset.pollMultiple === '1');
+
+            await this.sendPollAction(this.url('pollVote', card.dataset.poll), { options }, row.dataset.messageId);
+        },
+
+        async closePoll() {
+            const id = this.pollToClose;
+            const card = id ? document.querySelector(`[data-poll="${id}"]`) : null;
+
+            if (!card) {
+                this.closeAll();
+
+                return;
+            }
+
+            await this.sendPollAction(this.url('pollClose', id), {}, card.closest('[data-message-id]')?.dataset.messageId);
+            this.pollToClose = null;
+            this.dialog = null;
+        },
+
+        /**
+         * Vote ou clôture : le message est remplacé tout de suite par sa nouvelle version (résultats à jour).
+         */
+        async sendPollAction(url, body, messageId) {
+            this.busy = true;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { ...jsonHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    credentials: 'same-origin',
+                });
+                const json = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(errorForStatus(response.status, json));
+                }
+
+                const element = messageId ? document.getElementById(`m-${messageId}`) : null;
+
+                if (element && json.html) {
+                    element.outerHTML = json.html;
+                }
+
+                if (json.status) {
+                    this.flash(json.status);
+                }
+
+                navigator.vibrate?.(8);
+            } catch (error) {
+                this.flash(error.message);
+                await this.poll();
+            } finally {
+                this.busy = false;
+            }
+        },
+
+        /* ---------- Lieu (interrupteur « Partage de localisation ») ---------- */
+
+        openLocation() {
+            this.attachMenu = false;
+            this.place = { mode: 'position', latitude: null, longitude: null, accuracy: null, url: '', name: '', address: '', locating: false, error: '' };
+            this.dialog = 'location';
+        },
+
+        locate() {
+            if (!navigator.geolocation) {
+                this.place.error = geolocationError(null);
+
+                return;
+            }
+
+            this.place.locating = true;
+            this.place.error = '';
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    this.place.latitude = position.coords.latitude;
+                    this.place.longitude = position.coords.longitude;
+                    this.place.accuracy = Number.isFinite(position.coords.accuracy) ? Math.round(position.coords.accuracy) : null;
+                    this.place.locating = false;
+                },
+                (error) => {
+                    this.place.error = geolocationError(error);
+                    this.place.locating = false;
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+            );
+        },
+
+        async sendLocation() {
+            if (this.busy) {
+                return;
+            }
+
+            const place = this.place;
+            const body = { mode: place.mode, name: place.name.trim(), address: place.address.trim() };
+
+            if (place.mode === 'position') {
+                if (place.latitude === null) {
+                    this.place.error = 'Touchez d\'abord « Trouver ma position ».';
+
+                    return;
+                }
+
+                body.latitude = place.latitude;
+                body.longitude = place.longitude;
+            } else {
+                body.maps_url = cleanMapsLink(place.url);
+
+                if (!body.maps_url) {
+                    this.place.error = 'Collez le lien Google Maps du lieu.';
+
+                    return;
+                }
+            }
+
+            if (this.replyTo) {
+                body.reply_to_id = this.replyTo.id;
+            }
+
+            this.busy = true;
+
+            try {
+                const response = await fetch(config.urls.location, {
+                    method: 'POST',
+                    headers: { ...jsonHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    credentials: 'same-origin',
+                });
+                const json = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(errorForStatus(response.status, json));
+                }
+
+                this.dialog = null;
+                this.replyTo = null;
+                await this.poll({ scroll: true });
+            } catch (error) {
+                this.place.error = error.message;
+            } finally {
+                this.busy = false;
+            }
+        },
+
         /* ---------- Notes vocales ---------- */
 
         async startRecording() {
+            if (this.voiceReview) {
+                return;
+            }
+
             if (!navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder === 'undefined') {
                 this.flash('Votre navigateur ne permet pas d\'enregistrer une note vocale. Mettez-le à jour (Chrome ou Safari).');
 
@@ -1161,18 +1411,50 @@ export default function registerChat(Alpine) {
             this.recorder.start(1000);
 
             this.recording = true;
+            this.recordPaused = false;
             this.recordSeconds = 0;
-            this.recordStartedAt = Date.now();
+            this.recordClock = createRecordingClock(Date.now());
             this.recordTimer = setInterval(() => {
-                this.recordSeconds = Math.floor((Date.now() - this.recordStartedAt) / 1000);
+                this.recordSeconds = Math.floor(this.recordClock.elapsed(Date.now()) / 1000);
 
-                // Limite atteinte : la note part automatiquement.
+                // Limite atteinte : la note part automatiquement (avec la pause : elle s'arrête pour être écoutée).
                 if (this.recordSeconds >= config.voiceMaxSeconds) {
-                    this.stopRecording(true);
+                    this.stopRecording(this.pauseMode ? 'review' : true);
                 }
             }, 250);
         },
 
+        /**
+         * « Pause » / « Reprendre » : le chronomètre s'arrête pendant la pause.
+         */
+        togglePause() {
+            if (!this.recording || !this.recorder || !this.pauseMode) {
+                return;
+            }
+
+            try {
+                if (this.recordPaused) {
+                    this.recorder.resume();
+                    this.recordClock.resume(Date.now());
+                    this.recordPaused = false;
+                } else {
+                    this.recorder.pause();
+                    this.recordClock.pause(Date.now());
+                    this.recordPaused = true;
+                }
+            } catch (error) {
+                // Pause refusée par le navigateur : l'enregistrement continue, comme avant.
+                this.pauseMode = false;
+                this.recordPaused = false;
+                this.recordClock.resume(Date.now());
+            }
+
+            this.recordSeconds = Math.floor(this.recordClock.elapsed(Date.now()) / 1000);
+        },
+
+        /**
+         * send : true (envoyer tout de suite), false (annuler) ou 'review' (écouter avant d'envoyer).
+         */
         stopRecording(send) {
             if (!this.recording) {
                 return;
@@ -1180,8 +1462,9 @@ export default function registerChat(Alpine) {
 
             clearInterval(this.recordTimer);
             this.sendAfterStop = send;
-            this.recordDuration = Math.min(config.voiceMaxSeconds, Math.max(1, Math.round((Date.now() - this.recordStartedAt) / 1000)));
+            this.recordDuration = Math.min(config.voiceMaxSeconds, Math.max(1, Math.round(this.recordClock.elapsed(Date.now()) / 1000)));
             this.recording = false;
+            this.recordPaused = false;
 
             if (this.recorder && this.recorder.state !== 'inactive') {
                 this.recorder.stop();
@@ -1218,20 +1501,128 @@ export default function registerChat(Alpine) {
             }
 
             const extension = type.includes('mp4') || type.includes('aac') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
+
+            if (this.sendAfterStop === 'review') {
+                this.openReview({ blob, extension, duration: this.recordDuration });
+
+                return;
+            }
+
+            await this.sendVoice(blob, extension, this.recordDuration);
+        },
+
+        /**
+         * Envoi d'une note vocale. Renvoie true si elle est partie.
+         */
+        async sendVoice(blob, extension, duration) {
             const data = new FormData();
             data.append('type', 'voice');
             data.append('attachment', blob, `note-vocale.${extension}`);
-            data.append('duration', String(this.recordDuration));
+            data.append('duration', String(duration));
 
             if (this.replyTo) {
                 data.append('reply_to_id', this.replyTo.id);
             }
 
-            this.pending = { type: 'voice', name: 'Note vocale', label: formatSeconds(this.recordDuration), extension: 'MIC', preview: null };
-            await this.uploadWithProgress(data, () => (this.pending = null));
+            let sent = false;
+            this.pending = { type: 'voice', name: 'Note vocale', label: formatSeconds(duration), extension: 'MIC', preview: null };
+            await this.uploadWithProgress(data, () => {
+                sent = true;
+                this.pending = null;
+            });
 
             if (this.pending?.type === 'voice') {
                 this.pending = null;
+            }
+
+            return sent;
+        },
+
+        /* ---------- Écouter avant d'envoyer (pause des notes vocales) ---------- */
+
+        openReview(review) {
+            const audio = this.$refs.voiceReview;
+            this.voiceReview = { ...review, url: URL.createObjectURL(review.blob) };
+            this.reviewPlaying = false;
+            this.reviewCurrent = 0;
+            this.reviewProgress = 0;
+
+            if (!audio) {
+                return;
+            }
+
+            audio.src = this.voiceReview.url;
+
+            if (!audio.dataset.ready) {
+                audio.dataset.ready = '1';
+                audio.addEventListener('play', () => (this.reviewPlaying = true));
+                audio.addEventListener('pause', () => (this.reviewPlaying = false));
+                audio.addEventListener('ended', () => {
+                    this.reviewPlaying = false;
+                    this.reviewCurrent = 0;
+                    this.reviewProgress = 0;
+                });
+                audio.addEventListener('timeupdate', () => {
+                    const total = this.voiceReview?.duration || 0;
+                    this.reviewCurrent = audio.currentTime;
+                    this.reviewProgress = total ? Math.min(100, (audio.currentTime / total) * 100) : 0;
+                });
+            }
+        },
+
+        toggleReview() {
+            const audio = this.$refs.voiceReview;
+
+            if (!audio || !this.voiceReview) {
+                return;
+            }
+
+            if (!audio.paused) {
+                audio.pause();
+
+                return;
+            }
+
+            window.dispatchEvent(new CustomEvent('chat-voice-play', { detail: audio }));
+            audio.play().catch(() => this.flash('Lecture impossible sur cet appareil. Vous pouvez quand même envoyer la note.'));
+        },
+
+        closeReview() {
+            const audio = this.$refs.voiceReview;
+
+            if (audio) {
+                audio.pause();
+                audio.removeAttribute('src');
+                audio.load();
+            }
+
+            if (this.voiceReview?.url) {
+                URL.revokeObjectURL(this.voiceReview.url);
+            }
+
+            this.voiceReview = null;
+            this.reviewPlaying = false;
+        },
+
+        discardReview() {
+            this.closeReview();
+        },
+
+        async sendReview() {
+            if (!this.voiceReview || this.uploading) {
+                return;
+            }
+
+            const review = this.voiceReview;
+            this.$refs.voiceReview?.pause();
+            this.voiceReview = null;
+
+            if (await this.sendVoice(review.blob, review.extension, review.duration)) {
+                URL.revokeObjectURL(review.url);
+                this.$refs.voiceReview?.removeAttribute('src');
+            } else {
+                // Envoi raté : la note reste prête à être renvoyée.
+                this.voiceReview = review;
             }
         },
     }));

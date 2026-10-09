@@ -752,6 +752,63 @@ body {
     @apply mt-0.5 flex w-72 max-w-full items-center gap-3 rounded-xl bg-black/20 p-2.5 transition hover:bg-black/30;
 }
 
+/* Lieu partagé (carte sans carte intégrée) : fond foncé translucide, texte clair, bouton à contour,
+   stable face au mode sombre forcé. */
+@utility chat-location {
+    @apply mt-0.5 w-72 max-w-full rounded-xl bg-black/20 p-2.5;
+}
+
+@utility chat-location-link {
+    @apply mt-2.5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-night-900/60 px-3 text-sm font-semibold text-white ring-1 ring-sky-400/60 transition hover:bg-night-900 active:scale-[0.98];
+}
+
+/* Sondage : choix à contour, barre dorée, choix du membre entouré de doré (stable face au mode sombre forcé). */
+@utility chat-poll {
+    @apply mt-0.5 w-72 max-w-full rounded-xl bg-black/20 p-2.5;
+}
+
+@utility chat-poll-option {
+    @apply block min-h-11 w-full rounded-xl bg-night-900/50 px-3 py-2 ring-1 ring-slate-600 transition enabled:active:scale-[0.99] enabled:hover:bg-night-900 disabled:cursor-default;
+}
+
+@utility chat-poll-option-mine {
+    @apply bg-gold-500/15 ring-2 ring-gold-500;
+}
+
+@utility chat-poll-check {
+    @apply mt-0.5 grid size-4 shrink-0 place-items-center text-white ring-1 ring-slate-400;
+}
+
+@utility chat-poll-check-on {
+    @apply bg-gold-500/40 ring-gold-400;
+}
+
+@utility chat-poll-track {
+    @apply mt-1.5 block h-1.5 overflow-hidden rounded-full bg-night-700;
+}
+
+@utility chat-poll-bar {
+    @apply block h-full rounded-full bg-gold-500 transition-[width] duration-300;
+}
+
+@utility chat-poll-closed {
+    @apply ml-auto rounded-full bg-night-800 px-2 py-px text-[10px] text-slate-200 normal-case ring-1 ring-slate-500;
+}
+
+@utility chat-poll-close-button {
+    @apply mt-2.5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-100 ring-1 ring-slate-500 transition hover:bg-night-900;
+}
+
+/* Choix dans une fenêtre du groupe (lieu, sondage) : sélection en texte clair sur fond translucide et contour doré,
+   comme le sélecteur de créneaux (stable face au mode sombre forcé). */
+@utility chat-choice {
+    @apply flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-center text-sm font-semibold text-slate-200 ring-1 ring-slate-600 transition hover:bg-veil/5;
+}
+
+@utility chat-choice-on {
+    @apply bg-gold-500/15 text-white ring-2 ring-gold-500;
+}
+
 @utility chat-file-icon {
     @apply grid size-11 shrink-0 place-items-center rounded-lg bg-linear-to-br from-amber-400 to-orange-500 text-[10px] font-extrabold tracking-wide text-night-950;
 }

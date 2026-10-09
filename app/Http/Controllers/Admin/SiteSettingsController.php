@@ -8,6 +8,7 @@ use App\Assistant\AmaPrompt;
 use App\Assistant\NaturalVoice;
 use App\Assistant\VoicePronunciation;
 use App\Branding\BrandAssets;
+use App\Chat\ChatFeatures;
 use App\Enums\AdminAction;
 use App\Http\Controllers\Controller;
 use App\Jobs\PrepareAmaVoicePhrases;
@@ -51,6 +52,7 @@ class SiteSettingsController extends Controller
         'textes' => ['title' => 'Textes du site', 'text' => 'Accroche de l\'accueil, présentation du formateur, questions fréquentes.', 'icon' => 'document-text'],
         'video-accueil' => ['title' => 'Vidéo d\'accueil', 'text' => 'Vidéo YouTube verticale de l\'accueil : lien, image d\'aperçu, titre, phrase, bouton TikTok et interrupteur.', 'icon' => 'play-circle'],
         'fond-anime' => ['title' => 'Fond animé', 'text' => 'Halo lumineux, réseau de points et icônes qui bougent doucement derrière le haut de l\'accueil et du catalogue : interrupteur.', 'icon' => 'sparkles'],
+        'groupes' => ['title' => 'Fonctions des groupes', 'text' => 'Interrupteurs des nouvelles fonctions des groupes de discussion, éteintes au départ.', 'icon' => 'user-group'],
         'messages-whatsapp' => ['title' => 'Messages WhatsApp', 'text' => 'Message prérempli de chaque bouton WhatsApp selon la page : formation, paiement, formation gratuite, consultation, autres pages.', 'icon' => 'chat-bubble-left-right'],
         'page-joseph' => ['title' => 'Page Joseph Ahiankonou', 'text' => 'Votre page personnelle (/joseph-ahiankonou) : textes, photo, parcours, services, liens YouTube, TikTok, Facebook et chaînes WhatsApp, contact.', 'icon' => 'user-circle'],
         'google' => ['title' => 'Référencement Google', 'text' => 'Code de vérification Google Search Console et adresse du plan du site à déclarer.', 'icon' => 'magnifying-glass'],
@@ -95,6 +97,7 @@ class SiteSettingsController extends Controller
             'textes' => $this->updateTexts($request),
             'video-accueil' => $this->updateHomeVideo($request, $images),
             'fond-anime' => $this->updateAnimatedBackground($request),
+            'groupes' => $this->updateChatFeatures($request),
             'messages-whatsapp' => $this->updateWhatsAppMessages($request),
             'page-joseph' => $this->updateFounder($request, $images),
             'google' => $this->updateSearchConsole($request),
@@ -593,6 +596,26 @@ class SiteSettingsController extends Controller
         SiteSettings::save(['site.animated_background' => ['enabled' => $enabled]]);
 
         ActivityLog::record(AdminAction::SettingsUpdated, $enabled ? 'Fond animé activé (accueil et catalogue).' : 'Fond animé désactivé : fond fixe d\'origine.');
+    }
+
+    /**
+     * Nouvelles fonctions des groupes : un interrupteur par fonction (éteint = bouton absent, groupe inchangé).
+     */
+    private function updateChatFeatures(Request $request): void
+    {
+        $request->validate(['features' => ['nullable', 'array'], 'features.*' => ['nullable', 'boolean']]);
+        $sent = (array) $request->input('features', []);
+        $features = (array) SiteSettings::get('site.chat_features');
+
+        foreach (array_keys(ChatFeatures::LABELS) as $feature) {
+            $features[$feature] = filter_var($sent[$feature] ?? false, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        SiteSettings::save(['site.chat_features' => $features]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Fonctions des groupes : '.collect(ChatFeatures::LABELS)
+            ->map(fn (array $label, string $feature): string => $label['title'].' '.($features[$feature] ? 'activée' : 'désactivée'))
+            ->implode(', ').'.');
     }
 
     /**

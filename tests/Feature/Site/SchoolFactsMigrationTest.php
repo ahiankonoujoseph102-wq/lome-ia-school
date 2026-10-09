@@ -4,6 +4,7 @@ namespace Tests\Feature\Site;
 
 use App\Assistant\AmaKnowledge;
 use App\Settings\SiteSettings;
+use App\Support\FormationIllustrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -17,6 +18,20 @@ class SchoolFactsMigrationTest extends TestCase
     use RefreshDatabase;
 
     private const string OLD_DEFAULT_SCHOOL = "Lomé IA School est une école de formations en intelligence artificielle basée à Lomé, au Togo. Elle a été créée en 2023. Son ancien nom était Joseph Academy.\nFondateur et formateur principal : Joseph Ahiankonou.";
+
+    /**
+     * La base de test n'est migrée qu'une fois par série de tests, par le premier test qui tourne, à la vraie date du
+     * jour. Depuis le 8 octobre 2026, la migration 2026_10_11_100000_add_agents_ia_illustration y enregistre alors
+     * system.agents_illustration_done. Ce réglage est retiré au début de chaque test (retrait annulé à la fin du test
+     * avec le reste) : ces tests ne dépendent ainsi ni de la date ni de l'ordre des tests.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        DB::table('site_settings')->where('key', FormationIllustrations::AGENTS_DONE_KEY)->delete();
+        SiteSettings::flush();
+    }
 
     private function migrate(): void
     {

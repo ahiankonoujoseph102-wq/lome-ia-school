@@ -23,9 +23,11 @@ class StoreChatMessageRequest extends FormRequest
     public function rules(): array
     {
         $type = ChatMessageType::tryFrom((string) $this->input('type'));
+        $type = in_array($type, ChatMessageType::postable(), true) ? $type : null;
 
         return [
-            'type' => ['required', Rule::enum(ChatMessageType::class)],
+            // Lieu et sondage : formulaires à part (interrupteurs de l'admin), jamais par cette route.
+            'type' => ['required', Rule::enum(ChatMessageType::class)->only(ChatMessageType::postable())],
             'body' => [$type === ChatMessageType::Text ? 'required' : 'nullable', 'string', 'max:'.config('chat.max_text_length')],
             'reply_to_id' => ['nullable', 'integer'],
             'email_members' => ['nullable', 'boolean'],

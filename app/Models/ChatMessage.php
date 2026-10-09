@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -42,6 +43,8 @@ use Illuminate\Support\Str;
  * @property-read ChatMessage|null $replyTo
  * @property-read Collection<int, ChatMessageReport> $reports
  * @property-read Collection<int, ChatMessageReaction> $reactions
+ * @property-read ChatMessageLocation|null $location
+ * @property-read ChatPoll|null $poll
  */
 class ChatMessage extends Model
 {
@@ -117,6 +120,26 @@ class ChatMessage extends Model
     public function reactions(): HasMany
     {
         return $this->hasMany(ChatMessageReaction::class);
+    }
+
+    /**
+     * Lieu partagé (message de type « location » seulement).
+     *
+     * @return HasOne<ChatMessageLocation, $this>
+     */
+    public function location(): HasOne
+    {
+        return $this->hasOne(ChatMessageLocation::class);
+    }
+
+    /**
+     * Sondage (message de type « poll » seulement).
+     *
+     * @return HasOne<ChatPoll, $this>
+     */
+    public function poll(): HasOne
+    {
+        return $this->hasOne(ChatPoll::class);
     }
 
     /**
@@ -266,6 +289,18 @@ class ChatMessage extends Model
             'deleted_at' => now(),
             'deleted_by' => $by->id,
         ])->save();
+
+        // Lieu partagé : nom, adresse et lien effacés aussi (seulement pour ce type : rien de plus pour les autres messages).
+        if ($this->type === ChatMessageType::Location) {
+            $this->location()->delete();
+            $this->unsetRelation('location');
+        }
+
+        // Sondage : question, choix et votes effacés aussi.
+        if ($this->type === ChatMessageType::Poll) {
+            $this->poll()->delete();
+            $this->unsetRelation('poll');
+        }
 
         // Message supprimé : ses réactions disparaissent aussi.
         $this->reactions()->delete();

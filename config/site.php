@@ -71,6 +71,14 @@ return [
         'admin' => 'Administrateur',
     ],
 
+    // Nouvelles fonctions des groupes de discussion (App\Chat\ChatFeatures), chacune avec son interrupteur dans
+    // l'admin (Réglages du site > Fonctions des groupes). Éteintes au départ : bouton absent, groupe inchangé.
+    'chat_features' => [
+        'voice_pause' => false,
+        'location' => false,
+        'polls' => false,
+    ],
+
     // Quota d'e-mails du fournisseur (Brevo, offre gratuite : 300 par jour) et réserve gardée pour les codes de
     // confirmation, inscriptions et paiements : une annonce de groupe par e-mail est refusée si elle entamerait
     // cette réserve (App\Mail\MailQuota). Modifiables dans l'admin (Réglages du site > E-mails envoyés).

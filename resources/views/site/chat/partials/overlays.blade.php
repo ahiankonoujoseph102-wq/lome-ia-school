@@ -138,6 +138,14 @@
     </div>
 @endif
 
+@if (\App\Chat\ChatFeatures::polls())
+    @include('site.chat.partials.poll-dialog')
+@endif
+
+@if (\App\Chat\ChatFeatures::location())
+    @include('site.chat.partials.location-dialog')
+@endif
+
 {{-- Règles du groupe (affichées à l'entrée, puis à chaque modification) --}}
 <div
     x-show="dialog === 'rules'"
