@@ -24,6 +24,19 @@ class FormationIllustrationsTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Base de test créée à une date fixe, avant le 8 octobre 2026 : la migration 2026_10_11_100000_add_agents_ia_illustration
+     * ne dépend ainsi jamais du jour où les tests tournent (sinon, depuis le 8 octobre, elle pose l'illustration
+     * d'« Agents IA » et enregistre system.agents_illustration_done avant même le début du test). L'horloge réelle
+     * est rendue ensuite : chaque test fixe lui-même la date dont il a besoin.
+     */
+    protected function setUp(): void
+    {
+        Carbon::setTestNow('2026-10-01 12:00:00');
+        parent::setUp();
+        Carbon::setTestNow();
+    }
+
     private function migration(string $name): object
     {
         return require database_path('migrations/'.$name.'.php');
