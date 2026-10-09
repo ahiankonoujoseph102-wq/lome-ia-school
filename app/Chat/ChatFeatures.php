@@ -11,6 +11,8 @@ class ChatFeatures
 {
     public const string VOICE_PAUSE = 'voice_pause';
 
+    public const string LOCATION = 'location';
+
     /**
      * Libellés de l'écran d'administration.
      *
@@ -20,6 +22,10 @@ class ChatFeatures
         self::VOICE_PAUSE => [
             'title' => 'Pause des notes vocales',
             'text' => 'Pendant l\'enregistrement : « Pause » / « Reprendre » et « Annuler ». Avant l\'envoi : écouter, puis « Envoyer » ou « Supprimer ». Si le téléphone ne sait pas mettre en pause, l\'enregistrement reste comme aujourd\'hui.',
+        ],
+        self::LOCATION => [
+            'title' => 'Partage de localisation',
+            'text' => 'Bouton « Lieu » : position actuelle du téléphone ou lien Google Maps collé, avec un nom et une adresse facultatifs. Le message s\'affiche comme une carte avec « Ouvrir dans Google Maps » (aucune carte intégrée, aucune clé).',
         ],
     ];
 
@@ -31,5 +37,10 @@ class ChatFeatures
     public static function voicePause(): bool
     {
         return self::enabled(self::VOICE_PAUSE);
+    }
+
+    public static function location(): bool
+    {
+        return self::enabled(self::LOCATION);
     }
 }

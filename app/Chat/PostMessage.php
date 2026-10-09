@@ -9,6 +9,7 @@ use App\Models\ChatGroup;
 use App\Models\ChatGroupMember;
 use App\Models\ChatMessage;
 use App\Models\User;
+use Closure;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -25,14 +26,17 @@ class PostMessage
         private ChatRealtime $realtime,
     ) {}
 
-    public function handle(ChatGroup $group, ChatGroupMember $member, User $author, ChatMessageType $type, ?string $body, ?UploadedFile $file = null, ?int $replyToId = null, ?int $duration = null): ChatMessage
+    /**
+     * @param  (Closure(ChatMessage): mixed)|null  $details  Détails enregistrés dans la même transaction (lieu, sondage).
+     */
+    public function handle(ChatGroup $group, ChatGroupMember $member, User $author, ChatMessageType $type, ?string $body, ?UploadedFile $file = null, ?int $replyToId = null, ?int $duration = null, ?Closure $details = null): ChatMessage
     {
         $attachment = $file !== null && $type->hasAttachment()
             ? $this->attachments->store($file, $type, $group->id)
             : [];
 
         try {
-            $message = DB::transaction(function () use ($group, $member, $author, $type, $body, $attachment, $replyToId, $duration): ChatMessage {
+            $message = DB::transaction(function () use ($group, $member, $author, $type, $body, $attachment, $replyToId, $duration, $details): ChatMessage {
                 $replyTo = $replyToId
                     ? $group->messages()->whereKey($replyToId)->whereNull('deleted_at')->value('id')
                     : null;
@@ -45,6 +49,10 @@ class PostMessage
                     'duration_seconds' => $type === ChatMessageType::Voice ? min($duration ?? 0, (int) config('chat.attachments.voice.max_seconds')) : null,
                     ...$attachment,
                 ]);
+
+                if ($details !== null) {
+                    $details($message);
+                }
 
                 $group->forceFill(['last_message_at' => $message->created_at])->save();
                 $member->forceFill(['last_read_message_id' => $message->id, 'last_seen_at' => now()])->save();

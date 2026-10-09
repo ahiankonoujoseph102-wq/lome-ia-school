@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Chat\AttachmentController;
 use App\Http\Controllers\Chat\GroupController;
+use App\Http\Controllers\Chat\LocationController;
 use App\Http\Controllers\Chat\MessageController;
 use App\Http\Controllers\Chat\ModerationController;
 use App\Http\Controllers\Chat\ReportController;
@@ -185,6 +186,7 @@ Route::middleware('auth')->prefix('mon-espace')->group(function () {
         Route::get('groupes/{formation}', [GroupController::class, 'show'])->name('chat.show');
         Route::get('groupes/{formation}/messages', [GroupController::class, 'messages'])->name('chat.messages.index');
         Route::post('groupes/{formation}/messages', [MessageController::class, 'store'])->middleware('throttle:chat-messages')->name('chat.messages.store');
+        Route::post('groupes/{formation}/lieux', [LocationController::class, 'store'])->middleware('throttle:chat-messages')->name('chat.locations.store');
         Route::delete('groupes/{formation}/messages/{message}', [MessageController::class, 'destroy'])->name('chat.messages.destroy');
         Route::post('groupes/{formation}/messages/{message}/epingler', [MessageController::class, 'togglePin'])->name('chat.messages.pin');
         Route::post('groupes/{formation}/messages/{message}/reaction', [MessageController::class, 'react'])->middleware('throttle:60,1')->name('chat.messages.react');

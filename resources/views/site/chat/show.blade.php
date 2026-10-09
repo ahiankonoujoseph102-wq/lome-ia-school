@@ -18,6 +18,7 @@
         'canEmailAnnounce' => \App\Chat\EmailAnnouncements::canUse($viewer->user),
         'voiceMaxSeconds' => (int) config('chat.attachments.voice.max_seconds'),
         'voicePause' => \App\Chat\ChatFeatures::voicePause(),
+        'location' => \App\Chat\ChatFeatures::location(),
         'maxBytes' => [
             'image' => (int) config('chat.attachments.image.max_kb') * 1024,
             'video' => (int) config('chat.attachments.video.max_kb') * 1024,
@@ -38,6 +39,7 @@
             'exclude' => route('chat.members.exclude', [$formation, $placeholder]),
             'broadcastAuth' => url('/broadcasting/auth'),
             'emailPreview' => route('chat.announcement-email', $formation),
+            'location' => route('chat.locations.store', $formation),
         ],
     ];
     $fileAccept = collect((array) config('chat.attachments.file.mimes'))->map(fn ($ext) => '.'.$ext)->implode(',');

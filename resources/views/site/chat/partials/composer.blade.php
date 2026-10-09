@@ -4,6 +4,7 @@
 --}}
 @php
     $voicePause = \App\Chat\ChatFeatures::voicePause();
+    $location = \App\Chat\ChatFeatures::location();
 @endphp
 <form
     method="POST"
@@ -159,6 +160,12 @@
                     <span>Fichier <span class="block text-xs text-slate-400">PDF, Word, Excel, PowerPoint, ZIP, TXT</span></span>
                     <input type="file" accept="{{ $fileAccept }}" class="sr-only" @change="pick($event, 'file')">
                 </label>
+                @if ($location)
+                    <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-100 hover:bg-veil/5" @click="openLocation()" data-test="location-button">
+                        <span class="grid size-9 place-items-center rounded-full bg-rose-500/20 text-rose-300"><flux:icon.map-pin class="size-5" /></span>
+                        <span>Lieu <span class="block text-xs text-slate-400">Ma position ou un lien Google Maps</span></span>
+                    </button>
+                @endif
             </div>
         </div>
 

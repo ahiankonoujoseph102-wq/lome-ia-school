@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -42,6 +43,7 @@ use Illuminate\Support\Str;
  * @property-read ChatMessage|null $replyTo
  * @property-read Collection<int, ChatMessageReport> $reports
  * @property-read Collection<int, ChatMessageReaction> $reactions
+ * @property-read ChatMessageLocation|null $location
  */
 class ChatMessage extends Model
 {
@@ -117,6 +119,16 @@ class ChatMessage extends Model
     public function reactions(): HasMany
     {
         return $this->hasMany(ChatMessageReaction::class);
+    }
+
+    /**
+     * Lieu partagé (message de type « location » seulement).
+     *
+     * @return HasOne<ChatMessageLocation, $this>
+     */
+    public function location(): HasOne
+    {
+        return $this->hasOne(ChatMessageLocation::class);
     }
 
     /**
@@ -266,6 +278,12 @@ class ChatMessage extends Model
             'deleted_at' => now(),
             'deleted_by' => $by->id,
         ])->save();
+
+        // Lieu partagé : nom, adresse et lien effacés aussi (seulement pour ce type : rien de plus pour les autres messages).
+        if ($this->type === ChatMessageType::Location) {
+            $this->location()->delete();
+            $this->unsetRelation('location');
+        }
 
         // Message supprimé : ses réactions disparaissent aussi.
         $this->reactions()->delete();

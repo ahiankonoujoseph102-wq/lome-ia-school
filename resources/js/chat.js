@@ -6,6 +6,7 @@
  */
 
 import { createSwipeGesture } from './chat-swipe.js';
+import { cleanMapsLink, geolocationError } from './chat-location.js';
 import { canPauseRecording, createRecordingClock } from './voice-recording.js';
 
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -164,6 +165,7 @@ export default function registerChat(Alpine) {
         reviewProgress: 0,
 
         attachMenu: false,
+        place: { mode: 'position', latitude: null, longitude: null, accuracy: null, url: '', name: '', address: '', locating: false, error: '' },
         groupMenu: false,
         menu: null,
         dialog: null,
@@ -1138,6 +1140,94 @@ export default function registerChat(Alpine) {
                 xhr.addEventListener('error', () => reject(new Error('Connexion interrompue : le message n\'a pas été envoyé. Réessayez.')));
                 xhr.send(data);
             });
+        },
+
+        /* ---------- Lieu (interrupteur « Partage de localisation ») ---------- */
+
+        openLocation() {
+            this.attachMenu = false;
+            this.place = { mode: 'position', latitude: null, longitude: null, accuracy: null, url: '', name: '', address: '', locating: false, error: '' };
+            this.dialog = 'location';
+        },
+
+        locate() {
+            if (!navigator.geolocation) {
+                this.place.error = geolocationError(null);
+
+                return;
+            }
+
+            this.place.locating = true;
+            this.place.error = '';
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    this.place.latitude = position.coords.latitude;
+                    this.place.longitude = position.coords.longitude;
+                    this.place.accuracy = Number.isFinite(position.coords.accuracy) ? Math.round(position.coords.accuracy) : null;
+                    this.place.locating = false;
+                },
+                (error) => {
+                    this.place.error = geolocationError(error);
+                    this.place.locating = false;
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+            );
+        },
+
+        async sendLocation() {
+            if (this.busy) {
+                return;
+            }
+
+            const place = this.place;
+            const body = { mode: place.mode, name: place.name.trim(), address: place.address.trim() };
+
+            if (place.mode === 'position') {
+                if (place.latitude === null) {
+                    this.place.error = 'Touchez d\'abord « Trouver ma position ».';
+
+                    return;
+                }
+
+                body.latitude = place.latitude;
+                body.longitude = place.longitude;
+            } else {
+                body.maps_url = cleanMapsLink(place.url);
+
+                if (!body.maps_url) {
+                    this.place.error = 'Collez le lien Google Maps du lieu.';
+
+                    return;
+                }
+            }
+
+            if (this.replyTo) {
+                body.reply_to_id = this.replyTo.id;
+            }
+
+            this.busy = true;
+
+            try {
+                const response = await fetch(config.urls.location, {
+                    method: 'POST',
+                    headers: { ...jsonHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    credentials: 'same-origin',
+                });
+                const json = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(errorForStatus(response.status, json));
+                }
+
+                this.dialog = null;
+                this.replyTo = null;
+                await this.poll({ scroll: true });
+            } catch (error) {
+                this.place.error = error.message;
+            } finally {
+                this.busy = false;
+            }
         },
 
         /* ---------- Notes vocales ---------- */
