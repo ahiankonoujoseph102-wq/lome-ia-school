@@ -7,6 +7,7 @@
 
 import { createSwipeGesture } from './chat-swipe.js';
 import { cleanMapsLink, geolocationError } from './chat-location.js';
+import { nextPollChoice, parsePollMine } from './chat-poll.js';
 import { canPauseRecording, createRecordingClock } from './voice-recording.js';
 
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -165,6 +166,8 @@ export default function registerChat(Alpine) {
         reviewProgress: 0,
 
         attachMenu: false,
+        pollDraft: { question: '', options: ['', ''], multiple: false, error: '' },
+        pollToClose: null,
         place: { mode: 'position', latitude: null, longitude: null, accuracy: null, url: '', name: '', address: '', locating: false, error: '' },
         groupMenu: false,
         menu: null,
@@ -486,6 +489,24 @@ export default function registerChat(Alpine) {
         /* ---------- Menu d'un message ---------- */
 
         onListClick(event) {
+            // Sondage : toucher un choix vote, change ou retire le vote ; « Clôturer le sondage » demande confirmation.
+            const pollOption = event.target.closest('[data-poll-option]');
+
+            if (pollOption) {
+                this.votePoll(pollOption);
+
+                return;
+            }
+
+            const pollClose = event.target.closest('[data-poll-close]');
+
+            if (pollClose) {
+                this.pollToClose = pollClose.dataset.pollClose;
+                this.dialog = 'poll-close';
+
+                return;
+            }
+
             // Pastille de réaction sous un message : réagir avec cet emoji (ou retirer sa réaction).
             const reaction = event.target.closest('[data-react]');
 
@@ -1140,6 +1161,132 @@ export default function registerChat(Alpine) {
                 xhr.addEventListener('error', () => reject(new Error('Connexion interrompue : le message n\'a pas été envoyé. Réessayez.')));
                 xhr.send(data);
             });
+        },
+
+        /* ---------- Sondages (interrupteur « Sondages ») ---------- */
+
+        openPoll() {
+            this.attachMenu = false;
+            this.pollDraft = { question: '', options: ['', ''], multiple: false, error: '' };
+            this.dialog = 'poll';
+        },
+
+        async sendPoll() {
+            if (this.busy) {
+                return;
+            }
+
+            const question = this.pollDraft.question.trim();
+            const options = this.pollDraft.options.map((option) => option.trim()).filter((option) => option !== '');
+
+            if (!question) {
+                this.pollDraft.error = 'Écrivez la question du sondage.';
+
+                return;
+            }
+
+            if (options.length < 2) {
+                this.pollDraft.error = 'Ajoutez au moins 2 choix.';
+
+                return;
+            }
+
+            this.busy = true;
+            this.pollDraft.error = '';
+
+            try {
+                const body = { question, options, multiple: this.pollDraft.multiple };
+
+                if (this.replyTo) {
+                    body.reply_to_id = this.replyTo.id;
+                }
+
+                const response = await fetch(config.urls.polls, {
+                    method: 'POST',
+                    headers: { ...jsonHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    credentials: 'same-origin',
+                });
+                const json = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(errorForStatus(response.status, json));
+                }
+
+                this.dialog = null;
+                this.replyTo = null;
+                await this.poll({ scroll: true });
+            } catch (error) {
+                this.pollDraft.error = error.message;
+            } finally {
+                this.busy = false;
+            }
+        },
+
+        async votePoll(button) {
+            const card = button.closest('[data-poll]');
+            const row = button.closest('[data-message-id]');
+
+            if (!card || !row || this.busy) {
+                return;
+            }
+
+            const options = nextPollChoice(parsePollMine(card.dataset.pollMine), button.dataset.pollOption, card.dataset.pollMultiple === '1');
+
+            await this.sendPollAction(this.url('pollVote', card.dataset.poll), { options }, row.dataset.messageId);
+        },
+
+        async closePoll() {
+            const id = this.pollToClose;
+            const card = id ? document.querySelector(`[data-poll="${id}"]`) : null;
+
+            if (!card) {
+                this.closeAll();
+
+                return;
+            }
+
+            await this.sendPollAction(this.url('pollClose', id), {}, card.closest('[data-message-id]')?.dataset.messageId);
+            this.pollToClose = null;
+            this.dialog = null;
+        },
+
+        /**
+         * Vote ou clôture : le message est remplacé tout de suite par sa nouvelle version (résultats à jour).
+         */
+        async sendPollAction(url, body, messageId) {
+            this.busy = true;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { ...jsonHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    credentials: 'same-origin',
+                });
+                const json = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(errorForStatus(response.status, json));
+                }
+
+                const element = messageId ? document.getElementById(`m-${messageId}`) : null;
+
+                if (element && json.html) {
+                    element.outerHTML = json.html;
+                }
+
+                if (json.status) {
+                    this.flash(json.status);
+                }
+
+                navigator.vibrate?.(8);
+            } catch (error) {
+                this.flash(error.message);
+                await this.poll();
+            } finally {
+                this.busy = false;
+            }
         },
 
         /* ---------- Lieu (interrupteur « Partage de localisation ») ---------- */

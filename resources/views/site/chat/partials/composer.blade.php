@@ -5,6 +5,7 @@
 @php
     $voicePause = \App\Chat\ChatFeatures::voicePause();
     $location = \App\Chat\ChatFeatures::location();
+    $polls = \App\Chat\ChatPolls::canCreate($viewer->user);
 @endphp
 <form
     method="POST"
@@ -160,6 +161,12 @@
                     <span>Fichier <span class="block text-xs text-slate-400">PDF, Word, Excel, PowerPoint, ZIP, TXT</span></span>
                     <input type="file" accept="{{ $fileAccept }}" class="sr-only" @change="pick($event, 'file')">
                 </label>
+                @if ($polls)
+                    <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-100 hover:bg-veil/5" @click="openPoll()" data-test="poll-button">
+                        <span class="grid size-9 place-items-center rounded-full bg-gold-500/20 text-gold-200"><flux:icon.chart-bar class="size-5" /></span>
+                        <span>Sondage <span class="block text-xs text-slate-400">Question et 2 à 10 choix</span></span>
+                    </button>
+                @endif
                 @if ($location)
                     <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-100 hover:bg-veil/5" @click="openLocation()" data-test="location-button">
                         <span class="grid size-9 place-items-center rounded-full bg-rose-500/20 text-rose-300"><flux:icon.map-pin class="size-5" /></span>

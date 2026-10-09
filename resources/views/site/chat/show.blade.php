@@ -40,6 +40,9 @@
             'broadcastAuth' => url('/broadcasting/auth'),
             'emailPreview' => route('chat.announcement-email', $formation),
             'location' => route('chat.locations.store', $formation),
+            'polls' => route('chat.polls.store', $formation),
+            'pollVote' => route('chat.polls.vote', [$formation, $placeholder]),
+            'pollClose' => route('chat.polls.close', [$formation, $placeholder]),
         ],
     ];
     $fileAccept = collect((array) config('chat.attachments.file.mimes'))->map(fn ($ext) => '.'.$ext)->implode(',');

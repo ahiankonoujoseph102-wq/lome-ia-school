@@ -13,6 +13,9 @@ enum ChatMessageType: string
     // Lieu partagé (interrupteur « Partage de localisation ») : carte avec lien Google Maps, sans fichier.
     case Location = 'location';
 
+    // Sondage (interrupteur « Sondages ») : question et choix dans les tables chat_poll*.
+    case Poll = 'poll';
+
     /**
      * Aperçu court (liste des groupes, notifications, citation d'une réponse).
      */
@@ -25,6 +28,7 @@ enum ChatMessageType: string
             self::Video => '🎬 Vidéo',
             self::File => '📄 Fichier',
             self::Location => '📍 Lieu',
+            self::Poll => '📊 Sondage',
         };
     }
 

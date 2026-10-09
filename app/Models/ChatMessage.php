@@ -44,6 +44,7 @@ use Illuminate\Support\Str;
  * @property-read Collection<int, ChatMessageReport> $reports
  * @property-read Collection<int, ChatMessageReaction> $reactions
  * @property-read ChatMessageLocation|null $location
+ * @property-read ChatPoll|null $poll
  */
 class ChatMessage extends Model
 {
@@ -129,6 +130,16 @@ class ChatMessage extends Model
     public function location(): HasOne
     {
         return $this->hasOne(ChatMessageLocation::class);
+    }
+
+    /**
+     * Sondage (message de type « poll » seulement).
+     *
+     * @return HasOne<ChatPoll, $this>
+     */
+    public function poll(): HasOne
+    {
+        return $this->hasOne(ChatPoll::class);
     }
 
     /**
@@ -283,6 +294,12 @@ class ChatMessage extends Model
         if ($this->type === ChatMessageType::Location) {
             $this->location()->delete();
             $this->unsetRelation('location');
+        }
+
+        // Sondage : question, choix et votes effacés aussi.
+        if ($this->type === ChatMessageType::Poll) {
+            $this->poll()->delete();
+            $this->unsetRelation('poll');
         }
 
         // Message supprimé : ses réactions disparaissent aussi.

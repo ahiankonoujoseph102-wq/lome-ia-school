@@ -13,6 +13,8 @@ class ChatFeatures
 
     public const string LOCATION = 'location';
 
+    public const string POLLS = 'polls';
+
     /**
      * Libellés de l'écran d'administration.
      *
@@ -26,6 +28,10 @@ class ChatFeatures
         self::LOCATION => [
             'title' => 'Partage de localisation',
             'text' => 'Bouton « Lieu » : position actuelle du téléphone ou lien Google Maps collé, avec un nom et une adresse facultatifs. Le message s\'affiche comme une carte avec « Ouvrir dans Google Maps » (aucune carte intégrée, aucune clé).',
+        ],
+        self::POLLS => [
+            'title' => 'Sondages',
+            'text' => 'Bouton « Sondage » réservé aux administrateurs (dont le formateur principal) : une question, 2 à 10 choix, une ou plusieurs réponses. Tous les membres votent, modifient ou retirent leur vote ; résultats mis à jour sans recharger ; clôture par l\'auteur ou un administrateur.',
         ],
     ];
 
@@ -42,5 +48,10 @@ class ChatFeatures
     public static function location(): bool
     {
         return self::enabled(self::LOCATION);
+    }
+
+    public static function polls(): bool
+    {
+        return self::enabled(self::POLLS);
     }
 }
