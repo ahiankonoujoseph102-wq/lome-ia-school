@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -25,16 +26,17 @@ class FormationIllustrationsTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Base de test créée à une date fixe, avant le 8 octobre 2026 : la migration 2026_10_11_100000_add_agents_ia_illustration
-     * ne dépend ainsi jamais du jour où les tests tournent (sinon, depuis le 8 octobre, elle pose l'illustration
-     * d'« Agents IA » et enregistre system.agents_illustration_done avant même le début du test). L'horloge réelle
-     * est rendue ensuite : chaque test fixe lui-même la date dont il a besoin.
+     * La base de test n'est migrée qu'une fois par série de tests, par le premier test qui tourne, à la vraie date du
+     * jour. Depuis le 8 octobre 2026, la migration 2026_10_11_100000_add_agents_ia_illustration y enregistre alors
+     * system.agents_illustration_done. Ce réglage est retiré au début de chaque test (retrait annulé à la fin du test
+     * avec le reste) : ces tests ne dépendent ainsi ni de la date ni de l'ordre des tests.
      */
     protected function setUp(): void
     {
-        Carbon::setTestNow('2026-10-01 12:00:00');
         parent::setUp();
-        Carbon::setTestNow();
+
+        DB::table('site_settings')->where('key', Illustrations::AGENTS_DONE_KEY)->delete();
+        SiteSettings::flush();
     }
 
     private function migration(string $name): object
