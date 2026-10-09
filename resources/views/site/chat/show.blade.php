@@ -17,6 +17,7 @@
         'showRules' => $showRules,
         'canEmailAnnounce' => \App\Chat\EmailAnnouncements::canUse($viewer->user),
         'voiceMaxSeconds' => (int) config('chat.attachments.voice.max_seconds'),
+        'voicePause' => \App\Chat\ChatFeatures::voicePause(),
         'maxBytes' => [
             'image' => (int) config('chat.attachments.image.max_kb') * 1024,
             'video' => (int) config('chat.attachments.video.max_kb') * 1024,

@@ -2,6 +2,9 @@
     Zone d'écriture : texte, photo ou capture, vidéo courte, fichier, note vocale, réponse à un message.
     Sans JavaScript, le formulaire envoie quand même un message texte.
 --}}
+@php
+    $voicePause = \App\Chat\ChatFeatures::voicePause();
+@endphp
 <form
     method="POST"
     action="{{ route('chat.messages.store', $formation) }}"
@@ -62,7 +65,7 @@
     </div>
 
     {{-- Enregistrement d'une note vocale --}}
-    <div x-show="recording" x-cloak class="flex items-center gap-2 rounded-full bg-veil/[0.06] py-1.5 pr-1.5 pl-2 ring-1 ring-veil/10" role="status">
+    <div x-show="{{ $voicePause ? 'recording && !pauseMode' : 'recording' }}" x-cloak class="flex items-center gap-2 rounded-full bg-veil/[0.06] py-1.5 pr-1.5 pl-2 ring-1 ring-veil/10" role="status">
         <button type="button" @click="cancelRecording()" class="grid size-10 shrink-0 place-items-center rounded-full text-rose-300 hover:bg-rose-500/15" aria-label="Annuler la note vocale">
             <flux:icon.trash class="size-5" />
         </button>
@@ -76,9 +79,55 @@
         </button>
     </div>
 
+    @if ($voicePause)
+        {{-- Note vocale avec pause (interrupteur « Pause des notes vocales ») : pause / reprise, annuler, puis écouter avant d'envoyer.
+             Navigateur sans pause : bloc ci-dessus, comme avant. --}}
+        <div x-show="recording && pauseMode" x-cloak class="flex items-center gap-2 rounded-full bg-veil/[0.06] py-1.5 pr-1.5 pl-1.5 ring-1 ring-veil/10" role="status" data-test="voice-recording-pause">
+            <button type="button" @click="cancelRecording()" class="grid size-11 shrink-0 place-items-center rounded-full text-rose-300 hover:bg-rose-500/15" aria-label="Annuler la note vocale" data-test="voice-cancel">
+                <flux:icon.trash class="size-5" />
+            </button>
+            <span class="size-2.5 shrink-0 rounded-full" :class="recordPaused ? 'bg-slate-500' : 'animate-pulse bg-rose-500'"></span>
+            <span class="min-w-0 flex-1 text-sm text-slate-200 tabular-nums">
+                <span x-text="formatSeconds(recordSeconds)">0:00</span>
+                <span class="text-slate-500" x-show="!recordPaused">/ {{ intdiv((int) config('chat.attachments.voice.max_seconds'), 60) }}:00</span>
+                <span class="text-xs text-slate-400" x-show="recordPaused" x-cloak>En pause</span>
+            </span>
+            <button type="button" @click="togglePause()" class="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-white ring-1 ring-slate-600 hover:bg-veil/10" :aria-pressed="recordPaused.toString()" data-test="voice-pause">
+                <flux:icon.pause variant="solid" class="size-4" x-show="!recordPaused" />
+                <flux:icon.microphone class="size-4" x-show="recordPaused" x-cloak />
+                <span x-text="recordPaused ? 'Reprendre' : 'Pause'">Pause</span>
+            </button>
+            <button type="button" @click="stopRecording('review')" class="grid size-11 shrink-0 place-items-center rounded-full bg-electric-600 text-white shadow-lg shadow-electric-900/40" aria-label="Terminer et écouter avant d'envoyer" data-test="voice-finish">
+                <flux:icon.stop variant="solid" class="size-5" />
+            </button>
+        </div>
+
+        {{-- Écouter l'enregistrement avant l'envoi --}}
+        <div x-show="voiceReview" x-cloak class="flex items-center gap-2 rounded-full bg-veil/[0.06] py-1.5 pr-1.5 pl-1.5 ring-1 ring-veil/10" data-test="voice-review">
+            <button type="button" @click="discardReview()" class="grid size-11 shrink-0 place-items-center rounded-full text-rose-300 hover:bg-rose-500/15" aria-label="Supprimer la note vocale" data-test="voice-discard">
+                <flux:icon.trash class="size-5" />
+            </button>
+            <button type="button" @click="toggleReview()" class="chat-voice-button size-11" :aria-label="reviewPlaying ? 'Mettre en pause' : 'Écouter la note vocale'" aria-label="Écouter la note vocale" data-test="voice-listen">
+                <flux:icon.play variant="solid" class="size-5" x-show="!reviewPlaying" />
+                <flux:icon.pause variant="solid" class="size-5" x-show="reviewPlaying" x-cloak />
+            </button>
+            <span class="min-w-0 flex-1">
+                <span class="block h-1 overflow-hidden rounded-full bg-veil/20"><span class="block h-full rounded-full bg-gold-500" :style="`width: ${reviewProgress}%`"></span></span>
+                <span class="mt-1 flex justify-between text-[11px] text-slate-300 tabular-nums">
+                    <span x-text="formatSeconds(reviewCurrent)">0:00</span>
+                    <span x-text="voiceReview ? formatSeconds(voiceReview.duration) : ''"></span>
+                </span>
+            </span>
+            <button type="button" @click="sendReview()" class="grid size-11 shrink-0 place-items-center rounded-full bg-electric-600 text-white shadow-lg shadow-electric-900/40" :disabled="uploading" aria-label="Envoyer la note vocale" data-test="voice-send">
+                <flux:icon.paper-airplane variant="solid" class="size-5" />
+            </button>
+            <audio x-ref="voiceReview" preload="auto" class="hidden"></audio>
+        </div>
+    @endif
+
     {{-- Annonce importante aussi envoyée par e-mail : administrateurs seulement (jamais visible pour un élève) --}}
     @if (\App\Chat\EmailAnnouncements::canUse($viewer->user))
-        <label x-show="!recording" class="flex cursor-pointer items-center gap-2.5 px-1 text-sm text-slate-300" data-test="email-members">
+        <label x-show="!recording{{ $voicePause ? ' && !voiceReview' : '' }}" class="flex cursor-pointer items-center gap-2.5 px-1 text-sm text-slate-300" data-test="email-members">
             <input type="checkbox" name="email_members" value="1" x-model="emailMembers" class="peer sr-only">
             <span class="grid size-5 shrink-0 place-items-center rounded-md bg-night-900 ring-1 ring-slate-600 transition peer-checked:bg-gold-500/20 peer-checked:ring-gold-500 peer-focus-visible:outline-2 peer-focus-visible:outline-gold-300" aria-hidden="true">
                 <flux:icon.check x-show="emailMembers" x-cloak class="size-3.5 text-white" />
@@ -89,7 +138,7 @@
     @endif
 
     {{-- Ligne d'écriture --}}
-    <div x-show="!recording" class="flex items-end gap-1.5">
+    <div x-show="!recording{{ $voicePause ? ' && !voiceReview' : '' }}" class="flex items-end gap-1.5">
         <div class="relative" @click.outside="attachMenu = false">
             <button type="button" @click="attachMenu = !attachMenu" class="grid size-11 place-items-center rounded-full text-slate-300 hover:bg-veil/10 hover:text-white" aria-label="Joindre une photo, une vidéo ou un fichier" :aria-expanded="attachMenu.toString()">
                 <flux:icon.paper-clip class="size-6" />

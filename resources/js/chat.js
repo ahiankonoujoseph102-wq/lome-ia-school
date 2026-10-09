@@ -6,6 +6,7 @@
  */
 
 import { createSwipeGesture } from './chat-swipe.js';
+import { canPauseRecording, createRecordingClock } from './voice-recording.js';
 
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
@@ -153,6 +154,14 @@ export default function registerChat(Alpine) {
 
         recording: false,
         recordSeconds: 0,
+
+        // Pause des notes vocales (interrupteur de l'admin et navigateur capable de mettre en pause).
+        pauseMode: Boolean(config.voicePause) && canPauseRecording(window.MediaRecorder),
+        recordPaused: false,
+        voiceReview: null,
+        reviewPlaying: false,
+        reviewCurrent: 0,
+        reviewProgress: 0,
 
         attachMenu: false,
         groupMenu: false,
@@ -1134,6 +1143,10 @@ export default function registerChat(Alpine) {
         /* ---------- Notes vocales ---------- */
 
         async startRecording() {
+            if (this.voiceReview) {
+                return;
+            }
+
             if (!navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder === 'undefined') {
                 this.flash('Votre navigateur ne permet pas d\'enregistrer une note vocale. Mettez-le à jour (Chrome ou Safari).');
 
@@ -1161,18 +1174,50 @@ export default function registerChat(Alpine) {
             this.recorder.start(1000);
 
             this.recording = true;
+            this.recordPaused = false;
             this.recordSeconds = 0;
-            this.recordStartedAt = Date.now();
+            this.recordClock = createRecordingClock(Date.now());
             this.recordTimer = setInterval(() => {
-                this.recordSeconds = Math.floor((Date.now() - this.recordStartedAt) / 1000);
+                this.recordSeconds = Math.floor(this.recordClock.elapsed(Date.now()) / 1000);
 
-                // Limite atteinte : la note part automatiquement.
+                // Limite atteinte : la note part automatiquement (avec la pause : elle s'arrête pour être écoutée).
                 if (this.recordSeconds >= config.voiceMaxSeconds) {
-                    this.stopRecording(true);
+                    this.stopRecording(this.pauseMode ? 'review' : true);
                 }
             }, 250);
         },
 
+        /**
+         * « Pause » / « Reprendre » : le chronomètre s'arrête pendant la pause.
+         */
+        togglePause() {
+            if (!this.recording || !this.recorder || !this.pauseMode) {
+                return;
+            }
+
+            try {
+                if (this.recordPaused) {
+                    this.recorder.resume();
+                    this.recordClock.resume(Date.now());
+                    this.recordPaused = false;
+                } else {
+                    this.recorder.pause();
+                    this.recordClock.pause(Date.now());
+                    this.recordPaused = true;
+                }
+            } catch (error) {
+                // Pause refusée par le navigateur : l'enregistrement continue, comme avant.
+                this.pauseMode = false;
+                this.recordPaused = false;
+                this.recordClock.resume(Date.now());
+            }
+
+            this.recordSeconds = Math.floor(this.recordClock.elapsed(Date.now()) / 1000);
+        },
+
+        /**
+         * send : true (envoyer tout de suite), false (annuler) ou 'review' (écouter avant d'envoyer).
+         */
         stopRecording(send) {
             if (!this.recording) {
                 return;
@@ -1180,8 +1225,9 @@ export default function registerChat(Alpine) {
 
             clearInterval(this.recordTimer);
             this.sendAfterStop = send;
-            this.recordDuration = Math.min(config.voiceMaxSeconds, Math.max(1, Math.round((Date.now() - this.recordStartedAt) / 1000)));
+            this.recordDuration = Math.min(config.voiceMaxSeconds, Math.max(1, Math.round(this.recordClock.elapsed(Date.now()) / 1000)));
             this.recording = false;
+            this.recordPaused = false;
 
             if (this.recorder && this.recorder.state !== 'inactive') {
                 this.recorder.stop();
@@ -1218,20 +1264,128 @@ export default function registerChat(Alpine) {
             }
 
             const extension = type.includes('mp4') || type.includes('aac') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
+
+            if (this.sendAfterStop === 'review') {
+                this.openReview({ blob, extension, duration: this.recordDuration });
+
+                return;
+            }
+
+            await this.sendVoice(blob, extension, this.recordDuration);
+        },
+
+        /**
+         * Envoi d'une note vocale. Renvoie true si elle est partie.
+         */
+        async sendVoice(blob, extension, duration) {
             const data = new FormData();
             data.append('type', 'voice');
             data.append('attachment', blob, `note-vocale.${extension}`);
-            data.append('duration', String(this.recordDuration));
+            data.append('duration', String(duration));
 
             if (this.replyTo) {
                 data.append('reply_to_id', this.replyTo.id);
             }
 
-            this.pending = { type: 'voice', name: 'Note vocale', label: formatSeconds(this.recordDuration), extension: 'MIC', preview: null };
-            await this.uploadWithProgress(data, () => (this.pending = null));
+            let sent = false;
+            this.pending = { type: 'voice', name: 'Note vocale', label: formatSeconds(duration), extension: 'MIC', preview: null };
+            await this.uploadWithProgress(data, () => {
+                sent = true;
+                this.pending = null;
+            });
 
             if (this.pending?.type === 'voice') {
                 this.pending = null;
+            }
+
+            return sent;
+        },
+
+        /* ---------- Écouter avant d'envoyer (pause des notes vocales) ---------- */
+
+        openReview(review) {
+            const audio = this.$refs.voiceReview;
+            this.voiceReview = { ...review, url: URL.createObjectURL(review.blob) };
+            this.reviewPlaying = false;
+            this.reviewCurrent = 0;
+            this.reviewProgress = 0;
+
+            if (!audio) {
+                return;
+            }
+
+            audio.src = this.voiceReview.url;
+
+            if (!audio.dataset.ready) {
+                audio.dataset.ready = '1';
+                audio.addEventListener('play', () => (this.reviewPlaying = true));
+                audio.addEventListener('pause', () => (this.reviewPlaying = false));
+                audio.addEventListener('ended', () => {
+                    this.reviewPlaying = false;
+                    this.reviewCurrent = 0;
+                    this.reviewProgress = 0;
+                });
+                audio.addEventListener('timeupdate', () => {
+                    const total = this.voiceReview?.duration || 0;
+                    this.reviewCurrent = audio.currentTime;
+                    this.reviewProgress = total ? Math.min(100, (audio.currentTime / total) * 100) : 0;
+                });
+            }
+        },
+
+        toggleReview() {
+            const audio = this.$refs.voiceReview;
+
+            if (!audio || !this.voiceReview) {
+                return;
+            }
+
+            if (!audio.paused) {
+                audio.pause();
+
+                return;
+            }
+
+            window.dispatchEvent(new CustomEvent('chat-voice-play', { detail: audio }));
+            audio.play().catch(() => this.flash('Lecture impossible sur cet appareil. Vous pouvez quand même envoyer la note.'));
+        },
+
+        closeReview() {
+            const audio = this.$refs.voiceReview;
+
+            if (audio) {
+                audio.pause();
+                audio.removeAttribute('src');
+                audio.load();
+            }
+
+            if (this.voiceReview?.url) {
+                URL.revokeObjectURL(this.voiceReview.url);
+            }
+
+            this.voiceReview = null;
+            this.reviewPlaying = false;
+        },
+
+        discardReview() {
+            this.closeReview();
+        },
+
+        async sendReview() {
+            if (!this.voiceReview || this.uploading) {
+                return;
+            }
+
+            const review = this.voiceReview;
+            this.$refs.voiceReview?.pause();
+            this.voiceReview = null;
+
+            if (await this.sendVoice(review.blob, review.extension, review.duration)) {
+                URL.revokeObjectURL(review.url);
+                this.$refs.voiceReview?.removeAttribute('src');
+            } else {
+                // Envoi raté : la note reste prête à être renvoyée.
+                this.voiceReview = review;
             }
         },
     }));
