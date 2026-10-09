@@ -7,13 +7,13 @@
 export function geolocationError(error) {
     switch (error?.code) {
         case 1:
-            return 'Vous avez refusé l\'accès à votre position. Autorisez-la dans les réglages de votre navigateur, ou choisissez « Coller un lien Google Maps ».';
+            return 'Vous avez refusé l\'accès à votre position. Autorisez-la dans les réglages de votre navigateur, ou choisissez « Coller un lien Google Maps ».';
         case 2:
-            return 'Position introuvable pour le moment. Activez la localisation du téléphone, ou choisissez « Coller un lien Google Maps ».';
+            return 'Position introuvable pour le moment. Activez la localisation du téléphone, ou choisissez « Coller un lien Google Maps ».';
         case 3:
-            return 'La recherche de votre position a pris trop de temps. Réessayez, ou choisissez « Coller un lien Google Maps ».';
+            return 'La recherche de votre position a pris trop de temps. Réessayez, ou choisissez « Coller un lien Google Maps ».';
         default:
-            return 'Votre navigateur ne permet pas de trouver votre position. Choisissez « Coller un lien Google Maps ».';
+            return 'Votre navigateur ne permet pas de trouver votre position. Choisissez « Coller un lien Google Maps ».';
     }
 }
 

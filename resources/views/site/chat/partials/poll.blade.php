@@ -1,7 +1,7 @@
 {{--
     Sondage : question, choix avec barre de progression, nombre de votes et pourcentage (des votants).
     Le choix du membre est entouré de doré. Toucher un choix vote, change ou retire le vote (chat.js).
-    Style stable face au mode sombre forcé : fonds foncés translucides, textes clairs, contours en « ring ».
+    Style stable face au mode sombre forcé : fonds foncés translucides, textes clairs, contours en « ring ».
 --}}
 @use('App\Chat\ChatPolls')
 

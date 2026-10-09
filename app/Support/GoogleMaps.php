@@ -41,7 +41,7 @@ class GoogleMaps
         $path = (string) ($parts['path'] ?? '');
 
         return match (true) {
-            // Lien court de l'application Google Maps (« Partager » sur le téléphone).
+            // Lien court de l'application Google Maps (« Partager » sur le téléphone).
             $host === 'maps.app.goo.gl' => strlen(trim($path, '/')) > 0,
             $host === 'goo.gl' => str_starts_with($path, '/maps/'),
             preg_match('/^maps\.google\.'.self::GOOGLE_TLD.'$/', $host) === 1 => true,
@@ -65,6 +65,6 @@ class GoogleMaps
 
     public static function invalidMessage(): string
     {
-        return 'Ce lien n\'est pas un lien Google Maps. Dans Google Maps, touchez « Partager », copiez le lien (par exemple https://maps.app.goo.gl/…) puis collez-le ici.';
+        return 'Ce lien n\'est pas un lien Google Maps. Dans Google Maps, touchez « Partager », copiez le lien (par exemple https://maps.app.goo.gl/…) puis collez-le ici.';
     }
 }

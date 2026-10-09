@@ -23,7 +23,7 @@
                 <label class="flex cursor-pointer items-start justify-between gap-4 p-5 sm:p-6" data-test="chat-feature-{{ $feature }}">
                     <span class="min-w-0">
                         <span class="block font-semibold text-white">{{ $label['title'] }}</span>
-                        <span class="mt-0.5 block text-sm text-slate-400">{{ $label['text'] }}</span>
+                        <span class="mt-0.5 block text-sm text-slate-400">{{ str_replace(['« ', ' »'], ["«\u{00A0}", "\u{00A0}»"], $label['text']) }}</span>
                     </span>
                     <input type="hidden" name="features[{{ $feature }}]" value="0">
                     <input type="checkbox" name="features[{{ $feature }}]" value="1" @checked((bool) old('features.'.$feature, $features[$feature] ?? false)) class="peer sr-only">

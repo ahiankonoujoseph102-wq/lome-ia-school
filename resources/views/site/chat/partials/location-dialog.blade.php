@@ -1,5 +1,5 @@
 {{--
-    Partager un lieu (interrupteur « Partage de localisation ») : position actuelle du téléphone ou lien Google Maps,
+    Partager un lieu (interrupteur « Partage de localisation ») : position actuelle du téléphone ou lien Google Maps,
     nom et adresse facultatifs. Aucune carte intégrée, aucune clé : le message est une carte avec un lien.
 --}}
 <div x-show="dialog === 'location'" x-cloak x-transition class="chat-dialog max-h-[88dvh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="titre-lieu" data-test="location-dialog">
@@ -31,7 +31,7 @@
     <div x-show="place.mode === 'link'" x-cloak class="mt-4">
         <label for="lieu-lien" class="field-label">Lien Google Maps</label>
         <input id="lieu-lien" type="text" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" x-model="place.url" maxlength="500" placeholder="https://maps.app.goo.gl/…" class="field-input mt-1.5" data-test="location-url">
-        <p class="mt-1.5 text-xs text-slate-400">Dans Google Maps, touchez « Partager », puis « Copier le lien ».</p>
+        <p class="mt-1.5 text-xs text-slate-400">Dans Google Maps, touchez « Partager », puis « Copier le lien ».</p>
     </div>
 
     <label for="lieu-nom" class="field-label mt-4">Nom du lieu <span class="font-normal text-slate-400">(facultatif)</span></label>
