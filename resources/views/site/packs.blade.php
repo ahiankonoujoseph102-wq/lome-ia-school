@@ -7,11 +7,12 @@
 
     /**
      * Page de vente des offres d'accompagnement : en-tête (affiche, promesse, compte à rebours, bouton), cartes
-     * compactes, « Comment s'inscrire », « Dans toutes les offres », dernier bouton, et barre fixe sur téléphone.
+     * compactes, témoignages, « Comment s'inscrire », « Dans toutes les offres », dernier bouton, et barre fixe sur téléphone.
      *
      * @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\Formation> $packs
      * @var \App\Models\Formation|null $countdownPack offre ouverte dont la date de fin est la plus proche
      * @var int|null $closesAt fin de la dernière offre ouverte (ms) : les boutons communs se masquent à cette heure
+     * @var list<array<string, mixed>> $testimonials témoignages actifs (App\Support\Testimonials)
      */
     // Textes fixes (config/site.php, clé packs_page ; App\Packs\PackSalesTexts). Une clé absente d'un réglage
     // enregistré plus ancien prend la valeur de départ.
@@ -201,6 +202,15 @@
             @endforeach
         </ol>
     </section>
+
+    {{-- Témoignages : les mêmes que sur l'accueil et les pages des formations (gérés dans l'admin, Témoignages),
+         section masquée tant qu'il n'y en a aucun. Vidéos chargées seulement au toucher. --}}
+    @if ($testimonials)
+        <section class="mx-auto max-w-6xl px-4 pt-14 sm:px-6 sm:pt-20" data-test="packs-testimonials">
+            <x-site.section-heading eyebrow="Témoignages" title="Ce qu'en disent les élèves" />
+            <x-site.testimonials :items="$testimonials" class="mt-8 sm:mt-10" />
+        </section>
+    @endif
 
     {{-- Comment s'inscrire : le vrai parcours de paiement Mobile Money du site (sans objet une fois tout clos). --}}
     @unless ($allClosed)

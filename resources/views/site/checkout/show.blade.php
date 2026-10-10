@@ -186,4 +186,13 @@
             </div>
         </div>
     </section>
+
+    {{-- Page d'une offre d'accompagnement : témoignages (les mêmes que sur /accompagnement et l'accueil, gérés dans
+         l'admin), sous le récapitulatif et le paiement. Masqués s'il n'y en a aucun ; rien pour une formation habituelle. --}}
+    @if ($formation->isPack() && ($testimonials = \App\Support\Testimonials::all()))
+        <section class="mx-auto max-w-5xl px-4 pb-16 sm:px-6" data-test="checkout-testimonials">
+            <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Ce qu'en disent les élèves</h2>
+            <x-site.testimonials :items="$testimonials" class="mt-6" />
+        </section>
+    @endif
 </x-layouts::site>
