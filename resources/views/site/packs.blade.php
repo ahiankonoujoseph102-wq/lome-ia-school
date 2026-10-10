@@ -25,7 +25,7 @@
 @endphp
 
 <x-layouts::site
-    title="Accompagnement IA"
+    :title="$page['title']"
     description="Trois offres d'accompagnement en intelligence artificielle avec Coach Joseph : plusieurs formations réunies, un groupe VIP et un accompagnement à vie. Paiement par Mobile Money."
     :sticky-cta="$open"
 >
