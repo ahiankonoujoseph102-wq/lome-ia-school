@@ -68,6 +68,27 @@ class PackTexts
     ];
 
     /**
+     * Textes fixes de la page à la création des offres (valeurs de départ qu'avait config/site.php avant la
+     * refonte de la page de vente, voir PackSalesTexts ; le fichier contient maintenant les textes de la refonte).
+     *
+     * @var array<string, mixed>
+     */
+    public const array OLD_PAGE = [
+        'eyebrow' => 'Offres d\'accompagnement',
+        'title' => 'Accompagnement IA',
+        'subtitle' => 'Trois niveaux qui réunissent plusieurs formations du site. Choisissez celui qui correspond à votre projet.',
+        'common_eyebrow' => 'Dans toutes les offres',
+        'common_title' => 'Ce que chaque offre comprend',
+        'common' => [
+            ['icon' => 'document-text', 'title' => 'Document, résumé et exercice', 'text' => 'Chaque formation est accompagnée d\'un document, d\'un résumé et d\'un exercice.'],
+            ['icon' => 'chat-bubble-left-right', 'title' => 'Accès au groupe VIP', 'text' => ''],
+            ['icon' => 'heart', 'title' => 'Accompagnement à vie', 'text' => ''],
+            ['icon' => 'academic-cap', 'title' => 'Attestation de participation à la fin', 'text' => ''],
+        ],
+        'payment_note' => 'Paiement par Mobile Money : vous envoyez le montant, puis la capture de votre transfert, comme pour toutes les formations du site.',
+    ];
+
+    /**
      * Anciennes descriptions (celles créées avec les offres, octobre 2026), par adresse d'offre.
      *
      * @return array<string, string>
@@ -78,13 +99,13 @@ class PackTexts
     }
 
     /**
-     * Anciens textes fixes de la page : les valeurs de départ de config/site.php.
+     * Anciens textes fixes de la page (à la création des offres).
      *
      * @return array<string, mixed>
      */
     public static function oldPage(): array
     {
-        return (array) SiteSettings::default('site.packs_page');
+        return self::OLD_PAGE;
     }
 
     /**
@@ -143,18 +164,14 @@ class PackTexts
                 }
             }
 
-            $page = (array) SiteSettings::get('site.packs_page');
+            // Sans réglage enregistré, la page affiche les textes de la refonte (valeurs de départ de config/site.php) :
+            // ce ne sont ni les anciens ni les nouveaux textes de cette commande, laissés tels quels.
+            $page = SiteSetting::query()->where('key', 'site.packs_page')->value('value');
 
             if ($page == $pageTo) {
                 $report[] = 'Textes fixes de la page : déjà à jour, rien n\'est changé.';
             } elseif ($page == $pageFrom) {
-                if ($pageTo == self::oldPage()) {
-                    // Retour aux textes d'origine : le réglage enregistré est retiré, les valeurs de départ s'appliquent.
-                    SiteSetting::query()->where('key', 'site.packs_page')->delete();
-                    SiteSettings::flush();
-                } else {
-                    SiteSettings::save(['site.packs_page' => $pageTo]);
-                }
+                SiteSettings::save(['site.packs_page' => $pageTo]);
                 $report[] = 'Textes fixes de la page : remplacés.';
                 $changed++;
             } else {

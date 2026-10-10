@@ -46,4 +46,16 @@ class PacksPage
     {
         return Formation::query()->publishedPacks()->get()->contains(fn (Formation $pack): bool => ! $pack->registrationsClosed());
     }
+
+    /**
+     * Nom court du niveau, affiché en titre de sa carte : ce qui suit le dernier « : » du titre
+     * (« Accompagnement IA, niveau 1 : Créateur de contenu » → « Créateur de contenu ») ; le titre entier sinon.
+     */
+    public static function shortName(string $title): string
+    {
+        $position = mb_strrpos($title, ':');
+        $short = $position === false ? '' : trim(mb_substr($title, $position + 1));
+
+        return $short !== '' ? $short : $title;
+    }
 }

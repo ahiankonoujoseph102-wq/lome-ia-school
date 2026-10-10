@@ -13,8 +13,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Commandes « app:pack-texts-apply » et « app:pack-texts-revert » : nouveaux textes des offres et de la page,
- * relançables sans effet indésirable, jamais au-dessus d'un texte modifié dans l'admin.
+ * Anciennes commandes « app:pack-texts-apply » et « app:pack-texts-revert » (avant la refonte de la page de vente,
+ * remplacées par app:pack-sales-texts-*, voir PackSalesTextsTest) : toujours relançables sans effet indésirable,
+ * jamais au-dessus d'un texte modifié dans l'admin. Ici, la base est remise dans son état d'avant la refonte.
  */
 class PackTextsTest extends TestCase
 {
@@ -25,6 +26,12 @@ class PackTextsTest extends TestCase
         parent::setUp();
 
         Formation::query()->where('kind', 'pack')->update(['is_active' => true]);
+
+        // État d'avant la refonte : descriptions de la création des offres, anciens textes fixes de la page.
+        foreach (PackSetup::PACKS as $pack) {
+            Formation::query()->where('slug', $pack['slug'])->update(['description' => $pack['description']]);
+        }
+        SiteSettings::save(['site.packs_page' => PackTexts::OLD_PAGE]);
     }
 
     private function pack(int $level): Formation
@@ -97,7 +104,6 @@ class PackTextsTest extends TestCase
         }
 
         $this->assertSame(PackTexts::oldPage(), (array) SiteSettings::get('site.packs_page'));
-        $this->assertDatabaseMissing('site_settings', ['key' => 'site.packs_page']);
         $this->get(route('packs'))->assertOk()->assertSee('Ce que chaque offre comprend')->assertDontSee('Inclus à chaque niveau');
 
         $this->artisan('app:pack-texts-revert')->assertSuccessful()->expectsOutputToContain('déjà à jour')->doesntExpectOutputToContain('description remplacée');

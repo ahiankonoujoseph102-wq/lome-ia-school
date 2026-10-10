@@ -67,4 +67,42 @@ class RichText
 
         return $blocks;
     }
+
+    /**
+     * Résumé d'une carte d'offre : la première ligne (ou le premier paragraphe) sert d'accroche, la première
+     * liste donne les points forts ($max au plus) ; tout le reste (paragraphes suivants, points en trop) est
+     * renvoyé à part, pour être affiché replié sous « Voir tout ce qui est inclus » : rien n'est perdu.
+     *
+     * @return array{hook: list<string>, points: list<string>, rest: list<array{type: 'paragraph', lines: list<string>}|array{type: 'list', items: list<string>}>}
+     */
+    public static function summary(?string $text, int $max = 4): array
+    {
+        $blocks = self::blocks($text);
+        $hook = [];
+        $points = [];
+        $rest = [];
+
+        foreach ($blocks as $index => $block) {
+            if ($index === 0 && $block['type'] === 'paragraph') {
+                $hook = $block['lines'];
+
+                continue;
+            }
+
+            if ($points === [] && $block['type'] === 'list') {
+                $points = array_slice($block['items'], 0, $max);
+                $more = array_slice($block['items'], $max);
+
+                if ($more !== []) {
+                    $rest[] = ['type' => 'list', 'items' => $more];
+                }
+
+                continue;
+            }
+
+            $rest[] = $block;
+        }
+
+        return ['hook' => $hook, 'points' => $points, 'rest' => $rest];
+    }
 }

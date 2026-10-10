@@ -62,8 +62,11 @@ class PackPageTest extends TestCase
         $this->actingAs($admin)->get(route('packs'))
             ->assertOk()
             ->assertSee('Aperçu réservé à l\'administrateur', false)
-            ->assertSee('Accompagnement IA, niveau 1 : Créateur de contenu')
-            ->assertDontSee('data-test="pack-choose"', false);
+            ->assertSee('Créateur de contenu')
+            ->assertDontSee('data-test="pack-choose"', false)
+            // Offres masquées : ni bouton du haut, ni barre fixe.
+            ->assertDontSee('data-test="packs-hero-button"', false)
+            ->assertDontSee('data-test="packs-sticky-bar"', false);
     }
 
     public function test_the_three_packs_are_shown_with_their_validated_texts(): void
@@ -72,28 +75,28 @@ class PackPageTest extends TestCase
 
         $response = $this->get(route('packs'))->assertOk();
 
+        // Nom court du niveau (fin du titre), du niveau 1 au niveau 3.
         $response->assertSeeInOrder([
-            'Accompagnement IA, niveau 1 : Créateur de contenu',
-            'Accompagnement IA, niveau 2 : Créateur de sites et d&#039;applications',
-            'Accompagnement IA, niveau 3 : Parcours complet avec suivi personnel',
+            'data-test="pack-name">Créateur de contenu<',
+            'data-test="pack-name">Créateur de sites et d&#039;applications<',
+            'data-test="pack-name">Parcours complet avec suivi personnel<',
         ], false);
         $response->assertSeeInOrder(['Niveau 1', 'Niveau 2', 'Niveau 3']);
         $response->assertSee("10\u{00A0}000\u{00A0}FCFA")->assertSee("30\u{00A0}000\u{00A0}FCFA")->assertSee("75\u{00A0}000\u{00A0}FCFA");
 
         foreach ($this->packs as $pack) {
-            $response->assertSee(e($pack->description), false);
             $response->assertSee(route('checkout.show', $pack));
         }
 
         $this->assertSame(3, substr_count($response->getContent(), 'data-test="pack-choose"'));
-        $response->assertSee('Choisir cette offre');
+        $response->assertSee('Je m\'inscris maintenant', false)->assertDontSee('Choisir cette offre');
         $response->assertSee('Formation ChatGPT &amp; Claude', false)->assertSee('Groupe VIP');
 
-        // Points communs sous les cartes.
-        $response->assertSee('Chaque formation est accompagnée d&#039;un document, d&#039;un résumé et d&#039;un exercice.', false)
-            ->assertSee('Accès au groupe VIP')
-            ->assertSee('Accompagnement à vie')
-            ->assertSee('Attestation de participation à la fin');
+        // Points communs sous les cartes, une ligne chacun.
+        $response->assertSee('Un document, un résumé et un exercice pour chaque formation')
+            ->assertSee('L&#039;accès au groupe VIP', false)
+            ->assertSee('Un accompagnement à vie')
+            ->assertSee('Une attestation de participation à la fin');
 
         // Le niveau 3 (75 000 FCFA, au-dessus du seuil) s'ouvre après vérification ; les autres dès la capture.
         $response->assertSee('Accès ouvert après vérification du paiement')->assertSee('Accès dès l\'envoi de la capture du paiement', false);
@@ -160,7 +163,7 @@ class PackPageTest extends TestCase
         $html = (string) $this->get(route('packs'))->getContent();
 
         // Cartes empilées sur téléphone, trois colonnes seulement sur grand écran ; boutons pleine largeur.
-        $this->assertStringContainsString('grid gap-5 lg:grid-cols-3', $html);
+        $this->assertStringContainsString('grid gap-6 lg:grid-cols-3', $html);
         $this->assertStringContainsString('btn-gold w-full', $html);
         // Style stable face au mode sombre forcé : jamais de voile « bg-white/… ».
         $this->assertDoesNotMatchRegularExpression('/\bbg-white\//', (string) file_get_contents(resource_path('views/site/packs.blade.php')));

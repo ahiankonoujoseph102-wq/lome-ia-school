@@ -524,22 +524,30 @@ return [
 
     'packs_poster' => null,
 
-    // Textes fixes de la page. Valeurs de départ = textes d'origine ; les nouveaux textes s'appliquent avec
-    // « php artisan app:pack-texts-apply » et se retirent avec « php artisan app:pack-texts-revert »
-    // (App\Packs\PackTexts, réglage enregistré en base sous la clé site.packs_page).
+    // Textes fixes de la page de vente (refonte d'octobre 2026, App\Packs\PackSalesTexts). Un réglage enregistré
+    // en base sous la clé site.packs_page les remplace (anciens textes remis par « php artisan app:pack-sales-texts-revert ») ;
+    // une clé absente du réglage enregistré prend la valeur ci-dessous.
     'packs_page' => [
-        'eyebrow' => 'Offres d\'accompagnement',
-        'title' => 'Accompagnement IA',
-        'subtitle' => 'Trois niveaux qui réunissent plusieurs formations du site. Choisissez celui qui correspond à votre projet.',
-        'common_eyebrow' => 'Dans toutes les offres',
-        'common_title' => 'Ce que chaque offre comprend',
-        'common' => [
-            ['icon' => 'document-text', 'title' => 'Document, résumé et exercice', 'text' => 'Chaque formation est accompagnée d\'un document, d\'un résumé et d\'un exercice.'],
-            ['icon' => 'chat-bubble-left-right', 'title' => 'Accès au groupe VIP', 'text' => ''],
-            ['icon' => 'heart', 'title' => 'Accompagnement à vie', 'text' => ''],
-            ['icon' => 'academic-cap', 'title' => 'Attestation de participation à la fin', 'text' => ''],
+        'eyebrow' => 'Accompagnement IA',
+        'title' => 'Apprenez l\'intelligence artificielle avec Coach Joseph',
+        'subtitle' => 'Trois niveaux pour apprendre à créer avec l\'IA, de vos premières affiches jusqu\'à votre propre projet, avec un accompagnement à vie.',
+        'offers_title' => 'Choisissez votre niveau',
+        'offers_text' => 'Chaque niveau comprend tout le précédent.',
+        'steps_title' => 'Comment s\'inscrire',
+        'steps' => [
+            'Touchez « Je m\'inscris maintenant », puis créez votre compte (ou connectez-vous) et confirmez votre e-mail.',
+            'Choisissez votre pays et votre opérateur, puis envoyez le montant par Mobile Money au numéro affiché.',
+            'Envoyez la capture de votre transfert : votre accès s\'ouvre aussitôt, ou après vérification du paiement selon l\'offre.',
         ],
-        'payment_note' => 'Paiement par Mobile Money : vous envoyez le montant, puis la capture de votre transfert, comme pour toutes les formations du site.',
+        'common_title' => 'Dans toutes les offres',
+        'common' => [
+            ['icon' => 'document-text', 'title' => 'Un document, un résumé et un exercice pour chaque formation', 'text' => ''],
+            ['icon' => 'chat-bubble-left-right', 'title' => 'L\'accès au groupe VIP', 'text' => ''],
+            ['icon' => 'heart', 'title' => 'Un accompagnement à vie', 'text' => ''],
+            ['icon' => 'academic-cap', 'title' => 'Une attestation de participation à la fin', 'text' => ''],
+        ],
+        'final_title' => 'Prêt à commencer ?',
+        'final_text' => 'Choisissez votre niveau et inscrivez-vous par Mobile Money.',
     ],
 
     /*
