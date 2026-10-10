@@ -45,7 +45,7 @@ class PackAccessTest extends TestCase
 
         $this->chatgpt = Formation::factory()->create(['title' => 'Formation ChatGPT & Claude', 'price' => 5500]);
         $this->posters = Formation::factory()->create(['title' => 'Création d\'affiches pro avec l\'IA', 'price' => 36000]);
-        $this->vip = Formation::factory()->groupOnly()->create(['title' => 'Groupe VIP', 'slug' => 'groupe-vip']);
+        $this->vip = Formation::factory()->groupOnly()->create(['title' => 'Groupe VIP', 'slug' => 'groupe-vip-essai']);
         $this->pack = Formation::factory()->pack()->create(['title' => 'Accompagnement IA, niveau 1', 'price' => 10000]);
         $this->pack->includedFormations()->attach([
             $this->chatgpt->id => ['position' => 1],

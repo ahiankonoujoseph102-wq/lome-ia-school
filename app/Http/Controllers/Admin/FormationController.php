@@ -75,7 +75,8 @@ class FormationController extends Controller
 
     public function move(Formation $formation, string $direction): RedirectResponse
     {
-        $ordered = Formation::query()->orderBy('sort_order')->orderBy('id')->get()->values();
+        // Ordre propre à chaque type : les formations entre elles, les offres d'accompagnement entre elles.
+        $ordered = Formation::query()->where('kind', $formation->kind->value)->orderBy('sort_order')->orderBy('id')->get()->values();
         $index = $ordered->search(fn (Formation $item): bool => $item->id === $formation->id);
         $target = $direction === 'up' ? $index - 1 : $index + 1;
 
