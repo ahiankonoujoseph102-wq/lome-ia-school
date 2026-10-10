@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\FormationCategory;
 use App\Enums\FormationFormat;
+use App\Enums\FormationKind;
 use App\Services\ImageUploader;
 use App\Support\Money;
 use App\Support\YouTube;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -27,6 +29,7 @@ use Illuminate\Support\Collection;
  * @property int $id
  * @property string $title
  * @property string $slug
+ * @property FormationKind $kind Formation habituelle, offre d'accompagnement (pack) ou groupe de discussion seul.
  * @property string|null $subtitle
  * @property string $description
  * @property int $price Prix en FCFA (entier).
@@ -52,6 +55,8 @@ use Illuminate\Support\Collection;
  * @property-read ChatGroup|null $chatGroup
  * @property-read EloquentCollection<int, FreeRegistrationOption> $freeOptions
  * @property-read EloquentCollection<int, FreeRegistration> $freeRegistrations
+ * @property-read EloquentCollection<int, Formation> $includedFormations Formations incluses (offre d'accompagnement).
+ * @property-read EloquentCollection<int, Formation> $packs Offres qui incluent cette formation.
  */
 class Formation extends Model
 {
@@ -61,6 +66,7 @@ class Formation extends Model
     protected $fillable = [
         'title',
         'slug',
+        'kind',
         'subtitle',
         'description',
         'price',
@@ -86,6 +92,7 @@ class Formation extends Model
      * @var array<string, mixed>
      */
     protected $attributes = [
+        'kind' => 'course',
         'formats' => '["recorded"]',
         'is_featured' => false,
         'is_active' => true,
@@ -100,6 +107,7 @@ class Formation extends Model
     {
         return [
             'price' => 'integer',
+            'kind' => FormationKind::class,
             'category' => FormationCategory::class,
             'formats' => AsEnumCollection::of(FormationFormat::class),
             'sort_order' => 'integer',
@@ -142,7 +150,9 @@ class Formation extends Model
 
     protected static function booted(): void
     {
-        static::created(fn (self $formation) => ChatGroup::forFormation($formation));
+        // Une offre d'accompagnement n'a pas de groupe à elle : ses acheteurs rejoignent les groupes des
+        // formations incluses et le Groupe VIP (formation de type « groupe » incluse dans l'offre).
+        static::created(fn (self $formation) => $formation->isPack() ? null : ChatGroup::forFormation($formation));
     }
 
     public function getRouteKeyName(): string
@@ -158,7 +168,67 @@ class Formation extends Model
     #[Scope]
     protected function published(Builder $query): void
     {
-        $query->where('is_active', true)->orderBy('sort_order')->orderBy('id');
+        // Formations habituelles seulement : les offres d'accompagnement ont leur propre page (/accompagnement)
+        // et un groupe seul (Groupe VIP) n'est jamais affiché.
+        $query->where('kind', FormationKind::Course->value)->where('is_active', true)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * Offres d'accompagnement visibles sur le site, dans l'ordre d'affichage (niveau 1, 2, 3…).
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function publishedPacks(Builder $query): void
+    {
+        $query->where('kind', FormationKind::Pack->value)->where('is_active', true)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function isPack(): bool
+    {
+        return $this->kind === FormationKind::Pack;
+    }
+
+    /**
+     * Groupe de discussion seul (Groupe VIP) : ni page, ni contenu, ni vente.
+     */
+    public function isGroupOnly(): bool
+    {
+        return $this->kind === FormationKind::Group;
+    }
+
+    /**
+     * Formations incluses dans cette offre (et le Groupe VIP), dans l'ordre choisi.
+     *
+     * @return BelongsToMany<Formation, $this>
+     */
+    public function includedFormations(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'formation_pack_items', 'pack_id', 'formation_id')
+            ->withPivot('position')
+            ->withTimestamps()
+            ->orderByPivot('position')
+            ->orderBy('formations.id');
+    }
+
+    /**
+     * Offres d'accompagnement qui incluent cette formation.
+     *
+     * @return BelongsToMany<Formation, $this>
+     */
+    public function packs(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'formation_pack_items', 'formation_id', 'pack_id')->withTimestamps();
+    }
+
+    /**
+     * Prix total des formations incluses si on les achetait séparément (vrais prix en base, groupes exclus).
+     */
+    public function separatePrice(): int
+    {
+        return (int) $this->includedFormations
+            ->filter(fn (self $formation): bool => $formation->kind === FormationKind::Course)
+            ->sum('price');
     }
 
     /**

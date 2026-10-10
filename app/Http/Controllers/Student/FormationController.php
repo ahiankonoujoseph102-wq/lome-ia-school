@@ -9,7 +9,9 @@ use App\Models\ChatGroup;
 use App\Models\Formation;
 use App\Models\LiveSession;
 use App\Models\User;
+use App\Packs\StudentEnrollments;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class FormationController extends Controller
@@ -19,7 +21,7 @@ class FormationController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $enrollments = $user->enrollments()->with(['formation', 'purchase'])->latest('granted_at')->get();
+        $enrollments = StudentEnrollments::for($user);
 
         return view('site.student.formations.index', [
             'enrollments' => $enrollments,
@@ -30,10 +32,20 @@ class FormationController extends Controller
     /**
      * Espace d'une formation. L'accès est vérifié par la règle FormationPolicy::access (middleware can:access).
      */
-    public function show(Request $request, Formation $formation, CourseProgress $progress, UnreadCounter $unread): View
+    public function show(Request $request, Formation $formation, CourseProgress $progress, UnreadCounter $unread): View|RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
+
+        // Offre d'accompagnement : ses formations incluses sont dans « Mes formations » ; Groupe VIP : son groupe.
+        if ($formation->isPack()) {
+            return to_route('student.formations.index');
+        }
+
+        if ($formation->isGroupOnly()) {
+            return to_route('chat.show', $formation);
+        }
+
         $group = ChatGroup::forFormation($formation);
 
         return view('site.student.formations.show', [

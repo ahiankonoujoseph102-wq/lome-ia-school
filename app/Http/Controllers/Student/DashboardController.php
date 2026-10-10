@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\Formation;
 use App\Models\User;
+use App\Packs\StudentEnrollments;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -18,7 +19,7 @@ class DashboardController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $enrollments = $user->enrollments()->with(['formation', 'purchase'])->latest('granted_at')->get();
+        $enrollments = StudentEnrollments::for($user);
 
         return view('site.student.dashboard', [
             'user' => $user,

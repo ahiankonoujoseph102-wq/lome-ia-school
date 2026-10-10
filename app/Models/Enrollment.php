@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property int $formation_id
  * @property int|null $purchase_id Achat qui a ouvert l'accès.
+ * @property int|null $pack_id Offre d'accompagnement qui a ouvert cet accès (formation incluse).
  * @property EnrollmentSource $source
  * @property Carbon $granted_at Date d'ouverture de l'accès.
  * @property Carbon|null $created_at
@@ -23,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property-read User $user
  * @property-read Formation $formation
  * @property-read Purchase|null $purchase
+ * @property-read Formation|null $pack
  */
 class Enrollment extends Model
 {
@@ -33,6 +35,7 @@ class Enrollment extends Model
         'user_id',
         'formation_id',
         'purchase_id',
+        'pack_id',
         'source',
         'granted_at',
     ];
@@ -70,5 +73,30 @@ class Enrollment extends Model
     public function purchase(): BelongsTo
     {
         return $this->belongsTo(Purchase::class);
+    }
+
+    /**
+     * Offre d'accompagnement qui a ouvert cet accès (formation incluse), sinon null.
+     *
+     * @return BelongsTo<Formation, $this>
+     */
+    public function pack(): BelongsTo
+    {
+        return $this->belongsTo(Formation::class, 'pack_id');
+    }
+
+    /**
+     * Achat de l'offre qui a ouvert cet accès (formation incluse), pour la mention « accès provisoire ».
+     */
+    public function packPurchase(): ?Purchase
+    {
+        if ($this->pack_id === null) {
+            return null;
+        }
+
+        return self::query()
+            ->where('user_id', $this->user_id)
+            ->where('formation_id', $this->pack_id)
+            ->first()?->purchase;
     }
 }

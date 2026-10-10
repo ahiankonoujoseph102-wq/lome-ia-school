@@ -294,6 +294,7 @@ class GroupController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+        abort_if($formation->isPack(), 404);
         $group = ChatGroup::forFormation($formation);
         $member = app(GroupMembership::class)->membershipFor($user, $group);
 

@@ -27,7 +27,8 @@ class CheckoutController extends Controller
 {
     public function show(Request $request, Formation $formation, PromoCodes $promoCodes): View|RedirectResponse
     {
-        abort_unless($formation->is_active, 404);
+        // Un groupe seul (Groupe VIP) ne se vend jamais : il s'obtient avec une offre d'accompagnement.
+        abort_unless($formation->is_active && ! $formation->isGroupOnly(), 404);
 
         // Formation gratuite : aucun paiement, l'inscription se fait sur la page de la formation.
         if ($formation->isFree()) {
@@ -81,7 +82,8 @@ class CheckoutController extends Controller
 
     public function pay(StorePaymentProofRequest $request, Formation $formation, SubmitManualPayment $submit): RedirectResponse
     {
-        abort_unless($formation->is_active, 404);
+        // Un groupe seul (Groupe VIP) ne se vend jamais : il s'obtient avec une offre d'accompagnement.
+        abort_unless($formation->is_active && ! $formation->isGroupOnly(), 404);
 
         if ($formation->isFree()) {
             return redirect(route('formations.show', $formation).'#inscription');

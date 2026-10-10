@@ -24,7 +24,8 @@ class GroupMembership
      */
     public function add(User $user, Formation $formation): ?ChatGroupMember
     {
-        if ($user->isBlocked()) {
+        // Une offre d'accompagnement n'a pas de groupe : ses acheteurs rejoignent ceux des formations incluses.
+        if ($user->isBlocked() || $formation->isPack()) {
             return null;
         }
 

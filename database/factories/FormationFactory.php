@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\FormationCategory;
 use App\Enums\FormationFormat;
+use App\Enums\FormationKind;
 use App\Models\Formation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -46,5 +47,21 @@ class FormationFactory extends Factory
     public function inactive(): static
     {
         return $this->state(fn (): array => ['is_active' => false]);
+    }
+
+    /**
+     * Offre d'accompagnement (pack) : ses formations incluses s'ajoutent avec includedFormations()->attach().
+     */
+    public function pack(): static
+    {
+        return $this->state(fn (): array => ['kind' => FormationKind::Pack]);
+    }
+
+    /**
+     * Groupe de discussion seul (comme le Groupe VIP) : jamais visible ni vendu.
+     */
+    public function groupOnly(): static
+    {
+        return $this->state(fn (): array => ['kind' => FormationKind::Group, 'price' => 0, 'is_active' => false]);
     }
 }
