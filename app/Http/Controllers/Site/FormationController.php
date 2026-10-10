@@ -10,6 +10,7 @@ use App\Models\Formation;
 use App\Models\LiveSession;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -23,10 +24,20 @@ class FormationController extends Controller
         ]);
     }
 
-    public function show(Request $request, Formation $formation, FreeRegistrar $registrar): View
+    public function show(Request $request, Formation $formation, FreeRegistrar $registrar): View|RedirectResponse
     {
         /** @var User|null $user */
         $user = $request->user();
+
+        // Groupe seul (Groupe VIP) : aucune page publique.
+        abort_if($formation->isGroupOnly(), 404);
+
+        // Offre d'accompagnement : présentée avec les autres offres sur /accompagnement.
+        if ($formation->isPack()) {
+            abort_unless($formation->is_active || $user?->isAdmin(), 404);
+
+            return redirect(route('packs').'#'.$formation->slug);
+        }
 
         // Une formation gratuite masquée (brouillon) reste visible par l'admin, pour la relire avant de la publier.
         abort_unless($formation->is_active || ($formation->isFree() && $user?->isAdmin()), 404);

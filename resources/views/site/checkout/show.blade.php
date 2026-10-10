@@ -111,6 +111,11 @@
                                         @foreach ($liveOffer->included() as $item)
                                             <li class="flex gap-2"><flux:icon.check-circle class="size-4 shrink-0 text-gold-400" /> {{ $item }}</li>
                                         @endforeach
+                                    @elseif ($formation->isPack())
+                                        {{-- Offre d'accompagnement : formations incluses et Groupe VIP --}}
+                                        @foreach ($formation->includedFormations as $included)
+                                            <li class="flex gap-2" data-test="checkout-pack-item"><flux:icon.check-circle class="size-4 shrink-0 text-gold-400" /> {{ $included->title }}</li>
+                                        @endforeach
                                     @else
                                         <li class="flex gap-2"><flux:icon.chat-bubble-left-right class="size-4 shrink-0 text-gold-400" /> Groupe privé d'accompagnement</li>
                                     @endif
