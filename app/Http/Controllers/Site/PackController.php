@@ -6,6 +6,7 @@ use App\Enums\FormationKind;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\User;
+use App\Packs\PacksPage;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -40,6 +41,7 @@ class PackController extends Controller
         return view('site.packs', [
             'packs' => $packs,
             'preview' => $preview,
+            'posterUrl' => PacksPage::posterUrl(),
             'owned' => $user ? $user->enrollments()->whereIn('formation_id', $packs->modelKeys())->pluck('formation_id')->all() : [],
         ]);
     }

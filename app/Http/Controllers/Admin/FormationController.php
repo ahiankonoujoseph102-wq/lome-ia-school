@@ -12,6 +12,7 @@ use App\Models\Enrollment;
 use App\Models\Formation;
 use App\Packs\PackAccess;
 use App\Services\ImageUploader;
+use App\Settings\SiteSettings;
 use App\Support\Money;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -166,6 +167,44 @@ class FormationController extends Controller
         }
 
         return true;
+    }
+
+    /**
+     * Affiche en haut de la page des offres (/accompagnement) : envoyée, remplacée ou retirée depuis la partie
+     * des offres de « Formations et prix ». Mêmes contrôles et même recadrage (16:10) que l'image d'une formation.
+     */
+    public function updatePacksPoster(Request $request, ImageUploader $images): RedirectResponse
+    {
+        $request->validate([
+            'poster' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
+            'remove_poster' => ['nullable', 'boolean'],
+        ], [
+            'poster.image' => 'L\'image doit être une photo (JPEG, PNG ou WebP).',
+            'poster.mimes' => 'L\'image doit être une photo (JPEG, PNG ou WebP).',
+            'poster.max' => 'L\'image ne doit pas dépasser 8 Mo.',
+        ]);
+
+        $current = SiteSettings::get('site.packs_poster');
+
+        if ($request->hasFile('poster')) {
+            $path = $images->cover($request->file('poster'), 'packs', 1600, 1000, 'poster');
+            SiteSettings::save(['site.packs_poster' => $path]);
+            $this->deleteUploaded(is_string($current) ? $current : null, $images);
+            ActivityLog::record(AdminAction::SettingsUpdated, 'Affiche de la page des offres d\'accompagnement '.($current ? 'remplacée' : 'ajoutée').'.');
+
+            return back()->with('status', 'Affiche enregistrée : elle apparaît en haut de la page des offres.');
+        }
+
+        if ($request->boolean('remove_poster') && $current) {
+            // Texte vide plutôt que null : la colonne des réglages n'accepte pas null.
+            SiteSettings::save(['site.packs_poster' => '']);
+            $this->deleteUploaded(is_string($current) ? $current : null, $images);
+            ActivityLog::record(AdminAction::SettingsUpdated, 'Affiche de la page des offres d\'accompagnement retirée.');
+
+            return back()->with('status', 'Affiche retirée : la page des offres s\'affiche sans image.');
+        }
+
+        return back()->withErrors(['poster' => 'Choisissez une image, ou cochez « Retirer l\'affiche ».']);
     }
 
     public function move(Formation $formation, string $direction): RedirectResponse
