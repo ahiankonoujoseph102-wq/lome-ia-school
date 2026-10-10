@@ -1,8 +1,8 @@
 {{--
     Fin des inscriptions d'une offre d'accompagnement : « Inscriptions ouvertes jusqu'au … » et compte à rebours
     (jours, heures, minutes) calculé à partir de la date fixe enregistrée (App\Packs\PackDeadline), le même pour
-    tout le monde (l'écart d'horloge du téléphone est corrigé avec l'heure du serveur). Rien sans date ; rien non
-    plus une fois la date passée (la carte affiche alors « Inscriptions closes », sans bouton d'achat).
+    tout le monde (l'écart d'horloge du téléphone est corrigé avec l'heure du serveur). Rien sans date. Une fois la
+    date passée : mention « Inscriptions closes » à la place de l'encadré (la carte n'a plus de bouton d'achat).
     À la fin du compte à rebours, l'événement « pack-registrations-closed » masque le bouton d'achat sans attendre
     (le serveur refuse de toute façon les nouvelles commandes).
     Style stable face au mode sombre forcé : fond foncé, textes clairs, contour doré dessiné en ombre.
@@ -39,4 +39,9 @@
         </div>
         <p class="mt-3 text-sm font-semibold text-white" x-show="closed" x-cloak>Inscriptions closes</p>
     </div>
+@elseif ($deadline)
+    {{-- Inscriptions closes : mention à la place du compte à rebours, en haut de la carte. --}}
+    <p {{ $attributes->class('flex items-center gap-2 rounded-2xl bg-night-900 px-4 py-3 text-sm font-semibold text-slate-200 shadow-[inset_0_0_0_1px_var(--color-night-600)]') }} data-test="pack-closed-notice">
+        <flux:icon.lock-closed class="size-4 shrink-0 text-slate-400" /> Inscriptions closes
+    </p>
 @endif
