@@ -478,7 +478,7 @@ php artisan migrate
 
 **En cours sur la branche `claude/festive-goldberg-2yfq0f`** : affiche de la page /accompagnement et des offres, descriptions avec retours à la ligne et puces, nouveaux textes à appliquer par commande (voir « Offres d'accompagnement »). À faire de son côté après la fusion : téléverser l'affiche, puis lancer `php artisan app:pack-texts-apply` s'il valide les nouveaux textes.
 
-**En cours sur la branche `claude/admiring-edison-2blwb2`** : vraie date limite d'inscription des offres d'accompagnement (lundi 12 octobre 2026 à 16 h, compte à rebours, refus des nouvelles commandes ; voir « Fin des inscriptions »). Pull request « Date limite des offres d'accompagnement ».
+**En cours sur la branche `claude/inscription-deadline-offers-s8f1u5`** (reprise de `claude/admiring-edison-2blwb2`) : vraie date limite d'inscription des offres d'accompagnement (lundi 12 octobre 2026 à 16 h, compte à rebours, refus des nouvelles commandes ; voir « Fin des inscriptions »). Pull request « Date limite des offres d'accompagnement ».
 
 **Prochaine étape** : fusion de la branche en cours ; Joseph colle le lien de sa vidéo et choisit son format (Réglages du site > Page Entreprises), saisit le contenu de ses formations (écran « Contenu des formations ») et son lien Google Meet (« Disponibilités »). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 
