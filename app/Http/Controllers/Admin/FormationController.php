@@ -5,14 +5,19 @@ namespace App\Http\Controllers\Admin;
 use App\Admin\ActivityLog;
 use App\Enums\AdminAction;
 use App\Enums\FormationCategory;
+use App\Enums\FormationKind;
 use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Enrollment;
 use App\Models\Formation;
+use App\Packs\PackAccess;
 use App\Services\ImageUploader;
 use App\Support\Money;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -25,12 +30,18 @@ class FormationController extends Controller
 {
     public function index(): View
     {
+        // Le Groupe VIP (groupe seul) se gère dans « Groupes de discussion » : il n'est pas listé ici.
+        $all = Formation::query()
+            ->where('kind', '!=', FormationKind::Group->value)
+            ->withCount(['purchases as sales_count' => fn ($query) => $query->whereNull('live_session_id')->where('status', PurchaseStatus::Validated)])
+            ->with('includedFormations')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
         return view('site.admin.formations.index', [
-            'formations' => Formation::query()
-                ->withCount(['purchases as sales_count' => fn ($query) => $query->whereNull('live_session_id')->where('status', PurchaseStatus::Validated)])
-                ->orderBy('sort_order')
-                ->orderBy('id')
-                ->get(),
+            'formations' => $all->reject->isPack()->values(),
+            'packs' => $all->filter->isPack()->values(),
         ]);
     }
 
@@ -57,20 +68,104 @@ class FormationController extends Controller
 
     public function edit(Formation $formation): View
     {
-        return view('site.admin.formations.form', ['formation' => $formation]);
+        abort_if($formation->isGroupOnly(), 404);
+
+        return view('site.admin.formations.form', [
+            'formation' => $formation,
+            'choices' => $formation->isPack() ? $this->packChoices($formation) : collect(),
+        ]);
     }
 
-    public function update(Request $request, Formation $formation, ImageUploader $images): RedirectResponse
+    public function update(Request $request, Formation $formation, ImageUploader $images, PackAccess $packs): RedirectResponse
     {
+        abort_if($formation->isGroupOnly(), 404);
+
         $oldPrice = $formation->price;
         $this->fill($formation, $request, $images);
         $changes = array_keys($formation->getDirty());
-        $formation->save();
+        $included = $formation->isPack() ? $this->validatedIncluded($request, $formation) : null;
+
+        DB::transaction(function () use ($formation, $included, $packs, &$changes): void {
+            $formation->save();
+
+            if ($included !== null && $this->syncIncluded($formation, $included, $packs)) {
+                $changes[] = 'included_formations';
+            }
+        });
 
         $details = $oldPrice !== $formation->price ? ' Prix : '.Money::fcfa($oldPrice).' → '.Money::fcfa($formation->price).'.' : '';
-        ActivityLog::record(AdminAction::FormationUpdated, 'Formation modifiée : '.$formation->title.'.'.$details, $formation, ['fields' => $changes]);
 
-        return back()->with('status', 'Formation enregistrée.'.($details !== '' ? ' Le nouveau prix s\'applique aux prochains achats ; les achats déjà faits gardent leur montant.' : ''));
+        if (in_array('included_formations', $changes, true)) {
+            $details .= ' Formations incluses : '.$formation->includedFormations()->pluck('title')->implode(' ; ').'.';
+        }
+
+        ActivityLog::record(AdminAction::FormationUpdated, ($formation->isPack() ? 'Offre d\'accompagnement modifiée : ' : 'Formation modifiée : ').$formation->title.'.'.$details, $formation, ['fields' => $changes]);
+
+        return back()->with('status', ($formation->isPack() ? 'Offre enregistrée.' : 'Formation enregistrée.').($oldPrice !== $formation->price ? ' Le nouveau prix s\'applique aux prochains achats ; les achats déjà faits gardent leur montant.' : ''));
+    }
+
+    /**
+     * Formations qu'une offre peut inclure (formations habituelles et groupes seuls), celles déjà incluses
+     * en premier, dans leur ordre.
+     *
+     * @return Collection<int, Formation>
+     */
+    private function packChoices(Formation $pack): Collection
+    {
+        $included = $pack->includedFormations()->get();
+        $others = Formation::query()
+            ->whereIn('kind', [FormationKind::Course->value, FormationKind::Group->value])
+            ->whereKeyNot($included->modelKeys())
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        return $included->toBase()->concat($others)->values();
+    }
+
+    /**
+     * Formations cochées (offre d'accompagnement), dans l'ordre de la liste.
+     *
+     * @return list<int>
+     */
+    private function validatedIncluded(Request $request, Formation $pack): array
+    {
+        // Formulaire envoyé sans la liste (ancienne page) : la liste reste telle quelle.
+        if (! $request->boolean('included_sent')) {
+            return array_values($pack->includedFormations()->pluck('formations.id')->map(fn ($id): int => (int) $id)->all());
+        }
+
+        $validated = $request->validate([
+            'included' => ['array', 'max:60'],
+            'included.*' => ['integer', Rule::exists('formations', 'id')->whereIn('kind', [FormationKind::Course->value, FormationKind::Group->value])],
+        ], [
+            'included.*.exists' => 'Une offre ne peut inclure que des formations ou le Groupe VIP.',
+        ]);
+
+        return array_values(array_unique(array_map('intval', $validated['included'] ?? [])));
+    }
+
+    /**
+     * Enregistre la liste des formations incluses. Une formation ajoutée s'ouvre aussitôt aux élèves qui ont déjà
+     * l'offre ; une formation retirée de la liste n'est pas retirée à ceux qui l'ont déjà.
+     *
+     * @param  list<int>  $included
+     */
+    private function syncIncluded(Formation $pack, array $included, PackAccess $packs): bool
+    {
+        $before = $pack->includedFormations()->pluck('formations.id')->map(fn ($id): int => (int) $id)->all();
+
+        if ($before === $included) {
+            return false;
+        }
+
+        $pack->includedFormations()->sync(collect($included)->mapWithKeys(fn (int $id, int $index): array => [$id => ['position' => $index + 1]])->all());
+
+        if (array_diff($included, $before) !== []) {
+            $pack->enrollments()->with(['user', 'formation'])->get()->each(fn (Enrollment $enrollment) => $packs->grant($enrollment));
+        }
+
+        return true;
     }
 
     public function move(Formation $formation, string $direction): RedirectResponse
@@ -100,7 +195,8 @@ class FormationController extends Controller
             'title' => ['required', 'string', 'max:160'],
             'subtitle' => ['nullable', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:5000'],
-            'price' => ['required', 'integer', 'min:0', 'max:100000000'],
+            // Une offre d'accompagnement est toujours payante (0 FCFA = formation gratuite).
+            'price' => ['required', 'integer', $formation->isPack() ? 'min:1' : 'min:0', 'max:100000000'],
             'category' => ['required', Rule::enum(FormationCategory::class)],
             'outcomes' => ['array', 'max:15'],
             'outcomes.*' => ['nullable', 'string', 'max:255'],

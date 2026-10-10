@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Courses\Positions;
+use App\Enums\FormationKind;
 use App\Http\Controllers\Controller;
 use App\Models\CourseModule;
 use App\Models\Formation;
@@ -18,7 +19,9 @@ class CourseContentController extends Controller
     public function index(): View
     {
         return view('site.admin.content.index', [
+            // Seules les formations habituelles ont des leçons (pas les offres d'accompagnement ni le Groupe VIP).
             'formations' => Formation::query()
+                ->where('kind', FormationKind::Course->value)
                 ->orderBy('sort_order')
                 ->withCount(['modules', 'lessons', 'lessons as published_lessons_count' => fn ($query) => $query->where('is_published', true)])
                 ->get(),

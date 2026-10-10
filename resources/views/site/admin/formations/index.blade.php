@@ -45,4 +45,36 @@
             </li>
         @endforeach
     </ol>
+
+    @if ($packs->isNotEmpty())
+        <section class="mt-10" data-test="admin-packs">
+            <h2 class="text-lg font-semibold text-white">Offres d'accompagnement</h2>
+            <p class="mt-1 text-sm text-slate-400">Présentées ensemble sur la page {{ route('packs') }}, dans cet ordre (niveau 1, 2, 3). Tant qu'aucune offre n'est visible, cette page n'est pas accessible au public.</p>
+            <ol class="mt-4 space-y-2">
+                @foreach ($packs as $pack)
+                    @php $courses = $pack->includedFormations->reject->isGroupOnly(); @endphp
+                    <li class="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center" data-test="pack-row">
+                        <div class="min-w-0 flex-1">
+                            <p class="font-semibold text-white">{{ $pack->title }}</p>
+                            <p class="mt-0.5 flex flex-wrap items-center gap-2 text-sm">
+                                <span class="font-semibold text-gold-200">{{ $pack->formatted_price }}</span>
+                                <span @class([
+                                    'rounded-full px-2 py-0.5 text-xs font-semibold ring-1',
+                                    'text-emerald-200 ring-emerald-400/50' => $pack->is_active,
+                                    'text-slate-400 ring-veil/20' => ! $pack->is_active,
+                                ])>{{ $pack->is_active ? 'Visible' : 'Masquée' }}</span>
+                                <span class="text-slate-400">{{ $courses->count() }} {{ $courses->count() > 1 ? 'formations incluses' : 'formation incluse' }}{{ $pack->includedFormations->contains->isGroupOnly() ? ' + Groupe VIP' : '' }}</span>
+                                <span class="text-slate-400">{{ $pack->sales_count }} {{ $pack->sales_count > 1 ? 'ventes validées' : 'vente validée' }}</span>
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <form method="POST" action="{{ route('admin.formations.move', [$pack, 'up']) }}">@csrf<button class="grid size-9 place-items-center rounded-full text-slate-300 ring-1 ring-veil/15 hover:bg-veil/10 disabled:opacity-30" @disabled($loop->first) aria-label="Monter {{ $pack->title }}"><flux:icon.chevron-up class="size-4" /></button></form>
+                            <form method="POST" action="{{ route('admin.formations.move', [$pack, 'down']) }}">@csrf<button class="grid size-9 place-items-center rounded-full text-slate-300 ring-1 ring-veil/15 hover:bg-veil/10 disabled:opacity-30" @disabled($loop->last) aria-label="Descendre {{ $pack->title }}"><flux:icon.chevron-down class="size-4" /></button></form>
+                            <a href="{{ route('admin.formations.edit', $pack) }}" class="rounded-full px-3 py-2 text-sm font-semibold text-electric-200 ring-1 ring-electric-400/40 hover:bg-electric-500/10" data-test="pack-edit">Modifier et formations incluses</a>
+                        </div>
+                    </li>
+                @endforeach
+            </ol>
+        </section>
+    @endif
 </x-admin.page>
