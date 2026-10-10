@@ -1,8 +1,9 @@
 @php
     $links = [
         ['route' => 'formations.index', 'active' => 'formations.*', 'label' => 'Formations'],
-        // Offres d'accompagnement : lien seulement quand au moins une offre est publiée (sinon la page est fermée).
-        ...(($packsOnSale = \App\Packs\PacksPage::onSale()) ? [['route' => 'packs', 'active' => 'packs', 'label' => 'Accompagnement', 'test' => 'menu-packs']] : []),
+        // Offres d'accompagnement : lien dès qu'au moins une offre est publiée, même close (la page affiche alors
+        // « Inscriptions closes ») ; sans offre publiée, la page n'existe pas.
+        ...(($packsOnSale = \App\Packs\PacksPage::published()) ? [['route' => 'packs', 'active' => 'packs', 'label' => 'Accompagnement', 'test' => 'menu-packs']] : []),
         ['route' => 'consultation', 'active' => 'consultation', 'label' => 'Consultation gratuite'],
         ['route' => 'business', 'active' => 'business', 'label' => 'Entreprises'],
         ['route' => 'about', 'active' => 'about', 'label' => 'À propos'],
