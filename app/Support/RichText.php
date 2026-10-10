@@ -19,35 +19,51 @@ class RichText
     {
         $lines = preg_split('/\R/u', trim((string) $text)) ?: [];
         $blocks = [];
-        $current = null;
+        /** @var list<string> $paragraph */
+        $paragraph = [];
+        /** @var list<string> $items */
+        $items = [];
+
+        $close = function () use (&$blocks, &$paragraph, &$items): void {
+            if ($paragraph !== []) {
+                $blocks[] = ['type' => 'paragraph', 'lines' => $paragraph];
+            }
+
+            if ($items !== []) {
+                $blocks[] = ['type' => 'list', 'items' => $items];
+            }
+
+            $paragraph = [];
+            $items = [];
+        };
 
         foreach ($lines as $line) {
             $line = trim($line);
 
             if ($line === '') {
-                $current = null;
+                $close();
 
                 continue;
             }
 
             if (preg_match('/^[-–—•]\s*(.+)$/u', $line, $match) === 1) {
-                if ($current === null || $blocks[$current]['type'] !== 'list') {
-                    $blocks[] = ['type' => 'list', 'items' => []];
-                    $current = array_key_last($blocks);
+                if ($paragraph !== []) {
+                    $close();
                 }
 
-                $blocks[$current]['items'][] = trim($match[1]);
+                $items[] = trim($match[1]);
 
                 continue;
             }
 
-            if ($current === null || $blocks[$current]['type'] !== 'paragraph') {
-                $blocks[] = ['type' => 'paragraph', 'lines' => []];
-                $current = array_key_last($blocks);
+            if ($items !== []) {
+                $close();
             }
 
-            $blocks[$current]['lines'][] = $line;
+            $paragraph[] = $line;
         }
+
+        $close();
 
         return $blocks;
     }
