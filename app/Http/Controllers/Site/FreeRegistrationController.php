@@ -138,7 +138,7 @@ class FreeRegistrationController extends Controller
         }
 
         if ($formation->freeRegistrationsClosed()) {
-            return redirect($page)->withErrors(['option' => 'Les inscriptions à cette formation sont closes.']);
+            return redirect($page)->withErrors(['option' => $formation->isFreeEnded() ? FreeRegistrar::ENDED_REGISTER : 'Les inscriptions à cette formation sont closes.']);
         }
 
         $choices->remember($request, $formation, $option, $user);
@@ -216,6 +216,11 @@ class FreeRegistrationController extends Controller
             ['option.integer' => 'Choisissez une option dans la liste.'],
         );
 
+        if ($formation->isFreeEnded()) {
+            // Formation terminée : refus, même depuis une page restée ouverte ou un ancien lien.
+            return redirect(route('formations.show', $formation).'#inscription')->withErrors(['option' => FreeRegistrar::ENDED_REGISTER]);
+        }
+
         /** @var User $user */
         $user = $request->user();
         $registrar->register($user, $formation, isset($validated['option']) ? (int) $validated['option'] : null);
@@ -227,6 +232,11 @@ class FreeRegistrationController extends Controller
     public function destroy(Request $request, Formation $formation, FreeRegistrar $registrar): RedirectResponse
     {
         abort_unless($formation->isFree(), 404);
+
+        if ($formation->isFreeEnded()) {
+            // Formation terminée : l'inscription et la place dans le groupe des inscrits sont gardées.
+            return redirect(route('formations.show', $formation).'#inscription')->withErrors(['option' => FreeRegistrar::ENDED_CANCEL]);
+        }
 
         /** @var User $user */
         $user = $request->user();

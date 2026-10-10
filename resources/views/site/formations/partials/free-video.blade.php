@@ -13,7 +13,8 @@
 @php
     $presentationVideoId = $formation->presentationVideoId();
     $presentationVertical = $formation->presentationVideoIsVertical();
-    $presentationTitle = 'Coach Joseph vous présente la formation';
+    // Formation terminée : titre neutre (la présentation invitait à venir).
+    $presentationTitle = $formation->isFreeEnded() ? 'La vidéo de présentation' : 'Coach Joseph vous présente la formation';
 
     $videoUser = auth()->user();
     $videoAction = null;

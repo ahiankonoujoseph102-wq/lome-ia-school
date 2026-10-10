@@ -233,6 +233,15 @@ class AmaKnowledge
      */
     public static function freeText(Formation $formation): string
     {
+        if ($formation->isFreeEnded()) {
+            // Formation terminée : plus aucune inscription ni annulation ; Ama ne propose jamais de s'y inscrire.
+            return 'FORMATION GRATUITE TERMINÉE'
+                .($formation->eventDateLabel() ? ' (elle a eu lieu le '.Str::lcfirst($formation->eventDateLabel()).')' : '')
+                .' : les inscriptions et les annulations sont fermées, ne propose jamais de s\'y inscrire.'
+                .($formation->endedButton() !== null ? ' Sur sa page, le bouton « '.$formation->endedButtonLabel().' » mène à '.$formation->endedButtonPath().'.' : '')
+                .' Les inscrits gardent l\'accès au groupe des inscrits.';
+        }
+
         $options = $formation->freeOptions()->withTakenCount()->get()->map(fn (FreeRegistrationOption $option): string => $option->label
             .($option->schedule ? ' ('.$option->schedule.')' : '')
             .', '.($option->isOnsite() ? 'présentiel' : 'en ligne sur Google Meet')

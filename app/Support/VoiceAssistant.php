@@ -144,6 +144,7 @@ class VoiceAssistant
         'home' => 'Bonjour, je suis Ama, votre assistante. Une question ? Je suis là pour vous aider.',
         'formation' => 'Une question sur cette formation ? Posez-la-moi, je vous réponds.',
         'free' => 'Envie de vous inscrire ? Je peux vous aider à le faire.',
+        'ended' => 'Cette formation est terminée. Envie d\'aller plus loin ? Je vous présente l\'accompagnement.',
         'checkout' => 'Besoin d\'aide pour payer ? Je vous guide étape par étape.',
         'other' => 'Une question ? Je suis là pour vous répondre.',
     ];
@@ -367,7 +368,17 @@ class VoiceAssistant
         if ($routeName === 'formations.show') {
             $formation = $route->parameter('formation');
 
-            return $formation instanceof Formation && $formation->isFree() ? 'free' : 'formation';
+            if (! $formation instanceof Formation || ! $formation->isFree()) {
+                return 'formation';
+            }
+
+            // Formation terminée : jamais d'invitation à s'inscrire. Vers l'accompagnement seulement si son bouton
+            // est affiché (une offre en vente), sinon la bulle habituelle d'une formation.
+            if ($formation->isFreeEnded()) {
+                return $formation->endedButton() !== null && InternalPath::route($formation->endedButtonPath()) === Formation::ENDED_BUTTON_PATH ? 'ended' : 'formation';
+            }
+
+            return 'free';
         }
 
         return match (true) {
@@ -437,8 +448,18 @@ class VoiceAssistant
             $formation = $route->parameter('session')->formation;
         }
 
-        // Formation gratuite : inscription avec choix d'une option, jamais de paiement.
-        if ($routeName === 'formations.show' && $formation?->isFree()) {
+        // Formation gratuite terminée : inscriptions et annulations fermées ; Ama oriente vers le bouton de la page.
+        if ($routeName === 'formations.show' && $formation?->isFreeEnded()) {
+            $button = $formation->endedButton();
+            $role = 'présente une formation gratuite TERMINÉE'
+                .($formation->eventDateLabel() ? ' (elle a eu lieu le '.Str::lcfirst($formation->eventDateLabel()).')' : '')
+                .' : les inscriptions et les annulations sont fermées, ne propose jamais de s\'y inscrire'
+                .($button !== null
+                    ? ' ; propose plutôt le bouton « '.$button['label'].' » ('.$formation->endedButtonPath().')'
+                        .(InternalPath::route($formation->endedButtonPath()) === Formation::ENDED_BUTTON_PATH ? ', qui présente les offres d\'accompagnement' : '')
+                    : ' ; propose plutôt le catalogue des formations');
+        } elseif ($routeName === 'formations.show' && $formation?->isFree()) {
+            // Formation gratuite : inscription avec choix d'une option, jamais de paiement.
             $role = 'présente la formation gratuite et l\'inscription « Je m\'inscris gratuitement » (d\'abord « Créer mon compte », puis confirmer son e-mail, puis choisir une option ; places limitées, aucun paiement)';
         }
 

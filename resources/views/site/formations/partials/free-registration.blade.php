@@ -1,5 +1,6 @@
 {{--
-    Inscription à une formation gratuite. États : inscrit(e) (récapitulatif, groupe, annulation), inscriptions closes,
+    Inscription à une formation gratuite. États : formation terminée (inscrit(e) : « Vous avez participé à cette formation »
+    et le groupe, sans annulation ; sinon bouton réglé dans l'admin), inscrit(e) (récapitulatif, groupe, annulation), inscriptions closes,
     complet (WhatsApp), puis « compte d'abord » : visiteur sans compte (« Créer mon compte », « J'ai déjà un compte »),
     compte dont l'e-mail n'est pas confirmé (« Confirmer mon e-mail »), compte confirmé (« Choisir mon option »,
     écran séparé free-options.blade.php). Une seule action par état ; les options sont affichées en simple
@@ -14,11 +15,18 @@
     $date = $formation->eventDateLabel();
     $whatsappNumber = PhoneNumber::format('+'.config('site.whatsapp.number'));
     $fullMessage = \App\Support\WhatsAppMessages::freeFull($formation);
+    $ended = $formation->isFreeEnded();
+    $endedButton = $formation->endedButton();
 @endphp
 
 <div class="card p-5 sm:p-6" data-test="free-registration">
     @if (session('status'))
         <x-site.alert class="mb-5">{{ session('status') }}</x-site.alert>
+    @endif
+
+    @if ($ended && $errors->has('option'))
+        {{-- Formation terminée : refus d'une inscription ou d'une annulation (ancien lien, page restée ouverte) --}}
+        <x-site.alert type="error" class="mb-5" data-test="free-ended-error">{{ $errors->first('option') }}</x-site.alert>
     @endif
 
     @if ($registration)
@@ -29,7 +37,7 @@
                 <span class="grid size-11 shrink-0 place-items-center rounded-full bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/50 ring-inset">
                     <flux:icon.check class="size-6" />
                 </span>
-                <h2 class="text-xl font-bold text-white">Vous êtes inscrit(e)</h2>
+                <h2 class="text-xl font-bold text-white">{{ $ended ? 'Vous avez participé à cette formation' : 'Vous êtes inscrit(e)' }}</h2>
             </div>
 
             <dl class="mt-5 rounded-2xl bg-night-900 px-4 ring-1 ring-night-600 [&>div:not(:last-child)]:shadow-[inset_0_-1px_0_var(--color-night-700)]">
@@ -45,11 +53,13 @@
                 @if ($option?->isOnsite() && $formation->event_location)
                     <div class="flex gap-3 py-3"><dt class="w-24 shrink-0 text-sm text-slate-400">Adresse</dt><dd class="font-semibold text-white">{{ $formation->event_location }}</dd></div>
                 @elseif ($option && ! $option->isOnsite())
-                    <div class="flex gap-3 py-3"><dt class="w-24 shrink-0 text-sm text-slate-400">En ligne</dt><dd class="text-white"><span class="font-semibold">Sur Google Meet.</span> Le lien Google Meet sera publié dans le groupe des inscrits.</dd></div>
+                    <div class="flex gap-3 py-3"><dt class="w-24 shrink-0 text-sm text-slate-400">En ligne</dt><dd class="text-white"><span class="font-semibold">Sur Google Meet.</span> {{ $ended ? 'Le lien Google Meet a été publié dans le groupe des inscrits.' : 'Le lien Google Meet sera publié dans le groupe des inscrits.' }}</dd></div>
                 @endif
             </dl>
 
-            <p class="mt-4 text-sm text-slate-300">Un e-mail de confirmation a été envoyé à <strong class="break-words text-white">{{ $user?->email }}</strong>.</p>
+            @unless ($ended)
+                <p class="mt-4 text-sm text-slate-300">Un e-mail de confirmation a été envoyé à <strong class="break-words text-white">{{ $user?->email }}</strong>.</p>
+            @endunless
 
             <a href="{{ route('chat.show', $formation) }}" class="btn-gold mt-5 w-full sm:w-auto" data-test="free-open-group">
                 <flux:icon.chat-bubble-left-right class="size-5" /> Ouvrir le groupe des inscrits
@@ -65,6 +75,19 @@
                     </button>
                 </form>
             @endunless
+        </div>
+    @elseif ($ended)
+        {{-- Formation terminée : plus d'inscription, bouton vers l'accompagnement (ou la destination réglée) --}}
+        <div data-test="free-ended">
+            <h2 class="text-xl font-bold text-white">Cette formation est terminée</h2>
+            <p class="mt-2 text-sm text-slate-300">{{ $date ? 'Elle a eu lieu le '.\Illuminate\Support\Str::lcfirst($date).'. ' : '' }}Les inscriptions sont fermées.</p>
+            @if ($endedButton)
+                <a href="{{ $endedButton['url'] }}" class="btn-gold mt-5 w-full !py-4 text-base sm:w-auto" data-test="free-ended-block-button" data-ama-avoid data-ama-clear data-install-avoid>
+                    {{ $endedButton['label'] }}
+                </a>
+            @else
+                <a href="{{ route('formations.index') }}" class="btn-ghost mt-5 w-full sm:w-auto">Voir les formations</a>
+            @endif
         </div>
     @elseif ($closed)
         <div data-test="free-closed">

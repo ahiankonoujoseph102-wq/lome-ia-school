@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Enums\FormationCategory;
 use App\Enums\FormationFormat;
 use App\Enums\FormationKind;
+use App\Packs\PacksPage;
 use App\Services\ImageUploader;
+use App\Support\InternalPath;
 use App\Support\Money;
 use App\Support\YouTube;
 use Carbon\CarbonImmutable;
@@ -49,6 +51,9 @@ use Illuminate\Support\Collection;
  * @property bool $presentation_video_enabled Interrupteur « Afficher la vidéo » de la vidéo de présentation.
  * @property string|null $presentation_video_format Format choisi (horizontal, vertical) ; vide = automatique.
  * @property CarbonImmutable|null $registration_ends_at Fin des inscriptions d'une offre d'accompagnement (heure de Lomé) ; vide = aucune limite.
+ * @property bool $free_ended Interrupteur « Formation terminée » d'une formation gratuite (inscriptions et annulations fermées).
+ * @property string|null $free_ended_button_label Texte du bouton d'une formation terminée ; vide = « Découvrir l'accompagnement ».
+ * @property string|null $free_ended_button_url Destination interne du bouton (« /accompagnement ») ; vide = page de l'accompagnement.
  * @property-read string $formatted_price
  * @property-read string|null $image_url
  * @property-read EloquentCollection<int, Enrollment> $enrollments
@@ -64,6 +69,12 @@ class Formation extends Model
 {
     /** @use HasFactory<FormationFactory> */
     use HasFactory;
+
+    /** Texte par défaut du bouton d'une formation gratuite terminée. */
+    public const string ENDED_BUTTON_LABEL = 'Découvrir l\'accompagnement';
+
+    /** Destination par défaut du bouton d'une formation gratuite terminée : page des offres d'accompagnement. */
+    public const string ENDED_BUTTON_PATH = '/accompagnement';
 
     protected $fillable = [
         'title',
@@ -87,6 +98,9 @@ class Formation extends Model
         'presentation_video_enabled',
         'presentation_video_format',
         'registration_ends_at',
+        'free_ended',
+        'free_ended_button_label',
+        'free_ended_button_url',
     ];
 
     /**
@@ -101,6 +115,7 @@ class Formation extends Model
         'is_active' => true,
         'sort_order' => 0,
         'presentation_video_enabled' => false,
+        'free_ended' => false,
     ];
 
     /**
@@ -121,6 +136,7 @@ class Formation extends Model
             'event_date' => 'date',
             'presentation_video_enabled' => 'boolean',
             'registration_ends_at' => 'datetime',
+            'free_ended' => 'boolean',
         ];
     }
 
@@ -386,11 +402,59 @@ class Formation extends Model
     }
 
     /**
-     * Inscriptions closes : la date de l'événement est passée (heure de Lomé).
+     * Inscriptions closes : formation marquée « terminée » dans l'admin, ou date de l'événement passée (heure de Lomé).
      */
     public function freeRegistrationsClosed(): bool
     {
-        return $this->event_date !== null && now()->startOfDay()->gt($this->event_date);
+        return $this->isFreeEnded() || ($this->event_date !== null && now()->startOfDay()->gt($this->event_date));
+    }
+
+    /**
+     * Formation gratuite marquée « Formation terminée » dans l'admin : page au passé, aucune inscription ni annulation,
+     * bouton vers l'accompagnement (ou la destination réglée). Les inscriptions existantes et le groupe ne changent pas.
+     */
+    public function isFreeEnded(): bool
+    {
+        return $this->isFree() && $this->free_ended;
+    }
+
+    /**
+     * Texte du bouton d'une formation terminée.
+     */
+    public function endedButtonLabel(): string
+    {
+        $label = trim((string) $this->free_ended_button_label);
+
+        return $label !== '' ? $label : self::ENDED_BUTTON_LABEL;
+    }
+
+    /**
+     * Destination interne du bouton d'une formation terminée (« /accompagnement » par défaut).
+     */
+    public function endedButtonPath(): string
+    {
+        return InternalPath::clean($this->free_ended_button_url) ?? self::ENDED_BUTTON_PATH;
+    }
+
+    /**
+     * Bouton d'une formation terminée : texte et adresse, ou null si la destination est la page de l'accompagnement
+     * et qu'aucune offre n'est en vente (la page serait fermée).
+     *
+     * @return array{label: string, url: string}|null
+     */
+    public function endedButton(): ?array
+    {
+        if (! $this->isFreeEnded()) {
+            return null;
+        }
+
+        $path = $this->endedButtonPath();
+
+        if (InternalPath::route($path) === self::ENDED_BUTTON_PATH && ! PacksPage::onSale()) {
+            return null;
+        }
+
+        return ['label' => $this->endedButtonLabel(), 'url' => url($path)];
     }
 
     /**

@@ -2,6 +2,9 @@
     Page d'une formation gratuite (prix 0 FCFA) : inscription avec choix d'une option à places limitées.
     Aucun prix de vente, aucune garantie de remboursement, aucun bouton « Acheter ». La page des formations
     payantes (show.blade.php) n'est pas utilisée ici.
+    Formation terminée (interrupteur de l'admin) : pastille « Formation terminée », ni prix, ni options, ni places, ni
+    annulation ; bouton réglé dans l'admin (« Découvrir l'accompagnement » par défaut) à la place de l'inscription,
+    masqué si sa destination est /accompagnement et qu'aucune offre n'est en vente.
     Style stable face au mode sombre forcé : fonds foncés ou translucides, textes clairs, contours en « ring ».
 --}}
 @php
@@ -11,6 +14,10 @@
     use Illuminate\Support\Str;
 
     $user = auth()->user();
+    // Formation terminée (interrupteur de l'admin) : page au passé, aucun appel à s'inscrire, bouton vers
+    // l'accompagnement (ou la destination réglée) ; null si aucune offre n'est en vente.
+    $ended = $formation->isFreeEnded();
+    $endedButton = $formation->endedButton();
     $confirmed = $user && $user->hasConfirmedEmail();
     $allFull = $options->isNotEmpty() && $availableOptions->isEmpty();
     // « Je m'inscris » : création du compte d'abord (visiteur), confirmation de l'e-mail, puis choix de l'option.
@@ -106,8 +113,12 @@
 
             <div class="mt-6 grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
                 <div class="order-2 lg:order-1">
-                    <span class="eyebrow" data-reveal>
-                        <flux:icon.gift class="size-3.5" /> Formation gratuite
+                    <span class="eyebrow" data-reveal data-test="free-eyebrow">
+                        @if ($ended)
+                            <flux:icon.check-badge class="size-3.5" /> Formation terminée
+                        @else
+                            <flux:icon.gift class="size-3.5" /> Formation gratuite
+                        @endif
                     </span>
                     <h1 class="mt-4 text-3xl leading-tight font-bold tracking-tight text-balance text-white sm:text-5xl" data-reveal style="--reveal-delay: 60ms">
                         {{ $formation->title }}
@@ -129,9 +140,17 @@
                     </ul>
 
                     <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center" data-reveal style="--reveal-delay: 200ms">
-                        <p class="text-4xl font-bold text-gold-300" data-test="free-price">Gratuit</p>
-                        <div class="flex flex-col gap-3 sm:ml-auto sm:flex-row lg:ml-8">
-                            <a href="{{ $registerUrl }}" class="btn-gold" data-test="free-hero-register">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }} <flux:icon :icon="$registerIcon" class="size-5" /></a>
+                        @unless ($ended)
+                            <p class="text-4xl font-bold text-gold-300" data-test="free-price">Gratuit</p>
+                        @endunless
+                        <div @class(['flex flex-col gap-3 sm:flex-row', 'sm:ml-auto lg:ml-8' => ! $ended])>
+                            @if ($ended)
+                                @if ($endedButton)
+                                    <a href="{{ $endedButton['url'] }}" class="btn-gold !py-4 text-lg" data-test="free-ended-button" data-ama-avoid data-ama-clear data-install-avoid>{{ $endedButton['label'] }} <flux:icon.arrow-right class="size-5" /></a>
+                                @endif
+                            @else
+                                <a href="{{ $registerUrl }}" class="btn-gold" data-test="free-hero-register">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }} <flux:icon :icon="$registerIcon" class="size-5" /></a>
+                            @endif
                             <a href="{{ WhatsApp::url($whatsappMessage) }}" target="_blank" rel="noopener" class="btn-ghost">
                                 <x-site.whatsapp-icon class="size-5 text-[#25D366]" /> Poser une question
                             </a>
@@ -170,7 +189,7 @@
             {{-- Ce que vous allez apprendre --}}
             @if ($formation->outcomes)
                 <section>
-                    <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Ce que vous allez apprendre</h2>
+                    <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>{{ $ended ? 'Au programme de la formation' : 'Ce que vous allez apprendre' }}</h2>
                     <ul class="mt-6 grid gap-3 sm:grid-cols-2">
                         @foreach ($formation->outcomes as $outcome)
                             <li class="card flex gap-3 p-4" data-reveal style="--reveal-delay: {{ $loop->index * 60 }}ms">
@@ -198,7 +217,8 @@
                 </section>
             @endif
 
-            {{-- Inclus --}}
+            {{-- Inclus (masqué une fois la formation terminée : il invite à s'inscrire) --}}
+            @unless ($ended)
             <section class="card p-6 sm:p-8" data-reveal data-test="free-included">
                 <h2 class="flex items-center gap-3 text-2xl font-bold text-white">
                     <flux:icon.check-badge class="size-7 text-gold-300" /> Inclus avec l'inscription
@@ -211,6 +231,7 @@
                     @endforeach
                 </ul>
             </section>
+            @endunless
 
             {{-- Formateur --}}
             <section data-reveal>
@@ -228,21 +249,29 @@
                 </div>
             </section>
 
-            {{-- Questions fréquentes propres à l'inscription gratuite --}}
-            <section>
-                <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Questions fréquentes</h2>
-                <x-site.faq :items="$faq" class="mt-6" data-test="free-faq" />
-            </section>
+            {{-- Questions fréquentes propres à l'inscription gratuite (masquées une fois la formation terminée) --}}
+            @unless ($ended)
+                <section>
+                    <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Questions fréquentes</h2>
+                    <x-site.faq :items="$faq" class="mt-6" data-test="free-faq" />
+                </section>
+            @endunless
         </div>
 
         {{-- Récapitulatif (écrans larges) --}}
         <aside class="hidden lg:block">
             <div class="card sticky top-24 space-y-5 p-6">
-                <p class="text-4xl font-bold text-gold-300">Gratuit</p>
+                <p @class(['font-bold text-gold-300', 'text-4xl' => ! $ended, 'text-2xl' => $ended])>{{ $ended ? 'Formation terminée' : 'Gratuit' }}</p>
                 @if ($date)
                     <p class="-mt-3 flex items-center gap-2 text-sm text-slate-300"><flux:icon.calendar-days class="size-4 text-gold-400" /> {{ $date }}</p>
                 @endif
-                <a href="{{ $registerUrl }}" class="btn-gold w-full">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }}</a>
+                @if ($ended)
+                    @if ($endedButton)
+                        <a href="{{ $endedButton['url'] }}" class="btn-gold w-full">{{ $endedButton['label'] }}</a>
+                    @endif
+                @else
+                    <a href="{{ $registerUrl }}" class="btn-gold w-full">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }}</a>
+                @endif
                 <div class="border-t border-veil/10 pt-5">
                     <p class="text-sm text-slate-400">Une question ?</p>
                     <a href="{{ WhatsApp::url($whatsappMessage) }}" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[#25D366]">
@@ -255,10 +284,16 @@
 
     {{-- Appel à l'action final --}}
     <x-site.cta-banner
-        :title="'Rejoignez « '.$formation->title.' »'"
-        text="Créez votre compte, confirmez votre e-mail, choisissez votre option et rejoignez le groupe des inscrits. C'est gratuit."
+        :title="$ended ? 'Cette formation est terminée' : 'Rejoignez « '.$formation->title.' »'"
+        :text="$ended ? 'Les inscriptions sont fermées. Une question ? Écrivez-nous sur WhatsApp.' : 'Créez votre compte, confirmez votre e-mail, choisissez votre option et rejoignez le groupe des inscrits. C\'est gratuit.'"
     >
-        <a href="{{ $registerUrl }}" class="btn-gold">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }}</a>
+        @if ($ended)
+            @if ($endedButton)
+                <a href="{{ $endedButton['url'] }}" class="btn-gold">{{ $endedButton['label'] }}</a>
+            @endif
+        @else
+            <a href="{{ $registerUrl }}" class="btn-gold">{{ $registration ? 'Voir mon inscription' : 'Je m\'inscris gratuitement' }}</a>
+        @endif
         <a href="{{ WhatsApp::url($whatsappMessage) }}" target="_blank" rel="noopener" class="btn-ghost">
             <x-site.whatsapp-icon class="size-5 text-[#25D366]" /> Poser une question
         </a>
@@ -281,10 +316,21 @@
         <div data-bottom-bar data-install-avoid class="fixed inset-x-0 bottom-0 z-40 border-t border-veil/10 bg-night-950/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
             <div class="mx-auto flex max-w-xl items-center gap-3">
                 <div class="min-w-0 flex-1">
-                    <p class="truncate text-xs text-slate-400">{{ $formation->title }}</p>
-                    <p class="text-lg leading-tight font-bold text-gold-300">Gratuit</p>
+                    @if ($ended)
+                        {{-- Formation terminée : le libellé seul (le titre est en haut de page), sur deux lignes au besoin. --}}
+                        <p class="text-base leading-tight font-bold text-gold-300" data-test="free-bar-price">Formation terminée</p>
+                    @else
+                        <p class="truncate text-xs text-slate-400">{{ $formation->title }}</p>
+                        <p class="text-lg leading-tight font-bold text-gold-300" data-test="free-bar-price">Gratuit</p>
+                    @endif
                 </div>
-                <a href="{{ $registerUrl }}" class="btn-gold shrink-0 !px-5 !py-3" data-test="free-bar-register">{{ $registration ? 'Mon inscription' : 'Je m\'inscris' }}</a>
+                @if ($ended)
+                    @if ($endedButton)
+                        <a href="{{ $endedButton['url'] }}" class="btn-gold shrink-0 !px-4 !py-3 text-sm" data-test="free-bar-ended">{{ $endedButton['label'] }}</a>
+                    @endif
+                @else
+                    <a href="{{ $registerUrl }}" class="btn-gold shrink-0 !px-5 !py-3" data-test="free-bar-register">{{ $registration ? 'Mon inscription' : 'Je m\'inscris' }}</a>
+                @endif
             </div>
         </div>
     </x-slot:after>
