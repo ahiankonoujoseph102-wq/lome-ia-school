@@ -12,6 +12,7 @@ use App\Models\Formation;
 use App\Models\LiveSession;
 use App\Models\Purchase;
 use App\Models\User;
+use App\Packs\PackDeadline;
 use App\Payments\PaymentMethods;
 use App\Payments\ProofImageProcessor;
 use App\Promotions\PromoCodes;
@@ -28,7 +29,7 @@ use Illuminate\Validation\ValidationException;
  * L'élève n'envoie que la capture de son paiement (aucun numéro, nom ni identifiant de transaction à
  * recopier) : l'équipe lit ces informations sur la capture au moment de la vérification.
  *
- * Contrôles : formation pas déjà possédée, un seul paiement non vérifié à la fois, capture jamais envoyée. Sous le seuil de vérification, l'accès est ouvert
+ * Contrôles : inscriptions à l'offre d'accompagnement encore ouvertes (App\Packs\PackDeadline), formation pas déjà possédée, un seul paiement non vérifié à la fois, capture jamais envoyée. Sous le seuil de vérification, l'accès est ouvert
  * aussitôt à titre provisoire ; au-delà, il attend la validation de l'équipe.
  *
  * Même parcours pour le supplément d'une session en présentiel ($session) : la place réservée est
@@ -57,6 +58,11 @@ class SubmitManualPayment
         // Groupe seul (Groupe VIP) : jamais vendu, il s'obtient avec une offre d'accompagnement.
         if ($formation->isGroupOnly()) {
             throw ValidationException::withMessages(['formation' => 'Ce groupe est réservé aux acheteurs des offres d\'accompagnement.']);
+        }
+
+        // Inscriptions closes (offre d'accompagnement) : refus avant tout autre contrôle (code promo, capture).
+        if ($session === null && $formation->registrationsClosed()) {
+            throw ValidationException::withMessages(['formation' => PackDeadline::CLOSED_MESSAGE]);
         }
 
         $amount = $session !== null ? (int) $session->supplement_amount : $formation->price;
@@ -149,6 +155,13 @@ class SubmitManualPayment
             $this->ensureCanPaySupplement($user, $session);
 
             return;
+        }
+
+        // Offre d'accompagnement dont la date de fin des inscriptions est passée : plus aucune nouvelle commande,
+        // même depuis un ancien lien ou une page restée ouverte (vérifié aussi sous verrou, au moment d'enregistrer).
+        // Une capture déjà envoyée reste à valider ou refuser par l'équipe (App\Services\PurchaseManager).
+        if ($formation->registrationsClosed()) {
+            throw ValidationException::withMessages(['formation' => PackDeadline::CLOSED_MESSAGE]);
         }
 
         $alreadyOwned = $user->isEnrolledIn($formation) || $user->purchases()
