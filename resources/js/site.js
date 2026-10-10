@@ -311,12 +311,46 @@ Alpine.data('packCountdown', ({ deadline, serverNow, slug }) => ({
         if (parts.closed && !this.closed) {
             this.closed = true;
             clearInterval(this.timer);
-            window.dispatchEvent(new CustomEvent('pack-registrations-closed', { detail: { slug } }));
+            // La date atteinte est aussi envoyée : toute offre qui finit au plus tard à cette date est close.
+            window.dispatchEvent(new CustomEvent('pack-registrations-closed', { detail: { slug, deadline } }));
         }
     },
 
     destroy() {
         clearInterval(this.timer);
+    },
+}));
+
+/*
+ * Barre fixe de la page /accompagnement (téléphone) : masquée tant qu'un des gros boutons « Je m'inscris
+ * maintenant » du haut ou du bas de page (data-sticky-hide) est à l'écran, pour ne pas montrer deux fois le même
+ * bouton. Sans IntersectionObserver, elle reste affichée.
+ */
+Alpine.data('packsStickyBar', () => ({
+    closed: false,
+    away: true,
+    observer: null,
+
+    init() {
+        const targets = [...document.querySelectorAll('[data-sticky-hide]')];
+
+        if (!targets.length || !('IntersectionObserver' in window)) {
+            return;
+        }
+
+        const visible = new Set();
+        this.observer = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                entry.isIntersecting ? visible.add(entry.target) : visible.delete(entry.target);
+            }
+
+            this.away = visible.size === 0;
+        });
+        targets.forEach((target) => this.observer.observe(target));
+    },
+
+    destroy() {
+        this.observer?.disconnect();
     },
 }));
 

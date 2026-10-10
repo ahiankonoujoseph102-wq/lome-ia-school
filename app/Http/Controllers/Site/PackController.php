@@ -38,8 +38,24 @@ class PackController extends Controller
 
         abort_if($packs->isEmpty(), 404);
 
+        // Offres qu'on peut acheter maintenant (publiées, inscriptions ouvertes) : boutons du haut, du bas et barre fixe.
+        $open = $preview ? collect() : $packs->reject(fn (Formation $pack): bool => $pack->registrationsClosed())->values();
+        // Compte à rebours du haut de page : la date de fin la plus proche parmi elles.
+        $countdownPack = $open->filter(fn (Formation $pack): bool => $pack->registrationDeadline() !== null)
+            ->sortBy(fn (Formation $pack): int => (int) $pack->registrationDeadline()?->getTimestampMs())
+            ->first();
+        // Les boutons communs se masquent à la fin du compte à rebours seulement si toutes ces offres ont une date :
+        // à la plus lointaine.
+        $closesAt = $open->isNotEmpty() && $open->every(fn (Formation $pack): bool => $pack->registrationDeadline() !== null)
+            ? $open->max(fn (Formation $pack): int => (int) $pack->registrationDeadline()?->getTimestampMs())
+            : null;
+
         return view('site.packs', [
             'packs' => $packs,
+            'open' => $open->isNotEmpty(),
+            'allClosed' => ! $preview && $open->isEmpty(),
+            'countdownPack' => $countdownPack,
+            'closesAt' => $closesAt,
             'preview' => $preview,
             'posterUrl' => PacksPage::posterUrl(),
             'owned' => $user ? $user->enrollments()->whereIn('formation_id', $packs->modelKeys())->pluck('formation_id')->all() : [],

@@ -1,11 +1,11 @@
 {{--
     Texte saisi dans l'admin, affiché avec ses retours à la ligne et ses lignes à tiret en liste à puces
-    (App\Support\RichText). Chaque ligne est échappée : aucun code HTML saisi n'est interprété.
+    (App\Support\RichText). Reçoit le texte ($text) ou des blocs déjà découpés ($blocks). Chaque ligne est échappée : aucun code HTML saisi n'est interprété.
 --}}
-@props(['text'])
+@props(['text' => null, 'blocks' => null])
 
 <div {{ $attributes->class('space-y-3') }}>
-    @foreach (\App\Support\RichText::blocks($text) as $block)
+    @foreach ($blocks ?? \App\Support\RichText::blocks($text) as $block)
         @if ($block['type'] === 'list')
             <ul class="space-y-1.5">
                 @foreach ($block['items'] as $item)

@@ -112,7 +112,7 @@ class PackDeadlineTest extends AdminTestCase
             ->assertOk()
             ->assertSee('Inscriptions ouvertes jusqu\'au lundi 12 octobre 2026 à 16 h', false)
             ->assertSeeInOrder(['data-test="pack-countdown-days">2<', 'data-test="pack-countdown-hours">4<', 'data-test="pack-countdown-minutes">0<'], false)
-            ->assertSee('Choisir cette offre')
+            ->assertSee('data-test="pack-choose"', false)
             ->assertDontSee('data-test="pack-closed"', false);
 
         // Même date fixe pour tout le monde : le compte à rebours suit l'heure, il ne repart jamais à zéro.
@@ -148,7 +148,7 @@ class PackDeadlineTest extends AdminTestCase
             ->assertSee('Inscriptions closes')
             ->assertSee('data-test="pack-closed"', false)
             ->assertDontSee('data-test="pack-choose"', false)
-            ->assertDontSee('Choisir cette offre')
+            ->assertDontSee('Je m\'inscris maintenant', false)
             ->assertDontSee('data-test="pack-countdown"', false)
             ->assertDontSee(route('checkout.show', $this->pack));
 
