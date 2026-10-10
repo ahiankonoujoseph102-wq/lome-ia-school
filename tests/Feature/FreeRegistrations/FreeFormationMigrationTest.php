@@ -8,6 +8,7 @@ use App\Enums\FreeOptionMode;
 use App\Models\ChatGroup;
 use App\Models\Formation;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -27,6 +28,9 @@ class FreeFormationMigrationTest extends TestCase
 
     public function test_the_free_formation_is_created_as_a_hidden_draft_with_its_four_options(): void
     {
+        // Avant l'événement du 10 octobre 2026 : inscriptions ouvertes, les options sont affichées (le test ne dépend pas du jour où il tourne).
+        $this->travelTo(CarbonImmutable::parse('2026-10-05 08:00', 'Africa/Lome'));
+
         $formation = Formation::query()->where('slug', 'formation-gratuite-ia')->sole();
 
         $this->assertSame('Formation gratuite : utiliser l\'IA au quotidien', $formation->title);
