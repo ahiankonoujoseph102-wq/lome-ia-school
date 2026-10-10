@@ -116,8 +116,10 @@ class FreeRegistrationAdminTest extends TestCase
 
         $response->assertSee(route('admin.free-registrations.show', $this->formation));
         // La formation gratuite créée par la migration compte aussi : un lien par formation à 0 FCFA, aucun pour le payant.
-        $this->assertSame(Formation::query()->where('price', 0)->count(), substr_count($response->getContent(), 'data-test="free-registrations-link"'));
-        $this->assertSame(Formation::query()->count() - Formation::query()->where('price', 0)->count(), substr_count($response->getContent(), 'vente validée') + substr_count($response->getContent(), 'ventes validées'));
+        // Le Groupe VIP (groupe seul, 0 FCFA) n'est pas dans cette liste.
+        $listed = Formation::query()->where('kind', '!=', 'group');
+        $this->assertSame((clone $listed)->where('price', 0)->count(), substr_count($response->getContent(), 'data-test="free-registrations-link"'));
+        $this->assertSame((clone $listed)->count() - (clone $listed)->where('price', 0)->count(), substr_count($response->getContent(), 'vente validée') + substr_count($response->getContent(), 'ventes validées'));
     }
 
     public function test_the_admin_updates_date_place_and_options_and_adds_one(): void

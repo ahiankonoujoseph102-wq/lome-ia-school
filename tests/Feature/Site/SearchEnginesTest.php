@@ -204,6 +204,9 @@ class SearchEnginesTest extends TestCase
 
     public function test_every_indexable_page_is_in_the_sitemap(): void
     {
+        // La page des offres d'accompagnement n'existe qu'avec au moins une offre publiée.
+        Formation::factory()->pack()->create();
+
         $sitemap = collect(SearchEngines::sitemapUrls())->pluck('loc');
 
         foreach (SearchEngines::INDEXABLE_ROUTES as $name) {

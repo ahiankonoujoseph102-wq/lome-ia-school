@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Chat\ChatRealtime;
+use App\Enums\FormationKind;
 use App\Enums\ReportStatus;
 use App\Events\Chat\ChatGroupChanged;
 use App\Http\Controllers\Controller;
@@ -23,7 +24,7 @@ class ChatGroupController extends Controller
     public function index(): View
     {
         // Un groupe pour chaque formation, même ajoutée avant l'étape 6.
-        Formation::query()->doesntHave('chatGroup')->get()->each(fn (Formation $formation) => ChatGroup::forFormation($formation));
+        Formation::query()->where('kind', '!=', FormationKind::Pack->value)->doesntHave('chatGroup')->get()->each(fn (Formation $formation) => ChatGroup::forFormation($formation));
 
         $groups = ChatGroup::query()
             ->with('formation')

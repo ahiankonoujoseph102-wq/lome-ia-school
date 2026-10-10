@@ -25,6 +25,7 @@ class SearchEngines
         'about',
         'founder',
         'business',
+        'packs',
         'contact',
         'consultation',
         'affiliate.program',
@@ -105,6 +106,13 @@ class SearchEngines
             'lastmod' => $formation->updated_at?->toAtomString(),
         ]);
 
-        return $pages->concat($formations)->values()->all();
+        // Page des offres d'accompagnement : seulement si au moins une offre est publiée (sinon elle n'existe pas).
+        $packs = Formation::query()->publishedPacks()->get();
+        $packPage = $packs->isEmpty() ? [] : [[
+            'loc' => AppUrl::to(route('packs')),
+            'lastmod' => $packs->max('updated_at')?->toAtomString(),
+        ]];
+
+        return $pages->concat($packPage)->concat($formations)->values()->all();
     }
 }

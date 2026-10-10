@@ -18,6 +18,8 @@ trait ResolvesChatMember
     {
         $user = $request->user();
         abort_if($user === null, 403);
+        // Une offre d'accompagnement n'a pas de groupe à elle.
+        abort_if($formation->isPack(), 404);
 
         $group = ChatGroup::forFormation($formation);
         $group->setRelation('formation', $formation);

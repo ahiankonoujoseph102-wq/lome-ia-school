@@ -8,6 +8,7 @@ use App\Admin\ManualAccess;
 use App\Affiliates\AffiliateAccount;
 use App\Courses\CourseProgress;
 use App\Enums\AdminAction;
+use App\Enums\FormationKind;
 use App\Enums\PaymentGateway;
 use App\Enums\PurchaseStatus;
 use App\Enums\UserRole;
@@ -126,7 +127,9 @@ class StudentController extends Controller
             'consultations' => $consultations,
             'affiliateSummary' => $user->affiliate ? $affiliates->summary($user->affiliate) : null,
             'history' => $this->history($user, $consultations),
+            // Le Groupe VIP s'obtient avec une offre d'accompagnement, jamais par un accès manuel.
             'availableFormations' => Formation::query()
+                ->where('kind', '!=', FormationKind::Group->value)
                 ->whereNotIn('id', $user->enrollments->pluck('formation_id'))
                 ->orderBy('sort_order')
                 ->get(['id', 'title', 'price']),
@@ -137,7 +140,7 @@ class StudentController extends Controller
     public function grantAccess(Request $request, User $user, ManualAccess $access): RedirectResponse
     {
         $validated = $request->validateWithBag('manualAccess', [
-            'formation_id' => ['required', 'integer', 'exists:formations,id'],
+            'formation_id' => ['required', 'integer', Rule::exists('formations', 'id')->whereNot('kind', FormationKind::Group->value)],
             'amount' => ['required', 'integer', 'min:0', 'max:100000000'],
             'method' => ['required', Rule::in(array_keys(PaymentGateway::manualMethods()))],
             'reason' => ['required', 'string', 'min:3', 'max:500'],

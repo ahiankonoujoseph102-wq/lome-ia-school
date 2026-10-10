@@ -54,6 +54,11 @@ class SubmitManualPayment
             throw ValidationException::withMessages(['proof' => 'Cette formation est gratuite : aucun paiement n\'est nécessaire.']);
         }
 
+        // Groupe seul (Groupe VIP) : jamais vendu, il s'obtient avec une offre d'accompagnement.
+        if ($formation->isGroupOnly()) {
+            throw ValidationException::withMessages(['formation' => 'Ce groupe est réservé aux acheteurs des offres d\'accompagnement.']);
+        }
+
         $amount = $session !== null ? (int) $session->supplement_amount : $formation->price;
         // Code promo (formations uniquement) : vérifié une première fois ici, puis sous verrou au moment d'enregistrer.
         $promoInput = $session === null ? trim((string) ($input['promo_code'] ?? '')) : '';

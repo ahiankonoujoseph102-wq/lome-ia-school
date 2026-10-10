@@ -15,8 +15,10 @@ class FormationSeederTest extends TestCase
 
     public function test_it_seeds_the_seventeen_formations_with_their_prices(): void
     {
-        // La formation gratuite du 10 octobre 2026 est créée par une migration, pas par le seeder : hors du compte.
+        // La formation gratuite du 10 octobre 2026, les offres d'accompagnement et le Groupe VIP sont créés
+        // par des migrations, pas par le seeder : hors du compte.
         Formation::query()->where('slug', 'formation-gratuite-ia')->delete();
+        Formation::query()->whereIn('kind', ['pack', 'group'])->delete();
         $this->seed(FormationSeeder::class);
 
         $this->assertSame(17, Formation::count());
@@ -40,8 +42,10 @@ class FormationSeederTest extends TestCase
 
     public function test_running_the_seeder_twice_does_not_create_duplicates(): void
     {
-        // La formation gratuite du 10 octobre 2026 est créée par une migration, pas par le seeder : hors du compte.
+        // La formation gratuite du 10 octobre 2026, les offres d'accompagnement et le Groupe VIP sont créés
+        // par des migrations, pas par le seeder : hors du compte.
         Formation::query()->where('slug', 'formation-gratuite-ia')->delete();
+        Formation::query()->whereIn('kind', ['pack', 'group'])->delete();
         $this->seed(FormationSeeder::class);
         $this->seed(FormationSeeder::class);
 
