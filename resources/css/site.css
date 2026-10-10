@@ -1248,3 +1248,30 @@ body {
         opacity: 1;
     }
 }
+
+/*
+ * Compte à rebours des offres d'accompagnement : léger fondu à chaque nouvelle seconde (deux noms d'animation
+ * alternés pour la relancer). Seulement l'opacité ; rien si le téléphone demande moins d'animations : les chiffres
+ * changent alors sans aucun effet.
+ */
+@media (prefers-reduced-motion: no-preference) {
+    .countdown-second.countdown-tick-a {
+        animation: countdown-tick-a 0.45s ease-out;
+    }
+
+    .countdown-second.countdown-tick-b {
+        animation: countdown-tick-b 0.45s ease-out;
+    }
+
+    @keyframes countdown-tick-a {
+        from {
+            opacity: 0.35;
+        }
+    }
+
+    @keyframes countdown-tick-b {
+        from {
+            opacity: 0.35;
+        }
+    }
+}

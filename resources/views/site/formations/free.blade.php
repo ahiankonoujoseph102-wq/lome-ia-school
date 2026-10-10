@@ -249,6 +249,14 @@
                 </div>
             </section>
 
+            {{-- Témoignages : les mêmes que sur l'accueil et les autres pages (gérés dans l'admin), masqués s'il n'y en a aucun --}}
+            @if ($testimonials = \App\Support\Testimonials::all())
+                <section data-test="free-testimonials">
+                    <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Ce qu'en disent les élèves</h2>
+                    <x-site.testimonials :items="$testimonials" class="mt-6 lg:!columns-2" />
+                </section>
+            @endif
+
             {{-- Questions fréquentes propres à l'inscription gratuite (masquées une fois la formation terminée) --}}
             @unless ($ended)
                 <section>

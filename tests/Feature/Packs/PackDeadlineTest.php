@@ -111,16 +111,16 @@ class PackDeadlineTest extends AdminTestCase
         $this->get(route('packs'))
             ->assertOk()
             ->assertSee('Inscriptions ouvertes jusqu\'au lundi 12 octobre 2026 à 16 h', false)
-            ->assertSeeInOrder(['data-test="pack-countdown-days">2<', 'data-test="pack-countdown-hours">4<', 'data-test="pack-countdown-minutes">0<'], false)
+            ->assertSeeInOrder(['data-test="pack-countdown-days">2<', 'data-test="pack-countdown-hours">04<', 'data-test="pack-countdown-minutes">00<', 'data-test="pack-countdown-seconds">00<'], false)
             ->assertSee('data-test="pack-choose"', false)
             ->assertDontSee('data-test="pack-closed"', false);
 
         // Même date fixe pour tout le monde : le compte à rebours suit l'heure, il ne repart jamais à zéro.
         $this->at('2026-10-12 15:20:30');
         $this->get(route('packs'))
-            ->assertSeeInOrder(['data-test="pack-countdown-days">0<', 'data-test="pack-countdown-hours">0<', 'data-test="pack-countdown-minutes">40<'], false);
+            ->assertSeeInOrder(['data-test="pack-countdown-days">0<', 'data-test="pack-countdown-hours">00<', 'data-test="pack-countdown-minutes">39<', 'data-test="pack-countdown-seconds">30<'], false);
         $this->actingAs(User::factory()->create())->get(route('packs'))
-            ->assertSeeInOrder(['data-test="pack-countdown-days">0<', 'data-test="pack-countdown-hours">0<', 'data-test="pack-countdown-minutes">40<'], false);
+            ->assertSeeInOrder(['data-test="pack-countdown-days">0<', 'data-test="pack-countdown-hours">00<', 'data-test="pack-countdown-minutes">39<', 'data-test="pack-countdown-seconds">30<'], false);
 
         // Page de l'offre (récapitulatif de commande) : même encadré, paiement proposé.
         $this->actingAs(User::factory()->create())->get(route('checkout.show', $this->pack))
@@ -356,9 +356,10 @@ class PackDeadlineTest extends AdminTestCase
         $cases = ['2026-10-10 12:00:00', '2026-10-12 15:59:30', '2026-10-12 15:20:30', '2026-10-11 16:00:00', '2026-10-12 16:00:00', '2026-10-13 00:00:00'];
         $server = array_map(fn (string $now): array => PackDeadline::remaining($deadline, Carbon::parse($now, 'Africa/Lome')), $cases);
 
-        $this->assertSame(['days' => 2, 'hours' => 4, 'minutes' => 0, 'closed' => false], $server[0]);
-        $this->assertSame(['days' => 0, 'hours' => 0, 'minutes' => 1, 'closed' => false], $server[1]);
-        $this->assertSame(['days' => 1, 'hours' => 0, 'minutes' => 0, 'closed' => false], $server[3]);
+        $this->assertSame(['days' => 2, 'hours' => 4, 'minutes' => 0, 'seconds' => 0, 'closed' => false], $server[0]);
+        $this->assertSame(['days' => 0, 'hours' => 0, 'minutes' => 0, 'seconds' => 30, 'closed' => false], $server[1]);
+        $this->assertSame(['days' => 0, 'hours' => 0, 'minutes' => 39, 'seconds' => 30, 'closed' => false], $server[2]);
+        $this->assertSame(['days' => 1, 'hours' => 0, 'minutes' => 0, 'seconds' => 0, 'closed' => false], $server[3]);
         $this->assertTrue($server[4]['closed']);
         $this->assertTrue($server[5]['closed']);
 
@@ -386,7 +387,7 @@ class PackDeadlineTest extends AdminTestCase
         $out = json_decode(trim($process->getOutput()), true);
 
         $this->assertSame($server, $out['parts']);
-        $this->assertSame(['days' => 0, 'hours' => 1, 'minutes' => 0, 'closed' => false], $out['skewed']);
+        $this->assertSame(['days' => 0, 'hours' => 1, 'minutes' => 0, 'seconds' => 0, 'closed' => false], $out['skewed']);
         $this->assertSame(0, $out['noServer']);
     }
 }

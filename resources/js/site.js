@@ -32,7 +32,7 @@ import {
 import { isPlaybackError, listeningMessage, PLAYER_ORIGIN } from './home-video.js';
 import { bottomOffset, createInstallState, isInstalled, isIos, overlaps } from './install-app.js';
 import { initAnimatedBackgrounds } from './animated-background.js';
-import { clockOffset, countdownParts } from './countdown.js';
+import { countdownLabel, countdownParts, createServerClock, nextTickDelay } from './countdown.js';
 
 /**
  * Apparition douce des éléments marqués data-reveal, uniquement pour ceux encore sous l'écran.
@@ -283,41 +283,88 @@ async function copyToClipboard(text) {
     }
 }
 
+/*
+ * Horloge du serveur partagée par tous les comptes à rebours de la page : l'heure écrite dans la page sert tout de
+ * suite, puis une petite demande à /heure-serveur la corrige (page gardée en mémoire par le navigateur, réseau lent).
+ */
+const serverClock = createServerClock({ url: '/heure-serveur' });
+
+window.addEventListener('pageshow', (event) => {
+    // Retour en arrière : la page vient de la mémoire du navigateur, l'heure qu'elle contient est ancienne.
+    if (event.persisted) {
+        serverClock.sync({ force: true });
+    }
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        serverClock.sync();
+    }
+});
+
 /**
- * Compte à rebours de la fin des inscriptions d'une offre d'accompagnement (composant x-site.pack-deadline) :
- * date fixe du serveur, horloge du téléphone corrigée par l'heure du serveur, mise à jour toutes les 15 s.
- * À zéro : « Inscriptions closes » et événement « pack-registrations-closed » (le bouton d'achat se masque).
+ * Compte à rebours de la fin des inscriptions d'une offre d'accompagnement (composant x-site.pack-deadline et barre
+ * fixe de /accompagnement) : jours, heures, minutes et secondes, à partir de la date fixe du serveur, horloge du
+ * téléphone corrigée par l'heure du serveur, mis à jour à chaque seconde. Les lecteurs d'écran lisent un texte à la
+ * minute près, jamais annoncé tout seul. À zéro : « Inscriptions closes » et événement « pack-registrations-closed »
+ * (les boutons d'achat se masquent, sans recharger la page).
  */
 Alpine.data('packCountdown', ({ deadline, serverNow, slug }) => ({
     days: 0,
     hours: 0,
     minutes: 0,
+    seconds: 0,
+    label: '',
     closed: false,
-    offset: 0,
     timer: null,
+    unsubscribe: null,
 
     init() {
-        this.offset = clockOffset(serverNow, Date.now());
+        serverClock.hint(serverNow);
+        this.unsubscribe = serverClock.onChange(() => this.tick());
+        this.onVisible = () => document.visibilityState === 'visible' && this.tick();
+        document.addEventListener('visibilitychange', this.onVisible);
         this.tick();
-        this.timer = setInterval(() => this.tick(), 15000);
+        serverClock.sync();
+    },
+
+    pad(value) {
+        return String(value).padStart(2, '0');
     },
 
     tick() {
-        const parts = countdownParts(deadline, Date.now() + this.offset);
+        clearTimeout(this.timer);
+
+        const now = serverClock.now();
+        const parts = countdownParts(deadline, now);
         this.days = parts.days;
         this.hours = parts.hours;
         this.minutes = parts.minutes;
+        this.seconds = parts.seconds;
 
-        if (parts.closed && !this.closed) {
-            this.closed = true;
-            clearInterval(this.timer);
-            // La date atteinte est aussi envoyée : toute offre qui finit au plus tard à cette date est close.
-            window.dispatchEvent(new CustomEvent('pack-registrations-closed', { detail: { slug, deadline } }));
+        const label = countdownLabel(parts);
+
+        if (label !== this.label) {
+            this.label = label;
         }
+
+        if (parts.closed) {
+            if (!this.closed) {
+                this.closed = true;
+                // La date atteinte est aussi envoyée : toute offre qui finit au plus tard à cette date est close.
+                window.dispatchEvent(new CustomEvent('pack-registrations-closed', { detail: { slug, deadline } }));
+            }
+
+            return;
+        }
+
+        this.timer = setTimeout(() => this.tick(), nextTickDelay(deadline, now));
     },
 
     destroy() {
-        clearInterval(this.timer);
+        clearTimeout(this.timer);
+        this.unsubscribe?.();
+        document.removeEventListener('visibilitychange', this.onVisible);
     },
 }));
 
