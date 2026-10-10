@@ -109,26 +109,52 @@ class PackDeadline
     }
 
     /**
-     * Temps restant jusqu'à la date (minutes arrondies au-dessus : « 0 minute » n'apparaît jamais tant que
+     * Temps restant jusqu'à la date (secondes arrondies au-dessus : « 0 seconde » n'apparaît jamais tant que
      * les inscriptions sont ouvertes). Même calcul que countdownParts() de resources/js/countdown.js.
      *
-     * @return array{days: int, hours: int, minutes: int, closed: bool}
+     * @return array{days: int, hours: int, minutes: int, seconds: int, closed: bool}
      */
     public static function remaining(CarbonInterface $deadline, ?CarbonInterface $now = null): array
     {
         $milliseconds = $deadline->getTimestampMs() - ($now ?? now())->getTimestampMs();
 
         if ($milliseconds <= 0) {
-            return ['days' => 0, 'hours' => 0, 'minutes' => 0, 'closed' => true];
+            return ['days' => 0, 'hours' => 0, 'minutes' => 0, 'seconds' => 0, 'closed' => true];
         }
 
-        $minutes = (int) ceil($milliseconds / 60000);
+        $seconds = (int) ceil($milliseconds / 1000);
 
         return [
-            'days' => intdiv($minutes, 1440),
-            'hours' => intdiv($minutes % 1440, 60),
-            'minutes' => $minutes % 60,
+            'days' => intdiv($seconds, 86400),
+            'hours' => intdiv($seconds % 86400, 3600),
+            'minutes' => intdiv($seconds % 3600, 60),
+            'seconds' => $seconds % 60,
             'closed' => false,
         ];
+    }
+
+    /**
+     * Texte pour les lecteurs d'écran, à la minute près (« Temps restant : 2 jours, 4 heures et 1 minute »).
+     * Même texte que countdownLabel() de resources/js/countdown.js.
+     *
+     * @param  array{days: int, hours: int, minutes: int, closed: bool}  $remaining
+     */
+    public static function spokenRemaining(array $remaining): string
+    {
+        if ($remaining['closed']) {
+            return 'Inscriptions closes';
+        }
+
+        $words = [];
+
+        foreach ([['days', 'jour', 'jours'], ['hours', 'heure', 'heures'], ['minutes', 'minute', 'minutes']] as $index => [$unit, $one, $many]) {
+            if ($remaining[$unit] > 0 || $index === 2) {
+                $words[] = $remaining[$unit].' '.($remaining[$unit] > 1 ? $many : $one);
+            }
+        }
+
+        $last = array_pop($words);
+
+        return 'Temps restant : '.($words === [] ? $last : implode(', ', $words).' et '.$last);
     }
 }

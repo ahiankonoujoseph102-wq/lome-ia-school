@@ -39,6 +39,7 @@ use App\Http\Controllers\Site\OgImageController;
 use App\Http\Controllers\Site\PackController;
 use App\Http\Controllers\Site\PageController;
 use App\Http\Controllers\Site\PwaController;
+use App\Http\Controllers\Site\ServerTimeController;
 use App\Http\Controllers\Site\SitemapController;
 use App\Http\Controllers\Student\AffiliateController;
 use App\Http\Controllers\Student\DashboardController;
@@ -82,6 +83,8 @@ Route::get('joseph-ahiankonou', [PageController::class, 'founder'])->name('found
 Route::get('contact', [PageController::class, 'contact'])->name('contact');
 Route::get('entreprises', [PageController::class, 'business'])->name('business');
 Route::get('accompagnement', [PackController::class, 'index'])->name('packs');
+// Heure du serveur : corrige l'horloge du téléphone dans les comptes à rebours des offres.
+Route::get('heure-serveur', ServerTimeController::class)->middleware('throttle:60,1')->name('server-time');
 Route::get('devenir-affilie', [PageController::class, 'affiliate'])->name('affiliate.program');
 Route::get('mentions-legales', [PageController::class, 'legalNotice'])->name('legal.notice');
 Route::get('conditions-generales-de-vente', [PageController::class, 'terms'])->name('legal.terms');

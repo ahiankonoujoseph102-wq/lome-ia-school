@@ -285,9 +285,8 @@
                         @if ($countdownPack && $left)
                             <div x-data="packCountdown(@js(['deadline' => $countdownDeadline->getTimestampMs(), 'serverNow' => now()->getTimestampMs(), 'slug' => $countdownPack->slug]))" data-test="packs-sticky-countdown">
                                 <p class="text-xs text-slate-400">Clôture dans</p>
-                                <p class="text-sm leading-tight font-bold whitespace-nowrap text-white tabular-nums">
-                                    <span x-text="days">{{ $left['days'] }}</span>&nbsp;j <span x-text="hours">{{ $left['hours'] }}</span>&nbsp;h <span x-text="minutes">{{ $left['minutes'] }}</span>&nbsp;min
-                                </p>
+                                <p class="sr-only" x-text="label">{{ PackDeadline::spokenRemaining($left) }}</p>
+                                <p class="text-sm leading-tight font-bold whitespace-nowrap text-white tabular-nums" aria-hidden="true" data-test="packs-sticky-time"><span x-text="days">{{ $left['days'] }}</span>&nbsp;j <span x-text="pad(hours)">{{ sprintf('%02d', $left['hours']) }}</span>&nbsp;h <span x-text="pad(minutes)">{{ sprintf('%02d', $left['minutes']) }}</span>&nbsp;min <span x-text="pad(seconds)" class="countdown-second" :class="seconds % 2 ? 'countdown-tick-a' : 'countdown-tick-b'">{{ sprintf('%02d', $left['seconds']) }}</span>&nbsp;s</p>
                             </div>
                         @else
                             <p class="truncate text-xs text-slate-400">{{ $page['eyebrow'] }}</p>

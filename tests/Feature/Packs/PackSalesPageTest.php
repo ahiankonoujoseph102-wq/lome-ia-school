@@ -108,7 +108,7 @@ class PackSalesPageTest extends TestCase
         $html = $this->html();
 
         $this->assertMatchesRegularExpression('#<div\s+data-bottom-bar\s+data-install-avoid\s+class="fixed inset-x-0 bottom-0 z-40[^"]*lg:hidden"#', $html);
-        $this->assertMatchesRegularExpression('#data-test="packs-sticky-countdown">.*?<span x-text="days">2</span>&nbsp;j <span x-text="hours">3</span>&nbsp;h <span x-text="minutes">0</span>&nbsp;min#s', $html);
+        $this->assertMatchesRegularExpression('#data-test="packs-sticky-countdown">.*?<span x-text="days">2</span>&nbsp;j <span x-text="pad\(hours\)">03</span>&nbsp;h <span x-text="pad\(minutes\)">00</span>&nbsp;min <span x-text="pad\(seconds\)"[^>]*>00</span>&nbsp;s#s', $html);
         $this->assertMatchesRegularExpression('#<a href="\#offres" class="btn-gold[^"]*" data-test="packs-sticky-button">Je m\'inscris maintenant</a>#', $html);
         // Place réservée en bas de page (et le bouton d'Ama remonté au-dessus de la barre s'il est affiché).
         $this->assertMatchesRegularExpression('#<body class="[^"]*pb-24 lg:pb-0[^"]*has-sticky-cta#', $html);
