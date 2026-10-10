@@ -5,7 +5,9 @@ namespace Tests\Feature\Packs;
 use App\Models\AdminActivity;
 use App\Models\Formation;
 use App\Models\Purchase;
+use App\Models\SiteSetting;
 use App\Models\User;
+use App\Packs\PackSalesTexts;
 use App\Packs\PackSetup;
 use App\Packs\PackTexts;
 use App\Settings\SiteSettings;
@@ -31,6 +33,7 @@ class PackTextsTest extends TestCase
         foreach (PackSetup::PACKS as $pack) {
             Formation::query()->where('slug', $pack['slug'])->update(['description' => $pack['description']]);
         }
+        SiteSetting::query()->where('key', PackSalesTexts::SAVED_KEY)->delete();
         SiteSettings::save(['site.packs_page' => PackTexts::OLD_PAGE]);
     }
 

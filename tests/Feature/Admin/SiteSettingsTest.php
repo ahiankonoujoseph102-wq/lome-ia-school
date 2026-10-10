@@ -234,6 +234,8 @@ class SiteSettingsTest extends AdminTestCase
     public function test_settings_are_forbidden_to_students_and_moderators(): void
     {
         $student = User::factory()->create();
+        // Entrées déjà écrites par les migrations (textes de la page de vente des offres).
+        $logged = AdminActivity::query()->count();
 
         foreach ([$student, $this->moderator()] as $user) {
             $this->actingAs($user)->get(route('admin.settings.index'))->assertForbidden();
@@ -242,7 +244,7 @@ class SiteSettingsTest extends AdminTestCase
             $this->actingAs($user)->get(route('admin.activity.index'))->assertForbidden();
         }
 
-        $this->assertSame(0, AdminActivity::query()->count());
+        $this->assertSame($logged, AdminActivity::query()->count());
     }
 
     public function test_social_and_map_links_are_cleaned_before_being_checked(): void
