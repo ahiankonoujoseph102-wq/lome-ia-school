@@ -8,6 +8,7 @@ use App\Enums\FormationKind;
 use App\Services\ImageUploader;
 use App\Support\Money;
 use App\Support\YouTube;
+use Carbon\CarbonImmutable;
 use Database\Factories\FormationFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -47,6 +48,7 @@ use Illuminate\Support\Collection;
  * @property string|null $presentation_video_url Lien YouTube de la vidéo de présentation (formation gratuite).
  * @property bool $presentation_video_enabled Interrupteur « Afficher la vidéo » de la vidéo de présentation.
  * @property string|null $presentation_video_format Format choisi (horizontal, vertical) ; vide = automatique.
+ * @property CarbonImmutable|null $registration_ends_at Fin des inscriptions d'une offre d'accompagnement (heure de Lomé) ; vide = aucune limite.
  * @property-read string $formatted_price
  * @property-read string|null $image_url
  * @property-read EloquentCollection<int, Enrollment> $enrollments
@@ -84,6 +86,7 @@ class Formation extends Model
         'presentation_video_url',
         'presentation_video_enabled',
         'presentation_video_format',
+        'registration_ends_at',
     ];
 
     /**
@@ -117,6 +120,7 @@ class Formation extends Model
             'audience' => 'array',
             'event_date' => 'date',
             'presentation_video_enabled' => 'boolean',
+            'registration_ends_at' => 'datetime',
         ];
     }
 
@@ -387,6 +391,25 @@ class Formation extends Model
     public function freeRegistrationsClosed(): bool
     {
         return $this->event_date !== null && now()->startOfDay()->gt($this->event_date);
+    }
+
+    /**
+     * Fin des inscriptions d'une offre d'accompagnement (heure de Lomé), ou null : aucune limite. Les formations
+     * habituelles n'en ont jamais (voir App\Packs\PackDeadline).
+     */
+    public function registrationDeadline(): ?CarbonImmutable
+    {
+        return $this->isPack() ? $this->registration_ends_at : null;
+    }
+
+    /**
+     * Offre d'accompagnement dont la date de fin des inscriptions est passée : plus aucune nouvelle commande.
+     */
+    public function registrationsClosed(): bool
+    {
+        $deadline = $this->registrationDeadline();
+
+        return $deadline !== null && now()->greaterThanOrEqualTo($deadline);
     }
 
     /**

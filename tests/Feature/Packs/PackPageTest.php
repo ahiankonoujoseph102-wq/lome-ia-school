@@ -30,7 +30,9 @@ class PackPageTest extends TestCase
     {
         parent::setUp();
 
-        // Offres créées (masquées) par la migration ; leurs formations sont ajoutées ici.
+        // Offres créées (masquées) par la migration ; leurs formations sont ajoutées ici. Sans date de fin des
+        // inscriptions (aucune limite), pour que ces tests ne dépendent pas du jour où ils tournent (voir PackDeadlineTest).
+        Formation::query()->where('kind', 'pack')->update(['registration_ends_at' => null]);
         $this->packs = Formation::query()->where('kind', 'pack')->orderBy('sort_order')->get();
         $vip = Formation::query()->where('slug', 'groupe-vip')->sole();
         $this->chatgpt = Formation::factory()->create(['title' => 'Formation ChatGPT & Claude', 'price' => 5500]);
