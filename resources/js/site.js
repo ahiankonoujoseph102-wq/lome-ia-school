@@ -32,6 +32,7 @@ import {
 import { isPlaybackError, listeningMessage, PLAYER_ORIGIN } from './home-video.js';
 import { bottomOffset, createInstallState, isInstalled, isIos, overlaps } from './install-app.js';
 import { initAnimatedBackgrounds } from './animated-background.js';
+import { clockOffset, countdownParts } from './countdown.js';
 
 /**
  * Apparition douce des éléments marqués data-reveal, uniquement pour ceux encore sous l'écran.
@@ -281,6 +282,43 @@ async function copyToClipboard(text) {
         return done;
     }
 }
+
+/**
+ * Compte à rebours de la fin des inscriptions d'une offre d'accompagnement (composant x-site.pack-deadline) :
+ * date fixe du serveur, horloge du téléphone corrigée par l'heure du serveur, mise à jour toutes les 15 s.
+ * À zéro : « Inscriptions closes » et événement « pack-registrations-closed » (le bouton d'achat se masque).
+ */
+Alpine.data('packCountdown', ({ deadline, serverNow, slug }) => ({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    closed: false,
+    offset: 0,
+    timer: null,
+
+    init() {
+        this.offset = clockOffset(serverNow, Date.now());
+        this.tick();
+        this.timer = setInterval(() => this.tick(), 15000);
+    },
+
+    tick() {
+        const parts = countdownParts(deadline, Date.now() + this.offset);
+        this.days = parts.days;
+        this.hours = parts.hours;
+        this.minutes = parts.minutes;
+
+        if (parts.closed && !this.closed) {
+            this.closed = true;
+            clearInterval(this.timer);
+            window.dispatchEvent(new CustomEvent('pack-registrations-closed', { detail: { slug } }));
+        }
+    },
+
+    destroy() {
+        clearInterval(this.timer);
+    },
+}));
 
 Alpine.data('copyText', (text) => ({
     copied: false,

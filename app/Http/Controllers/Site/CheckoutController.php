@@ -49,8 +49,11 @@ class CheckoutController extends Controller
             }
         }
 
+        // Offre d'accompagnement dont la date de fin des inscriptions est passée : la page l'annonce, sans paiement.
+        $closed = $formation->registrationsClosed();
+
         // Un visiteur qui crée son compte ou se connecte depuis cette page y revient ensuite automatiquement (avec son code promo).
-        if (! $user) {
+        if (! $user && ! $closed) {
             $request->session()->put('url.intended', route('checkout.show', array_filter([$formation, 'code' => $quote ? $code : null])));
         }
 
@@ -72,6 +75,9 @@ class CheckoutController extends Controller
             'methods' => PaymentMethods::enabled()->map(fn (PaymentMethod $method): array => $method->toArray())->values()->all(),
             // Seuil appliqué au montant réellement payé (remise comprise).
             'needsVerification' => $amount >= PaymentMethods::verificationThreshold(),
+            'registrationsClosed' => $closed,
+            // Commande de cette offre envoyée avant la clôture (capture reçue, en attente de l'équipe) : elle reste valable.
+            'pendingPurchase' => $closed ? $user?->purchases()->awaitingVerification()->where('formation_id', $formation->id)->latest()->first() : null,
             'quote' => $quote,
             'promoCode' => $code,
             'promoError' => $promoError,

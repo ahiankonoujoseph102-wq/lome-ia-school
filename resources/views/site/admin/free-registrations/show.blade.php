@@ -60,7 +60,7 @@
         </div>
 
         @if ($formation->isFreeEnded() && $endedButton === null)
-            <p class="rounded-xl bg-night-900 px-3 py-2.5 text-sm text-gold-200 ring-1 ring-gold-500/60" data-test="free-ended-hidden-button">Aucune offre d'accompagnement n'est en vente : le bouton est masqué sur la page tant qu'aucune offre n'est publiée.</p>
+            <p class="rounded-xl bg-night-900 px-3 py-2.5 text-sm text-gold-200 ring-1 ring-gold-500/60" data-test="free-ended-hidden-button">Aucune offre d'accompagnement n'est en vente (aucune offre publiée, ou inscriptions closes) : le bouton est masqué sur la page tant qu'aucune offre n'est ouverte.</p>
         @elseif ($formation->isFreeEnded())
             <p class="text-sm text-emerald-200" data-test="free-ended-state">La page affiche « Formation terminée » et le bouton « {{ $endedButton['label'] }} ».</p>
         @endif

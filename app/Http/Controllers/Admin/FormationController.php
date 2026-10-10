@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
 use App\Models\Formation;
 use App\Packs\PackAccess;
+use App\Packs\PackDeadline;
 use App\Services\ImageUploader;
 use App\Settings\SiteSettings;
 use App\Support\Money;
@@ -82,7 +83,9 @@ class FormationController extends Controller
         abort_if($formation->isGroupOnly(), 404);
 
         $oldPrice = $formation->price;
+        $oldDeadline = $formation->registration_ends_at;
         $this->fill($formation, $request, $images);
+        $this->fillDeadline($formation, $request);
         $changes = array_keys($formation->getDirty());
         $included = $formation->isPack() ? $this->validatedIncluded($request, $formation) : null;
 
@@ -96,6 +99,10 @@ class FormationController extends Controller
 
         $details = $oldPrice !== $formation->price ? ' Prix : '.Money::fcfa($oldPrice).' → '.Money::fcfa($formation->price).'.' : '';
 
+        if (in_array('registration_ends_at', $changes, true)) {
+            $details .= ' Fin des inscriptions : '.PackDeadline::describe($oldDeadline).' → '.PackDeadline::describe($formation->registration_ends_at).'.';
+        }
+
         if (in_array('included_formations', $changes, true)) {
             $details .= ' Formations incluses : '.$formation->includedFormations()->pluck('title')->implode(' ; ').'.';
         }
@@ -103,6 +110,51 @@ class FormationController extends Controller
         ActivityLog::record(AdminAction::FormationUpdated, ($formation->isPack() ? 'Offre d\'accompagnement modifiée : ' : 'Formation modifiée : ').$formation->title.'.'.$details, $formation, ['fields' => $changes]);
 
         return back()->with('status', ($formation->isPack() ? 'Offre enregistrée.' : 'Formation enregistrée.').($oldPrice !== $formation->price ? ' Le nouveau prix s\'applique aux prochains achats ; les achats déjà faits gardent leur montant.' : ''));
+    }
+
+    /**
+     * Fin des inscriptions d'une offre (champ « date et heure », heure de Lomé ; vide = aucune limite). Formulaire
+     * envoyé sans ce champ (ancienne page restée ouverte) : la date reste telle quelle.
+     */
+    private function fillDeadline(Formation $formation, Request $request): void
+    {
+        if (! $formation->isPack() || ! $request->boolean('registration_deadline_sent')) {
+            return;
+        }
+
+        [$rules, $messages] = PackDeadline::rules();
+        $request->validate($rules, $messages);
+
+        $formation->registration_ends_at = PackDeadline::parse($request->string('registration_ends_at')->toString());
+    }
+
+    /**
+     * Même fin des inscriptions pour toutes les offres d'accompagnement en une fois (partie des offres de
+     * « Formations et prix »). Vide = aucune limite. Seule cette date change : prix, textes et achats restent tels quels.
+     */
+    public function updatePacksDeadline(Request $request): RedirectResponse
+    {
+        [$rules, $messages] = PackDeadline::rules();
+        $request->validate($rules, $messages);
+
+        $deadline = PackDeadline::parse($request->string('registration_ends_at')->toString());
+        $packs = Formation::query()->where('kind', FormationKind::Pack->value)->orderBy('sort_order')->orderBy('id')->get();
+
+        if ($packs->isEmpty()) {
+            return back();
+        }
+
+        DB::transaction(function () use ($packs, $deadline): void {
+            $packs->each(fn (Formation $pack) => $pack->forceFill(['registration_ends_at' => $deadline])->save());
+        });
+
+        ActivityLog::record(AdminAction::FormationUpdated, 'Fin des inscriptions des offres d\'accompagnement : '.PackDeadline::describe($deadline).' ('.$packs->pluck('title')->implode(' ; ').').', null, ['fields' => ['registration_ends_at']]);
+
+        $count = $packs->count().' '.($packs->count() > 1 ? 'offres' : 'offre');
+
+        return back()->with('status', $deadline
+            ? 'Fin des inscriptions réglée au '.PackDeadline::label($deadline).' pour les '.$count.'.'.($deadline->isPast() ? ' Cette date est déjà passée : les inscriptions sont closes.' : '')
+            : 'Fin des inscriptions retirée pour les '.$count.' : aucune limite.');
     }
 
     /**

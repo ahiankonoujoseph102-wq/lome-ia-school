@@ -29,10 +29,21 @@ class PacksPage
     }
 
     /**
-     * Au moins une offre d'accompagnement en vente (publiée) : la page /accompagnement est ouverte au public.
+     * Au moins une offre d'accompagnement publiée (même close) : la page /accompagnement est ouverte au public et le
+     * lien « Accompagnement » du menu est affiché (une offre close y montre « Inscriptions closes »).
+     */
+    public static function published(): bool
+    {
+        return Formation::query()->publishedPacks()->exists();
+    }
+
+    /**
+     * Au moins une offre d'accompagnement en vente : publiée et inscriptions encore ouvertes (aucune date de fin, ou
+     * date pas encore atteinte, voir Formation::registrationsClosed). Sert au bouton d'une formation gratuite terminée
+     * et à Ama : quand toutes les offres sont closes, ils n'orientent plus vers l'accompagnement.
      */
     public static function onSale(): bool
     {
-        return Formation::query()->publishedPacks()->exists();
+        return Formation::query()->publishedPacks()->get()->contains(fn (Formation $pack): bool => ! $pack->registrationsClosed());
     }
 }

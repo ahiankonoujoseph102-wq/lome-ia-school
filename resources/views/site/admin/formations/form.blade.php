@@ -79,6 +79,25 @@
             </section>
         @endif
 
+        @if ($isPack)
+            @php $deadline = $formation->registrationDeadline(); @endphp
+            <section class="card space-y-4 p-5 sm:p-6" data-test="pack-deadline-editor">
+                <div>
+                    <h2 class="font-semibold text-white">Fin des inscriptions</h2>
+                    <p class="mt-1 text-sm text-slate-400">Date et heure de Lomé. Après elles, le site refuse toute nouvelle commande de cette offre ; une capture déjà envoyée reste à valider ou refuser, et ceux qui ont l'offre gardent leurs accès. Vide : aucune limite.</p>
+                </div>
+                <input type="hidden" name="registration_deadline_sent" value="1">
+                <x-admin.field name="registration_ends_at" label="Fin des inscriptions" type="datetime-local" :value="\App\Packs\PackDeadline::input($deadline)" hint="Heure de Lomé (GMT). Exemple : 12/10/2026 16:00. Effacez le champ pour retirer la limite." data-test="pack-deadline-input" />
+                @if ($deadline)
+                    <p @class(['text-sm font-semibold', 'text-rose-300' => $formation->registrationsClosed(), 'text-emerald-200' => ! $formation->registrationsClosed()]) data-test="pack-deadline-status">
+                        {{ $formation->registrationsClosed() ? 'Inscriptions closes depuis le ' : 'Inscriptions ouvertes jusqu\'au ' }}{{ \App\Packs\PackDeadline::label($deadline) }}.
+                    </p>
+                @else
+                    <p class="text-sm text-slate-400" data-test="pack-deadline-status">Aucune limite : l'offre reste en vente tant qu'elle est visible.</p>
+                @endif
+            </section>
+        @endif
+
         <section @class(['card space-y-5 p-5 sm:p-6', 'hidden' => $isPack])>
             <h2 class="font-semibold text-white">Contenu de la page</h2>
             <x-admin.list-editor name="outcomes" label="Ce que vous allez apprendre" :items="$formation->outcomes ?? []" add-label="Ajouter un point" />

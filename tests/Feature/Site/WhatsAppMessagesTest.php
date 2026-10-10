@@ -13,6 +13,7 @@ use App\Models\Purchase;
 use App\Models\User;
 use App\Support\WhatsApp;
 use App\Support\WhatsAppMessages;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -104,6 +105,9 @@ class WhatsAppMessagesTest extends TestCase
 
     public function test_free_formation_and_its_full_screen(): void
     {
+        // Avant l'événement du 10 octobre 2026 : inscriptions ouvertes, sinon l'écran « Complet » n'existe plus (le test ne dépend pas du jour où il tourne).
+        $this->travelTo(CarbonImmutable::parse('2026-10-05 08:00', 'Africa/Lome'));
+
         $formation = Formation::factory()->create(['title' => 'Formation gratuite : utiliser l\'IA', 'price' => 0, 'event_date' => '2026-10-10']);
         $option = $formation->freeOptions()->create(['label' => 'En ligne soir', 'schedule' => '18 h à 20 h', 'mode' => 'online', 'capacity' => 1, 'position' => 1]);
 

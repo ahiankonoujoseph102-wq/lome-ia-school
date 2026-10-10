@@ -84,6 +84,9 @@
                         </p>
                     </div>
 
+                    {{-- Fin des inscriptions et compte à rebours (rien sans date, ni une fois la date passée). --}}
+                    <x-site.pack-deadline :pack="$pack" class="mt-4" />
+
                     <x-site.rich-text :text="$pack->description" class="mt-4 text-sm leading-relaxed text-pretty text-slate-300" data-test="pack-description" />
 
                     <div class="mt-5 rounded-2xl bg-night-900/70 p-4 shadow-[inset_0_0_0_1px_var(--color-night-700)]">
@@ -101,8 +104,14 @@
                     <div class="mt-6 lg:mt-auto lg:pt-6">
                         @if ($isOwned)
                             <a href="{{ route('student.formations.index') }}" class="btn-ghost w-full" data-test="pack-owned">Offre déjà active : voir mes formations</a>
+                        @elseif ($pack->registrationsClosed())
+                            {{-- Date de fin des inscriptions passée : plus de bouton d'achat (le serveur refuse aussi toute commande). --}}
+                            <p class="rounded-2xl bg-night-900 px-4 py-3 text-center font-semibold text-slate-200 shadow-[inset_0_0_0_1px_var(--color-night-600)]" data-test="pack-closed">Inscriptions closes</p>
                         @elseif ($pack->is_active)
-                            <a href="{{ route('checkout.show', $pack) }}" class="btn-gold w-full" data-test="pack-choose" data-ama-avoid data-install-avoid>Choisir cette offre</a>
+                            <div x-data="{ closed: false }" x-on:pack-registrations-closed.window="if ($event.detail.slug === @js($pack->slug)) closed = true">
+                                <a href="{{ route('checkout.show', $pack) }}" class="btn-gold w-full" x-show="! closed" data-test="pack-choose" data-ama-avoid data-install-avoid>Choisir cette offre</a>
+                                <p class="rounded-2xl bg-night-900 px-4 py-3 text-center font-semibold text-slate-200 shadow-[inset_0_0_0_1px_var(--color-night-600)]" x-show="closed" x-cloak>Inscriptions closes</p>
+                            </div>
                         @else
                             <span class="btn-ghost w-full cursor-not-allowed opacity-60">Choisir cette offre (offre masquée)</span>
                         @endif
