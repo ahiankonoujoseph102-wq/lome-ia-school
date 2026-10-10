@@ -47,7 +47,7 @@
 
                     @if ($open)
                         <div class="mt-6" x-data="{ closed: false }" x-on:pack-registrations-closed.window="if ({{ $closeOn }}) closed = true">
-                            <a href="#offres" class="btn-gold w-full !py-4 text-lg sm:w-auto sm:min-w-80" x-show="! closed" data-test="packs-hero-button" data-sticky-hide data-ama-avoid data-install-avoid>Je m'inscris maintenant</a>
+                            <a href="#offres" class="btn-gold w-full !py-4 text-lg sm:w-auto sm:min-w-80" x-show="! closed" data-test="packs-hero-button" data-sticky-hide data-ama-avoid data-ama-clear data-install-avoid>Je m'inscris maintenant</a>
                             <p class="rounded-2xl bg-night-900 px-4 py-3 text-center font-semibold text-slate-200 shadow-[inset_0_0_0_1px_var(--color-night-600)]" x-show="closed" x-cloak>Inscriptions closes</p>
                         </div>
                     @elseif ($allClosed)
@@ -168,7 +168,7 @@
                             <p class="rounded-2xl bg-night-900 px-4 py-3 text-center font-semibold text-slate-200 shadow-[inset_0_0_0_1px_var(--color-night-600)]" data-test="pack-closed">Inscriptions closes</p>
                         @elseif ($pack->is_active)
                             <div x-data="{ closed: false }" x-on:pack-registrations-closed.window="if ($event.detail.slug === @js($pack->slug) || {{ $deadline ? '$event.detail.deadline >= '.$deadline->getTimestampMs() : 'false' }}) closed = true">
-                                <a href="{{ route('checkout.show', $pack) }}" class="btn-gold w-full !py-4 text-lg" x-show="! closed" data-test="pack-choose" data-ama-avoid data-install-avoid>Je m'inscris maintenant</a>
+                                <a href="{{ route('checkout.show', $pack) }}" class="btn-gold w-full !py-4 text-lg" x-show="! closed" data-test="pack-choose" data-ama-avoid data-ama-clear data-install-avoid>Je m'inscris maintenant</a>
                                 <p class="rounded-2xl bg-night-900 px-4 py-3 text-center font-semibold text-slate-200 shadow-[inset_0_0_0_1px_var(--color-night-600)]" x-show="closed" x-cloak>Inscriptions closes</p>
                             </div>
                         @else
@@ -271,7 +271,7 @@
                         @if ($countdownDeadline)
                             <p class="mb-4 text-sm font-semibold text-gold-100">Inscriptions ouvertes jusqu'au {{ PackDeadline::label($countdownDeadline) }}</p>
                         @endif
-                        <a href="#offres" class="btn-gold w-full !py-4 text-lg sm:w-auto sm:min-w-80" data-test="packs-final-button" data-sticky-hide data-ama-avoid data-install-avoid>Je m'inscris maintenant</a>
+                        <a href="#offres" class="btn-gold w-full !py-4 text-lg sm:w-auto sm:min-w-80" data-test="packs-final-button" data-sticky-hide data-ama-avoid data-ama-clear data-install-avoid>Je m'inscris maintenant</a>
                     </div>
                     <p class="rounded-2xl bg-night-950 px-4 py-3 font-semibold text-slate-200 shadow-[inset_0_0_0_1px_var(--color-night-600)]" x-show="closed" x-cloak>Inscriptions closes</p>
                 </div>

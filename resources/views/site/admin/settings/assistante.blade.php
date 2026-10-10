@@ -132,6 +132,12 @@
                 'free' => 'Formation gratuite',
                 'ended' => 'Formation gratuite terminée (quand une offre d\'accompagnement est en vente)',
                 'checkout' => 'Paiement',
+                'pay_country' => 'Paiement, étape 1 (choix du pays)',
+                'pay_operator' => 'Paiement, étape 2 (choix de l\'opérateur)',
+                'pay_send' => 'Paiement, étape 3 (transfert Mobile Money)',
+                'pay_capture' => 'Paiement, étape 4 (envoi de la capture)',
+                'account' => 'Création du compte, connexion ou confirmation de l\'e-mail pendant une commande',
+                'packs' => 'Page Accompagnement (offres)',
                 'other' => 'Autres pages publiques (catalogue, À propos, Entreprises, Contact, Affiliation, Consultation)',
             ] as $type => $label)
                 <x-admin.field :name="'nudges['.$type.']'" :label="'Message : '.$label" :value="old('nudges.'.$type, VoiceAssistant::nudgeText($type))" :maxlength="VoiceAssistant::NUDGE_MAX_LENGTH" :hint="'Court : '.VoiceAssistant::NUDGE_MAX_LENGTH.' caractères au maximum. N\'écrivez ni promesse ni chiffre.'" />
