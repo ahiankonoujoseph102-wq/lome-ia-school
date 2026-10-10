@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\User;
 use App\Packs\PacksPage;
+use App\Packs\PackTrust;
 use App\Support\Testimonials;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -61,6 +62,8 @@ class PackController extends Controller
             'posterUrl' => PacksPage::posterUrl(),
             // Mêmes témoignages que l'accueil et les pages des formations (gérés dans l'admin, Témoignages).
             'testimonials' => Testimonials::all(),
+            // « Pourquoi nous faire confiance » : faits lus dans les réglages du site (App\Packs\PackTrust).
+            'trust' => PackTrust::facts(),
             'owned' => $user ? $user->enrollments()->whereIn('formation_id', $packs->modelKeys())->pluck('formation_id')->all() : [],
         ]);
     }

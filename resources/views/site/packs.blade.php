@@ -7,12 +7,13 @@
 
     /**
      * Page de vente des offres d'accompagnement : en-tête (affiche, promesse, compte à rebours, bouton), cartes
-     * compactes, témoignages, « Comment s'inscrire », « Dans toutes les offres », dernier bouton, et barre fixe sur téléphone.
+     * compactes, témoignages, « Pourquoi nous faire confiance », « Comment s'inscrire », « Dans toutes les offres », dernier bouton, et barre fixe sur téléphone.
      *
      * @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\Formation> $packs
      * @var \App\Models\Formation|null $countdownPack offre ouverte dont la date de fin est la plus proche
      * @var int|null $closesAt fin de la dernière offre ouverte (ms) : les boutons communs se masquent à cette heure
      * @var list<array<string, mixed>> $testimonials témoignages actifs (App\Support\Testimonials)
+     * @var list<array<string, mixed>> $trust faits du bloc de confiance (App\Packs\PackTrust)
      */
     // Textes fixes (config/site.php, clé packs_page ; App\Packs\PackSalesTexts). Une clé absente d'un réglage
     // enregistré plus ancien prend la valeur de départ.
@@ -210,6 +211,12 @@
             <x-site.section-heading eyebrow="Témoignages" title="Ce qu'en disent les élèves" />
             <x-site.testimonials :items="$testimonials" class="mt-8 sm:mt-10" />
         </section>
+    @endif
+
+    {{-- Pourquoi nous faire confiance : faits lus dans les réglages du site (App\Packs\PackTrust) ; une information
+         absente n'est pas affichée. --}}
+    @if ($trust)
+        @include('site.packs.partials.trust', ['facts' => $trust])
     @endif
 
     {{-- Comment s'inscrire : le vrai parcours de paiement Mobile Money du site (sans objet une fois tout clos). --}}
