@@ -94,7 +94,7 @@
                         </p>
                     </div>
 
-                    <p class="mt-4 text-sm leading-relaxed text-pretty text-slate-300" data-test="pack-description">{{ $pack->description }}</p>
+                    <x-site.rich-text :text="$pack->description" class="mt-4 text-sm leading-relaxed text-pretty text-slate-300" data-test="pack-description" />
 
                     <div class="mt-5 rounded-2xl bg-night-900/70 p-4 shadow-[inset_0_0_0_1px_var(--color-night-700)]">
                         <p class="text-sm font-semibold text-white">Ce qui est inclus</p>
