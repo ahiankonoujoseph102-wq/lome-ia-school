@@ -80,9 +80,11 @@
         </section>
 
         <section class="card space-y-4 p-5 sm:p-6">
-            <h2 class="font-semibold text-white">Image</h2>
+            <h2 class="font-semibold text-white">{{ $isPack ? 'Affiche de l\'offre' : 'Image' }}</h2>
             <x-site.formation-cover :formation="$formation" class="aspect-[16/10] w-full max-w-md rounded-2xl" />
-            <x-admin.field name="image" label="Nouvelle image" type="file" accept="image/png,image/jpeg,image/webp" hint="Depuis votre téléphone : elle est recadrée (format 16:10) et compressée automatiquement. Sans image, un visuel aux couleurs de la catégorie est dessiné." />
+            <x-admin.field name="image" label="Nouvelle image" type="file" accept="image/png,image/jpeg,image/webp" :hint="$isPack
+                ? 'JPEG, PNG ou WebP, 8 Mo au plus, format conseillé 1600 × 1000 pixels (recadrée en 16:10 et compressée). Affichée en haut de la carte de l\'offre ; sans image, la carte s\'affiche sans visuel.'
+                : 'Depuis votre téléphone : elle est recadrée (format 16:10) et compressée automatiquement. Sans image, un visuel aux couleurs de la catégorie est dessiné.'" />
             @if ($formation->image)
                 <label class="flex items-center gap-2 text-sm text-slate-300"><input type="checkbox" name="remove_image" value="1" class="size-4 accent-gold-400"> Retirer l'image</label>
             @endif

@@ -516,6 +516,16 @@ return [
 
     /*
     |----------------------------------------------------------------------
+    | Page des offres d'accompagnement (/accompagnement)
+    |----------------------------------------------------------------------
+    | Affiche en haut de la page : téléversée dans l'admin (Formations et prix, partie des offres),
+    | chemin sur le disque « public » ; vide = page sans affiche.
+    */
+
+    'packs_poster' => null,
+
+    /*
+    |----------------------------------------------------------------------
     | Page « Entreprises et centres de formation » (/entreprises)
     |----------------------------------------------------------------------
     | Tout se modifie dans l'admin (Réglages du site > Page Entreprises). Vidéo YouTube vide = bloc

@@ -258,6 +258,7 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::get('formations', [AdminFormationController::class, 'index'])->name('formations.index');
     Route::get('formations/nouvelle', [AdminFormationController::class, 'create'])->name('formations.create');
     Route::post('formations', [AdminFormationController::class, 'store'])->name('formations.store');
+    Route::put('formations/offres/affiche', [AdminFormationController::class, 'updatePacksPoster'])->name('formations.packs-poster');
     Route::get('formations/{formation}', [AdminFormationController::class, 'edit'])->name('formations.edit');
     Route::put('formations/{formation}', [AdminFormationController::class, 'update'])->name('formations.update');
     Route::get('formations/{formation}/inscriptions', [AdminFreeRegistrationController::class, 'show'])->name('free-registrations.show');

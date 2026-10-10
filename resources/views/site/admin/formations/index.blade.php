@@ -50,6 +50,28 @@
         <section class="mt-10" data-test="admin-packs">
             <h2 class="text-lg font-semibold text-white">Offres d'accompagnement</h2>
             <p class="mt-1 text-sm text-slate-400">Présentées ensemble sur la page {{ route('packs') }}, dans cet ordre (niveau 1, 2, 3). Tant qu'aucune offre n'est visible, cette page n'est pas accessible au public.</p>
+
+            @php $posterUrl = \App\Packs\PacksPage::posterUrl(); @endphp
+            <form method="POST" action="{{ route('admin.formations.packs-poster') }}" enctype="multipart/form-data" class="card mt-4 space-y-4 p-5 sm:p-6" data-test="packs-poster-form">
+                @csrf
+                @method('PUT')
+                <div>
+                    <h3 class="font-semibold text-white">Affiche de la page des offres</h3>
+                    <p class="mt-1 text-sm text-slate-400">Grande image affichée en haut de la page {{ route('packs') }}, comme l'affiche d'une formation. Sans affiche, la page s'affiche sans image. L'affiche propre à chaque offre se règle dans sa fiche (« Modifier et formations incluses », partie « Image ») et s'affiche en haut de sa carte.</p>
+                </div>
+                @if ($posterUrl)
+                    <div class="relative aspect-[16/10] w-full max-w-md overflow-hidden rounded-2xl bg-night-800 ring-1 ring-veil/10">
+                        <img src="{{ $posterUrl }}" alt="Affiche actuelle de la page des offres" class="absolute inset-0 size-full object-cover" data-test="packs-poster-current">
+                    </div>
+                @else
+                    <p class="text-sm text-slate-400" data-test="packs-poster-none">Aucune affiche pour le moment.</p>
+                @endif
+                <x-admin.field name="poster" :label="$posterUrl ? 'Nouvelle affiche' : 'Affiche'" type="file" accept="image/png,image/jpeg,image/webp" hint="JPEG, PNG ou WebP, 8 Mo au plus. Format conseillé : 1600 × 1000 pixels. Depuis votre téléphone : l'image est recadrée au format 16:10 et compressée automatiquement." />
+                @if ($posterUrl)
+                    <label class="flex items-center gap-2 text-sm text-slate-300"><input type="checkbox" name="remove_poster" value="1" class="size-4 accent-gold-400"> Retirer l'affiche</label>
+                @endif
+                <button type="submit" class="btn-gold w-full sm:w-auto">Enregistrer l'affiche</button>
+            </form>
             <ol class="mt-4 space-y-2">
                 @foreach ($packs as $pack)
                     @php $courses = $pack->includedFormations->reject->isGroupOnly(); @endphp

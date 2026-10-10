@@ -2,6 +2,11 @@
     use App\Support\Money;
 
     /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\Formation> $packs */
+    $page = [
+        'eyebrow' => 'Offres d\'accompagnement',
+        'title' => 'Accompagnement IA',
+        'subtitle' => 'Trois niveaux qui réunissent plusieurs formations du site. Choisissez celui qui correspond à votre projet.',
+    ];
     // Points communs aux offres (fournis par Joseph, octobre 2026).
     $common = [
         ['icon' => 'document-text', 'title' => 'Document, résumé et exercice', 'text' => 'Chaque formation est accompagnée d\'un document, d\'un résumé et d\'un exercice.'],
@@ -15,11 +20,35 @@
     title="Accompagnement IA"
     description="Trois offres d'accompagnement en intelligence artificielle avec Coach Joseph : plusieurs formations réunies, un groupe VIP et un accompagnement à vie. Paiement par Mobile Money."
 >
-    @include('site.partials.page-header', [
-        'eyebrow' => 'Offres d\'accompagnement',
-        'title' => 'Accompagnement IA',
-        'subtitle' => 'Trois niveaux qui réunissent plusieurs formations du site. Choisissez celui qui correspond à votre projet.',
-    ])
+    @if ($posterUrl)
+        {{-- Avec une affiche : même en-tête que la page d'une formation (affiche en premier sur téléphone, à droite sur ordinateur). --}}
+        <section class="relative isolate overflow-hidden" data-test="packs-hero-poster">
+            <div class="glow pointer-events-none absolute inset-0 -z-10"></div>
+            <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
+
+            <div class="mx-auto max-w-6xl px-4 pt-6 pb-12 sm:px-6 sm:pt-10 lg:pb-16">
+                <div class="grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
+                    <div class="order-2 lg:order-1">
+                        <span class="eyebrow" data-reveal>{{ $page['eyebrow'] }}</span>
+                        <h1 class="mt-4 text-3xl leading-tight font-bold tracking-tight text-balance text-white sm:text-5xl" data-reveal style="--reveal-delay: 60ms">{{ $page['title'] }}</h1>
+                        <p class="mt-4 max-w-2xl text-base text-pretty text-slate-300 sm:text-lg" data-reveal style="--reveal-delay: 120ms">{{ $page['subtitle'] }}</p>
+                    </div>
+
+                    <div class="order-1 lg:order-2" data-reveal>
+                        <div class="relative aspect-[16/10] overflow-hidden rounded-3xl bg-night-800 shadow-2xl shadow-electric-900/50 ring-1 ring-veil/10" data-test="packs-poster">
+                            <img src="{{ $posterUrl }}" alt="{{ $page['title'] }}" class="absolute inset-0 size-full object-cover" loading="eager" decoding="async" width="800" height="500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    @else
+        @include('site.partials.page-header', [
+            'eyebrow' => $page['eyebrow'],
+            'title' => $page['title'],
+            'subtitle' => $page['subtitle'],
+        ])
+    @endif
 
     <section class="mx-auto max-w-6xl px-4 sm:px-6" data-test="packs-page">
         @if ($preview)
@@ -37,6 +66,10 @@
                     $isOwned = in_array($pack->id, $owned, true);
                 @endphp
                 <li id="{{ $pack->slug }}" class="card flex scroll-mt-24 flex-col p-5 sm:p-6" data-test="pack-card" data-reveal style="--reveal-delay: {{ $loop->index * 60 }}ms">
+                    @if ($pack->image_url)
+                        {{-- Affiche propre à l'offre (envoyée dans sa fiche de l'admin) ; sans elle, la carte reste telle quelle. --}}
+                        <x-site.formation-cover :formation="$pack" class="mb-5 aspect-[16/10] rounded-2xl ring-1 ring-veil/10" data-test="pack-card-poster" />
+                    @endif
                     <p>
                         <span class="inline-flex rounded-full bg-night-900 px-3 py-1 text-xs font-semibold text-gold-200 ring-1 ring-gold-500/60">Niveau {{ $loop->iteration }}</span>
                         @unless ($pack->is_active)
