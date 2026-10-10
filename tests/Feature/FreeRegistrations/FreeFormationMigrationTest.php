@@ -43,6 +43,10 @@ class FreeFormationMigrationTest extends TestCase
         $this->assertSame([FreeOptionMode::Onsite, FreeOptionMode::Onsite, FreeOptionMode::Online, FreeOptionMode::Online], $options->pluck('mode')->all());
         $this->assertSame('9 h à 16 h (pause de 13 h à 14 h)', $options[0]->schedule);
 
+        // Depuis octobre 2026, une migration suivante la marque « terminée » ; avant cela, elle proposait ses options.
+        $this->assertTrue($formation->isFreeEnded());
+        $formation->forceFill(['free_ended' => false])->save();
+
         // Masquée : les visiteurs ne la voient pas ; l'admin peut la relire.
         $this->get('/formations/formation-gratuite-ia')->assertNotFound();
         $this->actingAs(User::factory()->admin()->create())->get('/formations/formation-gratuite-ia')->assertOk()->assertSee('Présentiel soir');
@@ -92,7 +96,8 @@ class FreeFormationMigrationTest extends TestCase
 
     public function test_ama_knows_the_free_formation_and_the_cheapest_paid_one_stays_the_reference(): void
     {
-        Formation::query()->where('slug', 'formation-gratuite-ia')->update(['is_active' => true]);
+        // Formation avant qu'elle soit marquée « terminée » (migration suivante) : inscriptions ouvertes.
+        Formation::query()->where('slug', 'formation-gratuite-ia')->update(['is_active' => true, 'free_ended' => false]);
         Formation::factory()->create(['title' => 'Formation payante exemple', 'price' => 5100]);
 
         $formations = AmaKnowledge::formations();

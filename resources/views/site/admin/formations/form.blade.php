@@ -14,6 +14,13 @@
         </x-slot:actions>
     @endif
 
+    @if ($editing && $formation->isFree() && $formation->kind === \App\Enums\FormationKind::Course)
+        <a href="{{ route('admin.free-registrations.show', $formation) }}" class="card flex items-center justify-between gap-3 p-4 text-sm text-slate-200 hover:text-white" data-test="free-ended-link">
+            <span>Inscriptions, vidéo de présentation et « Formation terminée »@if ($formation->isFreeEnded()) <span class="ml-1 rounded-full px-2 py-0.5 text-xs font-semibold text-gold-200 ring-1 ring-gold-500/60">Terminée</span>@endif</span>
+            <flux:icon.arrow-right class="size-5 shrink-0 text-gold-300" />
+        </a>
+    @endif
+
     @if ($errors->any())
         <x-site.alert type="error">Vérifiez les champs signalés : {{ $errors->first() }}</x-site.alert>
     @endif

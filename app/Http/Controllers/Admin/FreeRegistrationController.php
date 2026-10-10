@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\FreeRegistration;
 use App\Models\FreeRegistrationOption;
+use App\Support\InternalPath;
 use App\Support\PastedLink;
 use App\Support\PhoneNumber;
 use App\Support\YouTube;
@@ -190,6 +191,50 @@ class FreeRegistrationController extends Controller
         ActivityLog::record(AdminAction::FreeRegistrationUpdated, 'Vidéo de présentation modifiée : '.$formation->title.' ('.$detail.').', $formation);
 
         return to_route('admin.free-registrations.show', $formation)->with('status', 'Vidéo de présentation enregistrée.');
+    }
+
+    /**
+     * « Formation terminée » : interrupteur, texte et destination du bouton qui remplace l'inscription.
+     * La destination doit être une adresse interne du site (toute adresse externe est refusée).
+     * Les inscriptions existantes et le groupe des inscrits ne changent pas.
+     */
+    public function updateEnded(Request $request, Formation $formation): RedirectResponse
+    {
+        abort_unless($formation->isFree(), 404);
+
+        $validated = $request->validate([
+            'free_ended' => ['nullable', 'boolean'],
+            'free_ended_button_label' => ['nullable', 'string', 'max:80'],
+            'free_ended_button_url' => ['nullable', 'string', 'max:500'],
+        ], [
+            'free_ended_button_label.max' => 'Le texte du bouton est trop long (80 caractères au maximum).',
+            'free_ended_button_url.max' => 'L\'adresse est trop longue.',
+        ]);
+
+        $label = trim((string) preg_replace('/\s+/u', ' ', (string) ($validated['free_ended_button_label'] ?? '')));
+        $rawUrl = PastedLink::clean((string) ($validated['free_ended_button_url'] ?? ''));
+        $path = $rawUrl !== '' ? InternalPath::clean($rawUrl) : null;
+
+        if ($rawUrl !== '' && $path === null) {
+            throw ValidationException::withMessages(['free_ended_button_url' => 'Indiquez une adresse de ce site, par exemple /accompagnement. Les adresses d\'autres sites ne sont pas acceptées.']);
+        }
+
+        $ended = (bool) ($validated['free_ended'] ?? false);
+
+        $formation->forceFill([
+            'free_ended' => $ended,
+            // Valeurs par défaut non enregistrées : un champ vidé revient au texte et à la page d'origine.
+            'free_ended_button_label' => $label !== '' && $label !== Formation::ENDED_BUTTON_LABEL ? $label : null,
+            'free_ended_button_url' => $path !== null && $path !== Formation::ENDED_BUTTON_PATH ? $path : null,
+        ])->save();
+
+        ActivityLog::record(
+            AdminAction::FreeRegistrationUpdated,
+            'Formation terminée : '.$formation->title.' ('.($ended ? 'oui' : 'non').', bouton « '.$formation->endedButtonLabel().' » vers '.$formation->endedButtonPath().').',
+            $formation,
+        );
+
+        return to_route('admin.free-registrations.show', $formation)->with('status', $ended ? 'La formation est marquée comme terminée.' : 'La formation n\'est plus marquée comme terminée.');
     }
 
     public function export(Formation $formation): StreamedResponse
