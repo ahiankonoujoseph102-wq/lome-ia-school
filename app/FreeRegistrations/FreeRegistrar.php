@@ -26,10 +26,18 @@ use Illuminate\Validation\ValidationException;
  */
 class FreeRegistrar
 {
+    public const string ENDED_REGISTER = 'Cette formation est terminée : les inscriptions sont fermées.';
+
+    public const string ENDED_CANCEL = 'Cette formation est terminée : l\'inscription ne peut plus être annulée.';
+
     public function register(User $user, Formation $formation, ?int $optionId): FreeRegistration
     {
         if (! $formation->isFree() || ! $formation->is_active) {
             throw ValidationException::withMessages(['option' => 'Cette formation n\'est pas ouverte à l\'inscription gratuite.']);
+        }
+
+        if ($formation->isFreeEnded()) {
+            throw ValidationException::withMessages(['option' => self::ENDED_REGISTER]);
         }
 
         if ($formation->freeRegistrationsClosed()) {
@@ -89,6 +97,10 @@ class FreeRegistrar
 
     public function cancel(User $user, Formation $formation): void
     {
+        if ($formation->isFreeEnded()) {
+            throw ValidationException::withMessages(['option' => self::ENDED_CANCEL]);
+        }
+
         if ($formation->freeRegistrationsClosed()) {
             throw ValidationException::withMessages(['option' => 'La formation a déjà eu lieu : l\'inscription ne peut plus être annulée.']);
         }
