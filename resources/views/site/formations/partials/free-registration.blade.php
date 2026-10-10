@@ -53,7 +53,7 @@
                 @if ($option?->isOnsite() && $formation->event_location)
                     <div class="flex gap-3 py-3"><dt class="w-24 shrink-0 text-sm text-slate-400">Adresse</dt><dd class="font-semibold text-white">{{ $formation->event_location }}</dd></div>
                 @elseif ($option && ! $option->isOnsite())
-                    <div class="flex gap-3 py-3"><dt class="w-24 shrink-0 text-sm text-slate-400">En ligne</dt><dd class="text-white"><span class="font-semibold">Sur Google Meet.</span> Le lien Google Meet sera publié dans le groupe des inscrits.</dd></div>
+                    <div class="flex gap-3 py-3"><dt class="w-24 shrink-0 text-sm text-slate-400">En ligne</dt><dd class="text-white"><span class="font-semibold">Sur Google Meet.</span> {{ $ended ? 'Le lien Google Meet a été publié dans le groupe des inscrits.' : 'Le lien Google Meet sera publié dans le groupe des inscrits.' }}</dd></div>
                 @endif
             </dl>
 

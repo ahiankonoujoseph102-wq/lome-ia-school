@@ -164,6 +164,7 @@ class FreeFormationEndedTest extends TestCase
 
         $this->actingAs($student)->get(route('formations.show', $formation))->assertOk()
             ->assertSee('Vous avez participé à cette formation')
+            ->assertSee('Le lien Google Meet a été publié dans le groupe des inscrits.')
             ->assertSee('data-test="free-registered"', false)
             ->assertSee('En ligne soir')
             ->assertSee('data-test="free-open-group"', false)
