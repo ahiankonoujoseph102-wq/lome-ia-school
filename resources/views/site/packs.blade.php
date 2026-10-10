@@ -2,18 +2,8 @@
     use App\Support\Money;
 
     /** @var \Illuminate\Database\Eloquent\Collection<int, \App\Models\Formation> $packs */
-    $page = [
-        'eyebrow' => 'Offres d\'accompagnement',
-        'title' => 'Accompagnement IA',
-        'subtitle' => 'Trois niveaux qui réunissent plusieurs formations du site. Choisissez celui qui correspond à votre projet.',
-    ];
-    // Points communs aux offres (fournis par Joseph, octobre 2026).
-    $common = [
-        ['icon' => 'document-text', 'title' => 'Document, résumé et exercice', 'text' => 'Chaque formation est accompagnée d\'un document, d\'un résumé et d\'un exercice.'],
-        ['icon' => 'chat-bubble-left-right', 'title' => 'Accès au groupe VIP', 'text' => null],
-        ['icon' => 'heart', 'title' => 'Accompagnement à vie', 'text' => null],
-        ['icon' => 'academic-cap', 'title' => 'Attestation de participation à la fin', 'text' => null],
-    ];
+    // Textes fixes de la page (config/site.php, clé packs_page ; nouveaux textes : app:pack-texts-apply).
+    $page = (array) config('site.packs_page');
 @endphp
 
 <x-layouts::site
@@ -123,16 +113,16 @@
     </section>
 
     <section class="section">
-        <x-site.section-heading eyebrow="Dans toutes les offres" title="Ce que chaque offre comprend" />
+        <x-site.section-heading :eyebrow="$page['common_eyebrow']" :title="$page['common_title']" />
         <ul class="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-2" data-test="packs-common">
-            @foreach ($common as $item)
+            @foreach ((array) ($page['common'] ?? []) as $item)
                 <li class="flex items-start gap-3 rounded-2xl bg-veil/[0.04] p-4 ring-1 ring-veil/10" data-reveal style="--reveal-delay: {{ $loop->index * 40 }}ms">
                     <span class="grid size-9 shrink-0 place-items-center rounded-full bg-electric-500/15 text-electric-200 ring-1 ring-electric-400/30">
                         <flux:icon :icon="$item['icon']" class="size-5" />
                     </span>
                     <span class="pt-1.5">
                         <span class="block font-semibold text-white">{{ $item['title'] }}</span>
-                        @if ($item['text'])
+                        @if (filled($item['text'] ?? null))
                             <span class="mt-0.5 block text-sm text-slate-300">{{ $item['text'] }}</span>
                         @endif
                     </span>
@@ -140,7 +130,7 @@
             @endforeach
         </ul>
         <p class="mx-auto mt-8 max-w-2xl text-center text-sm text-slate-400">
-            Paiement par Mobile Money : vous envoyez le montant, puis la capture de votre transfert, comme pour toutes les formations du site.
+            {{ $page['payment_note'] }}
         </p>
     </section>
 </x-layouts::site>

@@ -524,6 +524,24 @@ return [
 
     'packs_poster' => null,
 
+    // Textes fixes de la page. Valeurs de départ = textes d'origine ; les nouveaux textes s'appliquent avec
+    // « php artisan app:pack-texts-apply » et se retirent avec « php artisan app:pack-texts-revert »
+    // (App\Packs\PackTexts, réglage enregistré en base sous la clé site.packs_page).
+    'packs_page' => [
+        'eyebrow' => 'Offres d\'accompagnement',
+        'title' => 'Accompagnement IA',
+        'subtitle' => 'Trois niveaux qui réunissent plusieurs formations du site. Choisissez celui qui correspond à votre projet.',
+        'common_eyebrow' => 'Dans toutes les offres',
+        'common_title' => 'Ce que chaque offre comprend',
+        'common' => [
+            ['icon' => 'document-text', 'title' => 'Document, résumé et exercice', 'text' => 'Chaque formation est accompagnée d\'un document, d\'un résumé et d\'un exercice.'],
+            ['icon' => 'chat-bubble-left-right', 'title' => 'Accès au groupe VIP', 'text' => ''],
+            ['icon' => 'heart', 'title' => 'Accompagnement à vie', 'text' => ''],
+            ['icon' => 'academic-cap', 'title' => 'Attestation de participation à la fin', 'text' => ''],
+        ],
+        'payment_note' => 'Paiement par Mobile Money : vous envoyez le montant, puis la capture de votre transfert, comme pour toutes les formations du site.',
+    ],
+
     /*
     |----------------------------------------------------------------------
     | Page « Entreprises et centres de formation » (/entreprises)
