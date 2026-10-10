@@ -2,6 +2,7 @@
 
 namespace App\Packs;
 
+use App\Models\Formation;
 use App\Support\FileStorage;
 
 /**
@@ -25,5 +26,13 @@ class PacksPage
     public static function posterUrl(): ?string
     {
         return FileStorage::publicUrl(self::posterPath());
+    }
+
+    /**
+     * Au moins une offre d'accompagnement en vente (publiée) : la page /accompagnement est ouverte au public.
+     */
+    public static function onSale(): bool
+    {
+        return Formation::query()->publishedPacks()->exists();
     }
 }

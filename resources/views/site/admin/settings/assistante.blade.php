@@ -130,6 +130,7 @@
                 'home' => 'Accueil',
                 'formation' => 'Page d\'une formation',
                 'free' => 'Formation gratuite',
+                'ended' => 'Formation gratuite terminée (quand une offre d\'accompagnement est en vente)',
                 'checkout' => 'Paiement',
                 'other' => 'Autres pages publiques (catalogue, À propos, Entreprises, Contact, Affiliation, Consultation)',
             ] as $type => $label)

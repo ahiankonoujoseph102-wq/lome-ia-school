@@ -1,6 +1,8 @@
 @php
     $links = [
         ['route' => 'formations.index', 'active' => 'formations.*', 'label' => 'Formations'],
+        // Offres d'accompagnement : lien seulement quand au moins une offre est publiée (sinon la page est fermée).
+        ...(($packsOnSale = \App\Packs\PacksPage::onSale()) ? [['route' => 'packs', 'active' => 'packs', 'label' => 'Accompagnement', 'test' => 'menu-packs']] : []),
         ['route' => 'consultation', 'active' => 'consultation', 'label' => 'Consultation gratuite'],
         ['route' => 'business', 'active' => 'business', 'label' => 'Entreprises'],
         ['route' => 'about', 'active' => 'about', 'label' => 'À propos'],
@@ -28,11 +30,12 @@
                     <a
                         href="{{ route($link['route']) }}"
                         @class([
-                            'rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition xl:px-4',
+                            'rounded-full px-2.5 py-2 text-sm font-medium whitespace-nowrap transition xl:px-4',
                             'bg-veil/10 text-white' => request()->routeIs($link['active']),
                             'text-slate-300 hover:bg-veil/5 hover:text-white' => ! request()->routeIs($link['active']),
                         ])
                         @if (request()->routeIs($link['active'])) aria-current="page" @endif
+                        @isset($link['test']) data-test="{{ $link['test'] }}" @endisset
                     >{{ $link['label'] }}</a>
                 @endforeach
             </div>
@@ -97,7 +100,8 @@
                 @else
                     <a href="{{ route('login') }}" class="hidden rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-slate-200 transition hover:text-white sm:inline-flex xl:px-4">Connexion</a>
                 @endauth
-                <a href="{{ route('formations.index') }}" class="btn-gold hidden !px-5 !py-2.5 !text-sm whitespace-nowrap md:inline-flex lg:hidden xl:inline-flex">Voir les formations</a>
+                {{-- Avec le lien « Accompagnement », le menu est plein sur grand écran : le bouton (doublon du lien « Formations ») n'y reste que sur tablette. --}}
+                <a href="{{ route('formations.index') }}" @class(['btn-gold hidden !px-5 !py-2.5 !text-sm whitespace-nowrap md:inline-flex lg:hidden', 'xl:inline-flex' => ! $packsOnSale])>Voir les formations</a>
 
                 <button
                     type="button"

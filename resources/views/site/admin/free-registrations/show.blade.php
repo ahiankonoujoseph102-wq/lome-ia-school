@@ -11,6 +11,8 @@
     $videoFormat = old('presentation_video_format', YouTube::format($videoUrl, $formation->presentation_video_format));
     $videoFormats = ['horizontal' => ['Horizontal', 'Filmée à l\'horizontale (16:9)'], 'vertical' => ['Vertical (téléphone)', 'Filmée au téléphone, tenu droit (9:16)']];
     $videoShown = $formation->presentationVideoId() !== null;
+    $ended = (bool) old('free_ended', $formation->free_ended);
+    $endedButton = $formation->endedButton();
 @endphp
 
 <x-admin.page :title="'Inscriptions : '.$formation->title" subtitle="Formation gratuite : inscrits par option, places prises et réglages de l'inscription." :back="route('admin.formations.index')" back-label="Formations" width="max-w-4xl">
@@ -28,6 +30,43 @@
         ])>{{ $formation->is_active ? 'Visible' : 'Masquée' }}</span>
         <a href="{{ route('formations.show', $formation) }}" class="font-semibold text-electric-300 hover:text-white">Voir la page</a>
     </div>
+
+    {{-- Formation terminée : page au passé, inscriptions et annulations fermées, bouton vers l'accompagnement --}}
+    <form method="POST" action="{{ route('admin.free-registrations.ended', $formation) }}" class="card space-y-5 p-5 sm:p-6" data-test="free-ended-settings">
+        @csrf
+        @method('PUT')
+        <div>
+            <h2 class="text-lg font-semibold text-white">Formation terminée</h2>
+            <p class="mt-1 text-sm text-slate-400">Allumé : la page reste en ligne mais n'invite plus à s'inscrire (pastille « Formation terminée », ni prix, ni options, ni places, ni annulation) et affiche un grand bouton à la place. Personne ne peut plus s'inscrire ni annuler. Les inscrits et le groupe des inscrits ne changent pas.</p>
+        </div>
+
+        @if ($errors->has('free_ended_button_url') || $errors->has('free_ended_button_label'))
+            <x-site.alert type="error">{{ $errors->first('free_ended_button_url') ?: $errors->first('free_ended_button_label') }}</x-site.alert>
+        @endif
+
+        <label class="flex cursor-pointer items-start justify-between gap-4" data-test="free-ended-toggle">
+            <span class="min-w-0">
+                <span class="block font-semibold text-white">Formation terminée</span>
+                <span class="block text-sm text-slate-400">Éteint : la page se comporte comme avant.</span>
+            </span>
+            <input type="hidden" name="free_ended" value="0">
+            <input type="checkbox" name="free_ended" value="1" @checked($ended) class="peer sr-only">
+            <span class="relative mt-0.5 h-7 w-12 shrink-0 rounded-full bg-veil/10 ring-1 ring-veil/20 transition peer-checked:bg-emerald-500/30 peer-checked:ring-emerald-400 peer-focus-visible:outline-2 peer-focus-visible:outline-gold-300 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full after:bg-slate-400 after:transition peer-checked:after:translate-x-5 peer-checked:after:bg-emerald-300" aria-hidden="true"></span>
+        </label>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+            <x-admin.field name="free_ended_button_label" label="Texte du bouton" :value="$formation->free_ended_button_label" :placeholder="\App\Models\Formation::ENDED_BUTTON_LABEL" maxlength="80" hint="Vide : « Découvrir l'accompagnement »." />
+            <x-admin.field name="free_ended_button_url" label="Destination du bouton" type="url" :value="$formation->free_ended_button_url" :placeholder="\App\Models\Formation::ENDED_BUTTON_PATH" hint="Une page de ce site seulement, par exemple /accompagnement ou /formations. Vide : /accompagnement." />
+        </div>
+
+        @if ($formation->isFreeEnded() && $endedButton === null)
+            <p class="rounded-xl bg-night-900 px-3 py-2.5 text-sm text-gold-200 ring-1 ring-gold-500/60" data-test="free-ended-hidden-button">Aucune offre d'accompagnement n'est en vente : le bouton est masqué sur la page tant qu'aucune offre n'est publiée.</p>
+        @elseif ($formation->isFreeEnded())
+            <p class="text-sm text-emerald-200" data-test="free-ended-state">La page affiche « Formation terminée » et le bouton « {{ $endedButton['label'] }} ».</p>
+        @endif
+
+        <button type="submit" class="btn-gold w-full sm:w-auto" data-test="free-ended-save">Enregistrer</button>
+    </form>
 
     {{-- Vidéo de présentation : au-dessus du bloc d'inscription de la page publique. Un lien Shorts choisit « Vertical ». --}}
     <form method="POST" action="{{ route('admin.free-registrations.video', $formation) }}" class="card space-y-5 p-5 sm:p-6" x-data="{ format: @js($videoFormat) }" data-test="free-video-settings">
