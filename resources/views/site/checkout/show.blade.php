@@ -3,7 +3,9 @@
     $activeTab = old('form') === 'login' ? 'login' : 'register';
     $moduleCount = $formation->publicCurriculum()->count();
     $lessonCount = $formation->orderedPublishedLessons()->count();
-    $paying = $user && ! $alreadyEnrolled;
+    // Offre d'accompagnement dont la date de fin des inscriptions est passée : aucun paiement proposé.
+    $closed = $registrationsClosed && ! $alreadyEnrolled;
+    $paying = $user && ! $alreadyEnrolled && ! $closed;
     // Message WhatsApp de l'en-tête : formation et étape affichée (mis à jour par le paiement à chaque étape).
     $whatsappMessage = \App\Support\WhatsAppMessages::payment($formation, null, \App\Support\WhatsAppMessages::paymentStep($user, $unverifiedPurchase ?? null, (bool) $alreadyEnrolled));
 @endphp
@@ -20,7 +22,7 @@
             <h1 class="mt-4 text-2xl font-bold tracking-tight text-white sm:text-4xl">Récapitulatif de commande</h1>
 
             {{-- Étapes du parcours (le paiement a ensuite ses propres étapes numérotées) --}}
-            @guest
+            @if (! $user && ! $closed)
             <ol class="mt-6 flex items-center gap-2 text-xs font-semibold sm:text-sm" aria-label="Étapes de la commande">
                 @foreach (['Mon compte', 'Paiement', 'Accès à la formation'] as $step)
                     @php $done = $loop->first && $user; $current = ($loop->first && ! $user) || ($loop->index === 1 && $user); @endphp
@@ -44,7 +46,7 @@
                     </li>
                 @endforeach
             </ol>
-            @endguest
+            @endif
 
             <div class="mt-6 grid sm:mt-8 items-start gap-6 lg:grid-cols-[1fr_380px]">
                 {{-- Colonne principale --}}
@@ -53,6 +55,17 @@
                         <div class="card p-6">
                             <x-site.alert>Vous avez déjà accès à cette formation.</x-site.alert>
                             <a href="{{ route('student.formations.show', $formation) }}" class="btn-gold mt-5 w-full sm:w-auto">Ouvrir la formation</a>
+                        </div>
+                    @elseif ($closed)
+                        <div class="card p-6" data-test="checkout-closed">
+                            <x-site.alert>{{ \App\Packs\PackDeadline::CLOSED_MESSAGE }}</x-site.alert>
+                            @if ($pendingPurchase)
+                                {{-- Commande envoyée avant la clôture : elle reste valable et sera vérifiée. --}}
+                                <p class="mt-4 text-sm text-slate-300" data-test="checkout-closed-pending">Votre capture de paiement a bien été reçue avant la clôture : votre commande reste valable et sera vérifiée par notre équipe.</p>
+                                <a href="{{ route('student.purchases.show', $pendingPurchase) }}" class="btn-ghost mt-5 w-full sm:w-auto">Suivre mon achat</a>
+                            @else
+                                <a href="{{ route('formations.index') }}" class="btn-ghost mt-5 w-full sm:w-auto">Voir les formations</a>
+                            @endif
                         </div>
                     @elseif ($user)
                         @include('site.checkout.partials.payment')
@@ -95,6 +108,9 @@
                                 <x-site.formation-formats :formation="$formation" class="mt-2" />
                             </div>
 
+                            {{-- Offre d'accompagnement : fin des inscriptions et compte à rebours (tant que la date n'est pas passée). --}}
+                            <x-site.pack-deadline :pack="$formation" />
+
                             <div @class(['hidden lg:block' => $paying])>
                                 <p class="text-sm font-semibold text-white">Ce qui est inclus</p>
                                 <ul class="mt-3 space-y-2.5 text-sm text-slate-300">
@@ -126,7 +142,7 @@
                             </div>
 
                             {{-- Code promo : le montant à payer tient compte de la remise --}}
-                            @unless ($alreadyEnrolled)
+                            @unless ($alreadyEnrolled || $closed)
                                 <details class="group border-t border-veil/10 pt-4" @if ($promoCode !== '') open @endif>
                                     <summary class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-electric-200">
                                         Vous avez un code promo ?
