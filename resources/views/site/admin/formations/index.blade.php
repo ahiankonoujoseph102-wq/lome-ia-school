@@ -72,6 +72,19 @@
                 @endif
                 <button type="submit" class="btn-gold w-full sm:w-auto">Enregistrer l'affiche</button>
             </form>
+            @php
+                $deadlines = $packs->map(fn ($pack) => \App\Packs\PackDeadline::input($pack->registrationDeadline()))->unique();
+            @endphp
+            <form method="POST" action="{{ route('admin.formations.packs-deadline') }}" class="card mt-4 space-y-4 p-5 sm:p-6" data-test="packs-deadline-form">
+                @csrf
+                @method('PUT')
+                <div>
+                    <h3 class="font-semibold text-white">Fin des inscriptions de toutes les offres</h3>
+                    <p class="mt-1 text-sm text-slate-400">Règle la même date et la même heure (heure de Lomé) pour les {{ $packs->count() }} offres en une fois. Après elles, le site refuse toute nouvelle commande ; une capture déjà envoyée reste à valider ou refuser, et ceux qui ont une offre gardent leurs accès. Vide : aucune limite. Chaque offre peut aussi avoir sa propre date dans sa fiche.</p>
+                </div>
+                <x-admin.field name="registration_ends_at" label="Fin des inscriptions" type="datetime-local" :value="$deadlines->count() === 1 ? $deadlines->first() : ''" :hint="$deadlines->count() > 1 ? 'Les offres ont aujourd\'hui des dates différentes (voir la liste ci-dessous).' : 'Heure de Lomé (GMT). Exemple : 12/10/2026 16:00.'" id="champ-packs-registration-ends-at" />
+                <button type="submit" class="btn-gold w-full sm:w-auto">Appliquer aux {{ $packs->count() }} offres</button>
+            </form>
             <ol class="mt-4 space-y-2">
                 @foreach ($packs as $pack)
                     @php $courses = $pack->includedFormations->reject->isGroupOnly(); @endphp
@@ -88,6 +101,13 @@
                                 <span class="text-slate-400">{{ $courses->count() }} {{ $courses->count() > 1 ? 'formations incluses' : 'formation incluse' }}{{ $pack->includedFormations->contains->isGroupOnly() ? ' + Groupe VIP' : '' }}</span>
                                 <span class="text-slate-400">{{ $pack->sales_count }} {{ $pack->sales_count > 1 ? 'ventes validées' : 'vente validée' }}</span>
                             </p>
+                            @if ($deadline = $pack->registrationDeadline())
+                                <p @class(['mt-1 text-sm', 'text-rose-300' => $pack->registrationsClosed(), 'text-slate-300' => ! $pack->registrationsClosed()]) data-test="pack-row-deadline">
+                                    {{ $pack->registrationsClosed() ? 'Inscriptions closes depuis le ' : 'Inscriptions jusqu\'au ' }}{{ \App\Packs\PackDeadline::label($deadline) }}
+                                </p>
+                            @else
+                                <p class="mt-1 text-sm text-slate-400" data-test="pack-row-deadline">Inscriptions : aucune limite</p>
+                            @endif
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <form method="POST" action="{{ route('admin.formations.move', [$pack, 'up']) }}">@csrf<button class="grid size-9 place-items-center rounded-full text-slate-300 ring-1 ring-veil/15 hover:bg-veil/10 disabled:opacity-30" @disabled($loop->first) aria-label="Monter {{ $pack->title }}"><flux:icon.chevron-up class="size-4" /></button></form>
