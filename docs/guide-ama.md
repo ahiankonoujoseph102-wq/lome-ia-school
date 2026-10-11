@@ -132,3 +132,13 @@ En bref : formation affichée « Gratuit » ; d'abord « Créer mon compte », p
 - Après l'inscription : « Vous êtes inscrit(e) », e-mail de confirmation (option, date, horaires, adresse du présentiel ; en ligne, le lien Google Meet est publié dans le groupe des inscrits), accès au groupe des inscrits (« Ouvrir le groupe des inscrits », aussi dans « Groupes »).
 - Changer d'option ou ne plus venir : « Annuler mon inscription » sur la page de la formation (la place est libérée et l'on quitte le groupe), puis se réinscrire s'il reste des places. Aucun paiement, aucune capture, rien à rembourser.
 - Formation terminée : la page affiche « Formation terminée », sans prix, sans options et sans bouton d'inscription. On ne peut plus s'y inscrire ni annuler. Le grand bouton de la page (par exemple « Découvrir l'accompagnement ») mène vers la suite proposée. Une personne inscrite voit « Vous avez participé à cette formation » et garde « Ouvrir le groupe des inscrits ».
+
+## 14. S'inscrire à une offre d'accompagnement
+
+En bref : page « Accompagnement », trois niveaux (chacun comprend le précédent) ; « Je m'inscris maintenant » sur la carte du niveau, puis compte, e-mail confirmé et paiement Mobile Money en 4 étapes ; date de fin des inscriptions affichée.
+
+- Sur la page « Accompagnement » : chaque carte montre le niveau, le prix, le total des formations achetées séparément, l'accès (dès l'envoi de la capture ou après vérification) et « Voir tout ce qui est inclus » (formations incluses et groupe VIP). Le compte à rebours montre le temps restant avant la fin des inscriptions.
+- « Je m'inscris maintenant » sur la carte ouvre le récapitulatif de commande de l'offre. Sans compte : « Créer un compte » (nom, numéro WhatsApp, e-mail, mot de passe) ou « J'ai déjà un compte », sur la même page ; on revient ensuite tout seul à ce récapitulatif.
+- Confirmer son adresse e-mail avec le code à 6 chiffres reçu par e-mail. Pas reçu : regarder dans les courriers indésirables (spam), puis « Renvoyer le code » ; adresse mal tapée : la corriger sur la même page. Mot de passe oublié : « Mot de passe oublié ? » sur la page de connexion.
+- Paiement : choisir son pays, puis son opérateur, envoyer exactement le montant affiché au numéro affiché (vérifier le nom du bénéficiaire), puis « Envoyer la capture de mon paiement ». Capture refusée : une vraie capture d'écran (pas un PDF), pas trop lourde, jamais déjà envoyée.
+- Après la date de fin : « Inscriptions closes », plus aucun paiement possible ; une capture envoyée avant reste vérifiée par l'équipe.

@@ -1028,6 +1028,8 @@ Alpine.data('voiceAssistant', (config) => ({
     nudgeWatch: null,
     nudgeTimer: null,
     nudgeHideTimer: null,
+    // Étape du paiement affichée (1 à 4), envoyée par le composant de paiement.
+    paymentStep: null,
     swipe: null,
 
     init() {
@@ -1107,6 +1109,11 @@ Alpine.data('voiceAssistant', (config) => ({
 
         if (typeof values.numero_etape === 'number') {
             this.watchStep(values.numero_etape);
+            this.paymentStep = values.numero_etape;
+            // Bulle affichée pendant le paiement : elle suit l'étape en cours.
+            if (this.nudge && config.nudge?.steps?.[this.paymentStep]) {
+                this.nudgeText = config.nudge.steps[this.paymentStep];
+            }
         }
 
         if (JSON.stringify(this.context) !== before) {
@@ -1267,6 +1274,10 @@ Alpine.data('voiceAssistant', (config) => ({
 
         // « Bonjour » ou « Bonsoir » selon l'heure du téléphone, avec le prénom si la personne est connectée.
         this.nudgeText = this.greet(config.nudge?.text ?? '');
+        // Paiement : texte de l'étape affichée (pays, opérateur, transfert, capture) s'il y en a un.
+        if (config.nudge?.steps?.[this.paymentStep]) {
+            this.nudgeText = this.greet(config.nudge.steps[this.paymentStep]);
+        }
         this.nudge = true;
         this.$nextTick(() => this.checkCovering());
         // La page change sous la bulle (étape suivante du paiement, menu ouvert…) : la place est revérifiée deux fois
@@ -2057,6 +2068,10 @@ const initAmaClearance = () => {
 
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);
+    // La page change sans défiler (étape suivante du paiement, onglet du compte, détail ouvert) : place revérifiée.
+    window.addEventListener('ama-context', () => setTimeout(schedule, 50));
+    document.addEventListener('click', () => setTimeout(schedule, 50), { passive: true });
+    document.addEventListener('toggle', schedule, true);
     schedule();
 };
 

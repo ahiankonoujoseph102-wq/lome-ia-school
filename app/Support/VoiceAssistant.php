@@ -53,6 +53,7 @@ class VoiceAssistant
         'home' => ['page d\'accueil', 'présente l\'école et les formations en intelligence artificielle'],
         'formations.index' => ['catalogue des formations', 'liste toutes les formations, avec un filtre par catégorie et une recherche'],
         'formations.show' => ['page d\'une formation', 'présente la formation, son prix et le bouton « Acheter maintenant »'],
+        'packs' => [self::PACKS_PAGE, 'présente les trois niveaux d\'accompagnement (prix, formations incluses, fin des inscriptions) ; chaque bouton « Je m\'inscris maintenant » mène au récapitulatif de commande de l\'offre, puis à la création du compte et au paiement Mobile Money'],
         'checkout.show' => ['page de commande et de paiement', 'récapitulatif de la commande, code promo, puis paiement Mobile Money en 4 étapes'],
         'about' => ['page À propos', 'présente l\'école et le formateur'],
         'business' => ['page Entreprises et centres de formation', 'présente les services aux entreprises et le bouton « Réserver un appel gratuit »'],
@@ -87,6 +88,19 @@ class VoiceAssistant
         'security.edit' => ['page Sécurité du compte', 'mot de passe, double authentification et passkeys'],
         'chat.index' => ['page Groupes', 'liste des groupes de discussion des formations achetées'],
     ];
+
+    /**
+     * Nom de la page /accompagnement pour Ama (sert aussi à reconnaître la page côté serveur, App\Assistant\AmaPacks).
+     */
+    public const string PACKS_PAGE = 'page des offres d\'accompagnement';
+
+    /**
+     * Pages de compte où Ama se présente seulement si le visiteur vient d'un récapitulatif de commande (URL « intended ») :
+     * il crée son compte, se connecte ou confirme son e-mail pour payer.
+     *
+     * @var list<string>
+     */
+    public const array ACCOUNT_PAGES = ['register', 'login', 'password.request', 'password.reset', 'email-confirmation.show'];
 
     /**
      * Lecteur de cours : bouton affiché seulement si l'admin l'a choisi (réglage « lessons »).
@@ -146,7 +160,48 @@ class VoiceAssistant
         'free' => 'Envie de vous inscrire ? Je peux vous aider à le faire.',
         'ended' => 'Cette formation est terminée. Envie d\'aller plus loin ? Je vous présente l\'accompagnement.',
         'checkout' => 'Besoin d\'aide pour payer ? Je vous guide étape par étape.',
+        'packs' => 'Bonjour, je suis Ama, l\'assistante IA. Je peux vous aider à choisir le niveau qui vous correspond.',
+        'account' => 'Besoin d\'aide pour créer votre compte ou confirmer votre e-mail ? Je vous guide.',
+        'pay_country' => 'Besoin d\'aide pour payer ? Choisissez d\'abord votre pays, je vous guide ensuite.',
+        'pay_operator' => 'Vous hésitez sur l\'opérateur ? Je vous explique les moyens de paiement de votre pays.',
+        'pay_send' => 'Besoin d\'aide pour faire le transfert Mobile Money ? Je vous guide pas à pas.',
+        'pay_capture' => 'Besoin d\'aide pour envoyer la capture de votre paiement ? Je vous explique.',
         'other' => 'Une question ? Je suis là pour vous répondre.',
+    ];
+
+    /**
+     * Bulle du paiement selon l'étape affichée (numéro de l'étape du composant de paiement => type de bulle).
+     *
+     * @var array<int, string>
+     */
+    public const array PAYMENT_STEP_NUDGES = [1 => 'pay_country', 2 => 'pay_operator', 3 => 'pay_send', 4 => 'pay_capture'];
+
+    /**
+     * Premier message d'Ama sur les pages de vente des offres (aucun appel à l'IA) : elle dit qu'elle est une IA, ne
+     * demande jamais « Comment puis-je vous aider » et pose tout de suite une question utile.
+     */
+    public const string PACKS_GREETING = 'Bonjour, je suis Ama, l\'assistante IA de Lomé IA School. Je vous aide à choisir votre niveau d\'accompagnement et à vous inscrire. Quel est votre projet avec l\'IA, et débutez-vous ?';
+
+    public const string PACK_CHECKOUT_GREETING = 'Bonjour, je suis Ama, l\'assistante IA de Lomé IA School. Je vous guide pour votre inscription, étape par étape : compte, confirmation de l\'e-mail, puis paiement Mobile Money. Où en êtes-vous ?';
+
+    /**
+     * Questions proposées sur la page des offres et pendant la commande d'une offre.
+     *
+     * @var list<string>
+     */
+    public const array PACKS_SUGGESTIONS = [
+        'Quel niveau me conseillez-vous ?',
+        'Que contient chaque niveau ?',
+        'Comment payer par Mobile Money ?',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    public const array PACK_CHECKOUT_SUGGESTIONS = [
+        'Comment payer depuis mon pays ?',
+        'Je n\'ai pas reçu l\'e-mail de confirmation',
+        'Ma capture ne s\'envoie pas',
     ];
 
     /**
@@ -353,7 +408,8 @@ class VoiceAssistant
 
     /**
      * Type de bulle de la page : accueil, formation, formation gratuite, paiement ou autre page publique.
-     * Aucune bulle sur les pages de compte (connexion, inscription, espace élève…) ni dans le lecteur de cours.
+     * Pages de compte (connexion, inscription, confirmation de l'e-mail) : bulle seulement pendant une commande ; jamais
+     * dans l'espace élève ni le lecteur de cours.
      */
     public static function nudgeType(Request $request): ?string
     {
@@ -381,12 +437,73 @@ class VoiceAssistant
             return 'free';
         }
 
+        if ($routeName === 'checkout.show') {
+            $formation = $route->parameter('formation');
+
+            // Offre close : rien à payer, aucune invitation.
+            if ($formation instanceof Formation && $formation->registrationsClosed()) {
+                return null;
+            }
+
+            // Sans compte, la première étape est la création du compte.
+            if ($request->user() === null) {
+                return 'account';
+            }
+        }
+
+        // Création du compte, connexion ou confirmation de l'e-mail pendant une commande : aide pour cette étape.
+        if (in_array($routeName, self::ACCOUNT_PAGES, true)) {
+            return self::intendedCheckout($request) !== null ? 'account' : null;
+        }
+
         return match (true) {
             $routeName === 'home' => 'home',
+            $routeName === 'packs' => 'packs',
             in_array($routeName, ['checkout.show', 'student.sessions.payment'], true) => 'checkout',
             in_array($routeName, self::NUDGE_OTHER_PAGES, true) => 'other',
             default => null,
         };
+    }
+
+    /**
+     * Formation (ou offre) dont le visiteur a ouvert le récapitulatif de commande avant de créer son compte ou de se
+     * connecter : lue dans l'URL « intended » de la session (posée par CheckoutController), null sinon.
+     */
+    public static function intendedCheckout(Request $request): ?Formation
+    {
+        $intended = $request->hasSession() ? $request->session()->get('url.intended') : null;
+        $path = is_string($intended) ? (string) parse_url($intended, PHP_URL_PATH) : '';
+        $prefix = (string) parse_url(route('checkout.show', ['formation' => '__slug__']), PHP_URL_PATH);
+        [$before] = explode('__slug__', $prefix);
+
+        if ($path === '' || ! str_starts_with($path, $before)) {
+            return null;
+        }
+
+        $slug = substr($path, strlen($before));
+
+        if (preg_match('/^[a-z0-9-]{1,120}$/', $slug) !== 1) {
+            return null;
+        }
+
+        return Formation::query()->where('slug', $slug)->where('is_active', true)->first();
+    }
+
+    /**
+     * Offre d'accompagnement concernée par la page : récapitulatif de commande d'une offre, ou page de compte ouverte
+     * pendant la commande d'une offre. Null ailleurs (y compris /accompagnement, qui présente toutes les offres).
+     */
+    public static function packInProgress(Request $request): ?Formation
+    {
+        $route = $request->route();
+        $routeName = (string) $route?->getName();
+        $formation = $routeName === 'checkout.show' ? $route->parameter('formation') : null;
+
+        if ($formation === null && in_array($routeName, self::ACCOUNT_PAGES, true)) {
+            $formation = self::intendedCheckout($request);
+        }
+
+        return $formation instanceof Formation && $formation->isPack() ? $formation : null;
     }
 
     public static function proactiveHelp(): bool
@@ -446,6 +563,19 @@ class VoiceAssistant
 
         if ($formation === null && $route?->parameter('session') instanceof LiveSession) {
             $formation = $route->parameter('session')->formation;
+        }
+
+        // Création du compte ou connexion pendant une commande : la formation commandée est connue d'Ama.
+        if ($formation === null && in_array($routeName, self::ACCOUNT_PAGES, true) && ($intended = self::intendedCheckout($request)) !== null) {
+            $formation = $intended;
+            $role .= ' ; le visiteur fait cette étape pour commander « '.$intended->title.' » : il reviendra ensuite automatiquement à son récapitulatif de commande pour payer';
+        }
+
+        // Récapitulatif de commande d'une offre d'accompagnement : étapes de l'inscription.
+        if ($routeName === 'checkout.show' && $formation?->isPack()) {
+            $role = 'récapitulatif de commande de l\'offre d\'accompagnement'.($formation->registrationsClosed()
+                ? ' : les inscriptions à cette offre sont CLOSES, aucun paiement n\'est possible'
+                : ' : sans compte, « Créer un compte » ou « J\'ai déjà un compte » sur cette page, puis confirmer son e-mail ; ensuite paiement Mobile Money en 4 étapes (pays, opérateur, transfert, capture)');
         }
 
         // Formation gratuite terminée : inscriptions et annulations fermées ; Ama oriente vers le bouton de la page.
@@ -616,7 +746,7 @@ class VoiceAssistant
             // « Transmettre au fondateur » : envoi de la question à Coach Joseph (seulement au toucher de « Envoyer »).
             'handoffEndpoint' => $gemini ? route('assistant.handoff') : null,
             'maxLength' => self::limit('max_length'),
-            'suggestions' => $gemini ? self::SUGGESTIONS : [],
+            'suggestions' => $gemini ? self::suggestionsFor($request) : [],
             // Agent ElevenLabs : seulement s'il est choisi dans l'admin.
             'agentId' => $gemini ? null : self::agentId(),
             'scriptUrl' => $gemini ? null : self::SCRIPT_URL,
@@ -629,6 +759,8 @@ class VoiceAssistant
             'faceStyle' => self::characterStyle(),
             'nudge' => self::nudgeEnabled() && ($type = self::nudgeType($request)) !== null
                 ? ['text' => self::nudgeText($type), 'type' => $type, 'seconds' => self::NUDGE_DELAY]
+                    // Paiement : la bulle propose son aide pour l'étape affichée (pays, opérateur, transfert, capture).
+                    + ($type === 'checkout' ? ['steps' => array_map(self::nudgeText(...), self::PAYMENT_STEP_NUDGES)] : [])
                 : null,
             // Mode appel : interruption à la voix (expérimental, éteinte par défaut, réglée dans l'admin).
             'voiceInterrupt' => $gemini && self::voiceInterrupt(),
@@ -647,11 +779,37 @@ class VoiceAssistant
             'timingEndpoint' => $gemini ? route('assistant.timing') : null,
             'helpDelay' => self::helpDelay(),
             'difficulties' => self::DIFFICULTIES,
-            'greeting' => self::DEFAULT_GREETING,
+            'greeting' => $gemini ? self::greetingFor($request) : self::DEFAULT_GREETING,
             // Prénom de la personne connectée, pour « Bonsoir Kossi » (bulle et premier message, calculés dans le
             // navigateur selon l'heure du téléphone). Jamais dans le contexte envoyé à Ama, ni à Google, ni à ElevenLabs.
             'firstName' => $gemini ? self::firstName($request->user()) : '',
         ];
+    }
+
+    /**
+     * Premier message d'Ama selon la page : offres d'accompagnement et commande d'une offre, sinon le message habituel.
+     */
+    public static function greetingFor(Request $request): string
+    {
+        if ($request->route()?->getName() === 'packs') {
+            return self::PACKS_GREETING;
+        }
+
+        return self::packInProgress($request) !== null ? self::PACK_CHECKOUT_GREETING : self::DEFAULT_GREETING;
+    }
+
+    /**
+     * Questions proposées selon la page.
+     *
+     * @return list<string>
+     */
+    public static function suggestionsFor(Request $request): array
+    {
+        if ($request->route()?->getName() === 'packs') {
+            return self::PACKS_SUGGESTIONS;
+        }
+
+        return self::packInProgress($request) !== null ? self::PACK_CHECKOUT_SUGGESTIONS : self::SUGGESTIONS;
     }
 
     /**

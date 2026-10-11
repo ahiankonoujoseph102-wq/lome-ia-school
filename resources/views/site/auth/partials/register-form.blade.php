@@ -46,7 +46,7 @@
 
     <x-site.newsletter-checkbox :id="$prefix.'-newsletter'" :checked="$showErrors && old('wants_newsletter')" />
 
-    <button type="submit" class="btn-gold w-full" data-test="register-user-button">Créer mon compte</button>
+    <button type="submit" class="btn-gold w-full" data-test="register-user-button" data-ama-clear>Créer mon compte</button>
 
     <p class="text-center text-xs leading-relaxed text-slate-500">
         En créant votre compte, vous acceptez nos <a href="{{ route('legal.terms') }}" class="underline hover:text-slate-300">conditions générales de vente</a>

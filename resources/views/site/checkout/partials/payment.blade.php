@@ -99,7 +99,7 @@
                     @foreach ($countries as $code => $country)
                         <button type="button" role="listitem" @click="chooseCountry(@js($code))"
                             class="flex min-h-16 w-full items-center gap-4 rounded-2xl bg-veil/5 px-4 py-3 text-left ring-1 ring-veil/15 transition hover:bg-veil/10 active:scale-[0.99]"
-                            data-test="country-{{ $code }}">
+                            data-test="country-{{ $code }}" data-ama-clear>
                             <span class="text-3xl leading-none" aria-hidden="true">{{ $country['flag'] }}</span>
                             <span class="flex-1 text-lg font-semibold text-white">{{ $country['name'] }}</span>
                             <flux:icon.chevron-right class="size-5 text-slate-400" />
@@ -115,7 +115,7 @@
                     @foreach ($paymentMethods as $method)
                         <button type="button" x-show="country === @js($method->country)" @click="chooseMethod(@js($method->key))"
                             class="flex min-h-16 w-full items-center gap-4 rounded-2xl bg-veil/5 px-4 py-3 text-left ring-1 ring-veil/15 transition hover:bg-veil/10 active:scale-[0.99]"
-                            data-test="method-{{ $method->key }}">
+                            data-test="method-{{ $method->key }}" data-ama-clear>
                             <span class="method-dot grid size-11 shrink-0 place-items-center rounded-full text-sm font-bold text-night-950" style="background:{{ $method->color }};--dot-inverse:{{ $method->inverseColor() }}" aria-hidden="true">{{ $method->initials() }}</span>
                             <span class="flex-1 text-lg font-semibold text-white">{{ $method->name }}</span>
                             <flux:icon.chevron-right class="size-5 text-slate-400" />
@@ -179,7 +179,7 @@
                         <div class="space-y-3 rounded-2xl bg-night-900 p-4 ring-1 ring-veil/15" data-test="ussd-block">
                             <p class="font-semibold text-white">Payer maintenant</p>
                             @unless ($isIos)
-                                <a href="{{ $ussdUrl }}" x-show="canDial" class="btn-gold w-full" data-test="ussd-button">
+                                <a href="{{ $ussdUrl }}" x-show="canDial" class="btn-gold w-full" data-test="ussd-button" data-ama-clear>
                                     <flux:icon.phone class="size-5" /> Ouvrir {{ $method->name }}
                                 </a>
                             @endunless
@@ -220,7 +220,7 @@
                         </p>
                     @endif
 
-                    <button type="button" @click="goTo(4)" class="btn w-full bg-gold-400/10 text-gold-100 ring-1 ring-gold-400/60 hover:bg-gold-400/20" data-test="paid-button">
+                    <button type="button" @click="goTo(4)" class="btn w-full bg-gold-400/10 text-gold-100 ring-1 ring-gold-400/60 hover:bg-gold-400/20" data-test="paid-button" data-ama-clear>
                         J'ai payé : envoyer ma capture <flux:icon.arrow-right class="size-5" />
                     </button>
                     <button type="button" @click="goTo(2)" class="inline-flex items-center gap-1.5 py-2 text-sm font-semibold text-slate-300 hover:text-white">
@@ -242,7 +242,7 @@
                     <p class="mt-1 text-sm text-slate-300">Faites une capture d'écran du message de confirmation de votre paiement ({{ $amount }}), puis envoyez-la.</p>
                 </div>
 
-                <label for="proof" class="btn-gold w-full cursor-pointer !py-5 text-lg" :class="sending && 'pointer-events-none brightness-75'" data-test="send-proof-button">
+                <label for="proof" class="btn-gold w-full cursor-pointer !py-5 text-lg" :class="sending && 'pointer-events-none brightness-75'" data-test="send-proof-button" data-ama-clear>
                     <flux:icon.camera class="size-6" x-show="!sending" />
                     <svg x-show="sending" x-cloak class="size-6 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" opacity=".3"/><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
                     <span x-text="sending ? 'Envoi en cours…' : 'Envoyer la capture de mon paiement'">Envoyer la capture de mon paiement</span>

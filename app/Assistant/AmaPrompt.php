@@ -19,7 +19,9 @@ use Illuminate\Support\Str;
  *    fréquentes, autres informations) ;
  * 4. formations visibles : prix, description et programme réel (titres des modules et des leçons publiées),
  *    lus directement dans la base (un prix changé dans l'admin est connu d'Ama dès le message suivant) ;
- * 5. pages publiques (accueil, Entreprises, questions fréquentes) et règles importantes des CGV ;
+ * 5. offres d'accompagnement et paiement Mobile Money exact (App\Assistant\AmaPacks : détail sur la page des offres et
+ *    pendant la commande d'une offre, une ligne ailleurs), puis pages publiques (accueil, Entreprises, questions
+ *    fréquentes) et règles importantes des CGV ;
  * 6. guide des parcours du site (docs/guide-ama.md) ;
  * 7. contexte de la page du visiteur (sans donnée personnelle, VoiceAssistant::contextText).
  */
@@ -97,6 +99,12 @@ class AmaPrompt
     public static function build(array $context, bool $call = false, string $recent = '', bool $interrupted = false): string
     {
         $sections = self::sections($context, $shortened, $recent);
+
+        // Offres d'accompagnement : règles de conseillère (après les autres, elles priment), seulement quand Ama reçoit
+        // le détail des offres (page des offres, commande d'une offre, visiteur qui en parle).
+        if (AmaPacks::relevant($context, $recent)) {
+            $sections['Instructions'] .= AmaPacks::rules($call);
+        }
 
         if ($call) {
             $sections['Instructions'] .= self::callRules();
@@ -191,6 +199,14 @@ class AmaPrompt
             ->map(fn (string $field): string => is_string($page[$field] ?? null) ? $page[$field] : '')
             ->prepend($recent)
             ->implode(' ');
+        $packs = AmaPacks::relevant($context, $recent);
+
+        // Offres : le détail du compte, de l'e-mail, du mot de passe, de l'achat, du paiement et du remboursement sert
+        // à chaque étape de l'inscription.
+        if ($packs) {
+            $topics .= ' compte confirm mot de passe achat paiement rembours accompagnement';
+        }
+
         $guide = self::guide($topics);
 
         return [
@@ -200,6 +216,9 @@ class AmaPrompt
                 ? "## Base de connaissances de l'école (rédigée par l'équipe)\n".$knowledge
                 : '',
             'Formations' => "## Formations proposées : prix, description et programme (à jour)\n".AmaKnowledge::formations($descriptionLimit, $focus),
+            'Offres d\'accompagnement' => AmaPacks::section($context, $recent),
+            // Récapitulatif de commande d'une formation habituelle ou supplément d'une session : le paiement exact.
+            'Paiement' => ! $packs && AmaPacks::paymentRelevant($context) ? "## Paiement Mobile Money (réglages à jour)\n".AmaPacks::payment() : '',
             'Pages du site' => "## Informations des pages publiques du site\n".AmaKnowledge::publicPages(),
             'Guide des parcours' => $guide !== '' ? "## Guide des parcours du site\n".$guide : '',
             'Contexte de la page' => "## Contexte de la page du visiteur\n".VoiceAssistant::contextText($context),
@@ -395,6 +414,7 @@ class AmaPrompt
         11 => ['contact', 'whatsapp', 'joindre', 'fondateur', 'joseph', 'transmettre', 'numero', 'telephone', 'adresse'],
         12 => ['appel', 'voix', 'micro', 'parler', 'vocal', 'raccrocher'],
         13 => ['gratuit', 'complet', 'place', 'option', 'presentiel', 'en ligne'],
+        14 => ['accompagnement', 'niveau', 'offre', 'pack', 'vip'],
     ];
 
     /**

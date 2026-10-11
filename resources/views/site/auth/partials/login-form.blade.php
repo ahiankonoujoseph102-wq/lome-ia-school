@@ -32,5 +32,5 @@
         Rester connecté sur cet appareil
     </label>
 
-    <button type="submit" class="btn-gold w-full" data-test="login-button">Se connecter</button>
+    <button type="submit" class="btn-gold w-full" data-test="login-button" data-ama-clear>Se connecter</button>
 </form>
