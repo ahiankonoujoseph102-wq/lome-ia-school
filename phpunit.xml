@@ -21,6 +21,11 @@
         <env name="APP_ENV" value="testing"/>
         <!-- Jamais de vraie clé Gemini pendant les tests (faux Gemini : Http::fake). -->
         <env name="GEMINI_API_KEY" value=""/>
+        <!-- Jamais de vrai jeton WhatsApp pendant les tests (faux Meta : Http::fake). -->
+        <env name="WHATSAPP_ACCESS_TOKEN" value=""/>
+        <env name="WHATSAPP_PHONE_NUMBER_ID" value=""/>
+        <env name="WHATSAPP_APP_SECRET" value=""/>
+        <env name="WHATSAPP_VERIFY_TOKEN" value=""/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>

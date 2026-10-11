@@ -7,6 +7,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Nombre de demandes envoyées à Gemini par jour. La journée est celle de Google : ses quotas quotidiens
@@ -51,6 +52,22 @@ class AssistantUsage extends Model
     public static function requestsToday(): int
     {
         return (int) static::query()->where('day', self::today())->value('requests');
+    }
+
+    /**
+     * Compte une demande de plus pour la journée de Google, seulement si la limite n'est pas atteinte (mise à jour
+     * conditionnelle : deux demandes en même temps ne la dépassent jamais). Partagé par Ama et l'agent WhatsApp,
+     * qui utilisent le même projet Google (mêmes quotas).
+     */
+    public static function reserve(int $limit): bool
+    {
+        $day = self::today();
+        static::query()->insertOrIgnore(['day' => $day, 'requests' => 0, 'failures' => 0, 'created_at' => now(), 'updated_at' => now()]);
+
+        return static::query()
+            ->where('day', $day)
+            ->where('requests', '<', $limit)
+            ->update(['requests' => DB::raw('requests + 1'), 'updated_at' => now()]) === 1;
     }
 
     /**

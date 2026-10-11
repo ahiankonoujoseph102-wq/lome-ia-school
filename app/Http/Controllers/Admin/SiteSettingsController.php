@@ -15,6 +15,8 @@ use App\Support\PastedLink;
 use App\Support\PhoneNumber;
 use App\Support\VoiceAssistant;
 use App\Support\YouTube;
+use App\WhatsApp\AgentSettings;
+use App\WhatsApp\WhatsAppPrompt;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,6 +46,7 @@ class SiteSettingsController extends Controller
         'video-accueil' => ['title' => 'Vidéo d\'accueil', 'text' => 'Vidéo YouTube verticale de l\'accueil : lien, image d\'aperçu, titre, phrase, bouton TikTok et interrupteur.', 'icon' => 'play-circle'],
         'fond-anime' => ['title' => 'Fond animé', 'text' => 'Halo lumineux, réseau de points et icônes qui bougent doucement derrière le haut de l\'accueil et du catalogue : interrupteur.', 'icon' => 'sparkles'],
         'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
+        'whatsapp' => ['title' => 'Agent WhatsApp', 'text' => 'Réponses automatiques aux clients qui écrivent au numéro WhatsApp de l\'API : activation, instructions, limites, état des réglages de Meta et adresse du webhook.', 'icon' => 'device-phone-mobile'],
         'assistante' => ['title' => 'Assistante Ama', 'text' => 'Bouton « Parler avec notre assistante » : activation, Ama (Gemini) ou ElevenLabs, instructions, limites, lecteur de cours et aide proactive.', 'icon' => 'chat-bubble-oval-left-ellipsis'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
     ];
@@ -85,6 +88,7 @@ class SiteSettingsController extends Controller
             'fond-anime' => $this->updateAnimatedBackground($request),
             'entreprises' => $this->updateBusiness($request),
             'assistante' => $this->updateVoiceAssistant($request),
+            'whatsapp' => $this->updateWhatsAppAgent($request),
             'legal' => $this->updateLegal($request),
         };
 
@@ -669,6 +673,39 @@ class SiteSettingsController extends Controller
             : 'agent ElevenLabs '.$agentId;
 
         ActivityLog::record(AdminAction::SettingsUpdated, 'Assistante '.($enabled ? 'activée' : 'désactivée').' ('.$summary.', lecteur de cours : '.($lessons ? 'oui' : 'non').', aide proactive : '.($proactive ? 'oui, après '.$delay.' s' : 'non').', interruption à la voix : '.($voiceInterrupt ? 'oui' : 'non').').');
+    }
+
+    private function updateWhatsAppAgent(Request $request): void
+    {
+        $rules = [
+            'enabled' => ['nullable', 'boolean'],
+            'instructions' => ['nullable', 'string', 'max:12000'],
+        ];
+        $messages = ['instructions.max' => 'Les instructions sont trop longues (12 000 caractères au maximum).'];
+
+        foreach (AgentSettings::LIMITS as $name => [, $min, $max]) {
+            $rules[$name] = ['nullable', 'integer', 'min:'.$min, 'max:'.$max];
+            $messages[$name.'.integer'] = 'Écrivez un nombre entier, sans espace ni virgule.';
+            $messages[$name.'.min'] = 'Le nombre doit être d\'au moins '.$min.'.';
+            $messages[$name.'.max'] = 'Le nombre ne peut pas dépasser '.$max.'.';
+        }
+
+        $validated = $request->validate($rules, $messages);
+        $previous = (array) SiteSettings::get('site.whatsapp_agent');
+        $enabled = (bool) ($validated['enabled'] ?? false);
+        // Instructions vidées : retour au texte d'origine.
+        $instructions = WhatsAppPrompt::effectiveInstructions($validated['instructions'] ?? '');
+
+        /** @var array<string, int> $limits */
+        $limits = [];
+        foreach (AgentSettings::LIMITS as $name => [$default]) {
+            $limits[$name] = (int) ($validated[$name] ?? $default);
+        }
+
+        SiteSettings::save(['site.whatsapp_agent' => ['enabled' => $enabled, 'instructions' => $instructions, ...$limits]]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Agent WhatsApp '.($enabled ? 'activé' : 'désactivé').' ('.$limits['contact_daily_limit'].' réponses par client et par jour, pause de '.$limits['pause_hours'].' h après l\'équipe'
+            .($instructions !== WhatsAppPrompt::effectiveInstructions((string) ($previous['instructions'] ?? '')) ? ', instructions modifiées' : '').').');
     }
 
     private function updateLegal(Request $request): void

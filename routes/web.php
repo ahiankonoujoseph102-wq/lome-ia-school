@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\SalesController;
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TestimonialController;
+use App\Http\Controllers\Admin\WhatsAppConversationController;
 use App\Http\Controllers\Chat\AttachmentController;
 use App\Http\Controllers\Chat\GroupController;
 use App\Http\Controllers\Chat\MessageController;
@@ -270,6 +271,12 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::get('assistante/conversations/{conversation}', [AssistantConversationController::class, 'show'])->middleware('no-store')->name('assistant.show');
     Route::get('assistante/demandes', [AssistantHandoffController::class, 'index'])->middleware('no-store')->name('assistant.handoffs.index');
     Route::post('assistante/demandes/{handoff}/statut', [AssistantHandoffController::class, 'toggle'])->name('assistant.handoffs.toggle');
+    // Agent WhatsApp : conversations, réponse de l'équipe, agent arrêté ou relancé pour un client
+    Route::get('whatsapp', [WhatsAppConversationController::class, 'index'])->middleware('no-store')->name('whatsapp.index');
+    Route::get('whatsapp/{contact}', [WhatsAppConversationController::class, 'show'])->middleware('no-store')->name('whatsapp.show');
+    Route::post('whatsapp/{contact}/repondre', [WhatsAppConversationController::class, 'reply'])->middleware('throttle:30,1')->name('whatsapp.reply');
+    Route::post('whatsapp/{contact}/traitee', [WhatsAppConversationController::class, 'handled'])->name('whatsapp.handled');
+    Route::post('whatsapp/{contact}/agent', [WhatsAppConversationController::class, 'agent'])->name('whatsapp.agent');
     Route::get('reglages', [SiteSettingsController::class, 'index'])->name('settings.index');
     Route::get('reglages/{section}', [SiteSettingsController::class, 'edit'])->name('settings.edit');
     Route::put('reglages/{section}', [SiteSettingsController::class, 'update'])->name('settings.update');

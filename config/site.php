@@ -2,6 +2,7 @@
 
 use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
+use App\WhatsApp\WhatsAppPrompt;
 
 /*
 |==========================================================================
@@ -483,6 +484,23 @@ return [
         'voice_interrupt' => false,
         // Secondes sur une même étape du paiement avant de proposer l'aide.
         'help_delay' => 90,
+    ],
+
+    /*
+    |----------------------------------------------------------------------
+    | Agent WhatsApp
+    |----------------------------------------------------------------------
+    | Réponses automatiques aux clients qui écrivent au numéro WhatsApp de l'API (Gemini, comme Ama).
+    | Modifiable dans l'admin (Réglages du site > Agent WhatsApp). Désactivé par défaut.
+    */
+    'whatsapp_agent' => [
+        'enabled' => false,
+        // Instructions de l'agent ; vide = texte d'origine (App\WhatsApp\WhatsAppPrompt).
+        'instructions' => WhatsAppPrompt::DEFAULT_INSTRUCTIONS,
+        // Réponses de l'agent par client et par jour de Lomé (au-delà, l'équipe prend le relais).
+        'contact_daily_limit' => 30,
+        // Heures de silence de l'agent pour un client après une réponse de l'équipe ou une transmission à l'équipe.
+        'pause_hours' => 24,
     ],
 
     /*

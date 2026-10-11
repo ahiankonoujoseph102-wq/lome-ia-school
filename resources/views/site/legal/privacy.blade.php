@@ -78,6 +78,15 @@
                 <p data-test="privacy-voice-assistant">Le bouton « Parler avec notre assistante » vous permet de discuter avec Ama, notre assistante vocale. <strong>Ama est une intelligence artificielle.</strong> Vos conversations avec elle sont traitées par le service ElevenLabs. L'audio et la transcription de chaque conversation sont conservés 90 jours. Pour fonctionner, le widget d'ElevenLabs enregistre dans votre navigateur un identifiant technique de visiteur. Pour vous guider, l'assistante reçoit des informations sur la page que vous consultez (par exemple la formation, le montant à payer ou l'étape du paiement) et sur les éventuelles erreurs affichées à l'écran, sans aucune donnée personnelle : ni nom, ni adresse e-mail, ni numéro de téléphone, ni mot de passe, ni code, ni capture de paiement.</p>
             @endif
 
+            @if (\App\WhatsApp\AgentSettings::switchedOn())
+                <h2>Assistante sur WhatsApp</h2>
+                <div data-test="privacy-whatsapp-agent">
+                    <p>Quand vous écrivez à notre numéro WhatsApp professionnel, une assistante peut vous répondre automatiquement. <strong>C'est une intelligence artificielle</strong>, limitée aux questions sur l'école et ses formations ; vous pouvez demander à tout moment à parler à l'équipe, qui vous répond alors elle-même sur WhatsApp.</p>
+                    <p>Vos messages passent par WhatsApp Business, un service de Meta. Pour obtenir la réponse, le texte de vos messages est transmis à Gemini, le service d'intelligence artificielle de Google (offre gratuite, sur laquelle Google peut utiliser les échanges pour améliorer ses services). Votre numéro et votre nom de profil WhatsApp ne lui sont jamais transmis, et les numéros de téléphone, adresses e-mail et codes que vous écririez sont retirés avant l'envoi. N'écrivez jamais de mot de passe ni de code secret.</p>
+                    <p>Nous conservons votre numéro WhatsApp, votre nom de profil et les messages échangés (mots de passe et codes secrets masqués) pour vous répondre et suivre votre demande. Les images, notes vocales et fichiers que vous envoyez ne sont ni lus ni enregistrés par l'assistante. Ces conversations sont effacées automatiquement 90 jours après le dernier message.</p>
+                </div>
+            @endif
+
             <h2>Utilisation des données</h2>
             <ul>
                 <li>Créer et gérer votre compte et vos accès aux formations ;</li>

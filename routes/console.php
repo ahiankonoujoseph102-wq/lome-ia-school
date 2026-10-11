@@ -4,6 +4,7 @@ use App\Models\AssistantConversation;
 use App\Models\AssistantHandoff;
 use App\Models\AssistantIncident;
 use App\Models\AssistantUsage;
+use App\Models\WhatsAppContact;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -61,7 +62,7 @@ Schedule::command('app:process-consultations')
     ->everyFiveMinutes()
     ->withoutOverlapping();
 
-Schedule::command('model:prune', ['--model' => [AssistantConversation::class, AssistantHandoff::class, AssistantIncident::class, AssistantUsage::class]])
+Schedule::command('model:prune', ['--model' => [AssistantConversation::class, AssistantHandoff::class, AssistantIncident::class, AssistantUsage::class, WhatsAppContact::class]])
     ->dailyAt('03:30')
     ->timezone('Africa/Lome')
     ->withoutOverlapping();

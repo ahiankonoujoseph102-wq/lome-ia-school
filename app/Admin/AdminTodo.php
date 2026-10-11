@@ -10,6 +10,7 @@ use App\Models\AssistantHandoff;
 use App\Models\ChatMessageReport;
 use App\Models\Consultation;
 use App\Models\Purchase;
+use App\Models\WhatsAppContact;
 
 /**
  * « À traiter » : nombres affichés sur l'accueil admin et dans le menu (calculés une fois par requête).
@@ -50,5 +51,13 @@ class AdminTodo
     public static function handoffsToAnswer(): int
     {
         return once(fn (): int => AssistantHandoff::query()->where('status', AssistantHandoff::PENDING)->count());
+    }
+
+    /**
+     * Clients WhatsApp qui attendent une réponse de l'équipe (agent WhatsApp).
+     */
+    public static function whatsappToAnswer(): int
+    {
+        return once(fn (): int => WhatsAppContact::query()->whereNotNull('needs_human_at')->count());
     }
 }

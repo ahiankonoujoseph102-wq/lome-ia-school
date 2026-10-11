@@ -46,6 +46,7 @@ class AdminMenu
                 ['label' => 'Messages signalés', 'route' => 'moderation.reports.index', 'icon' => 'flag', 'count' => AdminTodo::openReports(), 'active' => ['moderation.reports.*']],
                 ['label' => 'Demandes transmises', 'route' => 'admin.assistant.handoffs.index', 'icon' => 'inbox-arrow-down', 'count' => AdminTodo::handoffsToAnswer(), 'active' => ['admin.assistant.handoffs.*']],
                 ['label' => 'Conversations d\'Ama', 'route' => 'admin.assistant.index', 'icon' => 'chat-bubble-oval-left-ellipsis', 'active' => ['admin.assistant.index', 'admin.assistant.show']],
+                ['label' => 'Conversations WhatsApp', 'route' => 'admin.whatsapp.index', 'icon' => 'device-phone-mobile', 'count' => AdminTodo::whatsappToAnswer(), 'active' => ['admin.whatsapp.*']],
                 ['label' => 'Équipe de modération', 'route' => 'admin.moderators.index', 'icon' => 'user-group', 'active' => ['admin.moderators.*']],
             ]],
             ['label' => 'Affiliation', 'icon' => 'share', 'links' => [
@@ -70,7 +71,7 @@ class AdminMenu
     public static function todoTotal(User $user): int
     {
         if ($user->isAdmin()) {
-            return AdminTodo::paymentsToVerify() + AdminTodo::withdrawalsToPay() + AdminTodo::openReports() + AdminTodo::consultationsToday() + AdminTodo::refundsDue() + AdminTodo::handoffsToAnswer();
+            return AdminTodo::paymentsToVerify() + AdminTodo::withdrawalsToPay() + AdminTodo::openReports() + AdminTodo::consultationsToday() + AdminTodo::refundsDue() + AdminTodo::handoffsToAnswer() + AdminTodo::whatsappToAnswer();
         }
 
         return $user->isStaff() ? AdminTodo::openReports() : 0;

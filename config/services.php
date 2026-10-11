@@ -55,4 +55,21 @@ return [
         'thinking' => env('GEMINI_THINKING', 'minimal'),
     ],
 
+    // Agent WhatsApp : API officielle WhatsApp Business Cloud de Meta (App\WhatsApp\CloudApiSender), appelée
+    // uniquement par le serveur. Jeton, identifiant du numéro, clé secrète de l'application et mot de contrôle du
+    // webhook dans .env (jamais dans le code). Sans eux, l'agent reste inactif et rien n'est envoyé.
+    'whatsapp' => [
+        // Jeton permanent d'un « utilisateur système » du portefeuille d'entreprise Meta.
+        'token' => env('WHATSAPP_ACCESS_TOKEN'),
+        // « Identifiant du numéro de téléphone » (WhatsApp > Configuration de l'API), pas le numéro lui-même.
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        // « Clé secrète de l'application » (Paramètres de l'app > Général) : vérifie que les messages reçus viennent de Meta.
+        'app_secret' => env('WHATSAPP_APP_SECRET'),
+        // Mot de contrôle choisi par nous, recopié dans l'écran « Webhook » de Meta.
+        'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+        'api_version' => env('WHATSAPP_API_VERSION', 'v24.0'),
+        'endpoint' => env('WHATSAPP_GRAPH_ENDPOINT', 'https://graph.facebook.com'),
+        'timeout' => (int) env('WHATSAPP_TIMEOUT', 10),
+    ],
+
 ];

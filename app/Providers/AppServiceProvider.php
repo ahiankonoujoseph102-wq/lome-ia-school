@@ -5,12 +5,14 @@ namespace App\Providers;
 use App\Assistant\GeminiModel;
 use App\Contracts\AssistantModel;
 use App\Contracts\PushSender;
+use App\Contracts\WhatsAppSender;
 use App\Models\User;
 use App\Push\NullPushSender;
 use App\Push\WebPushSender;
 use App\Settings\SiteSettings;
 use App\Support\BroadcastingConfig;
 use App\Support\FileStorage;
+use App\WhatsApp\CloudApiSender;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Middleware\TrustProxies;
@@ -46,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Assistante « Ama » : API Gemini de Google, appelée uniquement par le serveur.
         $this->app->bind(AssistantModel::class, GeminiModel::class);
+        $this->app->bind(WhatsAppSender::class, CloudApiSender::class);
     }
 
     /**

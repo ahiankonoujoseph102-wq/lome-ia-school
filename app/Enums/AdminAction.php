@@ -35,6 +35,10 @@ enum AdminAction: string
     case Export = 'export';
     case HandoffHandled = 'handoff_handled';
     case HandoffReopened = 'handoff_reopened';
+    case WhatsAppReplied = 'whatsapp_replied';
+    case WhatsAppHandled = 'whatsapp_handled';
+    case WhatsAppAgentStopped = 'whatsapp_agent_stopped';
+    case WhatsAppAgentResumed = 'whatsapp_agent_resumed';
 
     public function label(): string
     {
@@ -67,6 +71,10 @@ enum AdminAction: string
             self::Export => 'Export CSV',
             self::HandoffHandled => 'Demande transmise traitée',
             self::HandoffReopened => 'Demande transmise remise à traiter',
+            self::WhatsAppReplied => 'Réponse WhatsApp envoyée',
+            self::WhatsAppHandled => 'Conversation WhatsApp traitée',
+            self::WhatsAppAgentStopped => 'Agent WhatsApp arrêté pour un client',
+            self::WhatsAppAgentResumed => 'Agent WhatsApp relancé pour un client',
         };
     }
 

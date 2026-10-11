@@ -10,7 +10,6 @@ use App\Models\AssistantMessage;
 use App\Models\AssistantUsage;
 use App\Support\VoiceAssistant;
 use App\Support\WhatsApp;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Throwable;
@@ -240,13 +239,7 @@ class AmaChat
      */
     private function reserveDailyRequest(): bool
     {
-        $day = AssistantUsage::today();
-        AssistantUsage::query()->insertOrIgnore(['day' => $day, 'requests' => 0, 'failures' => 0, 'created_at' => now(), 'updated_at' => now()]);
-
-        return AssistantUsage::query()
-            ->where('day', $day)
-            ->where('requests', '<', VoiceAssistant::limit('daily_limit'))
-            ->update(['requests' => DB::raw('requests + 1'), 'updated_at' => now()]) === 1;
+        return AssistantUsage::reserve(VoiceAssistant::limit('daily_limit'));
     }
 
     private function store(AssistantConversation $conversation, string $role, string $content, bool $unanswered = false): void
