@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\FreeRegistrationController as AdminFreeRegistrati
 use App\Http\Controllers\Admin\LessonController as AdminLessonController;
 use App\Http\Controllers\Admin\LiveSessionController as AdminLiveSessionController;
 use App\Http\Controllers\Admin\ModeratorController;
+use App\Http\Controllers\Admin\NewsletterController as AdminNewsletterController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\Admin\SalesController;
@@ -314,6 +315,21 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::post('equipe', [ModeratorController::class, 'store'])->name('moderators.store');
     Route::delete('equipe/{user}', [ModeratorController::class, 'destroy'])->name('moderators.destroy');
     Route::put('equipe/etiquettes', [ModeratorController::class, 'updateBadges'])->name('moderators.badges');
+
+    // Envoi d'e-mails groupés à tous les comptes (texte, image, vidéo, bouton), étalé selon le quota de Brevo
+    Route::get('envoi-emails', [AdminNewsletterController::class, 'index'])->name('newsletters.index');
+    Route::get('envoi-emails/nouveau', [AdminNewsletterController::class, 'create'])->name('newsletters.create');
+    Route::post('envoi-emails', [AdminNewsletterController::class, 'store'])->name('newsletters.store');
+    Route::get('envoi-emails/{newsletter}', [AdminNewsletterController::class, 'show'])->name('newsletters.show');
+    Route::get('envoi-emails/{newsletter}/modifier', [AdminNewsletterController::class, 'edit'])->name('newsletters.edit');
+    Route::put('envoi-emails/{newsletter}', [AdminNewsletterController::class, 'update'])->name('newsletters.update');
+    Route::delete('envoi-emails/{newsletter}', [AdminNewsletterController::class, 'destroy'])->name('newsletters.destroy');
+    Route::get('envoi-emails/{newsletter}/apercu', [AdminNewsletterController::class, 'preview'])->middleware('no-store')->name('newsletters.preview');
+    Route::post('envoi-emails/{newsletter}/test', [AdminNewsletterController::class, 'test'])->middleware('throttle:6,10')->name('newsletters.test');
+    Route::post('envoi-emails/{newsletter}/envoyer', [AdminNewsletterController::class, 'send'])->name('newsletters.send');
+    Route::post('envoi-emails/{newsletter}/pause', [AdminNewsletterController::class, 'pause'])->name('newsletters.pause');
+    Route::post('envoi-emails/{newsletter}/reprise', [AdminNewsletterController::class, 'resume'])->name('newsletters.resume');
+    Route::post('envoi-emails/{newsletter}/annulation', [AdminNewsletterController::class, 'cancel'])->name('newsletters.cancel');
 
     // Affiliation : retraits à payer et affiliés (admin uniquement, jamais les modérateurs : il s'agit d'argent)
     Route::get('affiliation/retraits', [AdminAffiliateController::class, 'withdrawals'])->name('affiliates.withdrawals');
