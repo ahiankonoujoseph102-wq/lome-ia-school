@@ -97,6 +97,7 @@
                 <li>Organiser votre consultation gratuite (confirmation, rappels, lien de l'appel vidéo) et, si vous le souhaitez, vous recommander une formation ;</li>
                 <li>Vous prévenir des nouveaux messages de vos groupes, selon vos réglages de notifications ;</li>
                 <li>Vous informer des nouvelles formations, uniquement si vous avez coché la case « Je souhaite être informé(e) des nouvelles formations » à l'inscription ou dans votre profil.</li>
+                <li data-test="privacy-bulk-emails">Vous envoyer de temps en temps des e-mails d'information de Lomé IA School (annonces, vidéos, nouvelles de l'école) si votre adresse e-mail est confirmée. Chacun contient en bas un lien « Se désabonner de ces e-mails », qui fonctionne en un clic ; vous pouvez aussi les arrêter ou les reprendre dans Mon espace &gt; Notifications. Ce désabonnement n'arrête pas les e-mails liés à votre compte et à vos achats (codes, paiements, inscriptions, sessions, annonces de vos groupes).</li>
             </ul>
             <p>Cette case n'est jamais cochée par défaut. Vous pouvez retirer votre accord à tout moment en la décochant dans votre profil. Vos données ne sont jamais vendues à des tiers.</p>
 

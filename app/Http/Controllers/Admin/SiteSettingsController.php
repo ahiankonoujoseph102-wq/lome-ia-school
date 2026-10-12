@@ -13,6 +13,7 @@ use App\Enums\AdminAction;
 use App\Http\Controllers\Controller;
 use App\Jobs\PrepareAmaVoicePhrases;
 use App\Models\AssistantUsage;
+use App\Newsletters\NewsletterQuota;
 use App\Services\ImageUploader;
 use App\Settings\SiteSettings;
 use App\Support\Founder;
@@ -58,7 +59,7 @@ class SiteSettingsController extends Controller
         'google' => ['title' => 'Référencement Google', 'text' => 'Code de vérification Google Search Console et adresse du plan du site à déclarer.', 'icon' => 'magnifying-glass'],
         'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
         'assistante' => ['title' => 'Assistante Ama', 'text' => 'Bouton « Parler avec notre assistante » : activation, Ama (Gemini) ou ElevenLabs, instructions, limites, lecteur de cours et aide proactive.', 'icon' => 'chat-bubble-oval-left-ellipsis'],
-        'emails' => ['title' => 'E-mails envoyés', 'text' => 'Quota quotidien du fournisseur d\'e-mails (Brevo), réserve gardée pour les codes et les paiements, e-mails partis aujourd\'hui.', 'icon' => 'envelope'],
+        'emails' => ['title' => 'E-mails envoyés', 'text' => 'Quota quotidien du fournisseur d\'e-mails (Brevo), réserve gardée pour les codes et les paiements, plafond des envois groupés, e-mails partis aujourd\'hui.', 'icon' => 'envelope'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
     ];
 
@@ -627,6 +628,7 @@ class SiteSettingsController extends Controller
         $validated = $request->validate([
             'daily_limit' => ['required', 'integer', 'min:1', 'max:1000000'],
             'reserve' => ['required', 'integer', 'min:0', 'lt:daily_limit'],
+            'bulk_daily_limit' => ['nullable', 'integer', 'min:0'],
         ], [
             'daily_limit.required' => 'Indiquez le nombre d\'e-mails par jour permis par votre offre Brevo.',
             'daily_limit.integer' => 'Le quota doit être un nombre entier, par exemple 300.',
@@ -635,14 +637,27 @@ class SiteSettingsController extends Controller
             'reserve.integer' => 'La réserve doit être un nombre entier, par exemple 100.',
             'reserve.min' => 'La réserve ne peut pas être négative.',
             'reserve.lt' => 'La réserve doit être plus petite que le quota quotidien.',
+            'bulk_daily_limit.integer' => 'Le plafond des envois groupés doit être un nombre entier, par exemple 200.',
+            'bulk_daily_limit.min' => 'Le plafond des envois groupés ne peut pas être négatif.',
         ]);
 
         $limit = (int) $validated['daily_limit'];
         $reserve = (int) $validated['reserve'];
+        // Page ouverte avant la mise à jour (champ absent) : plafond enregistré gardé.
+        $bulk = array_key_exists('bulk_daily_limit', $validated) && $validated['bulk_daily_limit'] !== null
+            ? (int) $validated['bulk_daily_limit']
+            : (int) (((array) SiteSettings::get('site.mail_quota'))['bulk_daily_limit'] ?? NewsletterQuota::DEFAULT_DAILY_LIMIT);
 
-        SiteSettings::save(['site.mail_quota' => ['daily_limit' => $limit, 'reserve' => $reserve]]);
+        // Les envois groupés ne peuvent jamais prendre la réserve des e-mails indispensables.
+        if ($bulk > $limit - $reserve) {
+            throw ValidationException::withMessages([
+                'bulk_daily_limit' => 'Le plafond des envois groupés doit laisser la réserve libre : '.max(0, $limit - $reserve).' au maximum (quota '.$limit.' moins réserve '.$reserve.').',
+            ]);
+        }
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Quota d\'e-mails : '.$limit.' par jour, réserve de '.$reserve.' pour les codes, inscriptions et paiements.');
+        SiteSettings::save(['site.mail_quota' => ['daily_limit' => $limit, 'reserve' => $reserve, 'bulk_daily_limit' => $bulk]]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Quota d\'e-mails : '.$limit.' par jour, réserve de '.$reserve.' pour les codes, inscriptions et paiements, '.$bulk.' e-mails groupés par jour au plus.');
     }
 
     /**

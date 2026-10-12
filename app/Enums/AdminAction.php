@@ -37,6 +37,8 @@ enum AdminAction: string
     case HandoffReopened = 'handoff_reopened';
     case FreeRegistrationUpdated = 'free_registration_updated';
     case ChatEmailAnnouncement = 'chat_email_announcement';
+    case NewsletterSent = 'newsletter_sent';
+    case NewsletterUpdated = 'newsletter_updated';
 
     public function label(): string
     {
@@ -71,6 +73,8 @@ enum AdminAction: string
             self::HandoffReopened => 'Demande transmise remise à traiter',
             self::FreeRegistrationUpdated => 'Inscription gratuite modifiée',
             self::ChatEmailAnnouncement => 'Annonce envoyée par e-mail',
+            self::NewsletterSent => 'E-mail groupé lancé',
+            self::NewsletterUpdated => 'E-mail groupé : brouillon, pause, reprise ou annulation',
         };
     }
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatGroupMember;
 use App\Models\PushSubscription;
 use App\Models\User;
+use App\Newsletters\BulkEmailSubscription;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +48,11 @@ class NotificationController extends Controller
             'chat_digest_enabled' => $request->boolean('chat_digest_enabled'),
             'session_email_enabled' => $request->boolean('session_email_enabled'),
         ])->save();
+
+        // E-mails groupés de l'admin : réabonnement ou désabonnement (page ouverte avant la mise à jour : rien ne change).
+        if ($request->boolean('bulk_emails_sent')) {
+            $request->boolean('bulk_emails') ? BulkEmailSubscription::resubscribe($user) : BulkEmailSubscription::unsubscribe($user);
+        }
 
         $muted = collect((array) $request->input('muted_groups', []))->map(fn (mixed $id): int => (int) $id);
 

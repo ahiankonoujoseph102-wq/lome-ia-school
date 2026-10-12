@@ -40,6 +40,7 @@ class AdminMenu
             ]],
             ['label' => 'Élèves', 'icon' => 'users', 'links' => [
                 ['label' => 'Élèves', 'route' => 'admin.students.index', 'icon' => 'users', 'active' => ['admin.students.*']],
+                ['label' => 'Envoi d\'e-mails', 'route' => 'admin.newsletters.index', 'icon' => 'envelope', 'active' => ['admin.newsletters.*']],
             ]],
             ['label' => 'Communauté', 'icon' => 'chat-bubble-left-right', 'links' => [
                 ['label' => 'Groupes de discussion', 'route' => 'admin.chat.index', 'icon' => 'chat-bubble-left-right', 'active' => ['admin.chat.*']],
