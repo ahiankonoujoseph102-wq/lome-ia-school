@@ -40,6 +40,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property bool $session_email_enabled Rappels des sessions par e-mail.
  * @property int|null $referred_by_affiliate_id Inscrit arrivé par un lien d'affiliation.
  * @property Carbon|null $email_verified_at Adresse e-mail confirmée (null : pas encore confirmée).
+ * @property Carbon|null $bulk_email_unsubscribed_at Désabonné des envois groupés (« Envoi d'e-mails » de l'admin) ; les e-mails du compte et des achats continuent.
  * @property string $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
@@ -89,6 +90,7 @@ class User extends Authenticatable implements PasskeyUser
             'role' => UserRole::class,
             'wants_newsletter' => 'boolean',
             'blocked_at' => 'datetime',
+            'bulk_email_unsubscribed_at' => 'datetime',
             'chat_push_enabled' => 'boolean',
             'chat_digest_enabled' => 'boolean',
             'chat_digest_sent_at' => 'datetime',
@@ -185,6 +187,14 @@ class User extends Authenticatable implements PasskeyUser
     public function hasConfirmedEmail(): bool
     {
         return $this->email_verified_at !== null;
+    }
+
+    /**
+     * Désabonné des envois groupés de l'admin (jamais des e-mails liés au compte, aux achats ou aux groupes).
+     */
+    public function hasUnsubscribedFromBulkEmails(): bool
+    {
+        return $this->bulk_email_unsubscribed_at !== null;
     }
 
     public function isBlocked(): bool
