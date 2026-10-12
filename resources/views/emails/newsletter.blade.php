@@ -11,6 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <title>{{ $newsletter->subject }}</title>
+    <style>a { color: #6d28d9; }</style>
 </head>
 <body style="margin:0;padding:0;background:#eef0f7;font-family:Helvetica,Arial,sans-serif;color:#1e2340;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef0f7;padding:20px 10px;">
