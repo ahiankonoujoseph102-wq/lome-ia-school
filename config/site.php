@@ -82,9 +82,12 @@ return [
     // Quota d'e-mails du fournisseur (Brevo, offre gratuite : 300 par jour) et réserve gardée pour les codes de
     // confirmation, inscriptions et paiements : une annonce de groupe par e-mail est refusée si elle entamerait
     // cette réserve (App\Mail\MailQuota). Modifiables dans l'admin (Réglages du site > E-mails envoyés).
+    // Plafond des e-mails groupés de l'admin (« Envoi d'e-mails ») : 200 par jour au plus, jamais plus que
+    // « quota − réserve » (App\Newsletters\NewsletterQuota) ; au-delà, l'envoi continue le lendemain.
     'mail_quota' => [
         'daily_limit' => 300,
         'reserve' => 100,
+        'bulk_daily_limit' => 200,
     ],
 
     // Messages préremplis des boutons WhatsApp, adaptés à la page (App\Support\WhatsAppMessages).

@@ -34,8 +34,14 @@ Artisan::command('inspire', function () {
 | - Assistante Ama : conversations, demandes transmises au fondateur, incidents, compteurs et mesures de la voix effacés
 |   après 90 jours (chaque nuit).
 | - Voix naturelle d'Ama : phrases écrites à l'avance préparées en mémoire si l'une manque (chaque heure, sans effet sinon).
+| - Envois d'e-mails groupés de l'admin : prochains e-mails mis en file dans la limite du jour (chaque minute, juste
+|   avant la file d'attente) ; au-delà de la limite, la suite repart toute seule le lendemain.
 |
 */
+
+Schedule::command('app:send-newsletters')
+    ->everyMinute()
+    ->withoutOverlapping(5);
 
 Schedule::command('queue:work --stop-when-empty --tries=3 --max-time=50')
     ->everyMinute()

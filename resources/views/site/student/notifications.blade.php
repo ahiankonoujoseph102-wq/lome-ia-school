@@ -95,6 +95,15 @@
                 </span>
             </label>
 
+            <input type="hidden" name="bulk_emails_sent" value="1">
+            <label class="flex items-start gap-4">
+                <input type="checkbox" name="bulk_emails" value="1" @checked(! $user->hasUnsubscribedFromBulkEmails()) class="mt-1 size-5 shrink-0 rounded accent-electric-500" data-test="bulk-emails">
+                <span>
+                    <span class="block font-semibold text-white">E-mails d'information de Lomé IA School</span>
+                    <span class="block text-sm text-slate-400">Nouvelles formations, annonces et vidéos envoyées à tous les inscrits. Les e-mails liés à votre compte et à vos achats vous sont toujours envoyés.</span>
+                </span>
+            </label>
+
             @if ($memberships->isNotEmpty())
                 <fieldset class="border-t border-veil/10 pt-5">
                     <legend class="font-semibold text-white">Couper un groupe</legend>

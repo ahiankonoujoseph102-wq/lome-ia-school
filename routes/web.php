@@ -35,6 +35,7 @@ use App\Http\Controllers\Site\CheckoutController;
 use App\Http\Controllers\Site\ConsultationController;
 use App\Http\Controllers\Site\FormationController;
 use App\Http\Controllers\Site\FreeRegistrationController;
+use App\Http\Controllers\Site\NewsletterSubscriptionController;
 use App\Http\Controllers\Site\OgImageController;
 use App\Http\Controllers\Site\PackController;
 use App\Http\Controllers\Site\PageController;
@@ -89,6 +90,13 @@ Route::get('devenir-affilie', [PageController::class, 'affiliate'])->name('affil
 Route::get('mentions-legales', [PageController::class, 'legalNotice'])->name('legal.notice');
 Route::get('conditions-generales-de-vente', [PageController::class, 'terms'])->name('legal.terms');
 Route::get('politique-de-confidentialite', [PageController::class, 'privacy'])->name('legal.privacy');
+
+// Désabonnement des e-mails groupés (lien signé de l'e-mail, sans connexion ; POST = un clic de Gmail, sans jeton CSRF).
+Route::middleware(['signed', 'throttle:30,1', 'no-store'])->prefix('desabonnement/{user}')->group(function () {
+    Route::get('/', [NewsletterSubscriptionController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+    Route::post('/', [NewsletterSubscriptionController::class, 'oneClick'])->name('newsletter.unsubscribe.one-click');
+    Route::post('reabonnement', [NewsletterSubscriptionController::class, 'resubscribe'])->name('newsletter.resubscribe');
+});
 
 // Images de partage (Open Graph), plan du site et robots
 Route::get('og/site.png', [OgImageController::class, 'site'])->name('og.site');

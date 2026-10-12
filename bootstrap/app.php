@@ -27,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff-2fa' => RequireStaffTwoFactor::class,
         ]);
 
+        // Désabonnement en un clic de Gmail (POST sans jeton CSRF) : le lien est signé.
+        $middleware->validateCsrfTokens(except: ['desabonnement/*']);
+
         $middleware->web(append: [
             LogoutBlockedUser::class,
             TrackAffiliateReferral::class,
