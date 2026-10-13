@@ -44,6 +44,13 @@ Plateforme de vente et de suivi de formations en intelligence artificielle, bas�
 - Tout contenu marketing qui n'a pas été fourni par la porteuse du projet doit lui être **signalé explicitement** (liste claire, formation par formation) avant d'être considéré comme validé.
 - Les textes décrivent **ce que l'élève apprend à faire**, jamais un résultat garanti (revenus, clients, ventes, gain de temps, popularité). Le ton reste vendeur et dynamique.
 
+## Règle sur les images de personnes (permanente)
+
+- Lomé IA School est une **école togolaise, basée à Lomé**, qui s'adresse à un **public africain francophone**.
+- Toute photo ou illustration montrant des personnes doit montrer des **Africains (noirs)**, dans un cadre **professionnel et crédible pour l'Afrique de l'Ouest**.
+- Si aucune photo convaincante n'existe, utiliser une **photo sans personne** (ordinateur, écran, téléphone, bureau…).
+- **Jamais** de photo de personnes non africaines, **jamais** d'image générée par IA.
+
 ## Conventions de code
 
 - **Nommage** : code (classes, méthodes, variables, tables, colonnes) en anglais ; tout texte visible par l'utilisateur en français.
@@ -502,7 +509,7 @@ php artisan migrate
 
 **En cours sur la branche `claude/sweet-ramanujan-hsib4p`** : envoi d'e-mails groupés depuis l'admin (voir « Envoi d'e-mails groupés »). Pull request « Envoi d'e-mails groupés ».
 
-**En cours sur la branche `claude/practical-cerf-gn89z0`** : photos d'illustration des formations et des offres (voir « Photos d'illustration des formations et des offres »). Aperçu à valider ; pull request seulement après l'accord de Joseph. À faire de son côté : relire les photos et relever le nom des photographes dans `CREDITS-PHOTOS.md` (liens fournis).
+**En cours sur la branche `claude/practical-cerf-gn89z0`** : photos d'illustration des formations et des offres (voir « Photos d'illustration des formations et des offres »). Aperçu validé par Joseph ; règle permanente « Règle sur les images de personnes » ajoutée. Pull request « Photos d'illustration des formations ». À faire de son côté : relever les noms des photographes et relever le nom des photographes dans `CREDITS-PHOTOS.md` (liens fournis).
 
 **Prochaine étape** : fusion de la branche en cours ; Joseph colle le lien de sa vidéo et choisit son format (Réglages du site > Page Entreprises), saisit le contenu de ses formations (écran « Contenu des formations ») et son lien Google Meet (« Disponibilités »). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 
