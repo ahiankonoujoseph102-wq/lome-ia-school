@@ -22,6 +22,8 @@
     $lastIndex = $packs->count() - 1;
     // Fermeture des boutons communs quand le compte à rebours de la dernière offre ouverte arrive à zéro.
     $closeOn = $closesAt === null ? 'false' : '$event.detail.deadline >= '.$closesAt;
+    // Sans affiche envoyée dans l'admin : grande photo d'illustration derrière l'en-tête.
+    $heroPhoto = $posterUrl ? null : \App\Support\FormationPhotos::forSlug(\App\Support\FormationPhotos::PACKS_PAGE);
 @endphp
 
 <x-layouts::site
@@ -31,10 +33,14 @@
 >
     {{-- En-tête : affiche (s'il y en a une), titre, promesse, compte à rebours et bouton vers les offres. --}}
     <section class="relative isolate overflow-hidden" data-test="packs-hero">
-        <div class="glow pointer-events-none absolute inset-0 -z-10"></div>
-        <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
+        @if ($heroPhoto)
+            @include('site.formations.partials.photo-hero-background', ['photo' => $heroPhoto])
+        @else
+            <div class="glow pointer-events-none absolute inset-0 -z-10"></div>
+            <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
+        @endif
 
-        <div class="mx-auto max-w-6xl px-4 pt-6 pb-10 sm:px-6 sm:pt-10 lg:pb-14" @if ($posterUrl) data-test="packs-hero-poster" @endif>
+        <div @class(['mx-auto max-w-6xl px-4 pb-10 sm:px-6', 'pt-6 sm:pt-10 lg:pb-14' => ! $heroPhoto, 'pt-16 sm:pt-24 lg:pb-20' => $heroPhoto]) @if ($posterUrl) data-test="packs-hero-poster" @endif>
             <div @class(['grid items-center gap-6 lg:gap-12', 'lg:grid-cols-[1.15fr_0.85fr]' => $posterUrl])>
                 <div @class(['order-2 lg:order-1', 'mx-auto max-w-3xl text-center' => ! $posterUrl])>
                     <span class="eyebrow" data-reveal>{{ $page['eyebrow'] }}</span>
@@ -105,12 +111,21 @@
                     style="--reveal-delay: {{ $loop->index * 60 }}ms"
                 >
                     @if ($featured)
-                        <p class="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-night-900 px-4 py-1 text-xs font-bold whitespace-nowrap text-gold-100 shadow-[inset_0_0_0_1px_var(--color-gold-500)]" data-test="pack-featured">Le plus complet</p>
+                        <p class="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 rounded-full bg-night-900 px-4 py-1 text-xs font-bold whitespace-nowrap text-gold-100 shadow-[inset_0_0_0_1px_var(--color-gold-500)]" data-test="pack-featured">Le plus complet</p>
                     @endif
 
                     @if ($pack->image_url)
                         {{-- Affiche propre à l'offre (envoyée dans sa fiche de l'admin). --}}
                         <x-site.formation-cover :formation="$pack" class="mb-5 aspect-[16/10] rounded-2xl ring-1 ring-veil/10" data-test="pack-card-poster" />
+                    @elseif (\App\Support\FormationPhotos::for($pack))
+                        {{-- Sinon, photo d'illustration de l'offre (App\Support\FormationPhotos). --}}
+                        <div class="group relative -mx-5 -mt-5 mb-5 overflow-hidden rounded-t-3xl sm:-mx-6 sm:-mt-6">
+                            <x-site.formation-cover :formation="$pack" class="aspect-[16/9]" sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw" data-test="pack-card-photo" />
+                            @if ($featured)
+                                {{-- Contour doré du niveau le plus complet, redessiné par-dessus la photo. --}}
+                                <span class="pointer-events-none absolute inset-0 rounded-t-3xl shadow-[inset_0_0_0_2px_var(--color-gold-500)]" aria-hidden="true"></span>
+                            @endif
+                        </div>
                     @endif
 
                     @if ($ownDeadline)
