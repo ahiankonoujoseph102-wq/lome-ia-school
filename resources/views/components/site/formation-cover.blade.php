@@ -1,15 +1,39 @@
 {{--
-    Visuel d'une formation. Si une image est renseignée (fichier dans public/images/formations/),
-    elle est affichée ; sinon, un visuel de remplacement est dessiné aux couleurs de la catégorie.
+    Visuel d'une formation, dans cet ordre : image envoyée dans l'admin, photo d'illustration
+    (App\Support\FormationPhotos, avec un voile aux couleurs du site), illustration dessinée
+    (public/images/formations/), sinon visuel de remplacement dessiné aux couleurs de la catégorie.
 --}}
-@props(['formation', 'eager' => false, 'compact' => false])
+@props([
+    'formation',
+    'eager' => false,
+    'compact' => false,
+    'sizes' => '(min-width: 1024px) 384px, (min-width: 640px) 50vw, 100vw',
+])
 
 @php
     [$from, $to] = $formation->category->gradient();
+    $photo = \App\Support\FormationPhotos::for($formation);
 @endphp
 
 <div {{ $attributes->class('relative overflow-hidden bg-night-800') }}>
-    @if ($formation->image_url)
+    @if ($photo)
+        <img
+            src="{{ $photo['src'] }}"
+            srcset="{{ $photo['srcset'] }}"
+            sizes="{{ $compact ? '96px' : $sizes }}"
+            alt="{{ $photo['alt'] }}"
+            class="cover-photo absolute inset-0 size-full object-cover"
+            loading="{{ $eager ? 'eager' : 'lazy' }}"
+            @if ($eager) fetchpriority="high" @endif
+            decoding="async"
+            width="800"
+            height="500"
+            data-test="formation-photo"
+        >
+        @unless ($compact)
+            <span class="cover-photo-veil pointer-events-none absolute inset-0" aria-hidden="true"></span>
+        @endunless
+    @elseif ($formation->image_url)
         <img
             src="{{ $formation->image_url }}"
             alt="{{ $formation->title }}"

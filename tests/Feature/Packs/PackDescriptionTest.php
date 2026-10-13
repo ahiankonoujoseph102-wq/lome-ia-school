@@ -51,7 +51,7 @@ class PackDescriptionTest extends TestCase
         $this->pack->update(['description' => "Pour débuter avec l'IA.\n- Des affiches professionnelles\n- Des vidéos publicitaires\nFormations enregistrées.\nÀ votre rythme."]);
 
         $card = $this->cardHtml();
-        $summary = $this->between($card, 'data-test="pack-description"', 'data-test="pack-choose"');
+        $summary = $this->between($card, 'data-test="pack-description"', 'data-test="pack-more"');
 
         $this->assertMatchesRegularExpression('#<p[^>]*>\s*Pour débuter avec l&\#039;IA.\s*</p>#u', $summary);
         $this->assertMatchesRegularExpression('#<ul[^>]*data-test="pack-points"[^>]*>\s*<li[^>]*>.*Des affiches professionnelles</span></li>\s*<li[^>]*>.*Des vidéos publicitaires</span></li>\s*</ul>#su', $summary);
@@ -93,7 +93,7 @@ class PackDescriptionTest extends TestCase
     {
         $this->pack->update(['description' => PackSetup::PACKS[0]['description']]);
 
-        $summary = $this->between($this->cardHtml(), 'data-test="pack-description"', 'data-test="pack-choose"');
+        $summary = $this->between($this->cardHtml(), 'data-test="pack-description"', 'data-test="pack-more"');
 
         $this->assertStringContainsString(e($this->pack->description), $summary);
         $this->assertStringNotContainsString('<ul', $summary);

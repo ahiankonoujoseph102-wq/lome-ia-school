@@ -221,18 +221,20 @@ class FormationIllustrationsTest extends TestCase
         $this->assertSame('Africa/Lome', (string) $event->timezone);
     }
 
-    public function test_the_illustration_shows_in_the_catalogue_the_page_the_checkout_and_the_share_preview(): void
+    public function test_the_illustration_is_the_share_preview_and_the_photo_shows_on_the_pages(): void
     {
         $formation = $this->formation('ebooks-livres-professionnels-ia');
         $this->migration('2026_10_10_100000_add_illustrations_to_formations')->up();
         $formation = $formation->fresh();
 
-        $this->get(route('formations.index'))->assertOk()->assertSee('images/formations/ebooks-livres-professionnels-ia.webp', false);
+        // Sur les pages, la photo d'illustration passe avant le dessin (App\Support\FormationPhotos) ;
+        // le dessin reste l'image de l'aperçu de partage.
+        $this->get(route('formations.index'))->assertOk()->assertSee('images/photos/formations/ebooks-livres-professionnels-ia-800.webp', false);
         $this->get(route('formations.show', $formation))->assertOk()
-            ->assertSee('images/formations/ebooks-livres-professionnels-ia.webp', false)
+            ->assertSee('images/photos/formations/ebooks-livres-professionnels-ia-800.webp', false)
             ->assertSee('og/formations/ebooks-livres-professionnels-ia.jpg', false);
         $this->actingAs(User::factory()->create())->get(route('checkout.show', $formation))->assertOk()
-            ->assertSee('images/formations/ebooks-livres-professionnels-ia.webp', false);
+            ->assertSee('images/photos/formations/ebooks-livres-professionnels-ia-800.webp', false);
 
         $this->assertSame('image/jpeg', FormationShare::imageType($formation));
         $response = $this->get(route('og.formation.photo', $formation))->assertOk();

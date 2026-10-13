@@ -17,6 +17,9 @@
     // Formation terminée (interrupteur de l'admin) : page au passé, aucun appel à s'inscrire, bouton vers
     // l'accompagnement (ou la destination réglée) ; null si aucune offre n'est en vente.
     $ended = $formation->isFreeEnded();
+
+    // Photo d'illustration en grand en haut de la page (sinon : visuel à droite, comme avant).
+    $heroPhoto = \App\Support\FormationPhotos::for($formation);
     $endedButton = $formation->endedButton();
     $confirmed = $user && $user->hasConfirmedEmail();
     $allFull = $options->isNotEmpty() && $availableOptions->isEmpty();
@@ -98,9 +101,13 @@
     @endif
 
     {{-- En-tête de la formation --}}
-    <section class="relative isolate overflow-hidden">
-        <div class="glow pointer-events-none absolute inset-0 -z-10"></div>
-        <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
+    <section class="relative isolate overflow-hidden" @if ($heroPhoto) data-test="formation-photo-hero" @endif>
+        @if ($heroPhoto)
+            @include('site.formations.partials.photo-hero-background', ['photo' => $heroPhoto])
+        @else
+            <div class="glow pointer-events-none absolute inset-0 -z-10"></div>
+            <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
+        @endif
 
         <div class="mx-auto max-w-6xl px-4 pt-6 pb-12 sm:px-6 sm:pt-10 lg:pb-16">
             <nav aria-label="Fil d'Ariane" class="text-sm text-slate-400">
@@ -111,8 +118,8 @@
                 </ol>
             </nav>
 
-            <div class="mt-6 grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
-                <div class="order-2 lg:order-1">
+            <div @class(['mt-6 grid items-center gap-8 lg:gap-12', 'lg:grid-cols-[1.15fr_0.85fr]' => ! $heroPhoto, 'pt-10 sm:pt-16 lg:pt-24' => $heroPhoto])>
+                <div @class(['order-2 lg:order-1', 'max-w-3xl' => $heroPhoto])>
                     <span class="eyebrow" data-reveal data-test="free-eyebrow">
                         @if ($ended)
                             <flux:icon.check-badge class="size-3.5" /> Formation terminée
@@ -162,9 +169,11 @@
                     @endif
                 </div>
 
-                <div class="order-1 lg:order-2" data-reveal>
-                    <x-site.formation-cover :formation="$formation" class="aspect-[16/10] rounded-3xl shadow-2xl shadow-electric-900/50 ring-1 ring-veil/10" eager />
-                </div>
+                @unless ($heroPhoto)
+                    <div class="order-1 lg:order-2" data-reveal>
+                        <x-site.formation-cover :formation="$formation" class="aspect-[16/10] rounded-3xl shadow-2xl shadow-electric-900/50 ring-1 ring-veil/10" eager />
+                    </div>
+                @endunless
             </div>
         </div>
     </section>
