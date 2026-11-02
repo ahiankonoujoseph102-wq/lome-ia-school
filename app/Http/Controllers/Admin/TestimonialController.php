@@ -105,6 +105,7 @@ class TestimonialController extends Controller
             'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
             'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
             'youtube_url' => [Rule::requiredIf($request->input('type') === 'video'), 'nullable', 'string', 'max:255'],
+            'video_format' => ['nullable', Rule::in(YouTube::FORMATS)],
             'is_active' => ['nullable', 'boolean'],
             'remove_photo' => ['nullable', 'boolean'],
         ], [
@@ -129,6 +130,7 @@ class TestimonialController extends Controller
             'formation' => filled($validated['formation'] ?? null) ? trim((string) $validated['formation']) : null,
             'text' => $type === 'text' ? trim((string) $validated['text']) : null,
             'youtube_url' => $type === 'video' ? trim((string) $validated['youtube_url']) : null,
+            'video_format' => $type === 'video' && filled($validated['video_format'] ?? null) ? (string) $validated['video_format'] : null,
             'is_active' => $request->boolean('is_active'),
         ]);
 

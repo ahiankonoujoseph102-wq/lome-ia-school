@@ -102,6 +102,7 @@
             <h2 class="font-semibold text-white">Contenu de la page</h2>
             <x-admin.list-editor name="outcomes" label="Ce que vous allez apprendre" :items="$formation->outcomes ?? []" add-label="Ajouter un point" />
             <x-admin.list-editor name="audience" label="Pour qui est cette formation ?" :items="$formation->audience ?? []" add-label="Ajouter un profil" />
+            <x-admin.list-editor name="careers" label="Des métiers où ces compétences servent (facultatif, jamais présentés comme un emploi promis)" :items="$formation->careers ?? []" add-label="Ajouter un métier" />
             <x-admin.list-editor name="bonuses" label="Bonus" :items="$formation->exists ? $formation->bonuses : []" add-label="Ajouter un bonus" hint="Vide : la section « Bonus » est masquée. N'ajoutez que des bonus réellement fournis aux élèves." />
         </section>
 

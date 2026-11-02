@@ -126,25 +126,24 @@ class HomeVideoPosterTest extends TestCase
         $this->assertNull(HomeVideo::posterPath());
     }
 
-    public function test_without_poster_the_thumbnail_is_shown_whole_on_a_blurred_background(): void
+    public function test_without_poster_the_youtube_thumbnail_is_shown_large_in_16_9_then_the_frame_turns_9_16(): void
     {
         $this->save();
 
         $html = $this->get(route('home'))->assertOk()
-            ->assertSee('data-test="home-video-backdrop"', false)
             ->assertSee('data-test="home-video-thumbnail"', false)
+            ->assertSee('data-video-mode="grow"', false)
+            ->assertDontSee('data-test="home-video-backdrop"', false)
             ->getContent();
 
-        // Une seule adresse d'image (le navigateur ne la télécharge qu'une fois) : fond flouté + miniature en 16:9.
-        $this->assertSame(2, substr_count($html, 'https://i.ytimg.com/vi/'.self::ID.'/hqdefault.jpg'));
+        // Miniature haute définition (sans bandes noires) ; les autres tailles en repli seulement.
+        $this->assertSame(1, substr_count($html, 'src="https://i.ytimg.com/vi/'.self::ID.'/maxresdefault.jpg"'));
+        $this->assertSame(1, substr_count($html, 'https://i.ytimg.com/vi/'.self::ID.'/sddefault.jpg'));
 
-        // Cadre de la vidéo : lecteur commun x-site.lazy-youtube (aussi utilisé par la vidéo de présentation d'une formation gratuite).
         $partial = (string) file_get_contents(resource_path('views/components/site/lazy-youtube.blade.php'));
-        $this->assertStringContainsString('blur-xl', $partial);
-        // La miniature tient toute la largeur du cadre (rien n'est coupé sur les côtés) et les bandes noires du 4:3 sont retirées.
-        $this->assertStringContainsString('aspect-video w-full overflow-hidden', $partial);
-        // Une miniature surveillée par format (vertical ou horizontal), une seule dans la page.
-        $this->assertSame(2, substr_count($partial, 'x-on:error="fail()"'));
-        $this->assertSame(1, substr_count($html, 'x-on:error="fail()"'));
+        // Plus de fond flouté ni de petite miniature au milieu d'un grand cadre vide.
+        $this->assertStringNotContainsString('blur-xl', $partial);
+        // Cadre 16:9 au repos, 9:16 pendant la lecture d'une vidéo verticale.
+        $this->assertStringContainsString("x-bind:class=\"playing ? '!aspect-[9/16]' : ''\"", $partial);
     }
 }

@@ -190,7 +190,7 @@ class SearchEnginesTest extends TestCase
         preg_match_all('#<loc>(.*?)</loc>#', $xml, $matches);
         $locs = $matches[1];
 
-        $expected = ['', '/formations', '/a-propos', '/joseph-ahiankonou', '/entreprises', '/contact', '/consultation-gratuite', '/devenir-affilie', '/mentions-legales', '/conditions-generales-de-vente', '/politique-de-confidentialite', '/formations/creation-agents-ia'];
+        $expected = ['', '/formations', '/a-propos', '/joseph-ahiankonou', '/entreprises', '/contact', '/consultation-gratuite', '/devenir-affilie', '/mentions-legales', '/conditions-generales-de-vente', '/politique-de-confidentialite', '/formations/creation-agents-ia', '/formations/formation-complete-intelligence-artificielle'];
         foreach ($expected as $path) {
             $this->assertContains(self::DOMAIN.$path, $locs, $path ?: '/');
         }

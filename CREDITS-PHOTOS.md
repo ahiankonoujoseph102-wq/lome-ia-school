@@ -34,6 +34,7 @@ par `scripts/build-formation-photos.sh`). Liste dans le code : `App\Support\Form
 | contenu-tiktok-facebook-youtube-videos-ia | Créateur de contenu qui se filme avec un anneau lumineux | [8370484](https://www.pexels.com/photo/8370484/) | à relever |
 | e-commerce-produits-digitaux-ia | Jeune femme au foulard qui utilise son téléphone sur un canapé | [5711715](https://www.pexels.com/photo/5711715/) | à relever |
 | formation-gratuite-ia | Jeune femme souriante devant son ordinateur portable | [3769021](https://www.pexels.com/photo/3769021/) | à relever |
+| formation-complete-intelligence-artificielle | Réunion d'équipe autour d'une table (Lagos) ; même photo que l'ancienne offre niveau 3 | [30688592](https://www.pexels.com/photo/30688592/) | à relever |
 | accompagnement-ia-niveau-1 | Échange en tête-à-tête autour d'un ordinateur portable (Lagos) | [30688591](https://www.pexels.com/photo/30688591/) | à relever |
 | accompagnement-ia-niveau-2 | Petit groupe qui discute dans un bureau (Lagos) | [30688593](https://www.pexels.com/photo/30688593/) | à relever |
 | accompagnement-ia-niveau-3 | Réunion d'équipe autour d'une table (Lagos) | [30688592](https://www.pexels.com/photo/30688592/) | à relever |

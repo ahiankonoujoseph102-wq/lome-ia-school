@@ -188,18 +188,16 @@ class FreeFormationVideoTest extends TestCase
 
         $this->save($formation, ['presentation_video_enabled' => '1', 'presentation_video_url' => 'https://www.youtube.com/shorts/'.self::ID])->assertSessionHasNoErrors();
         $vertical = $this->guestPage($formation);
-        $this->assertStringContainsString('aspect-[9/16]', $vertical);
-        $this->assertStringContainsString('data-test="free-video-backdrop"', $vertical);
-        // Aperçu étroit sur téléphone, agrandi seulement au toucher.
-        $this->assertStringContainsString('w-40', $vertical);
-        $this->assertStringContainsString('data-[open=true]:w-[min(78%,17rem)]', $vertical);
+        // Miniature YouTube 16:9 en grand, puis cadre 9:16 au toucher (vidéo verticale lue sans bandes noires).
+        $this->assertStringContainsString('data-video-mode="grow"', $vertical);
+        $this->assertStringContainsString("playing ? '!aspect-[9/16]' : ''", $vertical);
 
         // Format choisi à la main : il l'emporte sur la détection automatique.
         $this->save($formation, ['presentation_video_enabled' => '1', 'presentation_video_url' => 'https://www.youtube.com/shorts/'.self::ID, 'presentation_video_format' => 'horizontal'])->assertSessionHasNoErrors();
         $horizontal = $this->guestPage($formation);
         $this->assertStringContainsString('data-video-format="horizontal"', $horizontal);
         $this->assertStringContainsString('aspect-video rounded-2xl', $horizontal);
-        $this->assertStringNotContainsString('data-test="free-video-backdrop"', $horizontal);
+        $this->assertStringContainsString('data-video-mode="landscape"', $horizontal);
 
         $this->save($formation, ['presentation_video_enabled' => '1', 'presentation_video_url' => 'https://youtu.be/'.self::ID, 'presentation_video_format' => 'vertical'])->assertSessionHasNoErrors();
         $this->assertStringContainsString('data-video-format="vertical"', $this->guestPage($formation));

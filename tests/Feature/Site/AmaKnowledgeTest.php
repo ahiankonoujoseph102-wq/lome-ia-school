@@ -5,6 +5,7 @@ namespace Tests\Feature\Site;
 use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
 use App\Assistant\UnansweredReply;
+use App\Catalogue\CatalogueUpdate;
 use App\Enums\UserRole;
 use App\Models\AssistantConversation;
 use App\Models\AssistantMessage;
@@ -149,6 +150,8 @@ class AmaKnowledgeTest extends TestCase
 
     public function test_a_lesson_added_later_is_known_at_the_next_message(): void
     {
+        // La formation complète créée par la migration de novembre 2026 n'entre pas dans ce test.
+        Formation::query()->where('slug', CatalogueUpdate::COMPLETE_SLUG)->delete();
         $this->fakeGemini();
         $formation = Formation::factory()->create(['title' => 'Formation Exemple Évolutive']);
 

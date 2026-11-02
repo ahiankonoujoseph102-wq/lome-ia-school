@@ -4,6 +4,7 @@ namespace App\Enums;
 
 enum FormationCategory: string
 {
+    case Complete = 'complete';
     case AiBasics = 'ai-basics';
     case Creative = 'creative';
     case Web = 'web';
@@ -14,6 +15,7 @@ enum FormationCategory: string
     public function label(): string
     {
         return match ($this) {
+            self::Complete => 'Parcours complet en IA',
             self::AiBasics => 'Initiation à l\'IA',
             self::Creative => 'Création visuelle, vidéo et musique',
             self::Web => 'Web, applications et SaaS',
@@ -29,6 +31,7 @@ enum FormationCategory: string
     public function shortLabel(): string
     {
         return match ($this) {
+            self::Complete => 'Parcours complet',
             self::AiBasics => 'Initiation',
             self::Creative => 'Création',
             self::Web => 'Web & apps',
@@ -41,6 +44,7 @@ enum FormationCategory: string
     public function icon(): string
     {
         return match ($this) {
+            self::Complete => 'academic-cap',
             self::AiBasics => 'sparkles',
             self::Creative => 'paint-brush',
             self::Web => 'code-bracket',
@@ -58,6 +62,7 @@ enum FormationCategory: string
     public function gradient(): array
     {
         return match ($this) {
+            self::Complete => ['#312E81', '#B45309'],
             self::AiBasics => ['#4F46E5', '#8B5CF6'],
             self::Creative => ['#7C3AED', '#DB2777'],
             self::Web => ['#2563EB', '#7C3AED'],

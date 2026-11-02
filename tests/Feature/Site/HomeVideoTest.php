@@ -267,8 +267,8 @@ class HomeVideoTest extends TestCase
     {
         $partial = $this->partial();
 
-        // Aperçu étroit (10 rem) en 9:16, section compacte, titre et boutons réduits sur téléphone.
-        $this->assertStringContainsString('mt-4 w-40', $partial);
+        // Avec une image d'aperçu 9:16 envoyée : aperçu étroit (10 rem) ; section compacte, titre et boutons réduits.
+        $this->assertStringContainsString('mx-auto w-40', $partial);
         $this->assertStringContainsString('aspect-[9/16]', $partial);
         $this->assertStringContainsString('!py-6', $partial);
         $this->assertStringContainsString('text-xl', $partial);
@@ -282,8 +282,9 @@ class HomeVideoTest extends TestCase
         // Dès les écrans moyens : 20 rem comme avant.
         $this->assertStringContainsString('sm:w-80', $partial);
 
+        // Sans image d'aperçu (novembre 2026) : la miniature YouTube 16:9 en grand, puis le cadre passe en 9:16 au toucher.
         $this->save();
-        $this->get(route('home'))->assertSee('data-test="home-video-frame"', false)->assertSee('w-40', false);
+        $this->get(route('home'))->assertSee('data-test="home-video-frame"', false)->assertSee('data-video-mode="grow"', false);
     }
 
     public function test_a_broken_video_shows_a_message_and_a_youtube_link_instead_of_an_empty_area(): void
@@ -293,7 +294,7 @@ class HomeVideoTest extends TestCase
         $partial = $this->partial();
 
         $this->assertStringContainsString('<template x-if="failed">', $partial);
-        $this->assertStringContainsString('x-on:error="fail()"', $partial);
+        $this->assertStringContainsString('x-on:error="thumbnailError($el)"', $partial);
         $this->assertStringContainsString('Regarder sur YouTube', $partial);
 
         $this->get(route('home'))->assertSee('data-test="home-video-fallback"', false)

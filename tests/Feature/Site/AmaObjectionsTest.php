@@ -4,6 +4,7 @@ namespace Tests\Feature\Site;
 
 use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
+use App\Catalogue\CatalogueUpdate;
 use App\Models\AssistantMessage;
 use App\Models\CourseModule;
 use App\Models\Formation;
@@ -257,6 +258,8 @@ class AmaObjectionsTest extends TestCase
 
     public function test_without_any_visible_formation_no_starting_price_is_given(): void
     {
+        // La formation complète créée par la migration de novembre 2026 n'entre pas dans ce test.
+        Formation::query()->where('slug', CatalogueUpdate::COMPLETE_SLUG)->delete();
         $this->assertStringNotContainsString('Formations à partir de', AmaPrompt::build([]));
     }
 

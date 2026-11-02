@@ -287,7 +287,7 @@ class FreeFormationEndedTest extends TestCase
     {
         // Les trois offres créées par la migration sont masquées : aucune offre en vente.
         $formation = $this->freeFormation(ended: true);
-        $this->get(route('packs'))->assertNotFound();
+        $this->get(route('packs'))->assertRedirect(route('formations.index'));
 
         $this->assertNull($formation->endedButton());
         $this->get(route('formations.show', $formation))->assertOk()

@@ -35,7 +35,7 @@ class Testimonial extends Model
         'video' => 'Vidéo YouTube',
     ];
 
-    protected $fillable = ['type', 'name', 'formation', 'text', 'photo_path', 'image_path', 'youtube_url', 'is_active', 'position'];
+    protected $fillable = ['type', 'name', 'formation', 'text', 'photo_path', 'image_path', 'youtube_url', 'video_format', 'is_active', 'position'];
 
     /**
      * @var array<string, mixed>

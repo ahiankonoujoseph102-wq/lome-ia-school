@@ -38,11 +38,7 @@
             :title="$presentationTitle.' : '.$formation->title"
             :vertical="$presentationVertical"
             test="free-video"
-            :class="\Illuminate\Support\Arr::toCssClasses([
-                'mt-3 sm:mt-4',
-                'mx-auto w-40 transition-[width] duration-300 data-[open=true]:w-[min(78%,17rem)] sm:w-72 sm:data-[open=true]:w-72 motion-reduce:transition-none' => $presentationVertical,
-                'w-full' => ! $presentationVertical,
-            ])"
+            class="mt-3 sm:mt-4"
             data-test="free-video-frame"
             data-ama-avoid
             data-ama-clear

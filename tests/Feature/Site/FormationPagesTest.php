@@ -73,11 +73,12 @@ class FormationPagesTest extends TestCase
             ->assertSee('"priceCurrency":"XOF"', false);
     }
 
-    public function test_inactive_or_unknown_formations_are_not_found(): void
+    public function test_inactive_formations_lead_to_the_catalogue_and_unknown_ones_are_not_found(): void
     {
         $inactive = Formation::factory()->inactive()->create();
 
-        $this->get(route('formations.show', $inactive))->assertNotFound();
+        // Masquée : ses liens circulent encore (WhatsApp, affiliation), ils mènent au catalogue.
+        $this->get(route('formations.show', $inactive))->assertRedirect(route('formations.index'));
         $this->get('/formations/formation-inexistante')->assertNotFound();
     }
 }

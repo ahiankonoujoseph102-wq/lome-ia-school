@@ -631,6 +631,39 @@ Alpine.data('homeVideo', () => ({
         this.$refs.frame?.contentWindow?.postMessage(listeningMessage(), PLAYER_ORIGIN);
     },
 
+    // Miniature haute définition absente : YouTube répond par une petite image grise (120 × 90) ou une erreur.
+    // On passe alors aux miniatures de repli (data-fallback).
+    checkThumbnail(img) {
+        if (img.complete && img.naturalWidth > 0 && img.naturalWidth <= 120) {
+            this.useFallback(img);
+        }
+    },
+
+    thumbnailError(img) {
+        if (!this.useFallback(img)) {
+            this.fail();
+        }
+    },
+
+    // data-fallback : adresses de repli séparées par une espace, essayées dans l'ordre.
+    useFallback(img) {
+        const [next, ...rest] = (img.dataset.fallback || '').split(' ').filter(Boolean);
+
+        if (!next) {
+            return false;
+        }
+
+        if (rest.length) {
+            img.dataset.fallback = rest.join(' ');
+        } else {
+            delete img.dataset.fallback;
+        }
+
+        img.src = next;
+
+        return true;
+    },
+
     fail() {
         this.failed = true;
         this.playing = false;
@@ -2075,6 +2108,53 @@ const initAmaClearance = () => {
     schedule();
 };
 
+/**
+ * Témoignage vidéo (x-site.video-testimonials) : format de la carte et miniature.
+ * « auto » : vertical tant que la miniature au format d'origine (oardefault, verticale pour une vidéo filmée au
+ * téléphone) existe ; si YouTube ne l'a pas, la carte passe en 16:9 avec la miniature haute définition.
+ * Miniature absente : YouTube répond par une petite image grise (120 × 90) ou une erreur → adresse suivante.
+ */
+Alpine.data('videoTestimonial', (format) => ({
+    vertical: format !== 'horizontal',
+    playing: false,
+
+    check(img) {
+        if (!img.complete || img.naturalWidth === 0) {
+            return;
+        }
+
+        if (img.naturalWidth <= 120) {
+            this.next(img);
+
+            return;
+        }
+
+        if (format === 'auto' && img.src.includes('/oardefault.jpg')) {
+            this.vertical = img.naturalHeight > img.naturalWidth;
+        }
+    },
+
+    next(img) {
+        const [nextSource, ...rest] = (img.dataset.fallback || '').split(' ').filter(Boolean);
+
+        if (!nextSource) {
+            return;
+        }
+
+        if (format === 'auto' && img.src.includes('/oardefault.jpg')) {
+            this.vertical = false;
+        }
+
+        if (rest.length) {
+            img.dataset.fallback = rest.join(' ');
+        } else {
+            delete img.dataset.fallback;
+        }
+
+        img.src = nextSource;
+    },
+}));
+
 const startAlpine = () => {
     window.Alpine = Alpine;
     Alpine.start();
@@ -2091,3 +2171,4 @@ if (document.querySelector('[data-chat]')) {
 } else {
     startAlpine();
 }
+

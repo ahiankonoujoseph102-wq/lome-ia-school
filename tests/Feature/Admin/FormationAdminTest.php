@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Catalogue\CatalogueUpdate;
 use App\Enums\AdminAction;
 use App\Enums\PurchaseStatus;
 use App\Models\ChatGroup;
@@ -93,6 +94,8 @@ class FormationAdminTest extends AdminTestCase
 
     public function test_hidden_formation_leaves_the_catalogue_and_order_can_change(): void
     {
+        // La formation complète créée par la migration de novembre 2026 n'entre pas dans ce test.
+        Formation::query()->where('slug', CatalogueUpdate::COMPLETE_SLUG)->delete();
         $first = Formation::factory()->create(['title' => 'Formation A', 'sort_order' => 1]);
         $second = Formation::factory()->create(['title' => 'Formation B', 'sort_order' => 2]);
 
@@ -101,7 +104,7 @@ class FormationAdminTest extends AdminTestCase
 
         $this->actingAs($this->admin)->put(route('admin.formations.update', $first), $this->form(['title' => 'Formation A', 'is_active' => null]))->assertSessionHasNoErrors();
         $this->get(route('formations.index'))->assertOk()->assertDontSee('Formation A')->assertSee('Formation B');
-        $this->get(route('formations.show', $first))->assertNotFound();
+        $this->get(route('formations.show', $first))->assertRedirect(route('formations.index'));
 
         $this->actingAs($this->admin)->get(route('admin.formations.index'))->assertOk()->assertSee('Formation A')->assertSee('Masquée');
     }

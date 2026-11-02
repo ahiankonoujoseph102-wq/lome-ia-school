@@ -20,39 +20,17 @@
 
     <section class="mx-auto max-w-4xl px-4 sm:px-6" data-test="business-page">
         @if ($videoId)
-            {{-- Vidéo : le lecteur YouTube n'est chargé qu'au clic (page légère, aucun cookie avant). --}}
-            {{-- Vertical (filmée au téléphone) : cadre 9:16 sans bandes noires, pleine largeur sur téléphone sans
-                 dépasser la hauteur de l'écran (en-tête compris), centré et limité à 400 px sur ordinateur. --}}
-            <div
-                @class([
-                    'card overflow-hidden p-0',
-                    'mx-auto w-[min(100%,calc((100svh-7rem)*9/16))] max-w-[400px]' => $vertical,
-                ])
+            {{-- Vidéo (x-site.lazy-youtube) : seule la miniature est chargée, le lecteur YouTube au toucher.
+                 Verticale : miniature 16:9 en grand, puis cadre 9:16 au toucher (sans bandes noires). --}}
+            <x-site.lazy-youtube
+                :video-id="$videoId"
+                title="Présentation vidéo : accompagnement des entreprises et des centres de formation"
+                :vertical="$vertical"
+                test="business-video"
                 data-test="business-video"
                 data-format="{{ $vertical ? 'vertical' : 'horizontal' }}"
                 data-reveal
-            >
-                <div @class(['bg-night-950', 'aspect-[9/16]' => $vertical, 'aspect-video' => ! $vertical]) x-data="{ playing: false }">
-                    <template x-if="playing">
-                        <iframe
-                            src="{{ YouTube::embedUrl($videoId) }}"
-                            title="Présentation vidéo : accompagnement des entreprises et des centres de formation"
-                            class="size-full"
-                            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen
-                        ></iframe>
-                    </template>
-                    <button type="button" x-show="! playing" x-on:click="playing = true" class="group relative block size-full" aria-label="Lire la vidéo de présentation">
-                        <img src="{{ YouTube::thumbnailUrl($videoId) }}" alt="" class="size-full object-cover opacity-80 transition group-hover:opacity-100" loading="lazy">
-                        <span class="absolute inset-0 grid place-items-center">
-                            <span class="grid size-16 place-items-center rounded-full bg-night-950/80 text-white shadow-xl shadow-black/40 ring-2 ring-gold-400 transition group-hover:scale-105">
-                                <flux:icon.play class="size-7 translate-x-0.5 text-gold-300" variant="solid" />
-                            </span>
-                        </span>
-                    </button>
-                </div>
-
-            </div>
+            />
         @endif
 
         <div @class(['space-y-4 text-base leading-relaxed text-slate-300 sm:text-lg', 'mt-10' => $videoId]) data-reveal>

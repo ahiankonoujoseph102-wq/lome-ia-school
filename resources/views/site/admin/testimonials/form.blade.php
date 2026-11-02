@@ -45,6 +45,16 @@
 
         <div x-show="type === 'video'" x-cloak>
             <x-admin.field name="youtube_url" label="Lien de la vidéo YouTube" type="url" :value="$testimonial->youtube_url" placeholder="https://www.youtube.com/watch?v=…" hint="Une vidéo non répertoriée fonctionne aussi." />
+            <div class="mt-4">
+                <x-admin.field
+                    name="video_format"
+                    label="Format de la vidéo"
+                    type="select"
+                    :options="['' => 'Automatique', 'vertical' => 'Vertical (filmée au téléphone, 9:16)', 'horizontal' => 'Horizontal (16:9)']"
+                    :value="$testimonial->video_format ?? ''"
+                    hint="Automatique reconnaît la plupart des vidéos verticales. Si une vidéo filmée au téléphone s'affiche en largeur sur le site, choisissez « Vertical »."
+                />
+            </div>
         </div>
 
         <label class="flex items-center gap-3 text-sm text-slate-200">
