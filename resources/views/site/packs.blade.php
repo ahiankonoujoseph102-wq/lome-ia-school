@@ -32,7 +32,7 @@
     :sticky-cta="$open"
 >
     {{-- En-tête : affiche (s'il y en a une), titre, promesse, compte à rebours et bouton vers les offres. --}}
-    <section @class(['relative isolate overflow-hidden', 'theme-island bg-night-950' => $heroPhoto]) data-test="packs-hero">
+    <section class="relative isolate overflow-hidden" data-test="packs-hero">
         @if ($heroPhoto)
             @include('site.formations.partials.photo-hero-background', ['photo' => $heroPhoto])
         @else

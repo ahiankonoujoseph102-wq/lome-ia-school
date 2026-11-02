@@ -22,8 +22,6 @@ class SiteColorSchemeTest extends TestCase
 
     public function test_pages_declare_only_dark_and_detect_forced_dark_mode(): void
     {
-        // Ancien design sombre (réglage site.design.theme = dark).
-        config(['site.design.theme' => 'dark']);
         $formation = Formation::factory()->create(['slug' => 'automatisation-ia']);
 
         foreach ([route('home'), route('formations.show', $formation), route('checkout.show', $formation), route('affiliate.program')] as $url) {

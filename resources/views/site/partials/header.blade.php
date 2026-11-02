@@ -25,11 +25,11 @@
     class="sticky top-0 z-50"
 >
     <div
-        class="site-header-bar border-b transition-colors duration-300"
+        class="border-b transition-colors duration-300"
         :class="scrolled || open ? 'border-veil/10 bg-night-950/85 backdrop-blur-xl' : 'border-transparent bg-transparent'"
     >
         <nav class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6" aria-label="Navigation principale">
-            <x-site.logo on-light />
+            <x-site.logo />
 
             <div class="hidden items-center gap-0.5 lg:flex xl:gap-1">
                 @foreach ($links as $link)

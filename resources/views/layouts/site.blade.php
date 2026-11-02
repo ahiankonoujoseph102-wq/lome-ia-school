@@ -35,17 +35,15 @@
     $bottomNav = $variant === 'student';
     // Bannière « Installer l'application » : liste fermée de pages (jamais paiement, connexion, cours, admin).
     $installBanner = \App\Support\InstallApp::bannerShownOn(request()->route()?->getName(), $variant);
-    // Design clair (style Talkami) ou ancien design sombre : App\Support\SiteDesign.
-    $lightDesign = \App\Support\SiteDesign::isLight($variant);
 @endphp
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-pt-20" data-theme="{{ $lightDesign ? 'light' : 'dark' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-pt-20">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-        {{-- Design clair ou sombre choisi par le site : empêche le navigateur d'appliquer son propre mode sombre ou clair. --}}
-        <meta name="color-scheme" content="{{ $lightDesign ? 'only light' : 'only dark' }}">
+        {{-- Site toujours sombre : empêche le navigateur d'appliquer son propre mode sombre ou clair. --}}
+        <meta name="color-scheme" content="only dark">
         {{--
             Mode sombre forcé de Chrome (réglage fréquent sur Tecno, Infinix, Xiaomi, Samsung) : quand le téléphone
             est en mode clair, Chrome recolore quand même les textes foncés et les fonds clairs, malgré « only dark ».
@@ -60,7 +58,7 @@
                 root.appendChild(probe);
                 const autoDark = getComputedStyle(probe).backgroundColor === 'rgb(18, 18, 18)';
                 probe.remove();
-                if (!autoDark || !window.matchMedia || root.dataset.theme === 'light') return;
+                if (!autoDark || !window.matchMedia) return;
                 const phoneDark = window.matchMedia('(prefers-color-scheme: dark)');
                 const apply = () => root.classList.toggle('force-dark', !phoneDark.matches);
                 apply();
@@ -71,7 +69,7 @@
         <title>{{ $fullTitle }}</title>
         <meta name="description" content="{{ $description }}">
         <link rel="canonical" href="{{ $canonical }}">
-        <meta name="theme-color" content="{{ $lightDesign ? '#ffffff' : '#0b1030' }}">
+        <meta name="theme-color" content="#0b1030">
         @if ($robots)
             <meta name="robots" content="{{ $robots }}">
         @endif
