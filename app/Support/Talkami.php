@@ -12,6 +12,47 @@ final class Talkami
 {
     public const string NAME = 'Talkami';
 
+    /**
+     * Logo blanc de talkami.net (fond transparent, pour le fond sombre du site).
+     */
+    public const string LOGO = 'images/talkami/logo-blanc.webp';
+
+    /**
+     * Vraies captures d'écran de Talkami (vidéo « catalogue des écrans » envoyée par Joseph, novembre 2026),
+     * 540 × 960 en WebP. Aucune simulation ni maquette de l'application.
+     *
+     * @var array<string, array{image: string, caption: string}>
+     */
+    public const array SCREENS = [
+        'seance' => ['image' => 'images/talkami/ecrans/seance.webp', 'caption' => 'Votre séance du jour avec Teacher Joe'],
+        'niveau' => ['image' => 'images/talkami/ecrans/niveau.webp', 'caption' => 'Votre niveau après l\'évaluation gratuite'],
+        'programme' => ['image' => 'images/talkami/ecrans/programme.webp', 'caption' => 'Un programme selon votre objectif'],
+        'accueil' => ['image' => 'images/talkami/ecrans/accueil.webp', 'caption' => 'L\'accueil de Talkami'],
+    ];
+
+    /**
+     * Textes repris de talkami.net (novembre 2026).
+     */
+    public const string PROMISE = 'Parlez anglais avec Teacher Joe, chaque jour';
+
+    public const string PROMISE_TEXT = 'Teacher Joe vous fait parler sans gêne ni jugement, depuis votre téléphone. Vous apprenez l\'anglais américain, compris partout dans le monde.';
+
+    public const string BUTTON = 'Passer mon évaluation gratuite';
+
+    public const string FOUNDER_QUOTE = 'J\'ai créé Talkami pour que chaque francophone puisse enfin oser parler anglais, depuis son téléphone, sans gêne.';
+
+    /**
+     * « Quatre étapes simples » de talkami.net.
+     *
+     * @var list<array{title: string, text: string}>
+     */
+    public const array STEPS = [
+        ['title' => 'Créez votre compte', 'text' => 'Avec votre nom et votre numéro de téléphone.'],
+        ['title' => 'Passez l\'évaluation gratuite', 'text' => '5 minutes à l\'oral pour trouver votre niveau, de A1 à C2.'],
+        ['title' => 'Choisissez votre formule', 'text' => 'Payez par Mobile Money. Rien n\'est prélevé automatiquement.'],
+        ['title' => 'Parlez chaque jour', 'text' => 'Teacher Joe vous accueille et votre programme est prêt.'],
+    ];
+
     public const string DEFAULT_URL = 'https://talkami.net/?utm_source=lome-ia-school';
 
     public const string HEADLINE = 'Évaluez gratuitement votre anglais en 5 minutes avec Talkami';

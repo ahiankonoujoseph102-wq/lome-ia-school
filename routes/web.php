@@ -86,7 +86,8 @@ Route::get('a-propos', [PageController::class, 'about'])->name('about');
 Route::get('joseph-ahiankonou', [PageController::class, 'founder'])->name('founder');
 Route::get('contact', [PageController::class, 'contact'])->name('contact');
 Route::get('entreprises', [PageController::class, 'business'])->name('business');
-Route::get('talkami', [PageController::class, 'talkami'])->name('talkami');
+// Ancienne page Talkami (retirée à la demande de Joseph) : son adresse mène à la section Talkami de l'accueil.
+Route::permanentRedirect('talkami', '/#talkami')->name('talkami');
 // Formulaire « Demander un devis » de la page Entreprises (sans compte ; champ piège et limite par adresse IP).
 Route::post('entreprises/devis', [QuoteRequestController::class, 'store'])->middleware('throttle:5,10')->name('business.quote');
 Route::get('accompagnement', [PackController::class, 'index'])->name('packs');

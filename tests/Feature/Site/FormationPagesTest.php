@@ -54,7 +54,7 @@ class FormationPagesTest extends TestCase
             ->assertSee('Des modèles d&#039;instructions', false)
             ->assertSee('Accès immédiat')
             ->assertSee('Accès à vie')
-            ->assertSee('Accompagnement à vie')
+            ->assertSee('Accompagnement de 3 mois')
             ->assertSee('Joseph Ahiankonou')
             ->assertSee('Acheter maintenant')
             ->assertSee(route('checkout.show', 'creation-agents-ia'), false);

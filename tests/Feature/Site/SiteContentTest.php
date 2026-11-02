@@ -21,7 +21,7 @@ class SiteContentTest extends TestCase
             ->assertSee('2023')
             ->assertSee('année où Joseph a commencé à former')
             ->assertSee('Accès à vie')
-            ->assertSee('Accompagnement à vie')
+            ->assertSee('Accompagnement de 3 mois')
             ->assertSee(config('site.trainer.short_bio'))
             ->assertSee('images/formateur.jpg')
             ->assertSee('alt="'.e(config('site.trainer.photo_alt')).'"', false)
@@ -50,7 +50,7 @@ class SiteContentTest extends TestCase
         $this->get(route('formations.show', $formation))
             ->assertOk()
             ->assertSee('Accès à vie')
-            ->assertSee('Accompagnement à vie')
+            ->assertSee('Accompagnement de 3 mois')
             ->assertSee(config('site.trainer.photo_alt'));
     }
 

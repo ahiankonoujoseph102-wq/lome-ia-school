@@ -30,7 +30,7 @@
                 <li>Si le paiement n'est pas reçu, ou ne correspond pas à la preuve envoyée, le paiement est refusé : l'accès, même provisoire, est retiré immédiatement et l'élève en est informé par e-mail, avec le motif. En cas de fraude, le compte peut être bloqué.</li>
             </ul>
             <p>Un reçu est disponible dans l'espace élève (« Mes achats ») pour chaque paiement validé.</p>
-            <p><strong class="text-white">Accès à vie et accompagnement à vie.</strong> {{ Placeholder::highlight($legal['access_duration']) }}</p>
+            <p><strong class="text-white">Accès à vie et accompagnement de 3 mois.</strong> {{ Placeholder::highlight($legal['access_duration']) }}</p>
 
             <h2>5. Usage personnel</h2>
             <p>L'accès à une formation est strictement personnel. Le partage des identifiants, l'enregistrement, la copie ou la revente des contenus sont interdits et peuvent entraîner la suspension de l'accès sans remboursement.</p>

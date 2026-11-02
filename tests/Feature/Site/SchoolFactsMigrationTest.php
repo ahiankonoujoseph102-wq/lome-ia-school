@@ -3,6 +3,7 @@
 namespace Tests\Feature\Site;
 
 use App\Assistant\AmaKnowledge;
+use App\Catalogue\Accompaniment;
 use App\Packs\PackSalesTexts;
 use App\Settings\SiteSettings;
 use App\Support\FormationIllustrations;
@@ -114,8 +115,9 @@ class SchoolFactsMigrationTest extends TestCase
     {
         $this->migrate();
 
-        // Seul réglage écrit par les migrations : les anciens textes des offres, gardés par PackSalesTexts.
-        $this->assertSame(0, DB::table('site_settings')->where('key', '!=', PackSalesTexts::SAVED_KEY)->count());
+        // Seuls réglages écrits par les migrations : les anciens textes des offres (PackSalesTexts) et la marque du
+        // passage à l'accompagnement de 3 mois (App\Catalogue\Accompaniment).
+        $this->assertSame(0, DB::table('site_settings')->whereNotIn('key', [PackSalesTexts::SAVED_KEY, Accompaniment::SAVED_KEY])->count());
         $this->assertSame('année où Joseph a commencé à former', config('site.stats.1.label'));
         $this->assertStringNotContainsString('Son ancien nom était Joseph Academy', AmaKnowledge::DEFAULT_SCHOOL);
     }

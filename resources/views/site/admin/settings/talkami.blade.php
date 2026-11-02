@@ -13,8 +13,8 @@
 
 <x-admin.page :title="$section['title']" :back="route('admin.settings.index')" back-label="Réglages du site">
     <div class="card flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-slate-300">
-        <p>Talkami, votre plateforme pour apprendre à parler anglais : section de l'accueil, page Talkami, lien du menu et mention dans À propos. Les textes de présentation reprennent les faits que vous avez fournis ; dites-moi s'ils changent.</p>
-        <a href="{{ route('talkami') }}" target="_blank" class="btn-ghost !px-4 !py-2 !text-sm">Voir la page <flux:icon.arrow-up-right class="size-4" /></a>
+        <p>Talkami, votre plateforme pour apprendre à parler anglais : section de l'accueil, lien du menu et mention dans À propos (pas de page à part). Les textes de présentation reprennent les faits que vous avez fournis ; dites-moi s'ils changent.</p>
+        <a href="{{ route('home') }}#talkami" target="_blank" class="btn-ghost !px-4 !py-2 !text-sm">Voir la section <flux:icon.arrow-up-right class="size-4" /></a>
     </div>
 
     @if ($errors->any())
@@ -29,7 +29,7 @@
             <label class="flex cursor-pointer items-start justify-between gap-4" data-test="talkami-toggle">
                 <span class="min-w-0">
                     <span class="block font-semibold text-white">Afficher Talkami sur le site</span>
-                    <span class="block text-sm text-slate-400">Éteint : la section de l'accueil, la page, le lien du menu et la mention d'À propos disparaissent.</span>
+                    <span class="block text-sm text-slate-400">Éteint : la section de l'accueil, le lien du menu et la mention d'À propos disparaissent.</span>
                 </span>
                 <input type="hidden" name="enabled" value="0">
                 <input type="checkbox" name="enabled" value="1" @checked($enabled) class="peer sr-only">
