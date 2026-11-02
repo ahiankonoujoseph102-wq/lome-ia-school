@@ -8,7 +8,7 @@
                 <article class="card p-5">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0">
-                            <p class="text-xs text-slate-500">{{ $purchase->created_at?->translatedFormat('j F Y à H\hi') }} · {{ $purchase->receipt_number }}</p>
+                            <p class="text-xs text-slate-400">{{ $purchase->created_at?->translatedFormat('j F Y à H\hi') }} · {{ $purchase->receipt_number }}</p>
                             <h2 class="mt-1 font-semibold text-white">{{ $purchase->item_label }}</h2>
                             <p class="mt-1 text-sm text-slate-400">{{ $purchase->formatted_amount }} · {{ $purchase->payment_method_name }}</p>
                         </div>

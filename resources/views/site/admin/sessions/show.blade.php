@@ -30,7 +30,7 @@
             @if ($session->isCancelled())
                 <x-site.alert type="error" class="mt-4">Annulée le {{ $session->cancelled_at?->translatedFormat('j F Y à H\hi') }}@if ($session->cancellation_reason) : {{ $session->cancellation_reason }}@endif</x-site.alert>
             @endif
-            <p class="mt-4 text-xs text-slate-500">Créée par {{ $session->creator?->name ?? 'l\'équipe' }} · annonce {{ $session->announcement_message_id ? ($session->announcement_unpinned_at ? 'désépinglée' : 'épinglée') : 'non publiée' }} dans le groupe</p>
+            <p class="mt-4 text-xs text-slate-400">Créée par {{ $session->creator?->name ?? 'l\'équipe' }} · annonce {{ $session->announcement_message_id ? ($session->announcement_unpinned_at ? 'désépinglée' : 'épinglée') : 'non publiée' }} dans le groupe</p>
 
             <div class="mt-5 flex flex-wrap gap-2">
                 @unless ($session->isCancelled())
@@ -57,7 +57,7 @@
                             <x-site.avatar :user="$registration->user" class="size-9 text-xs" />
                             <span class="min-w-0 flex-1">
                                 <span class="block truncate font-medium text-white">{{ $registration->user->name }}</span>
-                                <span class="block text-xs text-slate-500">{{ $registration->user->formatted_phone }}</span>
+                                <span class="block text-xs text-slate-400">{{ $registration->user->formatted_phone }}</span>
                             </span>
                             <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 {{ $registration->status->badgeClasses() }}">
                                 {{ $registration->paymentUnderReview() ? 'Paiement à vérifier' : ($registration->awaitsPayment() ? 'Supplément à payer' : $registration->status->label()) }}
@@ -75,7 +75,7 @@
                             <li class="flex items-center gap-3 py-2.5">
                                 <span class="grid size-7 shrink-0 place-items-center rounded-full bg-electric-500/15 text-xs font-bold text-electric-200">{{ $index + 1 }}</span>
                                 <span class="min-w-0 flex-1 truncate text-white">{{ $registration->user->name }}</span>
-                                <span class="shrink-0 text-xs text-slate-500">depuis le {{ $registration->waitlisted_at?->translatedFormat('j F à H\hi') }}</span>
+                                <span class="shrink-0 text-xs text-slate-400">depuis le {{ $registration->waitlisted_at?->translatedFormat('j F à H\hi') }}</span>
                             </li>
                         @endforeach
                     </ol>

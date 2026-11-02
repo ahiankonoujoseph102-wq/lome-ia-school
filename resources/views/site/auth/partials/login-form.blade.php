@@ -23,7 +23,7 @@
 
     <x-site.password-field :id="$prefix.'-password'" :show-errors="$showErrors" required autocomplete="current-password">
         <x-slot:action>
-            <a href="{{ route('password.request') }}" class="text-sm font-medium text-electric-300 hover:text-white">Mot de passe oublié ?</a>
+            <a href="{{ route('password.request') }}" class="-my-2.5 inline-block py-2.5 text-sm font-medium text-electric-300 hover:text-white">Mot de passe oublié ?</a>
         </x-slot:action>
     </x-site.password-field>
 

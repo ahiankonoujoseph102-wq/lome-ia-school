@@ -102,6 +102,6 @@
             @endif
         </section>
 
-        <p class="mt-6 text-center text-xs text-slate-500">Règles du programme : article « Programme d'affiliation » des <a href="{{ route('legal.terms') }}#affiliation" class="underline underline-offset-2 hover:text-white">conditions générales de vente</a>.</p>
+        <p class="mt-6 text-center text-xs text-slate-400">Règles du programme : article « Programme d'affiliation » des <a href="{{ route('legal.terms') }}#affiliation" class="underline underline-offset-2 hover:text-white">conditions générales de vente</a>.</p>
     </div>
 </x-layouts::site>

@@ -53,7 +53,7 @@
         <div class="space-y-1.5">
             <label for="nom-passkey" class="field-label">Nom de la passkey</label>
             <input id="nom-passkey" x-model="name" @keydown.enter.prevent="register()" class="field-input" placeholder="Ex. : iPhone, ordinateur du bureau">
-            <p class="text-xs text-slate-500">Un nom pour la reconnaître plus tard.</p>
+            <p class="text-xs text-slate-400">Un nom pour la reconnaître plus tard.</p>
         </div>
         <p x-show="error" x-text="error" x-cloak class="text-sm text-rose-300"></p>
         <div class="flex flex-wrap gap-2">

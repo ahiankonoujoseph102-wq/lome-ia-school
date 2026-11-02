@@ -74,10 +74,11 @@
             </div>
         </div>
 
-        {{-- Résultats --}}
+        {{-- Résultats (titre lu par les lecteurs d'écran : ordre des titres h1 → h2 → h3 des cartes) --}}
+        <h2 class="sr-only">Liste des formations</h2>
         <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($formations as $formation)
-                <x-site.formation-card :formation="$formation" :delay="($loop->index % 3) * 70" x-show="matches({{ $formation->id }})" x-transition:enter="transition duration-300 ease-out motion-reduce:transition-none" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" />
+                <x-site.formation-card :formation="$formation" :delay="($loop->index % 3) * 70" :eager="$loop->first" x-show="matches({{ $formation->id }})" x-transition:enter="transition duration-300 ease-out motion-reduce:transition-none" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" />
             @endforeach
         </div>
 

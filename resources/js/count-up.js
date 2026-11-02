@@ -1,8 +1,9 @@
 /**
  * Chiffres clés qui « montent » quand ils arrivent à l'écran (accueil, À propos).
  *
- * Le chiffre final est toujours écrit dans la page : sans script, avec « moins d'animations », avec l'économie de
- * données ou s'il est déjà visible au chargement, il ne bouge pas. Seul le texte change (aucune mise en page).
+ * Le chiffre final est toujours écrit dans la page, et il y reste tant que le chiffre n'est pas à l'écran : sans
+ * script, avec « moins d'animations », avec l'économie de données ou s'il est déjà visible au chargement, il ne
+ * bouge pas. Seul le texte change (aucune mise en page).
  */
 
 /**
@@ -76,7 +77,10 @@ export function initCountUp(root = document, { duration = 1400 } = {}) {
                 run(entry.target, count, finalText);
             });
         },
-        { threshold: 0.6 },
+        // Le comptage part dès que le chiffre entre à l'écran (bas de l'écran) : il démarre de 0 sous les yeux du
+        // visiteur. Jusque-là, le vrai chiffre reste écrit : un robot (Google, aperçu WhatsApp) ou un défilement
+        // très rapide ne voient jamais « 0 ».
+        { threshold: 0, rootMargin: '0px 0px -8% 0px' },
     );
 
     elements.forEach((element) => {
@@ -89,7 +93,6 @@ export function initCountUp(root = document, { duration = 1400 } = {}) {
         }
 
         element.__countUp = { count, finalText };
-        element.textContent = countText(count, 0);
         observer.observe(element);
     });
 }

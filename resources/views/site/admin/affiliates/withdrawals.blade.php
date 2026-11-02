@@ -45,7 +45,7 @@
                 <article class="card overflow-hidden" id="retrait-{{ $withdrawal->id }}" data-test="withdrawal">
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-veil/10 px-5 py-4">
                         <div>
-                            <p class="text-xs text-slate-500">Demandé le {{ $withdrawal->created_at?->translatedFormat('j F Y à H\hi') }} ({{ $withdrawal->created_at?->diffForHumans() }})</p>
+                            <p class="text-xs text-slate-400">Demandé le {{ $withdrawal->created_at?->translatedFormat('j F Y à H\hi') }} ({{ $withdrawal->created_at?->diffForHumans() }})</p>
                             <p class="mt-0.5 font-semibold text-white">{{ $user->name }} <span class="font-mono text-xs text-slate-400">· {{ $affiliate->code }}</span></p>
                         </div>
                         <p class="text-2xl font-bold text-gold-300">{{ Money::fcfa($withdrawal->amount) }}</p>
@@ -71,7 +71,7 @@
                                     @if ($user->phone)
                                         <dd><a href="https://wa.me/{{ ltrim($user->phone, '+') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-[#25D366]"><x-site.whatsapp-icon class="size-4" /> {{ $user->formatted_phone }}</a></dd>
                                     @endif
-                                    <dd class="text-xs text-slate-500">Affilié depuis le {{ $affiliate->created_at?->translatedFormat('j F Y') }}</dd>
+                                    <dd class="text-xs text-slate-400">Affilié depuis le {{ $affiliate->created_at?->translatedFormat('j F Y') }}</dd>
                                 </div>
                                 @foreach ([
                                     'Clics · inscriptions · ventes' => $summary['clicks'].' · '.$summary['signups'].' · '.$summary['sales'],
@@ -130,7 +130,7 @@
                                     <button type="submit" class="btn w-full bg-rose-500 text-white hover:bg-rose-400">Confirmer le refus</button>
                                     <button type="button" @click="mode = null" class="btn-ghost w-full">Annuler</button>
                                 </div>
-                                <p class="text-xs text-slate-500">Le montant revient dans le solde de l'affilié.</p>
+                                <p class="text-xs text-slate-400">Le montant revient dans le solde de l'affilié.</p>
                             </form>
                         </div>
                     </div>
@@ -152,7 +152,7 @@
                         <li class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
                             <div class="min-w-0">
                                 <p class="font-medium text-white">{{ $done->affiliate->user->name }} · {{ Money::fcfa($done->amount) }}</p>
-                                <p class="text-xs text-slate-500">
+                                <p class="text-xs text-slate-400">
                                     {{ $done->processed_at?->translatedFormat('j F Y à H\hi') }}
                                     @if ($done->status === \App\Enums\WithdrawalStatus::Paid)
                                         · frais {{ Money::fcfa((int) $done->fee) }} · reçu {{ Money::fcfa((int) $done->net_amount) }} · {{ $done->transaction_id }}

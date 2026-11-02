@@ -24,7 +24,7 @@
                         @endif
                         <span class="min-w-0 flex-1">{{ $item->title }}</span>
                         @if ($item->formatted_duration)
-                            <span class="shrink-0 text-xs text-slate-500">{{ $item->formatted_duration }}</span>
+                            <span class="shrink-0 text-xs text-slate-400">{{ $item->formatted_duration }}</span>
                         @endif
                     </a>
                 </li>

@@ -42,6 +42,6 @@
     @if ($hasError)
         <p id="{{ $id }}-erreur" class="text-sm text-rose-300">{{ $errors->first('phone') }}</p>
     @else
-        <p class="text-xs text-slate-500">Autre pays : tapez le numéro complet en commençant par +.</p>
+        <p class="text-xs text-slate-400">Autre pays : tapez le numéro complet en commençant par +.</p>
     @endif
 </div>

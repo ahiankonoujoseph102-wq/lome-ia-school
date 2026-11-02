@@ -198,7 +198,7 @@
                             <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-veil/5 text-electric-300"><flux:icon.key class="size-5" /></span>
                             <div class="min-w-0 flex-1">
                                 <p class="truncate font-medium text-white">{{ $passkey->name }}</p>
-                                <p class="text-xs text-slate-500">
+                                <p class="text-xs text-slate-400">
                                     Ajoutée {{ $passkey->created_at?->diffForHumans() }}
                                     @if ($passkey->last_used_at)
                                         · Utilisée {{ $passkey->last_used_at->diffForHumans() }}

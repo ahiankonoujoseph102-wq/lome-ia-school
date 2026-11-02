@@ -7,7 +7,7 @@
         <div class="card p-4">
             <p class="text-sm text-slate-400">Demandes envoyées à Google aujourd'hui</p>
             <p class="mt-1 text-2xl font-bold text-white"><span data-test="assistant-requests-today">{{ $requestsToday }}</span> <span class="text-base font-semibold text-slate-400">/ {{ $dailyLimit }}</span></p>
-            <p class="mt-1 text-xs text-slate-500">Dont {{ $failuresToday }} sans réponse. Nouvelle journée de Google à {{ $nextReset->translatedFormat('H \h i') }} (heure de Lomé).</p>
+            <p class="mt-1 text-xs text-slate-400">Dont {{ $failuresToday }} sans réponse. Nouvelle journée de Google à {{ $nextReset->translatedFormat('H \h i') }} (heure de Lomé).</p>
         </div>
         <div class="card p-4">
             <p class="text-sm text-slate-400">Conversations commencées aujourd'hui</p>

@@ -88,7 +88,7 @@
                     <li class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
                         <span class="font-semibold text-white">{{ $item->message->group->formation->title }}</span>
                         <span class="text-slate-400">{{ $item->reason->label() }}</span>
-                        <span class="ml-auto text-xs text-slate-500">{{ $item->status->label() }} par {{ $item->handler?->name ?? 'l\'équipe' }}, {{ $item->handled_at?->diffForHumans() }}</span>
+                        <span class="ml-auto text-xs text-slate-400">{{ $item->status->label() }} par {{ $item->handler?->name ?? 'l\'équipe' }}, {{ $item->handled_at?->diffForHumans() }}</span>
                     </li>
                 @endforeach
             </ul>

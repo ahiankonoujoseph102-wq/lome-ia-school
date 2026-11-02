@@ -33,7 +33,7 @@
                             @if ($member->isMuted())
                                 <p class="text-xs text-gold-300">En sourdine jusqu'au {{ $member->muted_until?->translatedFormat('j F à H\hi') }}</p>
                             @else
-                                <p class="text-xs text-slate-500">Membre depuis le {{ $member->joined_at->translatedFormat('j F Y') }}</p>
+                                <p class="text-xs text-slate-400">Membre depuis le {{ $member->joined_at->translatedFormat('j F Y') }}</p>
                             @endif
                         </div>
                         @if ($viewer->canModerate() && ! $user->isStaff())
@@ -81,7 +81,7 @@
                         <x-site.avatar :user="$member->user" class="size-10 text-xs opacity-60" />
                         <div class="min-w-0 flex-1">
                             <p class="truncate font-semibold text-slate-300">{{ $member->user->name }}</p>
-                            <p class="text-xs text-slate-500">Exclu le {{ $member->removed_at?->translatedFormat('j F Y') }}</p>
+                            <p class="text-xs text-slate-400">Exclu le {{ $member->removed_at?->translatedFormat('j F Y') }}</p>
                         </div>
                         <form method="POST" action="{{ route('chat.members.reinstate', [$formation, $member->user]) }}">
                             @csrf

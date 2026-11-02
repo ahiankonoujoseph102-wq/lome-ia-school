@@ -251,8 +251,8 @@
                         <p class="text-lg font-semibold text-white">{{ $trainer['name'] }}</p>
                         <p class="text-sm text-electric-300">{{ $trainer['role'] }}</p>
                         <p class="mt-3 text-sm leading-relaxed text-slate-300">{{ Placeholder::highlight($trainer['short_bio']) }}</p>
-                        <a href="{{ route('about') }}" class="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-electric-300 hover:text-white">
-                            En savoir plus <flux:icon.arrow-right class="size-4" />
+                        <a href="{{ route('founder') }}" class="mt-0.5 inline-flex items-center gap-1 py-2.5 text-sm font-semibold text-electric-300 hover:text-white">
+                            Découvrir son parcours <flux:icon.arrow-right class="size-4" />
                         </a>
                     </div>
                 </div>

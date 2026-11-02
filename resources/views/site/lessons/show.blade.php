@@ -123,7 +123,7 @@
                                 <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-[10px] font-bold text-electric-200">{{ $resource->extension() }}</span>
                                 <span class="min-w-0 flex-1">
                                     <span class="block truncate text-sm font-medium text-white">{{ $resource->name }}</span>
-                                    <span class="text-xs text-slate-500">{{ $resource->details() }}</span>
+                                    <span class="text-xs text-slate-400">{{ $resource->details() }}</span>
                                 </span>
                                 @if ($resource->isLink())
                                     <flux:icon.arrow-top-right-on-square class="size-5 shrink-0 text-gold-300" />

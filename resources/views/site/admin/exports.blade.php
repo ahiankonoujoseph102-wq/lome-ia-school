@@ -17,5 +17,5 @@
             </a>
         @endforeach
     </div>
-    <p class="text-xs text-slate-500">Astuce : depuis « Toutes les ventes » ou « Élèves », le bouton « Exporter » garde vos filtres.</p>
+    <p class="text-xs text-slate-400">Astuce : depuis « Toutes les ventes » ou « Élèves », le bouton « Exporter » garde vos filtres.</p>
 </x-admin.page>

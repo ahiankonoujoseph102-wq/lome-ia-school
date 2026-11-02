@@ -106,7 +106,7 @@
                         </div>
 
                         <button type="submit" class="btn-gold w-full" :disabled="!slot">Confirmer ma consultation gratuite</button>
-                        <p class="text-center text-xs text-slate-500">Vous pourrez déplacer ou annuler votre rendez-vous jusqu'à {{ \App\Models\ConsultationSettings::current()->manage_deadline_hours }} heures avant. Vos informations servent uniquement à organiser la consultation (voir la <a href="{{ route('legal.privacy') }}" class="underline underline-offset-2 hover:text-white">politique de confidentialité</a>).</p>
+                        <p class="text-center text-xs text-slate-400">Vous pourrez déplacer ou annuler votre rendez-vous jusqu'à {{ \App\Models\ConsultationSettings::current()->manage_deadline_hours }} heures avant. Vos informations servent uniquement à organiser la consultation (voir la <a href="{{ route('legal.privacy') }}" class="underline underline-offset-2 hover:text-white">politique de confidentialité</a>).</p>
                     </div>
                 </form>
             @endif

@@ -82,7 +82,7 @@
                     <x-site.field name="date" label="Date" type="date" :value="old('date', $session->starts_at?->format('Y-m-d'))" required />
                     <x-site.field name="time" label="Heure de début" type="time" :value="old('time', $session->starts_at?->format('H:i'))" required />
                 </div>
-                <p class="-mt-3 text-xs text-slate-500">Heure de Lomé (GMT). Les élèves du Bénin voient aussi leur heure (GMT+1).</p>
+                <p class="-mt-3 text-xs text-slate-400">Heure de Lomé (GMT). Les élèves du Bénin voient aussi leur heure (GMT+1).</p>
 
                 <div class="space-y-1.5">
                     <label for="duration" class="field-label">Durée</label>
@@ -135,7 +135,7 @@
                     @error('supplement_amount')
                         <p class="text-sm text-rose-300">{{ $message }}</p>
                     @enderror
-                    <p class="text-xs text-slate-500">Payé par Mobile Money avec preuve, comme une formation (vérification dans « Paiements à vérifier »). La place est réservée pendant la vérification.</p>
+                    <p class="text-xs text-slate-400">Payé par Mobile Money avec preuve, comme une formation (vérification dans « Paiements à vérifier »). La place est réservée pendant la vérification.</p>
                 </div>
             </div>
 

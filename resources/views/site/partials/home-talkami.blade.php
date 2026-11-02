@@ -29,7 +29,7 @@
                     Parlez anglais avec <span class="whitespace-nowrap text-[#fb923c]">Teacher Joe</span>, chaque jour
                 </h2>
                 <p class="mt-4 text-pretty text-slate-200 sm:text-lg">{{ Talkami::PROMISE_TEXT }}</p>
-                <a href="{{ $talkamiUrl }}" target="_blank" rel="noopener" class="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#ea580c] px-6 py-4 text-base font-bold text-white shadow-[0_12px_30px_-10px_rgb(234_88_12/0.7)] transition hover:bg-[#f97316] sm:w-auto sm:text-lg" data-test="home-talkami-start">
+                <a href="{{ $talkamiUrl }}" target="_blank" rel="noopener" class="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#c2410c] px-6 py-4 text-base font-bold text-white shadow-[0_12px_30px_-10px_rgb(234_88_12/0.7)] transition hover:bg-[#9a3412] sm:w-auto sm:text-lg" data-test="home-talkami-start">
                     <flux:icon.microphone class="size-5" variant="solid" /> {{ Talkami::BUTTON }}
                 </a>
                 <p class="mt-4 flex items-start gap-2 text-sm text-slate-200">

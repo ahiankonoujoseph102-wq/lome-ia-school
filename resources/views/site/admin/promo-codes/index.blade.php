@@ -48,5 +48,5 @@
             <li class="card p-6 text-center text-slate-400">Aucun code promo pour le moment.</li>
         @endforelse
     </ul>
-    <p class="text-xs text-slate-500">Chiffre d'affaires et remises : paiements validés uniquement. Utilisations : paiements envoyés, sauf refusés ou remboursés.</p>
+    <p class="text-xs text-slate-400">Chiffre d'affaires et remises : paiements validés uniquement. Utilisations : paiements envoyés, sauf refusés ou remboursés.</p>
 </x-admin.page>

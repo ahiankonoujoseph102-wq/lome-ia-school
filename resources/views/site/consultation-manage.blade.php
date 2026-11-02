@@ -131,7 +131,7 @@
                     </form>
                 </details>
 
-                <p class="text-center text-xs text-slate-500">Déplacement ou annulation possible jusqu'au {{ $consultation->changeDeadline()->translatedFormat('j F à H\hi') }} ({{ $deadlineHours }} heures avant). Gardez ce lien : il est aussi dans votre e-mail de confirmation.</p>
+                <p class="text-center text-xs text-slate-400">Déplacement ou annulation possible jusqu'au {{ $consultation->changeDeadline()->translatedFormat('j F à H\hi') }} ({{ $deadlineHours }} heures avant). Gardez ce lien : il est aussi dans votre e-mail de confirmation.</p>
             @else
                 <div class="card p-5 text-sm text-slate-300">
                     Le rendez-vous ne peut plus être déplacé ni annulé en ligne (c'est possible jusqu'à {{ $deadlineHours }} heures avant). En cas d'empêchement, prévenez-nous sur WhatsApp.

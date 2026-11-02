@@ -15,7 +15,7 @@
         <div class="glow pointer-events-none absolute inset-0 -z-10 opacity-70"></div>
 
         <div class="mx-auto max-w-5xl px-4 pt-6 pb-16 sm:px-6 sm:pt-10">
-            <a href="{{ route('formations.show', $formation) }}" class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
+            <a href="{{ route('formations.show', $formation) }}" class="-my-2.5 inline-flex items-center gap-1.5 py-2.5 text-sm text-slate-400 hover:text-white">
                 <flux:icon.arrow-left class="size-4" /> Retour à la formation
             </a>
 

@@ -61,7 +61,7 @@
                 </div>
                 <p x-show="message" x-text="message" x-cloak class="mt-3 text-sm text-slate-300" role="status"></p>
                 @if ($devicesCount > 0)
-                    <p class="mt-3 text-xs text-slate-500">{{ $devicesCount }} {{ $devicesCount > 1 ? 'appareils enregistrés' : 'appareil enregistré' }} sur votre compte.</p>
+                    <p class="mt-3 text-xs text-slate-400">{{ $devicesCount }} {{ $devicesCount > 1 ? 'appareils enregistrés' : 'appareil enregistré' }} sur votre compte.</p>
                 @endif
             @endif
         </section>

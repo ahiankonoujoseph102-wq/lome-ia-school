@@ -22,8 +22,9 @@
                 <div class="flex justify-center">
                     @include('site.partials.trainer-photo', ['size' => 'size-48', 'loading' => 'eager'])
                 </div>
-                <p class="mt-5 text-xl font-bold text-white"><a href="{{ route('founder') }}" class="hover:text-gold-200">{{ $trainer['name'] }}</a></p>
-                <p class="mt-1 text-sm text-electric-300">{{ $trainer['role'] }}</p>
+                {{-- Nom et rôle répétés juste dessous sur téléphone : affichés dans la carte seulement sur ordinateur. --}}
+                <p class="mt-5 hidden text-xl font-bold text-white lg:block"><a href="{{ route('founder') }}" class="hover:text-gold-200">{{ $trainer['name'] }}</a></p>
+                <p class="mt-1 hidden text-sm text-electric-300 lg:block">{{ $trainer['role'] }}</p>
                 <ul class="mt-6 space-y-2 text-left text-sm">
                     @foreach ($trainer['highlights'] as $highlight)
                         <li class="flex items-start gap-2 text-slate-300">
@@ -35,7 +36,8 @@
 
             <div class="space-y-6" data-reveal>
                 <span class="eyebrow">Le formateur</span>
-                <h2 class="text-3xl font-bold text-white">{{ $trainer['name'] }}</h2>
+                <h2 class="text-3xl font-bold text-white"><a href="{{ route('founder') }}" class="hover:text-gold-200">{{ $trainer['name'] }}</a></h2>
+                <p class="-mt-4 text-sm text-electric-300 lg:hidden">{{ $trainer['role'] }}</p>
                 <p class="text-lg text-slate-200">{{ Placeholder::highlight($trainer['short_bio']) }}</p>
                 <div class="prose-site">
                     @foreach ($trainer['bio'] as $paragraph)
@@ -54,7 +56,7 @@
                     </div>
                 @endif
                 <a href="{{ route('founder') }}" class="inline-flex items-center gap-2 font-semibold text-gold-300 hover:text-gold-200" data-test="about-founder-link">
-                    Son parcours, ses livres et ses services <flux:icon.arrow-right class="size-4" />
+                    Son parcours et ses services <flux:icon.arrow-right class="size-4" />
                 </a>
                 <div class="flex flex-col gap-3 pt-2 sm:flex-row">
                     <a href="{{ route('formations.index') }}" class="btn-gold">Découvrir ses formations</a>

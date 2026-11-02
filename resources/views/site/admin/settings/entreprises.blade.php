@@ -44,7 +44,7 @@
                         </label>
                     @endforeach
                 </div>
-                <p class="text-xs text-slate-500">Un lien YouTube Shorts (…/shorts/…) choisit automatiquement « Vertical ».</p>
+                <p class="text-xs text-slate-400">Un lien YouTube Shorts (…/shorts/…) choisit automatiquement « Vertical ».</p>
                 @error('video_format') <p class="text-sm text-rose-300">{{ $message }}</p> @enderror
             </fieldset>
         </section>

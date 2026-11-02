@@ -94,7 +94,7 @@
                         <flux:icon.play class="size-5" variant="solid" />
                         {{ $summary->hasStarted() ? 'Reprendre où j\'en étais' : 'Commencer la formation' }}
                     </a>
-                    <p class="mt-2 truncate text-xs text-slate-500">{{ $summary->resumeLesson->title }}</p>
+                    <p class="mt-2 truncate text-xs text-slate-400">{{ $summary->resumeLesson->title }}</p>
                 @endif
             </section>
 

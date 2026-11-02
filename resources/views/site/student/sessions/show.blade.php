@@ -40,7 +40,7 @@
                     <span class="btn mt-5 w-full cursor-not-allowed border border-veil/10 bg-veil/[0.04] text-slate-500" aria-disabled="true" data-test="join-button-disabled">
                         <flux:icon.video-camera class="size-5" /> Rejoindre la session
                     </span>
-                    <p class="mt-2 text-center text-xs text-slate-500">Le bouton s'active {{ config('live_sessions.join_window_minutes') }} minutes avant le début, à {{ \App\LiveSessions\SessionTime::hour($session->joinOpensAt()) }} (heure de Lomé).</p>
+                    <p class="mt-2 text-center text-xs text-slate-400">Le bouton s'active {{ config('live_sessions.join_window_minutes') }} minutes avant le début, à {{ \App\LiveSessions\SessionTime::hour($session->joinOpensAt()) }} (heure de Lomé).</p>
                 @endif
             @else
                 {{-- Présentiel : inscription obligatoire --}}
@@ -68,7 +68,7 @@
                                 @endif
                             </button>
                         </form>
-                        <p class="text-center text-xs text-slate-500">
+                        <p class="text-center text-xs text-slate-400">
                             @if ($session->requiresPayment())
                                 Supplément payé par Mobile Money : votre place est réservée {{ config('live_sessions.payment_hold_hours') }} heures le temps d'envoyer votre preuve de paiement.
                             @else
@@ -90,10 +90,10 @@
                                 </button>
                             </form>
                             @if ($status !== RegistrationStatus::Waitlisted)
-                                <p class="text-center text-xs text-slate-500">Annulation possible jusqu'au {{ $session->cancellationDeadline()->translatedFormat('j F à H\hi') }}.@if ($registration->purchase_id) Le supplément payé vous est alors remboursé par Mobile Money. Sans annulation, il n'est pas remboursé en cas d'absence.@endif</p>
+                                <p class="text-center text-xs text-slate-400">Annulation possible jusqu'au {{ $session->cancellationDeadline()->translatedFormat('j F à H\hi') }}.@if ($registration->purchase_id) Le supplément payé vous est alors remboursé par Mobile Money. Sans annulation, il n'est pas remboursé en cas d'absence.@endif</p>
                             @endif
                         @else
-                            <p class="text-center text-xs text-slate-500">Le délai d'annulation est dépassé ({{ config('live_sessions.cancel_deadline_hours') }} heures avant la session).</p>
+                            <p class="text-center text-xs text-slate-400">Le délai d'annulation est dépassé ({{ config('live_sessions.cancel_deadline_hours') }} heures avant la session).</p>
                         @endif
                     @endif
                 </div>

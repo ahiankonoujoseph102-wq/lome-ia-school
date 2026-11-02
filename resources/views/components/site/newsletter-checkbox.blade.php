@@ -12,6 +12,6 @@
     >
     <span>
         <span class="block font-medium text-slate-200">Je souhaite être informé(e) des nouvelles formations</span>
-        <span class="mt-0.5 block text-xs text-slate-500">Facultatif. Vous pouvez changer d'avis à tout moment depuis votre profil.</span>
+        <span class="mt-0.5 block text-xs text-slate-400">Facultatif. Vous pouvez changer d'avis à tout moment depuis votre profil.</span>
     </span>
 </label>

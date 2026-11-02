@@ -40,7 +40,7 @@
                 <span x-show="loading" x-cloak>Vérification…</span>
             </button>
             <p x-show="error" x-text="error" x-cloak class="mt-2 text-center text-sm text-rose-300"></p>
-            <div class="my-6 flex items-center gap-3 text-xs text-slate-500 uppercase">
+            <div class="my-6 flex items-center gap-3 text-xs text-slate-400 uppercase">
                 <span class="h-px flex-1 bg-veil/10"></span> ou avec votre e-mail <span class="h-px flex-1 bg-veil/10"></span>
             </div>
         </div>

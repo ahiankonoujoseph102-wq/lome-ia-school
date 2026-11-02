@@ -38,7 +38,7 @@
                             @endif
                         </span>
                         <span class="block truncate text-sm text-slate-400">{{ PhoneNumber::format($student->phone) }} · {{ $student->email }}</span>
-                        <span class="block text-xs text-slate-500">{{ $student->enrollments_count }} {{ $student->enrollments_count > 1 ? 'formations' : 'formation' }} · inscrit le {{ $student->created_at?->translatedFormat('j M Y') }}</span>
+                        <span class="block text-xs text-slate-400">{{ $student->enrollments_count }} {{ $student->enrollments_count > 1 ? 'formations' : 'formation' }} · inscrit le {{ $student->created_at?->translatedFormat('j M Y') }}</span>
                     </span>
                     <flux:icon.chevron-right class="size-4 shrink-0 text-slate-500" />
                 </a>

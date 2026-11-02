@@ -27,9 +27,9 @@
     </form>
 
     <dl class="grid gap-3 sm:grid-cols-3">
-        <div class="card p-4"><dt class="text-sm text-slate-400">Validé</dt><dd class="mt-1 text-xl font-bold text-white" data-test="validated-total">{{ Money::fcfa($validated['revenue']) }}</dd><dd class="text-xs text-slate-500">{{ $validated['sales'] }} {{ $validated['sales'] > 1 ? 'ventes' : 'vente' }}</dd></div>
-        <div class="card p-4"><dt class="text-sm text-slate-400">Accès provisoire (à vérifier)</dt><dd class="mt-1 text-xl font-bold text-sky-200">{{ Money::fcfa($provisional['revenue']) }}</dd><dd class="text-xs text-slate-500">{{ $provisional['sales'] }} en attente de vérification</dd></div>
-        <div class="card p-4"><dt class="text-sm text-slate-400">En attente de validation</dt><dd class="mt-1 text-xl font-bold text-gold-200">{{ Money::fcfa($pending['revenue']) }}</dd><dd class="text-xs text-slate-500">{{ $pending['sales'] }} sans accès pour le moment</dd></div>
+        <div class="card p-4"><dt class="text-sm text-slate-400">Validé</dt><dd class="mt-1 text-xl font-bold text-white" data-test="validated-total">{{ Money::fcfa($validated['revenue']) }}</dd><dd class="text-xs text-slate-400">{{ $validated['sales'] }} {{ $validated['sales'] > 1 ? 'ventes' : 'vente' }}</dd></div>
+        <div class="card p-4"><dt class="text-sm text-slate-400">Accès provisoire (à vérifier)</dt><dd class="mt-1 text-xl font-bold text-sky-200">{{ Money::fcfa($provisional['revenue']) }}</dd><dd class="text-xs text-slate-400">{{ $provisional['sales'] }} en attente de vérification</dd></div>
+        <div class="card p-4"><dt class="text-sm text-slate-400">En attente de validation</dt><dd class="mt-1 text-xl font-bold text-gold-200">{{ Money::fcfa($pending['revenue']) }}</dd><dd class="text-xs text-slate-400">{{ $pending['sales'] }} sans accès pour le moment</dd></div>
     </dl>
 
     <ul class="space-y-2">

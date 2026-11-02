@@ -18,7 +18,7 @@
             <p class="mt-1 font-semibold text-white">{{ $consultation->name }}</p>
             <p class="text-sm font-semibold text-gold-200" data-test="consultation-requester">{{ $consultation->requesterSummary() }}</p>
             <p class="text-sm text-slate-300">{{ $consultation->email }}</p>
-            <p class="text-xs text-slate-500">{{ PhoneNumber::format($consultation->phone) }} · réservé le {{ $consultation->created_at?->translatedFormat('j F à H\hi') }}</p>
+            <p class="text-xs text-slate-400">{{ PhoneNumber::format($consultation->phone) }} · réservé le {{ $consultation->created_at?->translatedFormat('j F à H\hi') }}</p>
         </div>
         <div class="flex flex-wrap items-center gap-1.5">
             @if ($consultation->isCancelled())
@@ -86,7 +86,7 @@
                 <form method="POST" action="{{ route('admin.consultations.recommend', $consultation) }}" class="mt-3">
                     @csrf
                     <button type="submit" class="btn-gold w-full !py-2.5 !text-sm sm:w-auto">Envoyer la recommandation</button>
-                    <p class="mt-1 text-xs text-slate-500">
+                    <p class="mt-1 text-xs text-slate-400">
                         E-mail simple avec le lien vers « {{ $consultation->recommendedFormation->title }} ».
                         @if ($consultation->recommendation_sent_at)
                             Déjà envoyée le {{ $consultation->recommendation_sent_at->translatedFormat('j F à H\hi') }}.

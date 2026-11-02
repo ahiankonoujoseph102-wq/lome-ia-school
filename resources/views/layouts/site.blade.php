@@ -16,9 +16,9 @@
 @php
     $siteName = config('app.name');
     $fullTitle = $title && $exactTitle ? $title : null;
-    $fullTitle ??= $title ? $title.' | '.$siteName : $siteName.' | Formations en intelligence artificielle à Lomé et en ligne';
+    $fullTitle ??= $title ? $title.' | '.$siteName : $siteName.' | Formations en intelligence artificielle à Lomé';
     // Description toujours présente, même si celle d'une page est vide.
-    $description = filled($description) ? $description : 'Formations pratiques en intelligence artificielle, en français : ChatGPT, création visuelle et vidéo, sites web, automatisation, agents IA. Paiement par Mobile Money.';
+    $description = filled($description) ? \Illuminate\Support\Str::limit(trim(preg_replace('/[ \t\r\n]+/', ' ', (string) $description)), 157) : 'Formations pratiques en intelligence artificielle, en français : ChatGPT, création visuelle et vidéo, sites web, automatisation, agents IA. Paiement par Mobile Money.';
     // Aperçus de partage : adresses absolues fondées sur APP_URL (voir App\Support\AppUrl).
     $imageType ??= $image === null ? \App\Support\Brand::shareImageType() : 'image/png';
     $image = \App\Support\AppUrl::to($image ?? route('og.site'));

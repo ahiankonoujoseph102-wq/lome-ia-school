@@ -104,7 +104,7 @@
                     <article class="card p-4" data-test="withdrawal-row">
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div>
-                                <p class="text-xs text-slate-500">{{ $withdrawal->created_at?->translatedFormat('j F Y à H\hi') }}</p>
+                                <p class="text-xs text-slate-400">{{ $withdrawal->created_at?->translatedFormat('j F Y à H\hi') }}</p>
                                 <p class="mt-0.5 font-semibold text-white">{{ Money::fcfa($withdrawal->amount) }} demandés</p>
                                 <p class="text-xs text-slate-400">{{ $withdrawal->payout_method_name }} · {{ $withdrawal->formattedPhone() }}</p>
                             </div>

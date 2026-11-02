@@ -216,7 +216,8 @@ class LiveOfferTest extends TestCase
         $response = $this->get(route('formations.show', $formation))->assertOk();
         $response->assertSee('<meta property="og:title" content="Agents IA', false)
             ->assertSee('<meta property="og:url" content="'.$url.'"', false)
-            ->assertSee("Formation en direct sur Google Meet, du 1er au 7 octobre 2026, chaque soir de 20\u{00A0}h à 23\u{00A0}h (heure de Lomé). 7 séances enregistrées, accompagnement à vie.", false)
+            // Description limitée à environ 160 caractères (taille lue par Google et les aperçus de partage).
+            ->assertSee("Formation en direct sur Google Meet, du 1er au 7 octobre 2026, chaque soir de 20\u{00A0}h à 23\u{00A0}h (heure de Lomé).", false)
             ->assertSee('"courseMode":"online"', false);
 
         $image = FormationShare::imageUrl($formation);
