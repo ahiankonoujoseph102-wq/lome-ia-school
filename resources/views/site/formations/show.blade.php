@@ -424,12 +424,9 @@
     @if ($related->isNotEmpty())
         <section class="section !pt-0">
             <x-site.section-heading title="Vous aimerez aussi" align="left" />
-            {{-- Téléphone : rangée qui défile sur le côté ; dès sm : grille. --}}
-            <div class="-mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-3 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3" data-test="related-formations">
+            <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($related as $item)
-                    <div class="flex w-[84%] shrink-0 snap-start sm:w-auto [&>*]:w-full">
-                        <x-site.formation-card :formation="$item" :delay="$loop->index * 70" />
-                    </div>
+                    <x-site.formation-card :formation="$item" :delay="$loop->index * 70" />
                 @endforeach
             </div>
         </section>
