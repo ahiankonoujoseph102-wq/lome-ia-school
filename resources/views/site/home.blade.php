@@ -41,7 +41,7 @@
             <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
         @endif
 
-        <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-10 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-[1.15fr_0.85fr] lg:pt-20 lg:pb-24">
+        <div class="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-12 px-4 pt-10 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:pt-20 lg:pb-24">
             <div class="text-center lg:text-left">
                 <span class="eyebrow" data-reveal>
                     <span class="size-1.5 rounded-full bg-gold-400"></span>
