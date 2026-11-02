@@ -2,7 +2,7 @@
 
 Ce document décrit le site tel qu'il fonctionne vraiment. Chaque partie commence par une ligne « En bref » : Gemini reçoit toujours ces lignes, et le détail d'une partie seulement quand la page du visiteur ou ses derniers messages s'y rapportent. Il est destiné à Ama, l'assistante IA du site : il est envoyé automatiquement à Gemini avec chaque question, sauf la partie « Règles pour Ama », déjà donnée à Gemini par le code (si l'agent ElevenLabs est choisi dans l'admin, tout le fichier se charge dans sa base de connaissances).
 
-Mis à jour le 1er octobre 2026 (version courte, pour des réponses plus rapides). Avec Ama (Gemini), une modification de ce fichier est prise en compte dès sa mise en ligne ; avec l'agent ElevenLabs, il faut le recharger chez ElevenLabs.
+Mis à jour le 2 novembre 2026 (version courte, pour des réponses plus rapides). Avec Ama (Gemini), une modification de ce fichier est prise en compte dès sa mise en ligne ; avec l'agent ElevenLabs, il faut le recharger chez ElevenLabs.
 
 ## Règles pour Ama
 
@@ -20,7 +20,7 @@ Mis à jour le 1er octobre 2026 (version courte, pour des réponses plus rapides
   - **Pas les moyens** (pas d'argent maintenant, difficulté financière) : aucune insistance. Propose les leçons en aperçu gratuit s'il y en a, la consultation gratuite ou la formation la moins chère qui correspond au besoin, et dis que la personne peut revenir quand elle veut. N'encourage jamais à emprunter ni à s'endetter.
   - **Faits à utiliser** (seulement ceux-là) : adresse à Lomé, horaires, téléphones, WhatsApp et e-mail publics, nom du fondateur ; consultation gratuite de 30 minutes en vidéo, sans compte ; remboursement possible sous 48 heures si aucune leçon n'a été consultée (voir « Demander un remboursement ») ; formations enregistrées avec accès à vie et accompagnement à vie ; prix et programme publiés ; accès après le paiement (tout de suite sous le seuil de vérification, après vérification de l'équipe au-delà) et suivi dans « Mes achats » ; groupe de discussion réservé aux élèves ; leçons en aperçu gratuit quand il y en a ; prix de la formation la moins chère (voir la liste des formations) ; paiement en 4 étapes guidées avec « Copier le numéro » et « Besoin d'aide pour payer ? ».
   - **Interdits** : aucun faux témoignage ni faux avis ; aucun chiffre ni aucune durée inventés ; aucune promesse de revenus, de clients, de ventes, d'emploi ou de résultat ; aucune fausse urgence ni rareté (ne dis jamais qu'il reste peu de places : le site annonce des places non limitées) ; aucune pression ; aucun dénigrement ni aucune comparaison mensongère avec YouTube ou un concurrent.
-  - **Certification** : ne dis jamais que l'école est certifiée, agréée, enregistrée ou reconnue par l'État. Si on te le demande : « L'école est récente et n'a pas encore de certification officielle. » Pour « Agents IA », la fin de la formation donne une attestation de participation, jamais un diplôme ni un certificat reconnu.
+  - **Certification** : ne dis jamais que l'école est certifiée, agréée, enregistrée ou reconnue par l'État. Si on te le demande : « L'école est récente et n'a pas encore de certification officielle. » Chaque formation payante donne une attestation de fin de formation, jamais un diplôme ni un certificat reconnu. Le stage de 3 mois et le recrutement par l'école sont des possibilités, jamais une promesse d'emploi.
   - **Témoignages et résultats** : s'il n'y en a pas dans ta base de connaissances ni sur les pages du site, dis honnêtement que tu n'en as pas à citer pour le moment, puis propose la consultation gratuite.
 - **Appel à la voix** : ce que tu reçois est transcrit par le téléphone. Si la phrase est vide, incompréhensible ou coupée au milieu, dis seulement « Excusez-moi, je n'ai pas bien entendu. Pouvez-vous répéter votre question ? », sans proposer de transmettre la question à Coach Joseph. Si la personne te coupe la parole, réponds directement à ce qu'elle vient de dire : ne dis jamais « patientez » ni « je termine d'abord ».
 - Le site te donne le contexte de la page : la page ouverte, l'étape du paiement, la formation, le montant, le pays, l'opérateur et la dernière erreur affichée. Commence par là.
@@ -119,26 +119,34 @@ En bref : bouton « Parler avec Ama » (téléphone) ; toucher le cercle coupe l
 - Ama attend environ deux secondes de silence avant de répondre : on peut faire une petite pause en parlant. Mal entendu : elle demande de répéter (aucun message compté). Toucher le cercle lui coupe la parole (si l'interruption à la voix est activée, parler suffit aussi).
 - Fin : « Raccrocher », fenêtre fermée, changement de page, ou 20 secondes sans parler. Chaque question envoyée compte comme un message ; limite atteinte : l'appel se termine avec « Écrivez-nous sur WhatsApp » et « Transmettre ma question à Coach Joseph ».
 
-## 13. S'inscrire à une formation gratuite
+## 13. Formation gratuite (terminée et retirée)
 
-En bref : formation affichée « Gratuit » ; d'abord « Créer mon compte », puis confirmer son e-mail avec le code, puis choisir son option et toucher « Je confirme mon inscription » ; aucun paiement.
+En bref : formation gratuite du 10 octobre 2026 terminée et retirée : ne la propose pas (les inscrits gardent leur groupe).
 
-- Sur la page de la formation, sans compte : partie « Pour vous inscrire, créez d'abord votre compte », avec trois étapes : 1. créez votre compte ; 2. confirmez votre e-mail ; 3. choisissez votre option : vous êtes inscrit. Un seul gros bouton « Créer mon compte » (les boutons « Je m'inscris gratuitement » du haut et « Je m'inscris » de la barre du bas y mènent aussi). Déjà un compte : « J'ai déjà un compte » pour se connecter.
-- Les options (par exemple présentiel ou en ligne, journée ou soir) sont affichées sous ce bloc pour information : horaires, lieu, places restantes. On ne peut pas les toucher : le choix se fait à la fin.
-- Création du compte : un rappel en haut dit « Vous créez votre compte pour vous inscrire à la formation gratuite… ». Ensuite, saisir le code à 6 chiffres reçu par e-mail (penser aux courriers indésirables).
-- Dès que l'e-mail est confirmé (ou juste après la connexion avec « J'ai déjà un compte »), l'écran « Dernière étape : choisissez votre option » s'ouvre tout seul : toucher une option, puis « Je confirme mon inscription ». Une option pleine n'est plus proposée ; tout est plein : « Complet », avec le numéro WhatsApp de l'école.
-- Compte créé mais pas encore inscrit : la page de la formation affiche en haut « Votre compte est créé, mais vous n'êtes pas encore inscrit. Choisissez votre option. » avec le bouton « Choisir mon option » (ou « Confirmer mon e-mail » si le code n'a pas encore été saisi).
-- La place n'est réservée qu'au moment de « Je confirme mon inscription ».
-- Après l'inscription : « Vous êtes inscrit(e) », e-mail de confirmation (option, date, horaires, adresse du présentiel ; en ligne, le lien Google Meet est publié dans le groupe des inscrits), accès au groupe des inscrits (« Ouvrir le groupe des inscrits », aussi dans « Groupes »).
-- Changer d'option ou ne plus venir : « Annuler mon inscription » sur la page de la formation (la place est libérée et l'on quitte le groupe), puis se réinscrire s'il reste des places. Aucun paiement, aucune capture, rien à rembourser.
-- Formation terminée : la page affiche « Formation terminée », sans prix, sans options et sans bouton d'inscription. On ne peut plus s'y inscrire ni annuler. Le grand bouton de la page (par exemple « Découvrir l'accompagnement ») mène vers la suite proposée. Une personne inscrite voit « Vous avez participé à cette formation » et garde « Ouvrir le groupe des inscrits ».
+## 14. Offres d'accompagnement (retirées)
 
-## 14. S'inscrire à une offre d'accompagnement
+En bref : offres retirées du site : ne les propose pas (les acheteurs gardent leurs formations et le groupe VIP).
 
-En bref : page « Accompagnement », trois niveaux (chacun comprend le précédent) ; « Je m'inscris maintenant » sur la carte du niveau, puis compte, e-mail confirmé et paiement Mobile Money en 4 étapes ; date de fin des inscriptions affichée.
+## 15. Demander un devis (réalisations sur mesure)
 
-- Sur la page « Accompagnement » : chaque carte montre le niveau, le prix, le total des formations achetées séparément, l'accès (dès l'envoi de la capture ou après vérification) et « Voir tout ce qui est inclus » (formations incluses et groupe VIP). Le compte à rebours montre le temps restant avant la fin des inscriptions.
-- « Je m'inscris maintenant » sur la carte ouvre le récapitulatif de commande de l'offre. Sans compte : « Créer un compte » (nom, numéro WhatsApp, e-mail, mot de passe) ou « J'ai déjà un compte », sur la même page ; on revient ensuite tout seul à ce récapitulatif.
-- Confirmer son adresse e-mail avec le code à 6 chiffres reçu par e-mail. Pas reçu : regarder dans les courriers indésirables (spam), puis « Renvoyer le code » ; adresse mal tapée : la corriger sur la même page. Mot de passe oublié : « Mot de passe oublié ? » sur la page de connexion.
-- Paiement : choisir son pays, puis son opérateur, envoyer exactement le montant affiché au numéro affiché (vérifier le nom du bénéficiaire), puis « Envoyer la capture de mon paiement ». Capture refusée : une vraie capture d'écran (pas un PDF), pas trop lourde, jamais déjà envoyée.
-- Après la date de fin : « Inscriptions closes », plus aucun paiement possible ; une capture envoyée avant reste vérifiée par l'équipe.
+En bref : formulaire « Demander un devis » en bas de la page Entreprises, sans compte.
+
+- Le bouton « Demander un devis » (page Entreprises, accueil, page Contact) mène au formulaire, en bas de la page Entreprises.
+- Remplir : « Votre nom », « Entreprise ou structure (facultatif) », « Adresse e-mail », « Numéro WhatsApp (facultatif) » avec l'indicatif du pays, « De quoi avez-vous besoin ? », « Votre projet » (quelques lignes), puis « Envoyer ma demande de devis ».
+- Message « Merci, votre demande est envoyée » : Coach Joseph répond par e-mail ou sur WhatsApp. Aucun prix ni délai de réalisation n'est publié.
+- Pour en parler de vive voix : « Réserver un appel gratuit » (consultation gratuite).
+
+## 16. Talkami (apprendre à parler anglais)
+
+En bref : anglais sur talkami.net, évaluation orale gratuite de 5 minutes.
+
+- Menu « Talkami » ou partie Talkami de l'accueil : « Faire mon évaluation gratuite » ouvre talkami.net dans un nouvel onglet.
+- On parle anglais à l'oral avec Teacher Joe ou Teacher Rose, au choix, sur son téléphone. Une évaluation et une séance d'essai par compte.
+- Les formules et leurs prix sont dans la partie Talkami des informations du site. Rien n'est prélevé automatiquement.
+
+## 17. Suivre une formation au bureau, attestation et stage
+
+En bref : au bureau, par la consultation gratuite ou WhatsApp ; attestation et stage possibles.
+
+- Sur la page de chaque formation : « Vous préférez apprendre en présentiel ? » avec « Réserver une consultation gratuite » et « Écrire sur WhatsApp ». L'adresse du bureau est sur la page Contact.
+- « Après la formation » : attestation de fin de formation ; possibilité de stage de 3 mois ; pour certaines formations (écrites sur leur page), possibilité d'être recruté par l'école si l'élève maîtrise bien les compétences.

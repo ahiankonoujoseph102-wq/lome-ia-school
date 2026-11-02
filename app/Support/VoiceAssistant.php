@@ -58,6 +58,7 @@ class VoiceAssistant
         'about' => ['page À propos', 'présente l\'école et le formateur'],
         'business' => ['page Entreprises et réalisations sur mesure', 'présente les réalisations sur mesure (sites vitrines, sites professionnels, agents IA, automatisations), les services aux entreprises, le formulaire « Demander un devis » et le bouton « Réserver un appel gratuit »'],
         'contact' => ['page Contact', 'donne les coordonnées de l\'école et les horaires'],
+        'talkami' => ['page Talkami', 'présente Talkami, la plateforme créée par Joseph pour apprendre à parler anglais ; le bouton « Faire mon évaluation gratuite » ouvre talkami.net'],
         'affiliate.program' => ['page Devenez affilié', 'explique le programme d\'affiliation'],
         'consultation' => ['page de la consultation gratuite', 'permet de réserver un appel vidéo gratuit de 30 minutes, sans compte'],
         'consultation.manage' => ['page de gestion d\'un rendez-vous de consultation', 'permet de voir, déplacer ou annuler son rendez-vous'],

@@ -8,6 +8,7 @@ use App\Models\FreeRegistrationOption;
 use App\Models\Lesson;
 use App\Support\LiveOffer;
 use App\Support\Money;
+use App\Support\Talkami;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 
@@ -36,7 +37,8 @@ class AmaKnowledge
         Horaires : {horaires}.
         Les formations sont enregistrées : l'élève les suit à son rythme, avec un accès immédiat après le paiement. L'accès à vie et l'accompagnement à vie sont inclus (dans le groupe privé de chaque formation, réservé aux élèves inscrits).
         De temps en temps, l'école organise des sessions ponctuelles en direct (Google Meet) ou en présentiel à Lomé pour une formation. Elles sont annoncées sur le site au moment où elles sont organisées.
-        Une page « Entreprises et centres de formation » présente les services de Joseph aux entreprises et aux centres de formation, avec un appel gratuit à réserver.
+        Une page « Entreprises et réalisations sur mesure » présente les réalisations faites pour les clients (sites, agents IA, automatisations), les services aux entreprises et aux centres de formation, un formulaire « Demander un devis » et un appel gratuit à réserver.
+        Joseph a aussi créé Talkami, une plateforme pour apprendre à parler anglais avec un professeur virtuel.
         La consultation gratuite dure 30 minutes, se réserve sur le site sans compte et se déroule en ligne par appel vidéo.
         TXT;
 
@@ -271,6 +273,19 @@ class AmaKnowledge
             'Description : '.$description,
         ];
 
+        // Ce qui est écrit sur la page de la formation (novembre 2026) : compétences, métiers, après la formation.
+        if ($formation->outcomes) {
+            $lines[] = 'Ce que vous allez apprendre (écrit sur la page) : '.implode(' ; ', (array) $formation->outcomes).'.';
+        }
+
+        if ($formation->careers) {
+            $lines[] = 'Des métiers où ces compétences servent (écrit sur la page, jamais un emploi promis) : '.implode(' ; ', (array) $formation->careers).'.';
+        }
+
+        if ($after = $formation->afterTraining()) {
+            $lines[] = 'Après la formation : '.implode(' ; ', array_map(fn (array $item): string => $item['title'], $after)).'.';
+        }
+
         $modules = $formation->modules
             ->filter(fn (CourseModule $module): bool => $module->lessons->isNotEmpty())
             ->values();
@@ -285,7 +300,7 @@ class AmaKnowledge
         if ($modules->isEmpty() && $liveOffer !== null) {
             $lines[] = 'Leçons enregistrées : aucune n\'est encore publiée sur le site ; le programme à présenter est celui des séances en direct ci-dessus.';
         } elseif ($modules->isEmpty()) {
-            $lines[] = 'Programme : aucun module ni aucune leçon n\'est encore publié pour cette formation. Ne décris aucun programme, aucun module ni aucune leçon : dis simplement que le contenu détaillé n\'est pas encore affiché sur le site.';
+            $lines[] = 'Programme : aucun module ni aucune leçon n\'est encore publié pour cette formation. Ne décris aucun module ni aucune leçon : tu peux citer « Ce que vous allez apprendre » ci-dessus, et dire que le détail des leçons n\'est pas encore affiché sur le site.';
         } else {
             $lines[] = 'Programme (titres des modules et des leçons publiées) :';
 
@@ -338,8 +353,13 @@ class AmaKnowledge
     /**
      * Informations utiles des pages publiques et règles importantes des CGV.
      */
-    public static function publicPages(): string
+    public static function publicPages(string $topics = ''): string
     {
+        // Détail de la page Entreprises, de l'après-formation et de Talkami seulement quand la page du visiteur ou ses
+        // derniers messages s'y rapportent (mêmes mots que les parties 15, 16 et 17 du guide) ; sinon une ligne courte.
+        $topics = Str::lower(Str::ascii($topics));
+        $about = fn (int $part, string $page): bool => str_contains($topics, Str::lower(Str::ascii($page)))
+            || collect(AmaPrompt::GUIDE_TRIGGERS[$part] ?? [])->contains(fn (string $word): bool => str_contains($topics, $word));
         $hero = (array) config('site.hero');
         $business = (array) config('site.business');
         $stats = collect((array) config('site.stats'))
@@ -358,10 +378,46 @@ class AmaKnowledge
 
         $services = collect((array) ($business['services'] ?? []))->implode(' ; ');
         $intro = collect((array) ($business['intro'] ?? []))->implode(' ');
-        $parts[] = '### Page « Entreprises et réalisations sur mesure » ('.route('business').")\n"
-            .($business['title'] ?? '')."\n".$intro
-            ."\nServices proposés : ".$services.'.'
-            ."\nLe bouton « Réserver un appel gratuit » mène à la consultation gratuite (profil « entreprise » présélectionné).";
+        $customWork = (array) config('site.custom_work');
+        $workItems = collect((array) ($customWork['items'] ?? []))
+            ->filter(fn ($item): bool => is_array($item) && filled($item['title'] ?? null))
+            ->map(fn (array $item): string => $item['title'].(filled($item['text'] ?? null) ? ' ('.$item['text'].')' : ''))
+            ->implode(' ; ');
+        if ($about(15, 'page Entreprises')) {
+            $parts[] = '### Page « Entreprises et réalisations sur mesure » ('.route('business').")\n"
+                .($business['title'] ?? '')."\n".$intro
+                .($workItems !== '' ? "\n« ".($customWork['title'] ?? 'Nous le faisons pour vous').' » : l\'équipe réalise pour le client : '.$workItems.'.' : '')
+                ."\nServices proposés : ".$services.'.'
+                ."\nDevis : formulaire « Demander un devis » en bas de cette page (".route('business').'#devis'.', sans compte : nom, e-mail, WhatsApp facultatif, besoin, description du projet) ; la demande arrive à Coach Joseph, qui répond par e-mail ou sur WhatsApp. Aucun prix de réalisation n\'est publié : ne donne jamais de prix ni de délai, oriente vers le formulaire.'
+                ."\nLe bouton « Réserver un appel gratuit » mène à la consultation gratuite (profil « entreprise » présélectionné).";
+        } else {
+            $parts[] = '### Page Entreprises ('.route('business').")\n"
+                .'Réalisations ('.collect((array) ($customWork['items'] ?? []))->pluck('title')->filter()->implode(', ').') et services aux entreprises ; devis : formulaire (#devis), jamais de prix ni de délai.';
+        }
+
+        // Après la formation et présentiel (novembre 2026, faits fournis par Joseph : config site.after_training, site.in_person).
+        $after = (array) config('site.after_training');
+        $recruitment = Formation::query()->published()->whereIn('slug', (array) ($after['recruitment_slugs'] ?? []))->pluck('title')->implode(', ');
+        $afterLines = array_filter([
+            collect((array) ($after['items'] ?? []))->map(fn ($item): string => is_array($item) ? trim(($item['title'] ?? '').' : '.($item['text'] ?? '')) : '')->filter()->implode("\n- "),
+            $recruitment !== '' && is_array($after['recruitment'] ?? null) ? ($after['recruitment']['title'] ?? '').' (seulement après : '.$recruitment.') : '.($after['recruitment']['text'] ?? '') : null,
+            filled(config('site.in_person.text')) ? 'Présentiel : '.str_replace('{adresse}', (string) config('site.contact.address'), (string) config('site.in_person.text')) : null,
+        ]);
+
+        if ($afterLines !== [] && $about(17, 'page de la formation')) {
+            $parts[] = "### Après la formation et formation au bureau (toutes les formations payantes)\n- ".implode("\n- ", $afterLines)
+                ."\nPrésente le stage et le recrutement comme des possibilités, jamais comme une promesse d'emploi.";
+        } elseif ($afterLines !== []) {
+            $parts[] = "### Après la formation\nAttestation, stage de 3 mois possible ; au bureau : consultation gratuite ou WhatsApp, paiement en ligne. Jamais une promesse d'emploi.";
+        }
+
+        // Talkami, création de Joseph (App\Support\Talkami).
+        if (($talkami = Talkami::assistantText()) !== '' && $about(16, 'page Talkami')) {
+            $parts[] = '### Talkami (plateforme pour apprendre à parler anglais, page '.route('talkami').")\n".$talkami
+                ."\nPour l'anglais, propose l'évaluation orale gratuite de 5 minutes sur Talkami ; ne parle jamais de « formation gratuite en anglais » (Talkami est payant après l'évaluation et la séance d'essai).";
+        } elseif ($talkami !== '') {
+            $parts[] = "### Talkami\nCréé par Joseph, pour parler anglais : évaluation gratuite de 5 minutes sur ".Talkami::url().'.';
+        }
 
         $faq = collect((array) config('site.faq.home'))
             ->map(fn (array $item): string => '- '.($item['question'] ?? '').' '.($item['answer'] ?? ''))

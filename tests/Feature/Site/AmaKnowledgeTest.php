@@ -64,7 +64,8 @@ class AmaKnowledgeTest extends TestCase
     public function test_ama_receives_the_school_the_pages_the_rules_and_the_guide_under_clear_headings(): void
     {
         $this->fakeGemini();
-        $this->ask();
+        // Novembre 2026 : le détail de la page Entreprises n'est envoyé que si le visiteur en parle.
+        $this->ask('Bonjour, je voudrais un devis pour mon entreprise');
         $prompt = $this->received();
 
         foreach ([
@@ -144,7 +145,7 @@ class AmaKnowledgeTest extends TestCase
         $this->ask();
         $prompt = $this->received();
 
-        $this->assertMatchesRegularExpression('/### Formation Exemple Sans Contenu\n.*\nDescription : .*\nProgramme : aucun module ni aucune leçon n\'est encore publié pour cette formation\. Ne décris aucun programme/s', $prompt);
+        $this->assertMatchesRegularExpression('/### Formation Exemple Sans Contenu\n.*\nDescription : .*\nProgramme : aucun module ni aucune leçon n\'est encore publié pour cette formation\. Ne décris aucun module ni aucune leçon/s', $prompt);
         $this->assertStringNotContainsString('Formation Exemple Masquée', $prompt);
     }
 
