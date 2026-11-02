@@ -113,14 +113,6 @@
                         </div>
                     @endif
 
-                    <ul class="mt-6 flex flex-wrap gap-2" data-reveal style="--reveal-delay: 180ms">
-                        @foreach (config('site.lifetime.items') as $item)
-                            <li class="inline-flex items-center gap-1.5 rounded-full bg-gold-400/15 px-3 py-1.5 text-sm font-semibold text-gold-200 ring-1 ring-gold-400/40">
-                                <flux:icon :icon="$item['icon']" class="size-4" /> {{ $item['title'] }}
-                            </li>
-                        @endforeach
-                    </ul>
-
                     <div class="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center" data-reveal style="--reveal-delay: 200ms">
                         <div>
                             <p class="text-sm text-slate-400">Prix de la formation</p>
@@ -147,22 +139,7 @@
         </div>
     </section>
 
-    {{-- Garanties --}}
-    <section class="border-y border-veil/10 bg-veil/[0.02]">
-        <ul class="mx-auto grid max-w-6xl gap-4 px-4 py-6 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-            @foreach ($formation->guarantees() as $guarantee)
-                <li class="flex items-start gap-3" data-reveal style="--reveal-delay: {{ $loop->index * 80 }}ms">
-                    <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-gold-400/15 text-gold-300">
-                        <flux:icon :icon="$guarantee['icon']" class="size-5" />
-                    </span>
-                    <span>
-                        <span class="block font-semibold text-white">{{ $guarantee['title'] }}</span>
-                        <span class="block text-sm text-slate-400">{{ $guarantee['text'] }}</span>
-                    </span>
-                </li>
-            @endforeach
-        </ul>
-    </section>
+    @include('site.formations.partials.essentials')
 
     <div class="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_340px] lg:py-20">
         <div class="min-w-0 space-y-16">
@@ -172,10 +149,13 @@
             @endif
 
             {{-- Présentation --}}
-            <section data-reveal>
+            <section id="presentation" class="scroll-mt-32" data-reveal>
                 <h2 class="text-2xl font-bold text-white sm:text-3xl">Présentation</h2>
                 <x-site.rich-text :text="$formation->description" class="mt-4 text-base leading-relaxed text-pretty text-slate-300 sm:text-lg" />
             </section>
+
+            {{-- Comment se déroule la formation : parcours réel de l'élève (App\Support\FormationOverview) --}}
+            @include('site.formations.partials.journey')
 
             {{-- Prochaine session ponctuelle : sans lien Google Meet, réservée aux élèves de la formation --}}
             @if ($nextSession && ! $liveOffer)
@@ -197,18 +177,18 @@
 
             {{-- Ce que vous allez apprendre --}}
             @if ($formation->outcomes)
-                <section>
+                <section id="apprendre" class="scroll-mt-32" data-test="formation-outcomes">
                     <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Ce que vous allez apprendre</h2>
-                    <ul class="mt-6 grid gap-3 sm:grid-cols-2">
-                        @foreach ($formation->outcomes as $outcome)
-                            <li class="card flex gap-3 p-4" data-reveal style="--reveal-delay: {{ $loop->index * 60 }}ms">
-                                <span class="grid size-7 shrink-0 place-items-center rounded-full bg-electric-500/20 text-electric-300">
-                                    <flux:icon.check class="size-4" />
-                                </span>
-                                <span class="text-slate-200">{{ $outcome }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
+                    <div class="mt-6 rounded-3xl bg-night-900 p-5 shadow-[inset_0_0_0_1px_var(--color-night-700)] sm:p-7" data-reveal>
+                        <ol class="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                            @foreach ($formation->outcomes as $outcome)
+                                <li class="flex gap-3">
+                                    <span class="grid size-7 shrink-0 place-items-center rounded-full bg-electric-500/20 text-xs font-bold text-electric-200 tabular-nums shadow-[inset_0_0_0_1px_rgb(139_92_246/0.45)]">{{ $loop->iteration }}</span>
+                                    <span class="pt-0.5 leading-relaxed text-slate-200">{{ $outcome }}</span>
+                                </li>
+                            @endforeach
+                        </ol>
+                    </div>
                 </section>
             @endif
 
@@ -219,7 +199,7 @@
                 $totalDuration = $formation->totalDurationSeconds();
             @endphp
             @if ($curriculum->isNotEmpty())
-                <section id="programme" class="scroll-mt-24">
+                <section id="programme" class="scroll-mt-32">
                     <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Programme de la formation</h2>
                     <p class="mt-2 text-slate-400" data-reveal>
                         {{ $curriculum->count() }} {{ $curriculum->count() > 1 ? 'modules' : 'module' }} · {{ $lessonCount }} {{ $lessonCount > 1 ? 'leçons' : 'leçon' }}@if ($totalDuration) · {{ \App\Models\Lesson::formatDuration($totalDuration) }} de vidéo @endif
@@ -266,7 +246,7 @@
 
             {{-- Pour qui --}}
             @if ($formation->audience)
-                <section>
+                <section id="pour-qui" class="scroll-mt-32">
                     <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Pour qui est cette formation ?</h2>
                     <ul class="mt-6 space-y-3">
                         @foreach ($formation->audience as $person)
@@ -323,7 +303,7 @@
 
             {{-- Après la formation : attestation, stage, recrutement possible (config site.after_training) --}}
             @if ($afterTraining = $formation->afterTraining())
-                <section data-test="formation-after-training">
+                <section id="apres" class="scroll-mt-32" data-test="formation-after-training">
                     <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Après la formation</h2>
                     <ul class="mt-6 grid gap-3 sm:grid-cols-2">
                         @foreach ($afterTraining as $item)
@@ -358,7 +338,7 @@
             @endif
 
             {{-- Formateur --}}
-            <section data-reveal>
+            <section id="formateur" class="scroll-mt-32" data-reveal>
                 <h2 class="text-2xl font-bold text-white sm:text-3xl">Votre formateur</h2>
                 <div class="card mt-6 flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
                     @include('site.partials.trainer-photo', ['size' => 'size-20'])
@@ -382,7 +362,7 @@
             @endif
 
             {{-- FAQ --}}
-            <section>
+            <section id="questions" class="scroll-mt-32">
                 <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Questions fréquentes</h2>
                 <x-site.faq :items="$liveOffer ? $liveOffer->faq() : [...config('site.faq.formation'), ...$formation->extraFaq()]" class="mt-6" data-test="formation-faq" />
             </section>
@@ -390,7 +370,7 @@
 
         {{-- Encadré d'achat (écrans larges) --}}
         <aside class="hidden lg:block">
-            <div class="card sticky top-24 space-y-5 p-6">
+            <div class="card sticky top-32 space-y-5 p-6">
                 <p class="text-sm text-slate-400">Prix de la formation</p>
                 <p class="-mt-3 text-4xl font-bold text-gold-300">{{ $formation->formatted_price }}</p>
                 <a href="{{ $buyUrl }}" class="btn-gold w-full">Acheter maintenant</a>

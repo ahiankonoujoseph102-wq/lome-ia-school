@@ -401,6 +401,64 @@ Alpine.data('packsStickyBar', () => ({
     },
 }));
 
+/**
+ * Barre « Sur cette page » d'une formation : souligne la partie en cours de lecture et la garde visible dans la
+ * barre (défilement sur le côté sur téléphone). Une seule mesure par image, sans écouteur actif hors défilement.
+ */
+Alpine.data('sectionNav', () => ({
+    current: null,
+
+    init() {
+        const links = [...this.$el.querySelectorAll('[data-section-link]')];
+        const sections = links.map((link) => document.getElementById(link.dataset.sectionLink)).filter(Boolean);
+
+        if (!sections.length) {
+            return;
+        }
+
+        let pending = false;
+        const update = () => {
+            pending = false;
+            const line = this.$el.getBoundingClientRect().bottom + 24;
+            let active = null;
+
+            sections.forEach((section) => {
+                if (section.getBoundingClientRect().top <= line) {
+                    active = section.id;
+                }
+            });
+
+            if (active === this.current) {
+                return;
+            }
+
+            this.current = active;
+            links.forEach((link) => {
+                const on = link.dataset.sectionLink === active;
+                link.setAttribute('aria-current', on ? 'true' : 'false');
+
+                if (on) {
+                    const list = this.$refs.list;
+                    const left = link.offsetLeft - (list.clientWidth - link.offsetWidth) / 2;
+                    list.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+                }
+            });
+        };
+
+        window.addEventListener(
+            'scroll',
+            () => {
+                if (!pending) {
+                    pending = true;
+                    requestAnimationFrame(update);
+                }
+            },
+            { passive: true },
+        );
+        update();
+    },
+}));
+
 Alpine.data('copyText', (text) => ({
     copied: false,
 
