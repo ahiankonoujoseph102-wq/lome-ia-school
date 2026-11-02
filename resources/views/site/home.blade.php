@@ -41,7 +41,7 @@
             <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
         @endif
 
-        <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-10 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-[1.15fr_0.85fr] lg:pt-20 lg:pb-24">
+        <div class="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-12 px-4 pt-10 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:pt-20 lg:pb-24">
             <div class="text-center lg:text-left">
                 <span class="eyebrow" data-reveal>
                     <span class="size-1.5 rounded-full bg-gold-400"></span>
@@ -70,7 +70,41 @@
                         <li class="inline-flex items-center gap-1.5"><flux:icon.check-circle class="size-4 text-gold-400" /> {{ $point }}</li>
                     @endforeach
                 </ul>
+
+                {{-- Repère de confiance : Coach Joseph et le premier chiffre clé officiel (Réglages du site > Coordonnées). --}}
+                @php
+                    $heroStat = collect((array) config('site.stats'))->first(fn ($stat) => is_array($stat) && filled($stat['value'] ?? null) && ! str_starts_with((string) $stat['value'], '['));
+                @endphp
+                <a href="{{ route('founder') }}" class="mx-auto mt-7 flex w-fit items-center gap-3 rounded-full bg-night-900/80 py-1.5 pr-5 pl-1.5 text-left shadow-[inset_0_0_0_1px_var(--color-night-600)] transition hover:bg-night-800 lg:mx-0" data-test="hero-trainer" data-reveal style="--reveal-delay: 360ms">
+                    @include('site.partials.trainer-photo', ['size' => 'size-11 !rounded-full', 'loading' => 'eager'])
+                    <span class="min-w-0">
+                        <span class="block text-sm font-semibold text-white">Avec Coach Joseph, votre formateur</span>
+                        @if ($heroStat)
+                            <span class="block text-xs text-slate-300">{{ $heroStat['value'] }} {{ $heroStat['label'] }}</span>
+                        @endif
+                    </span>
+                </a>
             </div>
+
+            {{-- Téléphone et tablette : aperçu des formations phares qui défile sur le côté (l'écran large a sa carte à droite). --}}
+            @if ($featured->isNotEmpty())
+                <div class="-mx-4 -mt-4 lg:hidden" data-test="hero-featured" data-reveal style="--reveal-delay: 400ms">
+                    <p class="px-4 text-center text-xs font-semibold tracking-wide text-slate-400 uppercase">Nos formations phares</p>
+                    <ul class="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 [scrollbar-width:none] sm:justify-center">
+                        @foreach ($featured->take(5) as $formation)
+                            <li class="w-[15.5rem] shrink-0 snap-start">
+                                <a href="{{ route('formations.show', $formation) }}" class="flex items-center gap-3 rounded-2xl bg-night-900/90 p-2.5 shadow-[inset_0_0_0_1px_var(--color-night-600)]">
+                                    <x-site.formation-cover :formation="$formation" class="size-14 shrink-0 rounded-xl" compact />
+                                    <span class="min-w-0 flex-1">
+                                        <span class="line-clamp-2 text-sm leading-snug font-semibold text-white">{{ $formation->title }}</span>
+                                        <span class="mt-0.5 block text-sm font-bold text-gold-300">{{ $formation->formatted_price }}</span>
+                                    </span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             {{-- Aperçu des formations (écrans larges) --}}
             @if ($featured->isNotEmpty())
@@ -82,7 +116,7 @@
                             <a href="{{ route('formations.show', $formation) }}" class="flex items-center gap-4 rounded-2xl bg-veil/[0.04] p-3 ring-1 ring-veil/10 transition hover:bg-veil/[0.08]">
                                 <x-site.formation-cover :formation="$formation" class="size-16 shrink-0 rounded-xl" compact eager />
                                 <span class="min-w-0 flex-1">
-                                    <span class="block truncate font-semibold text-white">{{ $formation->title }}</span>
+                                    <span class="line-clamp-2 leading-snug font-semibold text-white">{{ $formation->title }}</span>
                                     <span class="block text-sm text-slate-400">{{ $formation->category->label() }}</span>
                                 </span>
                                 <span class="font-bold whitespace-nowrap text-gold-300">{{ $formation->formatted_price }}</span>

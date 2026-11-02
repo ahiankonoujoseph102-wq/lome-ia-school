@@ -75,9 +75,9 @@
         </div>
 
         {{-- Résultats --}}
-        <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             @foreach ($formations as $formation)
-                <x-site.formation-card :formation="$formation" :delay="($loop->index % 3) * 70" x-show="matches({{ $formation->id }})" />
+                <x-site.formation-card :formation="$formation" :delay="($loop->index % 3) * 70" list-on-mobile x-show="matches({{ $formation->id }})" />
             @endforeach
         </div>
 
