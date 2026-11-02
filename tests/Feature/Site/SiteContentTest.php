@@ -156,6 +156,8 @@ class SiteContentTest extends TestCase
 
     public function test_site_is_always_dark_whatever_the_phone_setting(): void
     {
+        // Ancien design sombre (réglage site.design.theme = dark) ; le design clair est testé dans SiteDesignTest.
+        config(['site.design.theme' => 'dark']);
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('<meta name="color-scheme" content="only dark">', false);

@@ -14,7 +14,7 @@
 @endphp
 
 <section id="talkami" class="section scroll-mt-20 !pt-4" data-test="home-talkami">
-    <div class="relative overflow-hidden rounded-[2rem] bg-[#101c45] p-5 shadow-[inset_0_0_0_1px_#24346e] sm:p-10 lg:p-12" data-reveal>
+    <div class="theme-island relative overflow-hidden rounded-[2rem] bg-[#101c45] p-5 shadow-[inset_0_0_0_1px_#24346e] sm:p-10 lg:p-12" data-reveal>
         <div class="pointer-events-none absolute -top-28 -right-24 size-80 rounded-full bg-[#f97316]/15 blur-3xl"></div>
 
         <div class="relative flex flex-wrap items-center justify-between gap-3">
