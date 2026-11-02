@@ -29,9 +29,7 @@ class SiteColorSchemeTest extends TestCase
 
             $this->assertStringContainsString('<meta name="color-scheme" content="only dark">', $html, $url);
             // Détection du mode sombre forcé (couleur système « canvas » qui n'est plus blanche) avant tout affichage.
-            // Seul l'en-tête compte (une page longue épuiserait la recherche sur tout le document).
-            $head = (string) strstr($html, '</head>', true);
-            $this->assertMatchesRegularExpression("/<script>\\s*\\(\\(\\) => \\{.*background-color:canvas;color-scheme:light.*rgb\\(18, 18, 18\\).*prefers-color-scheme: dark.*'force-dark'.*<\\/script>.*<link[^>]+build\\/assets\\/site/s", $head, $url);
+            $this->assertMatchesRegularExpression("/<script>\\s*\\(\\(\\) => \\{.*background-color:canvas;color-scheme:light.*rgb\\(18, 18, 18\\).*prefers-color-scheme: dark.*'force-dark'.*<\\/script>.*<link[^>]+build\\/assets\\/site/s", $html, $url);
         }
     }
 
