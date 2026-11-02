@@ -14,7 +14,7 @@
         <form method="POST" action="{{ route('admin.moderators.store') }}" class="card mt-6 space-y-4 p-5 sm:p-6">
             @csrf
             <x-site.field name="email" label="Adresse e-mail du compte à nommer modérateur" type="email" :value="old('email')" required inputmode="email" autocomplete="off" />
-            <p class="text-xs text-slate-500">La personne doit d'abord avoir créé son compte sur le site. Elle devra activer la double authentification pour accéder à la modération.</p>
+            <p class="text-xs text-slate-400">La personne doit d'abord avoir créé son compte sur le site. Elle devra activer la double authentification pour accéder à la modération.</p>
             <x-admin.password-confirm />
             <button type="submit" class="btn-gold w-full sm:w-auto"><flux:icon.user-plus class="size-5" /> Nommer modérateur</button>
         </form>
@@ -28,7 +28,7 @@
                         <x-site.avatar :user="$moderator" class="size-10 text-xs" />
                         <div class="min-w-0 flex-1">
                             <p class="flex items-center gap-1.5"><span class="truncate font-semibold text-white">{{ $moderator->name }}</span> <span class="chat-badge chat-badge-team">Équipe</span></p>
-                            <p class="truncate text-xs text-slate-500">{{ $moderator->email }}</p>
+                            <p class="truncate text-xs text-slate-400">{{ $moderator->email }}</p>
                         </div>
                     </div>
                     <details class="group mt-2" @if ($demoteErrors->any()) open @endif>
@@ -93,7 +93,7 @@
                     <x-site.avatar :user="$admin" class="size-10 text-xs" />
                     <div class="min-w-0 flex-1">
                         <p class="flex items-center gap-1.5"><span class="truncate font-semibold text-white">{{ $admin->name }}</span> <span class="{{ \App\Chat\ChatBadges::classes($admin->chatBadgeKind()) }}">{{ $admin->chatBadge() }}</span></p>
-                        <p class="truncate text-xs text-slate-500">{{ $admin->email }}</p>
+                        <p class="truncate text-xs text-slate-400">{{ $admin->email }}</p>
                     </div>
                 </li>
             @endforeach

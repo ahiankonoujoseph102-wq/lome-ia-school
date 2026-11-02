@@ -41,7 +41,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-veil/10 px-5 py-4">
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 {{ $purchase->status->badgeClasses() }}">{{ $purchase->status->label() }}</span>
-                            <span class="text-xs text-slate-500">{{ $purchase->receipt_number }} · {{ $purchase->created_at?->translatedFormat('j F Y à H\hi') }} ({{ $purchase->created_at?->diffForHumans() }})</span>
+                            <span class="text-xs text-slate-400">{{ $purchase->receipt_number }} · {{ $purchase->created_at?->translatedFormat('j F Y à H\hi') }} ({{ $purchase->created_at?->diffForHumans() }})</span>
                         </div>
                         <p class="text-2xl font-bold text-gold-300">{{ $purchase->formatted_amount }}</p>
                     </div>
@@ -97,7 +97,7 @@
                                         @if ($user->phone)
                                             <dd><a href="https://wa.me/{{ ltrim($user->phone, '+') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-[#25D366]"><x-site.whatsapp-icon class="size-4" /> {{ $user->formatted_phone }}</a></dd>
                                         @endif
-                                        <dd class="text-xs text-slate-500">Inscrit le {{ $user->created_at?->translatedFormat('j F Y à H\hi') }}</dd>
+                                        <dd class="text-xs text-slate-400">Inscrit le {{ $user->created_at?->translatedFormat('j F Y à H\hi') }}</dd>
                                     @endif
                                 </div>
                                 @foreach (array_filter([
@@ -173,7 +173,7 @@
                                     <button type="submit" class="btn w-full bg-rose-500 text-white hover:bg-rose-400">Confirmer le refus</button>
                                     <button type="button" @click="rejecting = false" class="btn-ghost w-full">Annuler</button>
                                 </div>
-                                <p class="text-xs text-slate-500">L'accès à la formation sera retiré immédiatement et l'élève prévenu par e-mail.</p>
+                                <p class="text-xs text-slate-400">L'accès à la formation sera retiré immédiatement et l'élève prévenu par e-mail.</p>
                             </form>
                         </div>
                     </div>
@@ -195,7 +195,7 @@
                         <li class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
                             <div class="min-w-0">
                                 <p class="font-medium text-white">{{ $decision->user?->name ?? 'Compte supprimé' }} · {{ $decision->item_label }}</p>
-                                <p class="text-xs text-slate-500">{{ $decision->formatted_amount }} · {{ $decision->verified_at?->translatedFormat('j F Y à H\hi') }}@if ($decision->rejection_reason) · {{ $decision->rejection_reason }}@endif @unless ($decision->isSessionSupplement()) · {{ $startedAt[$decision->id] ? 'formation commencée le '.$startedAt[$decision->id]->translatedFormat('j F') : 'aucune leçon consultée' }}@endunless</p>
+                                <p class="text-xs text-slate-400">{{ $decision->formatted_amount }} · {{ $decision->verified_at?->translatedFormat('j F Y à H\hi') }}@if ($decision->rejection_reason) · {{ $decision->rejection_reason }}@endif @unless ($decision->isSessionSupplement()) · {{ $startedAt[$decision->id] ? 'formation commencée le '.$startedAt[$decision->id]->translatedFormat('j F') : 'aucune leçon consultée' }}@endunless</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 {{ $decision->status->badgeClasses() }}">{{ $decision->status->label() }}</span>

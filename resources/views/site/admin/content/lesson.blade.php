@@ -47,7 +47,7 @@
             {{-- Vidéo : un lien par source (YouTube, Google Drive…), avec aperçu immédiat --}}
             <fieldset class="space-y-4" x-data="{ primary: @js($primaryVideo) }">
                 <legend class="field-label">Vidéo de la leçon</legend>
-                <p class="-mt-2 text-xs text-slate-500">Renseignez une source, ou les deux : la seconde sert de « lecteur de secours » si la première ne fonctionne pas.</p>
+                <p class="-mt-2 text-xs text-slate-400">Renseignez une source, ou les deux : la seconde sert de « lecteur de secours » si la première ne fonctionne pas.</p>
 
                 @foreach ($providers as $key => $videoProvider)
                     <div class="space-y-2 rounded-2xl bg-veil/[0.03] p-4 ring-1 ring-veil/10" x-data="lessonVideoPreview(@js($key), @js($videoLinks[$key]))">
@@ -81,7 +81,7 @@
                         @error('videos.'.$key)
                             <p class="text-sm text-rose-300">{{ $message }}</p>
                         @else
-                            <p class="text-xs text-slate-500">{{ $videoProvider->linkHelp() }}</p>
+                            <p class="text-xs text-slate-400">{{ $videoProvider->linkHelp() }}</p>
                         @enderror
 
                         <template x-if="videoId">
@@ -134,7 +134,7 @@
                                 @endif
                                 <span class="min-w-0 flex-1">
                                     <span class="block truncate text-sm text-white">{{ $resource->name }}</span>
-                                    <span class="text-xs text-slate-500">{{ $resource->details() }}</span>
+                                    <span class="text-xs text-slate-400">{{ $resource->details() }}</span>
                                 </span>
                                 <button type="submit" form="supprimer-ressource-{{ $resource->id }}" class="grid size-9 shrink-0 place-items-center rounded-full text-slate-400 ring-1 ring-veil/15 hover:text-rose-300" aria-label="Supprimer {{ $resource->name }}">
                                     <flux:icon.trash class="size-4" />
@@ -153,7 +153,7 @@
                     </label>
                     <input id="resources" type="file" name="resources[]" multiple accept=".{{ implode(',.', LessonRequest::RESOURCE_MIMES) }}" class="sr-only" @change="names = Array.from($event.target.files).map((file) => file.name)">
                 </div>
-                <p class="text-xs text-slate-500">PDF, images, Word, Excel, PowerPoint, ZIP… {{ intdiv(LessonRequest::RESOURCE_MAX_KB, 1024) }} Mo maximum par fichier. Ils restent privés : seuls les élèves de la formation peuvent les télécharger.</p>
+                <p class="text-xs text-slate-400">PDF, images, Word, Excel, PowerPoint, ZIP… {{ intdiv(LessonRequest::RESOURCE_MAX_KB, 1024) }} Mo maximum par fichier. Ils restent privés : seuls les élèves de la formation peuvent les télécharger.</p>
                 <div class="space-y-2 rounded-2xl bg-veil/[0.03] p-4 ring-1 ring-veil/10">
                     <p class="text-sm font-semibold text-white">Ou ajouter un lien Google Drive</p>
                     <p class="flex items-start gap-2 rounded-xl bg-gold-400/10 px-3 py-2 text-xs font-medium text-gold-100 ring-1 ring-gold-400/30">
@@ -169,7 +169,7 @@
                     @error('link_url')
                         <p class="text-sm text-rose-300">{{ $message }}</p>
                     @else
-                        <p class="text-xs text-slate-500">Le lien n'est jamais affiché dans la page : seuls les élèves ayant accès peuvent l'ouvrir.</p>
+                        <p class="text-xs text-slate-400">Le lien n'est jamais affiché dans la page : seuls les élèves ayant accès peuvent l'ouvrir.</p>
                     @enderror
                 </div>
                 @foreach ($errors->get('resources*') as $messages)

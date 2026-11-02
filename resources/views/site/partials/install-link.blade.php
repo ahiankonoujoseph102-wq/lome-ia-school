@@ -8,7 +8,7 @@
         type="button"
         @click="$store.installApp.install()"
         :aria-expanded="$store.installApp.ios ? String($store.installApp.helpOpen) : null"
-        class="inline-flex items-center gap-1.5 text-slate-400 hover:text-white"
+        class="inline-flex min-h-11 items-center gap-1.5 text-slate-400 hover:text-white sm:min-h-0"
     >
         <flux:icon.device-phone-mobile class="size-4 shrink-0" />
         Installer l'application

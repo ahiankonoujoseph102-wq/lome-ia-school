@@ -39,6 +39,6 @@
     @if ($hasError)
         <p id="{{ $id }}-erreur" class="text-sm text-rose-300">{{ $errors->first($name) }}</p>
     @elseif ($hint)
-        <p class="text-xs text-slate-500">{{ $hint }}</p>
+        <p class="text-xs text-slate-400">{{ $hint }}</p>
     @endif
 </div>

@@ -41,9 +41,9 @@
             <x-admin.field name="subtitle" label="Sous-titre" :value="$formation->subtitle" />
             <x-admin.field name="description" label="Description" type="textarea" :rows="7" :value="$formation->description" hint="Ce que l'élève apprend à faire, sans promettre de résultat (revenus, clients…)." />
             @if ($editing && $isPack)
-                <p class="text-xs text-slate-500">Présentée sur la page {{ route('packs') }}, avec les autres offres. La description s'affiche telle quelle sur la carte de l'offre.</p>
+                <p class="text-xs text-slate-400">Présentée sur la page {{ route('packs') }}, avec les autres offres. La description s'affiche telle quelle sur la carte de l'offre.</p>
             @elseif ($editing)
-                <p class="text-xs text-slate-500">Adresse de la page : {{ route('formations.show', $formation) }} (elle ne change pas, pour ne casser aucun lien partagé).</p>
+                <p class="text-xs text-slate-400">Adresse de la page : {{ route('formations.show', $formation) }} (elle ne change pas, pour ne casser aucun lien partagé).</p>
             @endif
         </section>
 
@@ -127,7 +127,7 @@
                 <input type="checkbox" name="is_featured" value="1" class="mt-0.5 size-5 accent-gold-400" @checked(old('is_featured', $formation->is_featured))>
                 <span><span class="font-semibold text-white">Mise en avant sur l'accueil</span></span>
             </label>
-            <p class="text-xs text-slate-500">L'ordre d'affichage se règle avec les flèches de la liste des formations.</p>
+            <p class="text-xs text-slate-400">L'ordre d'affichage se règle avec les flèches de la liste des formations.</p>
         </section>
 
         <button type="submit" class="btn-gold w-full sm:w-auto">{{ $editing ? ($isPack ? 'Enregistrer l\'offre' : 'Enregistrer la formation') : 'Créer la formation' }}</button>

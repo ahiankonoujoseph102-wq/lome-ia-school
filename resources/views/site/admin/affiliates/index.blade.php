@@ -26,7 +26,7 @@
                         <div class="min-w-0">
                             <p class="font-semibold text-white">{{ $affiliate->user->name }} <span class="font-mono text-xs text-slate-400">· {{ $affiliate->code }}</span></p>
                             <p class="text-sm text-slate-400">{{ $affiliate->user->email }} · {{ $affiliate->user->formatted_phone }}</p>
-                            <p class="text-xs text-slate-500">Affilié depuis le {{ $affiliate->created_at?->translatedFormat('j F Y') }} · Retraits : {{ $affiliate->payoutSummary() }}</p>
+                            <p class="text-xs text-slate-400">Affilié depuis le {{ $affiliate->created_at?->translatedFormat('j F Y') }} · Retraits : {{ $affiliate->payoutSummary() }}</p>
                         </div>
                         @if ($affiliate->isSuspended())
                             <span class="rounded-full bg-rose-500/15 px-3 py-1 text-xs font-semibold text-rose-200 ring-1 ring-rose-400/40">Suspendu</span>
@@ -67,7 +67,7 @@
                                     @csrf
                                     <label for="suspension-{{ $affiliate->id }}" class="field-label">Motif (affiché à l'affilié, facultatif)</label>
                                     <input id="suspension-{{ $affiliate->id }}" name="reason" type="text" maxlength="500" class="field-input">
-                                    <p class="text-xs text-slate-500">Ses liens ne sont plus actifs, aucune nouvelle commission n'est créée et les retraits sont impossibles. Les commissions déjà acquises sont conservées.</p>
+                                    <p class="text-xs text-slate-400">Ses liens ne sont plus actifs, aucune nouvelle commission n'est créée et les retraits sont impossibles. Les commissions déjà acquises sont conservées.</p>
                                     <button type="submit" class="btn w-full bg-rose-500 text-white hover:bg-rose-400 sm:w-auto">Confirmer la suspension</button>
                                 </form>
                             </details>

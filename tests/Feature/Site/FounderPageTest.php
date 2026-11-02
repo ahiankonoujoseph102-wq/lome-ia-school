@@ -291,14 +291,14 @@ class FounderPageTest extends TestCase
     public function test_the_signature_is_at_the_bottom_of_every_page_and_links_to_the_page(): void
     {
         $student = User::factory()->create();
-        $signature = '<a href="'.route('founder').'" class="hover:text-white" data-test="footer-signature">Dev by Joseph Ahiankonou</a>';
+        $signature = '/<a href="'.preg_quote(route('founder'), '/').'" class="[^"]*hover:text-white[^"]*" data-test="footer-signature">Dev by Joseph Ahiankonou<\/a>/';
 
         foreach (['home', 'about', 'founder', 'formations.index', 'contact', 'business', 'consultation', 'legal.privacy', 'login', 'register'] as $name) {
-            $this->get(route($name))->assertOk()->assertSee($signature, false);
+            $this->assertMatchesRegularExpression($signature, (string) $this->get(route($name))->assertOk()->getContent(), $name);
         }
 
-        $this->actingAs($student)->get(route('dashboard'))->assertOk()->assertSee($signature, false);
-        $this->actingAs($this->admin)->get(route('admin.settings.index'))->assertOk()->assertSee($signature, false);
+        $this->assertMatchesRegularExpression($signature, (string) $this->actingAs($student)->get(route('dashboard'))->assertOk()->getContent());
+        $this->assertMatchesRegularExpression($signature, (string) $this->actingAs($this->admin)->get(route('admin.settings.index'))->assertOk()->getContent());
     }
 
     public function test_the_about_and_home_pages_link_to_the_page_and_it_is_in_the_sitemap(): void

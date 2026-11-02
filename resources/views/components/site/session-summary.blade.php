@@ -43,7 +43,7 @@
             <dd>
                 {{ \Illuminate\Support\Str::ucfirst(SessionTime::range($session)) }} · {{ $session->durationLabel() }}
                 @if ($neighbours !== '')
-                    <span class="block text-xs text-slate-500">Soit {{ $neighbours }} · même heure qu'à Lomé au Burkina Faso</span>
+                    <span class="block text-xs text-slate-400">Soit {{ $neighbours }} · même heure qu'à Lomé au Burkina Faso</span>
                 @endif
             </dd>
         </div>

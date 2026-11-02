@@ -1,11 +1,11 @@
-@props(['formation', 'delay' => 0])
+@props(['formation', 'delay' => 0, 'eager' => false])
 
 <article
     {{ $attributes->class('card card-hover group relative flex flex-col overflow-hidden') }}
     data-reveal
     style="--reveal-delay: {{ $delay }}ms"
 >
-    <x-site.formation-cover :formation="$formation" class="aspect-[16/10]" />
+    <x-site.formation-cover :formation="$formation" class="aspect-[16/10]" :eager="$eager" />
 
     <div class="flex flex-1 flex-col gap-3 p-5">
         <div class="flex flex-wrap items-center gap-2">

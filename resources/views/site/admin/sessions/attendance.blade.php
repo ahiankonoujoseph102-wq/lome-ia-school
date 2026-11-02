@@ -45,7 +45,7 @@
                         <td class="py-3 pr-2 text-slate-400 tabular-nums">{{ $index + 1 }}</td>
                         <td class="py-3 pr-2">
                             <span class="font-medium text-white">{{ $registration->user->name }}</span>
-                            <span class="block text-xs text-slate-500 sm:hidden">{{ $registration->user->formatted_phone }}</span>
+                            <span class="block text-xs text-slate-400 sm:hidden">{{ $registration->user->formatted_phone }}</span>
                         </td>
                         <td class="hidden py-3 pr-2 text-slate-300 sm:table-cell">{{ $registration->user->formatted_phone }}</td>
                         <td class="py-3 text-right">

@@ -185,7 +185,7 @@
                             </li>
                         @endforeach
                     </ul>
-                    <a href="{{ route('formations.index') }}" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-electric-300 hover:text-white">
+                    <a href="{{ route('formations.index') }}" class="mt-3.5 inline-flex items-center gap-1 py-2.5 text-sm font-semibold text-electric-300 hover:text-white">
                         Voir les formations <flux:icon.arrow-right class="size-4" />
                     </a>
                 </div>

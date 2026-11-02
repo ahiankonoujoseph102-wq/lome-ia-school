@@ -41,7 +41,7 @@
                         class="sr-only"
                         @change="const file = $event.target.files[0]; preview = file ? URL.createObjectURL(file) : null"
                     >
-                    <p class="text-xs text-slate-500">JPG, PNG ou WebP, 4 Mo maximum.</p>
+                    <p class="text-xs text-slate-400">JPG, PNG ou WebP, 4 Mo maximum.</p>
                     @error('avatar')
                         <p class="text-sm text-rose-300">{{ $message }}</p>
                     @enderror

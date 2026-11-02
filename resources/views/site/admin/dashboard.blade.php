@@ -38,8 +38,8 @@
                     <p class="text-sm text-slate-400">{{ $stat['label'] }}</p>
                     <p class="mt-1 text-2xl font-bold text-white">{{ Money::fcfa($stat['revenue']) }}</p>
                     <p class="text-sm text-slate-400">{{ $stat['sales'] }} {{ $stat['sales'] > 1 ? 'ventes validées' : 'vente validée' }}</p>
-                    <p class="mt-2 text-xs text-slate-500">À part : {{ Money::fcfa($stat['unverified']) }} provisoire ou en attente de vérification</p>
-                    <p class="text-xs text-slate-500">{{ $stat['signups'] }} {{ $stat['signups'] > 1 ? 'nouveaux inscrits' : 'nouvel inscrit' }}</p>
+                    <p class="mt-2 text-xs text-slate-400">À part : {{ Money::fcfa($stat['unverified']) }} provisoire ou en attente de vérification</p>
+                    <p class="text-xs text-slate-400">{{ $stat['signups'] }} {{ $stat['signups'] > 1 ? 'nouveaux inscrits' : 'nouvel inscrit' }}</p>
                 </div>
             @endforeach
         </div>
@@ -49,7 +49,7 @@
                 <span class="text-2xl font-bold text-white">{{ $activeStudents }}</span>
                 <span class="text-sm text-slate-300">sur les 30 derniers jours (du {{ $activeSince->translatedFormat('j M') }} à aujourd'hui)</span>
             </p>
-            <p class="text-xs text-slate-500">Élèves ayant consulté au moins une leçon pendant cette période.</p>
+            <p class="text-xs text-slate-400">Élèves ayant consulté au moins une leçon pendant cette période.</p>
         </div>
     </section>
 
@@ -60,7 +60,7 @@
             <p class="text-sm text-slate-400">Total : <span class="font-semibold text-white">{{ Money::fcfa($chartTotal) }}</span></p>
         </div>
         <div class="relative">
-            <p class="absolute -top-1 left-0 text-xs text-slate-500">{{ Money::fcfa($max === 1 && $chartTotal === 0 ? 0 : $max) }}</p>
+            <p class="absolute -top-1 left-0 text-xs text-slate-400">{{ Money::fcfa($max === 1 && $chartTotal === 0 ? 0 : $max) }}</p>
             <div class="flex h-40 items-end gap-0.5 border-b border-veil/20 pt-5" role="img" aria-label="Chiffre d'affaires validé par jour sur les 30 derniers jours, total {{ Money::fcfa($chartTotal) }}">
                 @foreach ($chart as $day)
                     <div class="group relative flex h-full flex-1 items-end" tabindex="0" aria-label="{{ $day['date']->translatedFormat('j M') }} : {{ Money::fcfa($day['revenue']) }}">
@@ -72,7 +72,7 @@
                     </div>
                 @endforeach
             </div>
-            <div class="mt-1 flex justify-between text-xs text-slate-500">
+            <div class="mt-1 flex justify-between text-xs text-slate-400">
                 <span>{{ $chart[0]['date']->translatedFormat('j M') }}</span>
                 <span>Aujourd'hui</span>
             </div>

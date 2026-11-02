@@ -35,7 +35,7 @@
                             @if ($moduleErrors->has('title'))
                                 <p class="mt-1 text-sm text-rose-300">{{ $moduleErrors->first('title') }}</p>
                             @endif
-                            <p class="mt-0.5 text-xs text-slate-500">{{ $module->lessons->count() }} {{ $module->lessons->count() > 1 ? 'leçons' : 'leçon' }}</p>
+                            <p class="mt-0.5 text-xs text-slate-400">{{ $module->lessons->count() }} {{ $module->lessons->count() > 1 ? 'leçons' : 'leçon' }}</p>
                         </div>
                         <div class="flex shrink-0 items-center gap-1">
                             @include('site.admin.content.partials.move', ['route' => 'admin.modules.move', 'model' => $module, 'first' => $loop->first, 'last' => $loop->last, 'label' => 'le module'])

@@ -16,7 +16,7 @@
                 @error('rules')
                     <p class="text-sm text-rose-300">{{ $message }}</p>
                 @enderror
-                <p class="text-xs text-slate-500">Chaque membre verra les nouvelles règles à sa prochaine visite et devra appuyer sur « J'ai compris ».</p>
+                <p class="text-xs text-slate-400">Chaque membre verra les nouvelles règles à sa prochaine visite et devra appuyer sur « J'ai compris ».</p>
             </div>
             <label class="flex items-start gap-3 text-sm text-slate-300">
                 <input type="checkbox" name="apply_to_all" value="1" class="mt-0.5 size-5 rounded accent-electric-500">

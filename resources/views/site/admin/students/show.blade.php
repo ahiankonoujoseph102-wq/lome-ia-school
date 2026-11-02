@@ -83,7 +83,7 @@
                     <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-veil/10" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $summary?->percent() ?? 0 }}">
                         <div class="h-full rounded-full bg-electric-400" style="width: {{ $summary?->percent() ?? 0 }}%"></div>
                     </div>
-                    <p class="mt-1 text-xs text-slate-500">{{ $summary?->hasStarted() ? 'Commencée le '.$summary->startedAt?->translatedFormat('j M Y') : 'Pas encore commencée' }}</p>
+                    <p class="mt-1 text-xs text-slate-400">{{ $summary?->hasStarted() ? 'Commencée le '.$summary->startedAt?->translatedFormat('j M Y') : 'Pas encore commencée' }}</p>
                 </li>
             @empty
                 <li class="text-sm text-slate-400">Aucune formation.</li>
@@ -193,7 +193,7 @@
                     <flux:icon :name="$event['icon']" class="mt-0.5 size-4 shrink-0 text-slate-400" />
                     <span class="min-w-0 flex-1">
                         <span class="block text-slate-200">{{ $event['text'] }}</span>
-                        <span class="text-xs text-slate-500">{{ $event['at']->translatedFormat('j M Y à H\hi') }}</span>
+                        <span class="text-xs text-slate-400">{{ $event['at']->translatedFormat('j M Y à H\hi') }}</span>
                     </span>
                 </li>
             @endforeach

@@ -21,17 +21,17 @@
             <div class="card p-5" data-test="disk-usage">
                 <p class="text-sm text-slate-400">Espace disque des fichiers</p>
                 <p class="mt-1 text-2xl font-bold text-white">{{ $formatBytes($totalBytes) }}</p>
-                <p class="mt-1 text-xs text-slate-500">{{ $totalFiles }} {{ $totalFiles > 1 ? 'fichiers' : 'fichier' }} (photos, notes vocales, vidéos, documents)</p>
+                <p class="mt-1 text-xs text-slate-400">{{ $totalFiles }} {{ $totalFiles > 1 ? 'fichiers' : 'fichier' }} (photos, notes vocales, vidéos, documents)</p>
             </div>
             <a href="{{ route('moderation.reports.index') }}" class="card card-hover p-5">
                 <p class="text-sm text-slate-400">Messages signalés</p>
                 <p @class(['mt-1 text-2xl font-bold', 'text-gold-300' => $openReports > 0, 'text-white' => $openReports === 0])>{{ $openReports }}</p>
-                <p class="mt-1 text-xs text-slate-500">à traiter</p>
+                <p class="mt-1 text-xs text-slate-400">à traiter</p>
             </a>
             <a href="{{ route('admin.moderators.index') }}" class="card card-hover p-5">
                 <p class="text-sm text-slate-400">Équipe de modération</p>
                 <p class="mt-1 text-2xl font-bold text-white">{{ \App\Models\User::query()->where('role', 'moderator')->count() }}</p>
-                <p class="mt-1 text-xs text-slate-500">modérateur(s) · gérer l'équipe</p>
+                <p class="mt-1 text-xs text-slate-400">modérateur(s) · gérer l'équipe</p>
             </a>
         </div>
 
@@ -83,7 +83,7 @@
                                 <span><span class="font-semibold text-slate-200">{{ $group->recent_messages_count }}</span> cette semaine</span>
                                 <span>{{ $disk ? $formatBytes((int) $disk->bytes) : '0 Ko' }} de fichiers</span>
                             </p>
-                            <p class="mt-1 text-xs text-slate-500">
+                            <p class="mt-1 text-xs text-slate-400">
                                 {{ $group->last_message_at ? 'Dernier message '.$group->last_message_at->diffForHumans() : 'Aucun message' }}
                                 @if ($group->announcements_only)
                                     · <span class="font-semibold text-gold-300">Mode annonces</span>

@@ -39,7 +39,7 @@
                 @if ($settingsErrors->has('meet_url'))
                     <p class="text-sm text-rose-300">{{ $settingsErrors->first('meet_url') }}</p>
                 @else
-                    <p class="text-xs text-slate-500">Toujours le même lien. Il n'apparaît jamais sur une page publique : seulement sur la confirmation, dans les e-mails et sur la page de gestion du rendez-vous.</p>
+                    <p class="text-xs text-slate-400">Toujours le même lien. Il n'apparaît jamais sur une page publique : seulement sur la confirmation, dans les e-mails et sur la page de gestion du rendez-vous.</p>
                 @endif
             </div>
             <div class="grid gap-4 sm:grid-cols-2">
@@ -157,7 +157,7 @@
                     <label for="reason" class="field-label">Motif (pour vous seul, facultatif)</label>
                     <input id="reason" name="reason" type="text" maxlength="120" value="{{ old('reason') }}" class="field-input" placeholder="Congés, déplacement…">
                 </div>
-                <p class="col-span-2 text-xs text-slate-500">Sans heures, les journées entières sont bloquées.</p>
+                <p class="col-span-2 text-xs text-slate-400">Sans heures, les journées entières sont bloquées.</p>
                 <button type="submit" class="btn-ghost col-span-2 w-full">Bloquer cette période</button>
                 @if ($blockErrors->any())
                     <p class="col-span-2 text-sm text-rose-300">{{ $blockErrors->first() }}</p>
