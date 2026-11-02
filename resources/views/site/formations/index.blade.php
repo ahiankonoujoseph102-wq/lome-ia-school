@@ -77,7 +77,7 @@
         {{-- Résultats --}}
         <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($formations as $formation)
-                <x-site.formation-card :formation="$formation" :delay="($loop->index % 3) * 70" x-show="matches({{ $formation->id }})" />
+                <x-site.formation-card :formation="$formation" :delay="($loop->index % 3) * 70" x-show="matches({{ $formation->id }})" x-transition:enter="transition duration-300 ease-out motion-reduce:transition-none" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" />
             @endforeach
         </div>
 

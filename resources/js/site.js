@@ -1,4 +1,5 @@
 import Alpine from 'alpinejs';
+import { initCountUp } from './count-up.js';
 import { CALL_GREETING, createVoiceCall } from './ama-call.js';
 import { createElementPlayer, createNaturalSynth, NaturalUtterance } from './ama-voice.js';
 import {
@@ -2217,6 +2218,7 @@ const startAlpine = () => {
     window.Alpine = Alpine;
     Alpine.start();
     initReveal();
+    initCountUp();
     initAnimatedBackgrounds();
     initAmaClearance();
 };

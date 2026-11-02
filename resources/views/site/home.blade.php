@@ -56,7 +56,7 @@
                 </p>
 
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start" data-reveal style="--reveal-delay: 240ms">
-                    <a href="{{ route('formations.index') }}" class="btn-gold sm:whitespace-nowrap">
+                    <a href="{{ route('formations.index') }}" class="btn-gold btn-shine sm:whitespace-nowrap">
                         Voir les formations <flux:icon.arrow-right class="size-5" />
                     </a>
                     <a href="{{ route('consultation') }}" class="btn-ghost sm:whitespace-nowrap">
@@ -104,12 +104,12 @@
         <dl class="mx-auto grid max-w-6xl grid-cols-2 gap-px px-4 sm:px-6 lg:grid-cols-4">
             <div class="flex flex-col-reverse px-2 py-8 text-center" data-reveal>
                 <dt class="mt-1 text-sm text-slate-400">formations pratiques</dt>
-                <dd class="text-3xl font-bold text-white sm:text-4xl">{{ $formationCount }}</dd>
+                <dd class="text-3xl font-bold text-white tabular-nums sm:text-4xl" data-count-up>{{ $formationCount }}</dd>
             </div>
             @foreach (config('site.stats') as $stat)
                 <div class="flex flex-col-reverse px-2 py-8 text-center" data-reveal style="--reveal-delay: {{ ($loop->index + 1) * 80 }}ms">
                     <dt class="mt-1 text-sm text-slate-400">{{ $stat['label'] }}</dt>
-                    <dd @class(['font-bold text-white', 'text-3xl sm:text-4xl' => ! str_starts_with($stat['value'], '['), 'text-base' => str_starts_with($stat['value'], '[')])>{{ Placeholder::highlight($stat['value']) }}</dd>
+                    <dd data-count-up @class(['font-bold text-white tabular-nums', 'text-3xl sm:text-4xl' => ! str_starts_with($stat['value'], '['), 'text-base' => str_starts_with($stat['value'], '[')])>{{ Placeholder::highlight($stat['value']) }}</dd>
                 </div>
             @endforeach
         </dl>

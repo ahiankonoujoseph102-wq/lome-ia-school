@@ -47,6 +47,18 @@ class Brand
     }
 
     /**
+     * Version WebP du logo livré avec le site (même image, compressée : 8 Ko au lieu de 35 Ko), servie aux
+     * navigateurs qui la lisent ; null pour un logo envoyé depuis l'admin (sans version WebP).
+     */
+    public static function logoWebpUrl(): ?string
+    {
+        $path = trim((string) config('site.brand.logo'), '/');
+        $webp = preg_replace('/\.png$/i', '.webp', $path);
+
+        return $webp !== $path && is_file(public_path($path)) && is_file(public_path((string) $webp)) ? asset((string) $webp) : null;
+    }
+
+    /**
      * Une icône du jeu en place (favicon-32.png, icon-192.png…) : jeu envoyé depuis l'admin, sinon celui du site.
      */
     public static function icon(string $file): string

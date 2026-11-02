@@ -119,7 +119,7 @@
                             <p class="text-4xl font-bold text-gold-300">{{ $formation->formatted_price }}</p>
                         </div>
                         <div class="flex flex-col gap-3 sm:ml-auto sm:flex-row lg:ml-8">
-                            <a href="{{ $buyUrl }}" class="btn-gold">Acheter maintenant <flux:icon.arrow-right class="size-5" /></a>
+                            <a href="{{ $buyUrl }}" class="btn-gold btn-shine">Acheter maintenant <flux:icon.arrow-right class="size-5" /></a>
                             <a href="{{ WhatsApp::url($whatsappMessage) }}" target="_blank" rel="noopener" class="btn-ghost">
                                 <x-site.whatsapp-icon class="size-5 text-[#25D366]" /> Poser une question
                             </a>
@@ -373,7 +373,7 @@
             <div class="card sticky top-32 space-y-5 p-6">
                 <p class="text-sm text-slate-400">Prix de la formation</p>
                 <p class="-mt-3 text-4xl font-bold text-gold-300">{{ $formation->formatted_price }}</p>
-                <a href="{{ $buyUrl }}" class="btn-gold w-full">Acheter maintenant</a>
+                <a href="{{ $buyUrl }}" class="btn-gold btn-shine w-full">Acheter maintenant</a>
                 <ul class="space-y-3 text-sm text-slate-300">
                     @foreach ($formation->guarantees() as $guarantee)
                         <li class="flex items-center gap-2"><flux:icon :icon="$guarantee['icon']" class="size-4 text-gold-400" /> {{ $guarantee['title'] }}</li>
@@ -420,7 +420,7 @@
                     <p class="truncate text-xs text-slate-400">{{ $formation->title }}</p>
                     <p class="text-lg leading-tight font-bold text-gold-300">{{ $formation->formatted_price }}</p>
                 </div>
-                <a href="{{ $buyUrl }}" class="btn-gold shrink-0 !px-5 !py-3">Acheter maintenant</a>
+                <a href="{{ $buyUrl }}" class="btn-gold btn-shine shrink-0 !px-5 !py-3">Acheter maintenant</a>
             </div>
         </div>
     </x-slot:after>
