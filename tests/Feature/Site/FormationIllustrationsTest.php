@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Site;
 
+use App\Catalogue\CatalogueUpdate;
 use App\Models\Formation;
 use App\Models\User;
 use App\Settings\SiteSettings;
@@ -63,7 +64,8 @@ class FormationIllustrationsTest extends TestCase
         Formation::query()->whereIn('kind', ['pack', 'group'])->delete();
         $this->seed(FormationSeeder::class);
 
-        $this->assertEqualsCanonicalizing(Formation::pluck('slug')->all(), Illustrations::all());
+        // La formation complète (novembre 2026) n'a pas encore de dessin : sa photo et le visuel généré la présentent.
+        $this->assertEqualsCanonicalizing(Formation::where('slug', '!=', CatalogueUpdate::COMPLETE_SLUG)->pluck('slug')->all(), Illustrations::all());
         $this->assertCount(17, Illustrations::all());
         $this->assertNotContains(Illustrations::AGENTS_SLUG, Illustrations::NOW);
     }

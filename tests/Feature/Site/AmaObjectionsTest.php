@@ -4,6 +4,7 @@ namespace Tests\Feature\Site;
 
 use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
+use App\Catalogue\CatalogueUpdate;
 use App\Models\AssistantMessage;
 use App\Models\CourseModule;
 use App\Models\Formation;
@@ -133,8 +134,9 @@ class AmaObjectionsTest extends TestCase
 
         $this->assertStringContainsString('ne dis jamais que l\'école est certifiée, agréée, enregistrée ou reconnue par l\'État', $prompt);
         $this->assertStringContainsString('l\'école est récente et n\'a pas encore de certification officielle', $prompt);
-        $this->assertStringContainsString('attestation de participation délivrée par Lomé IA School : jamais un diplôme, ni un certificat reconnu', $prompt);
-        $this->assertStringContainsString('« Agents IA »', $prompt);
+        // Novembre 2026 : attestation de fin de formation pour chaque formation payante, stage et recrutement possibles.
+        $this->assertStringContainsString('attestation de fin de formation délivrée par Lomé IA School : jamais un diplôme, ni un certificat reconnu', $prompt);
+        $this->assertStringContainsString('jamais une promesse d\'emploi', $prompt);
     }
 
     public function test_missing_testimonials_are_admitted_not_invented(): void
@@ -225,7 +227,7 @@ class AmaObjectionsTest extends TestCase
         $this->assertStringContainsString('Je comprends cette inquiétude', $guide);
         $this->assertStringContainsString('places non limitées', $guide);
         $this->assertStringContainsString('n\'a pas encore de certification officielle', $guide);
-        $this->assertStringContainsString('attestation de participation, jamais un diplôme', $guide);
+        $this->assertStringContainsString('attestation de fin de formation, jamais un diplôme', $guide);
         $this->assertStringContainsString('aucune fausse urgence', $guide);
         // La partie « Règles pour Ama » du guide (pour l'agent ElevenLabs) n'est pas renvoyée à Gemini : la même règle
         // lui est déjà donnée par le code, une seule fois.
@@ -257,6 +259,8 @@ class AmaObjectionsTest extends TestCase
 
     public function test_without_any_visible_formation_no_starting_price_is_given(): void
     {
+        // La formation complète créée par la migration de novembre 2026 n'entre pas dans ce test.
+        Formation::query()->where('slug', CatalogueUpdate::COMPLETE_SLUG)->delete();
         $this->assertStringNotContainsString('Formations à partir de', AmaPrompt::build([]));
     }
 

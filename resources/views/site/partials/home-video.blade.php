@@ -1,8 +1,8 @@
 {{--
     Vidéo d'accueil (verticale 9:16), entre le haut de page et le catalogue. Réglages : admin > Vidéo d'accueil.
-    Section courte sur téléphone : aperçu de 10 rem qui s'agrandit au toucher.
+    Aperçu (x-site.lazy-youtube) : image envoyée depuis l'admin (9:16, étroite sur téléphone, agrandie au toucher), sinon la
+    miniature YouTube en haute définition, en grand et entière (16:9), et le cadre passe en 9:16 au toucher.
     Section absente tant qu'il n'y a pas de lien YouTube valide (ou si l'interrupteur est éteint).
-    Image d'aperçu : celle envoyée depuis l'admin (9:16), sinon la miniature YouTube entière sur un fond flouté.
     Seule l'image d'aperçu est chargée : le lecteur (youtube-nocookie.com) n'est ajouté qu'au toucher du bouton lecture.
     Sans JavaScript, le bouton est un simple lien vers YouTube. Aucune transcription ni sous-titre n'est affiché.
     Style stable face au mode sombre forcé : fonds foncés, contours dessinés en ombre, icône blanche, image jamais recolorée.
@@ -24,15 +24,13 @@
             <p class="mt-1.5 text-sm text-pretty text-slate-400 sm:mt-4 sm:text-lg">{{ HomeVideo::subtitle() }}</p>
         </div>
 
-        {{-- Aperçu étroit sur téléphone (10 rem) ; le cadre s'agrandit seulement quand le visiteur touche lecture
-             (ou si la vidéo est illisible, pour que le message tienne). 20 rem dès les écrans moyens. --}}
         <x-site.lazy-youtube
             :video-id="$homeVideoId"
             :title="HomeVideo::title()"
             :poster="$homeVideoPoster"
             :poster-width="HomeVideo::POSTER_WIDTH"
             :poster-height="HomeVideo::POSTER_HEIGHT"
-            class="mx-auto mt-4 w-40 transition-[width] duration-300 data-[open=true]:w-[min(78%,17rem)] sm:mt-8 sm:w-80 sm:data-[open=true]:w-80 motion-reduce:transition-none"
+            class="mt-4 sm:mt-8"
             data-test="home-video-frame"
             data-reveal
         />

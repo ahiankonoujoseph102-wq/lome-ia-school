@@ -3,6 +3,7 @@
 namespace Tests\Feature\Site;
 
 use App\Assistant\AmaKnowledge;
+use App\Catalogue\CatalogueUpdate;
 use App\Enums\EnrollmentSource;
 use App\Models\Formation;
 use App\Models\LiveSession;
@@ -272,6 +273,8 @@ class LiveOfferTest extends TestCase
 
     public function test_ama_knows_the_dates_the_programme_and_the_answers(): void
     {
+        // La formation complète créée par la migration de novembre 2026 n'entre pas dans ce test.
+        Formation::query()->where('slug', CatalogueUpdate::COMPLETE_SLUG)->delete();
         $this->formation();
 
         $text = AmaKnowledge::formations();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Site;
 use App\Http\Controllers\Controller;
 use App\Models\Formation;
 use App\Models\LiveSession;
+use App\Support\Talkami;
 use Illuminate\Contracts\View\View;
 
 class PageController extends Controller
@@ -41,6 +42,16 @@ class PageController extends Controller
     public function business(): View
     {
         return view('site.business');
+    }
+
+    /**
+     * Page Talkami (plateforme créée par Joseph pour apprendre à parler anglais) ; absente si l'admin l'a masquée.
+     */
+    public function talkami(): View
+    {
+        abort_unless(Talkami::enabled(), 404);
+
+        return view('site.talkami');
     }
 
     public function affiliate(): View

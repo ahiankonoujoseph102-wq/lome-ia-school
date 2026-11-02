@@ -50,6 +50,8 @@ final class FormationPhotos
         'contenu-tiktok-facebook-youtube-videos-ia' => 8370484,
         'e-commerce-produits-digitaux-ia' => 5711715,
         'formation-gratuite-ia' => 3769021,
+        // Novembre 2026 : même photo que l'ancienne offre niveau 3 (offres retirées du site).
+        'formation-complete-intelligence-artificielle' => 30688592,
         'accompagnement-ia-niveau-1' => 30688591,
         'accompagnement-ia-niveau-2' => 30688593,
         'accompagnement-ia-niveau-3' => 30688592,

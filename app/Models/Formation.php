@@ -91,6 +91,7 @@ class Formation extends Model
         'is_active',
         'outcomes',
         'audience',
+        'careers',
         'bonuses',
         'event_date',
         'event_location',
@@ -133,6 +134,7 @@ class Formation extends Model
             'is_active' => 'boolean',
             'outcomes' => 'array',
             'audience' => 'array',
+            'careers' => 'array',
             'event_date' => 'date',
             'presentation_video_enabled' => 'boolean',
             'registration_ends_at' => 'datetime',
@@ -347,6 +349,67 @@ class Formation extends Model
     /**
      * Formation à 0 FCFA : inscription gratuite (bouton « Je m'inscris gratuitement »), jamais de paiement ni d'achat.
      */
+    /**
+     * « Après la formation » (config site.after_training) : attestation de fin de formation et possibilité de stage
+     * pour toute formation payante ; possibilité de recrutement par l'école pour les formations de la liste
+     * « recruitment_slugs ». Jamais présenté comme une promesse. Vide pour une formation gratuite.
+     *
+     * @return list<array{icon: string, title: string, text: string}>
+     */
+    public function afterTraining(): array
+    {
+        if ($this->isFree()) {
+            return [];
+        }
+
+        $config = (array) config('site.after_training', []);
+        $items = array_values(array_filter((array) ($config['items'] ?? []), fn ($item): bool => is_array($item) && filled($item['title'] ?? null)));
+
+        if ($this->offersRecruitment() && is_array($config['recruitment'] ?? null) && filled($config['recruitment']['title'] ?? null)) {
+            $items[] = $config['recruitment'];
+        }
+
+        return array_map(fn (array $item): array => [
+            'icon' => (string) ($item['icon'] ?? 'check-badge'),
+            'title' => (string) $item['title'],
+            'text' => (string) ($item['text'] ?? ''),
+        ], $items);
+    }
+
+    /**
+     * Formation après laquelle un élève qui maîtrise bien les compétences peut être recruté par l'école.
+     */
+    public function offersRecruitment(): bool
+    {
+        return ! $this->isFree() && in_array($this->slug, (array) config('site.after_training.recruitment_slugs', []), true);
+    }
+
+    /**
+     * Questions fréquentes propres à une formation payante, ajoutées après celles de l'admin (site.faq.formation) :
+     * présentiel au bureau, paiement en ligne, attestation, stage (et recrutement s'il est prévu).
+     *
+     * @return list<array{question: string, answer: string}>
+     */
+    public function extraFaq(): array
+    {
+        if ($this->isFree()) {
+            return [];
+        }
+
+        $address = (string) config('site.contact.address');
+
+        return array_values(array_map(
+            fn (array $item): array => [
+                'question' => (string) $item['question'],
+                'answer' => str_replace('{adresse}', $address, (string) $item['answer']),
+            ],
+            array_filter([
+                ...(array) config('site.after_training.faq', []),
+                ...($this->offersRecruitment() ? (array) config('site.after_training.recruitment_faq', []) : []),
+            ], fn ($item): bool => is_array($item) && filled($item['question'] ?? null) && filled($item['answer'] ?? null)),
+        ));
+    }
+
     public function isFree(): bool
     {
         return $this->price === 0;

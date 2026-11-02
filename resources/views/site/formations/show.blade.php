@@ -174,7 +174,7 @@
             {{-- Présentation --}}
             <section data-reveal>
                 <h2 class="text-2xl font-bold text-white sm:text-3xl">Présentation</h2>
-                <p class="mt-4 text-base leading-relaxed text-pretty text-slate-300 sm:text-lg">{{ $formation->description }}</p>
+                <x-site.rich-text :text="$formation->description" class="mt-4 text-base leading-relaxed text-pretty text-slate-300 sm:text-lg" />
             </section>
 
             {{-- Prochaine session ponctuelle : sans lien Google Meet, réservée aux élèves de la formation --}}
@@ -278,6 +278,19 @@
                 </section>
             @endif
 
+            {{-- Métiers où servent ces compétences (masqué si la liste est vide ; jamais présenté comme un emploi promis) --}}
+            @if ($formation->careers)
+                <section data-test="formation-careers">
+                    <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Des métiers où ces compétences servent</h2>
+                    <p class="mt-2 text-slate-400" data-reveal>Les compétences de cette formation sont utiles dans ces métiers.</p>
+                    <ul class="mt-6 flex flex-wrap gap-2">
+                        @foreach ($formation->careers as $career)
+                            <li class="rounded-full bg-night-900 px-4 py-2 text-sm font-medium text-slate-100 ring-1 ring-night-600" data-reveal style="--reveal-delay: {{ $loop->index * 50 }}ms">{{ $career }}</li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+
             {{-- Inclus avec la formation --}}
             <section class="card p-6 sm:p-8" data-reveal>
                 <h2 class="flex items-center gap-3 text-2xl font-bold text-white">
@@ -308,6 +321,42 @@
                 </section>
             @endif
 
+            {{-- Après la formation : attestation, stage, recrutement possible (config site.after_training) --}}
+            @if ($afterTraining = $formation->afterTraining())
+                <section data-test="formation-after-training">
+                    <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Après la formation</h2>
+                    <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+                        @foreach ($afterTraining as $item)
+                            <li @class(['card flex gap-4 p-5', 'sm:col-span-2' => $loop->last && $loop->count % 2 === 1]) data-reveal style="--reveal-delay: {{ $loop->index * 60 }}ms">
+                                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-night-800 text-gold-300 ring-1 ring-night-600">
+                                    <flux:icon :icon="$item['icon']" class="size-5" />
+                                </span>
+                                <span>
+                                    <span class="block font-semibold text-white">{{ $item['title'] }}</span>
+                                    <span class="mt-1 block text-sm leading-relaxed text-slate-300">{{ $item['text'] }}</span>
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+
+            {{-- Présentiel au bureau : consultation gratuite ou message (config site.in_person) --}}
+            @if (filled(config('site.in_person.title')))
+                <section class="rounded-3xl bg-night-900 p-6 shadow-[inset_0_0_0_1px_var(--color-night-600)] sm:p-8" data-reveal data-test="formation-in-person">
+                    <h2 class="flex items-center gap-3 text-xl font-bold text-white sm:text-2xl">
+                        <flux:icon.map-pin class="size-6 shrink-0 text-gold-300" /> {{ config('site.in_person.title') }}
+                    </h2>
+                    <p class="mt-3 leading-relaxed text-slate-300">{{ str_replace('{adresse}', config('site.contact.address'), config('site.in_person.text')) }}</p>
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+                        <a href="{{ route('consultation') }}#reserver" class="btn-ghost">Réserver une consultation gratuite</a>
+                        <a href="{{ WhatsApp::url($whatsappMessage) }}" target="_blank" rel="noopener" class="btn-ghost">
+                            <x-site.whatsapp-icon class="size-5 text-[#25D366]" /> Écrire sur WhatsApp
+                        </a>
+                    </div>
+                </section>
+            @endif
+
             {{-- Formateur --}}
             <section data-reveal>
                 <h2 class="text-2xl font-bold text-white sm:text-3xl">Votre formateur</h2>
@@ -328,14 +377,14 @@
             @if ($testimonials)
                 <section>
                     <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Ce qu'en disent les élèves</h2>
-                    <x-site.testimonials :items="$testimonials" class="mt-6 lg:!columns-2" />
+                    <x-site.testimonials :items="$testimonials" class="mt-6" narrow />
                 </section>
             @endif
 
             {{-- FAQ --}}
             <section>
                 <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Questions fréquentes</h2>
-                <x-site.faq :items="$liveOffer ? $liveOffer->faq() : config('site.faq.formation')" class="mt-6" data-test="formation-faq" />
+                <x-site.faq :items="$liveOffer ? $liveOffer->faq() : [...config('site.faq.formation'), ...$formation->extraFaq()]" class="mt-6" data-test="formation-faq" />
             </section>
         </div>
 

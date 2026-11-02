@@ -45,6 +45,7 @@ class AdminMenu
             ['label' => 'Communauté', 'icon' => 'chat-bubble-left-right', 'links' => [
                 ['label' => 'Groupes de discussion', 'route' => 'admin.chat.index', 'icon' => 'chat-bubble-left-right', 'active' => ['admin.chat.*']],
                 ['label' => 'Messages signalés', 'route' => 'moderation.reports.index', 'icon' => 'flag', 'count' => AdminTodo::openReports(), 'active' => ['moderation.reports.*']],
+                ['label' => 'Demandes de devis', 'route' => 'admin.quotes.index', 'icon' => 'document-text', 'count' => AdminTodo::quotesToAnswer(), 'active' => ['admin.quotes.*']],
                 ['label' => 'Demandes transmises', 'route' => 'admin.assistant.handoffs.index', 'icon' => 'inbox-arrow-down', 'count' => AdminTodo::handoffsToAnswer(), 'active' => ['admin.assistant.handoffs.*']],
                 ['label' => 'Conversations d\'Ama', 'route' => 'admin.assistant.index', 'icon' => 'chat-bubble-oval-left-ellipsis', 'active' => ['admin.assistant.index', 'admin.assistant.show']],
                 ['label' => 'Équipe de modération', 'route' => 'admin.moderators.index', 'icon' => 'user-group', 'active' => ['admin.moderators.*']],
@@ -71,7 +72,7 @@ class AdminMenu
     public static function todoTotal(User $user): int
     {
         if ($user->isAdmin()) {
-            return AdminTodo::paymentsToVerify() + AdminTodo::withdrawalsToPay() + AdminTodo::openReports() + AdminTodo::consultationsToday() + AdminTodo::refundsDue() + AdminTodo::handoffsToAnswer();
+            return AdminTodo::paymentsToVerify() + AdminTodo::withdrawalsToPay() + AdminTodo::openReports() + AdminTodo::consultationsToday() + AdminTodo::refundsDue() + AdminTodo::handoffsToAnswer() + AdminTodo::quotesToAnswer();
         }
 
         return $user->isStaff() ? AdminTodo::openReports() : 0;

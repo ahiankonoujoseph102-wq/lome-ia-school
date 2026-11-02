@@ -46,7 +46,11 @@ class FormationPhotosTest extends TestCase
 
     public function test_each_photo_is_different_and_matches_the_script_and_the_credits(): void
     {
-        $this->assertSame(array_values(Photos::PHOTOS), array_values(array_unique(Photos::PHOTOS)));
+        // Une seule photo partagée, volontairement : celle de l'ancienne offre niveau 3 (offres retirées du site en
+        // novembre 2026) sert aussi à la formation complète.
+        $photos = array_diff_key(Photos::PHOTOS, ['formation-complete-intelligence-artificielle' => true]);
+        $this->assertSame(array_values($photos), array_values(array_unique($photos)));
+        $this->assertSame(Photos::PHOTOS['accompagnement-ia-niveau-3'], Photos::PHOTOS['formation-complete-intelligence-artificielle']);
 
         preg_match_all('/^([a-z0-9-]+) (\d+) (center|north)$/m', (string) file_get_contents(base_path('scripts/build-formation-photos.sh')), $matches);
         $this->assertSame(Photos::PHOTOS, array_combine($matches[1], array_map('intval', $matches[2])));

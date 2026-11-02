@@ -3,6 +3,8 @@
     use App\Support\YouTube;
 
     $business = (array) SiteSettings::get('site.business');
+    $customWork = (array) SiteSettings::get('site.custom_work');
+    $workItems = array_map(fn ($item) => ['question' => $item['title'] ?? '', 'answer' => $item['text'] ?? ''], (array) ($customWork['items'] ?? []));
     $videoFormat = old('video_format', YouTube::format($business['video_url'] ?? null, $business['video_format'] ?? null));
     $formats = ['horizontal' => ['Horizontal', 'Filmée à l\'horizontale (16:9)'], 'vertical' => ['Vertical (téléphone)', 'Filmée au téléphone, tenu droit (9:16)']];
 @endphp
@@ -54,6 +56,15 @@
             <x-admin.list-editor name="services" label="Services" :items="$business['services'] ?? []" add-label="Ajouter un service" />
         </section>
 
+
+        <section class="card space-y-4 p-5 sm:p-6" data-test="admin-custom-work">
+            <h2 class="font-semibold text-white">Réalisations sur mesure (« Nous le faisons pour vous »)</h2>
+            <p class="text-sm text-slate-400">Affichées sur la page et sur l'accueil, avec le bouton « Demander un devis ». Les demandes arrivent par e-mail et dans « Demandes de devis ».</p>
+            <input type="hidden" name="custom_work_sent" value="1">
+            <x-admin.field name="custom_work_title" label="Titre" :value="$customWork['title'] ?? ''" />
+            <x-admin.field name="custom_work_intro" label="Phrase d'introduction" type="textarea" :rows="2" :value="$customWork['intro'] ?? ''" />
+            <x-admin.questions-editor name="custom_work_items" label="Réalisations (un titre, sa description)" :items="$workItems" question-label="Titre (ex. Site vitrine)" answer-label="Description" add-label="Ajouter une réalisation" />
+        </section>
 
         <section class="card space-y-4 p-5 sm:p-6">
             <h2 class="font-semibold text-white">Bloc de l'accueil</h2>

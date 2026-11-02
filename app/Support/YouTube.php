@@ -74,4 +74,22 @@ class YouTube
     {
         return 'https://i.ytimg.com/vi/'.$id.'/hqdefault.jpg';
     }
+
+    /**
+     * Miniature en haute définition (1280 × 720, vraie image 16:9 sans bandes noires). YouTube ne la fabrique pas
+     * toujours (vidéo ancienne ou de faible définition) : il répond alors par une petite image grise de 120 × 90 ;
+     * le navigateur passe dans ce cas à thumbnailUrl() (composant x-site.lazy-youtube, méthode checkThumbnail).
+     */
+    public static function hdThumbnailUrl(string $id): string
+    {
+        return 'https://i.ytimg.com/vi/'.$id.'/maxresdefault.jpg';
+    }
+
+    /**
+     * Miniature moyenne (640 × 480, 4:3 : l'image 16:9 entourée de bandes noires), premier repli de hdThumbnailUrl().
+     */
+    public static function sdThumbnailUrl(string $id): string
+    {
+        return 'https://i.ytimg.com/vi/'.$id.'/sddefault.jpg';
+    }
 }

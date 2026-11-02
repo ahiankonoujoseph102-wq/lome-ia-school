@@ -56,6 +56,18 @@
         </div>
     </section>
 
+    {{-- Devis : formulaire de la page Entreprises et réalisations sur mesure --}}
+    <section class="section !pt-0" data-test="contact-quote">
+        <div class="card flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:p-8" data-reveal>
+            <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-night-800 text-gold-300 shadow-[0_0_0_1.5px_var(--color-gold-500)]"><flux:icon.document-text class="size-6" /></span>
+            <div class="min-w-0 flex-1">
+                <p class="text-lg font-semibold text-white">Un site, un agent IA ou une automatisation à réaliser ?</p>
+                <p class="mt-1 text-slate-300">Décrivez votre projet dans notre formulaire : nous vous répondons avec une proposition.</p>
+            </div>
+            <a href="{{ route('business') }}#devis" class="btn-gold w-full shrink-0 sm:w-auto">Demander un devis</a>
+        </div>
+    </section>
+
     <x-site.cta-banner
         title="Pas encore sûr de votre choix ?"
         text="Réservez une consultation gratuite : nous vous aidons à choisir la formation adaptée à votre objectif."

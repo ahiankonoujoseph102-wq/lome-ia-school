@@ -52,7 +52,7 @@ class FreeFormationMigrationTest extends TestCase
         $formation->forceFill(['free_ended' => false])->save();
 
         // Masquée : les visiteurs ne la voient pas ; l'admin peut la relire.
-        $this->get('/formations/formation-gratuite-ia')->assertNotFound();
+        $this->get('/formations/formation-gratuite-ia')->assertRedirect(route('formations.index'));
         $this->actingAs(User::factory()->admin()->create())->get('/formations/formation-gratuite-ia')->assertOk()->assertSee('Présentiel soir');
     }
 

@@ -219,7 +219,7 @@ class AmaPrompt
             'Offres d\'accompagnement' => AmaPacks::section($context, $recent),
             // Récapitulatif de commande d'une formation habituelle ou supplément d'une session : le paiement exact.
             'Paiement' => ! $packs && AmaPacks::paymentRelevant($context) ? "## Paiement Mobile Money (réglages à jour)\n".AmaPacks::payment() : '',
-            'Pages du site' => "## Informations des pages publiques du site\n".AmaKnowledge::publicPages(),
+            'Pages du site' => "## Informations des pages publiques du site\n".AmaKnowledge::publicPages($topics),
             'Guide des parcours' => $guide !== '' ? "## Guide des parcours du site\n".$guide : '',
             'Contexte de la page' => "## Contexte de la page du visiteur\n".VoiceAssistant::contextText($context),
         ];
@@ -291,7 +291,7 @@ class AmaPrompt
             ."\n- Pas les moyens, pas d'argent maintenant ou difficulté financière : aucune insistance ni relance. Propose les leçons en aperçu gratuit s'il y en a, la consultation gratuite ou la formation la moins chère qui correspond à son besoin, et dis qu'il peut revenir quand il veut. N'encourage jamais à emprunter ni à s'endetter."
             ."\n- Tu ne valides jamais un paiement : seule l'équipe le vérifie."
             ."\n- Interdits stricts : aucun faux témoignage ni faux avis ; aucun chiffre, aucune durée, aucun nombre d'élèves ni de résultats inventés (seuls les chiffres officiels de la base et des pages du site) ; aucune promesse de revenus, de clients, de ventes, d'emploi ou de résultat ; aucune fausse urgence ni fausse rareté (le site annonce des places non limitées ; seulement les vraies dates publiées si on les demande) ; aucune pression, aucune culpabilisation, aucun dénigrement ni aucune comparaison mensongère avec YouTube ou un concurrent."
-            ."\n- Certification : ne dis jamais que l'école est certifiée, agréée, enregistrée ou reconnue par l'État. Si on te le demande : l'école est récente et n'a pas encore de certification officielle. Pour « Agents IA » : attestation de participation délivrée par Lomé IA School : jamais un diplôme, ni un certificat reconnu. Une attestation pour une autre formation seulement si elle est écrite dans la base de connaissances."
+            ."\n- Certification : ne dis jamais que l'école est certifiée, agréée, enregistrée ou reconnue par l'État. Si on te le demande : l'école est récente et n'a pas encore de certification officielle. Chaque formation payante donne une attestation de fin de formation délivrée par Lomé IA School : jamais un diplôme, ni un certificat reconnu. Stage de 3 mois et recrutement par l'école : seulement des possibilités, jamais une promesse d'emploi."
             ."\n- Témoignages, avis ou résultats d'anciens élèves absents de la base et des pages : dis honnêtement que tu n'as pas de témoignage à citer pour le moment, sans rien inventer, puis propose la consultation gratuite."
             ."\n- Réponse courte : un court paragraphe à l'écrit ; en appel, une à trois phrases courtes.";
     }
@@ -413,8 +413,11 @@ class AmaPrompt
         10 => ['rembours', 'annul'],
         11 => ['contact', 'whatsapp', 'joindre', 'fondateur', 'joseph', 'transmettre', 'numero', 'telephone', 'adresse'],
         12 => ['appel', 'voix', 'micro', 'parler', 'vocal', 'raccrocher'],
-        13 => ['gratuit', 'complet', 'place', 'option', 'presentiel', 'en ligne'],
+        13 => ['gratuit', 'complet', 'place', 'option'],
         14 => ['accompagnement', 'niveau', 'offre', 'pack', 'vip'],
+        15 => ['devis', 'realis', 'sur mesure', 'faire pour moi', 'faites pour', 'site vitrine', 'site professionnel', 'entreprise', 'client'],
+        16 => ['anglais', 'english', 'talkami', 'teacher', 'langue'],
+        17 => ['presentiel', 'bureau', 'sur place', 'en ligne', 'attestation', 'certificat', 'diplome', 'stage', 'recrut', 'emploi', 'travail', 'metier'],
     ];
 
     /**

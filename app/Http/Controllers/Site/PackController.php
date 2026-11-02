@@ -10,6 +10,7 @@ use App\Packs\PacksPage;
 use App\Packs\PackTrust;
 use App\Support\Testimonials;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -20,7 +21,7 @@ use Illuminate\Http\Request;
  */
 class PackController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
         /** @var User|null $user */
         $user = $request->user();
@@ -38,7 +39,10 @@ class PackController extends Controller
             $preview = true;
         }
 
-        abort_if($packs->isEmpty(), 404);
+        // Aucune offre publiée (retirées du site en novembre 2026) : l'adresse circule encore, elle mène au catalogue.
+        if ($packs->isEmpty()) {
+            return redirect()->route('formations.index');
+        }
 
         // Offres qu'on peut acheter maintenant (publiées, inscriptions ouvertes) : boutons du haut, du bas et barre fixe.
         $open = $preview ? collect() : $packs->reject(fn (Formation $pack): bool => $pack->registrationsClosed())->values();

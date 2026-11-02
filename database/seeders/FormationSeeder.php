@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Catalogue\CatalogueUpdate;
 use App\Enums\FormationCategory;
 use App\Enums\FormationFormat;
 use App\Models\Formation;
@@ -21,6 +22,9 @@ class FormationSeeder extends Seeder
     public function run(): void
     {
         foreach ($this->formations() as $index => $formation) {
+            // Prix de novembre 2026 (App\Catalogue\CatalogueUpdate::PRICES).
+            $formation['price'] = CatalogueUpdate::PRICES[$formation['slug']] ?? $formation['price'];
+
             Formation::updateOrCreate(
                 ['slug' => $formation['slug']],
                 $formation + [
@@ -37,7 +41,21 @@ class FormationSeeder extends Seeder
      */
     private function formations(): array
     {
+        $complete = CatalogueUpdate::complete();
+
         return [
+            [
+                'title' => $complete['title'],
+                'slug' => CatalogueUpdate::COMPLETE_SLUG,
+                'subtitle' => $complete['subtitle'],
+                'description' => $complete['description'],
+                'price' => $complete['price'],
+                'category' => FormationCategory::from($complete['category']),
+                'is_featured' => true,
+                'outcomes' => $complete['outcomes'],
+                'audience' => $complete['audience'],
+                'careers' => $complete['careers'],
+            ],
             [
                 'title' => 'Formation ChatGPT & Claude',
                 'slug' => 'chatgpt-claude-initiation-ia',

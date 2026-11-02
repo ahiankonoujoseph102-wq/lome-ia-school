@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\ModeratorController;
 use App\Http\Controllers\Admin\NewsletterController as AdminNewsletterController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PromoCodeController;
+use App\Http\Controllers\Admin\QuoteRequestController as AdminQuoteRequestController;
 use App\Http\Controllers\Admin\SalesController;
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\StudentController;
@@ -41,6 +42,7 @@ use App\Http\Controllers\Site\OgImageController;
 use App\Http\Controllers\Site\PackController;
 use App\Http\Controllers\Site\PageController;
 use App\Http\Controllers\Site\PwaController;
+use App\Http\Controllers\Site\QuoteRequestController;
 use App\Http\Controllers\Site\ServerTimeController;
 use App\Http\Controllers\Site\SitemapController;
 use App\Http\Controllers\Student\AffiliateController;
@@ -84,6 +86,9 @@ Route::get('a-propos', [PageController::class, 'about'])->name('about');
 Route::get('joseph-ahiankonou', [PageController::class, 'founder'])->name('founder');
 Route::get('contact', [PageController::class, 'contact'])->name('contact');
 Route::get('entreprises', [PageController::class, 'business'])->name('business');
+Route::get('talkami', [PageController::class, 'talkami'])->name('talkami');
+// Formulaire « Demander un devis » de la page Entreprises (sans compte ; champ piège et limite par adresse IP).
+Route::post('entreprises/devis', [QuoteRequestController::class, 'store'])->middleware('throttle:5,10')->name('business.quote');
 Route::get('accompagnement', [PackController::class, 'index'])->name('packs');
 // Heure du serveur : corrige l'horloge du téléphone dans les comptes à rebours des offres.
 Route::get('heure-serveur', ServerTimeController::class)->middleware('throttle:60,1')->name('server-time');
@@ -343,6 +348,8 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     // Assistante Ama (Gemini) : conversations, demandes du jour et incidents
     Route::get('assistante/conversations', [AssistantConversationController::class, 'index'])->middleware('no-store')->name('assistant.index');
     Route::get('assistante/conversations/{conversation}', [AssistantConversationController::class, 'show'])->middleware('no-store')->name('assistant.show');
+    Route::get('devis', [AdminQuoteRequestController::class, 'index'])->middleware('no-store')->name('quotes.index');
+    Route::post('devis/{quote}/statut', [AdminQuoteRequestController::class, 'toggle'])->name('quotes.toggle');
     Route::get('assistante/demandes', [AssistantHandoffController::class, 'index'])->middleware('no-store')->name('assistant.handoffs.index');
     Route::post('assistante/demandes/{handoff}/statut', [AssistantHandoffController::class, 'toggle'])->name('assistant.handoffs.toggle');
     Route::get('reglages', [SiteSettingsController::class, 'index'])->name('settings.index');

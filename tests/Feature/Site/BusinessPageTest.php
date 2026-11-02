@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Page « Entreprises et centres de formation » (/entreprises) et ses réglages dans l'admin.
+ * Page « Entreprises et réalisations sur mesure » (/entreprises) et ses réglages dans l'admin.
  */
 class BusinessPageTest extends TestCase
 {
@@ -52,7 +52,7 @@ class BusinessPageTest extends TestCase
     public function test_page_lists_the_services_and_the_booking_button_without_video_by_default(): void
     {
         $response = $this->get(route('business'))->assertOk()
-            ->assertSee('Entreprises et centres de formation')
+            ->assertSee('Entreprises et réalisations sur mesure')
             ->assertSee('Afrique de l&#039;Ouest', false)
             ->assertDontSee('data-test="business-video"', false)
             ->assertDontSee('youtube');
@@ -95,7 +95,7 @@ class BusinessPageTest extends TestCase
             ->assertSee('Vous êtes un centre de formation ou une entreprise ?')
             ->assertSee(route('business'));
 
-        $this->get(route('contact'))->assertOk()->assertSee('>Entreprises<', false)->assertSee('Entreprises et centres de formation');
+        $this->get(route('contact'))->assertOk()->assertSee('>Entreprises<', false)->assertSee('Entreprises et réalisations sur mesure');
         $this->get(route('sitemap'))->assertSee(route('business'));
     }
 
@@ -140,17 +140,16 @@ class BusinessPageTest extends TestCase
         $this->assertSame('vertical', YouTube::format('https://youtu.be/dQw4w9WgXcQ', 'vertical'));
     }
 
-    public function test_vertical_video_is_shown_in_a_9_16_frame_without_black_bars(): void
+    public function test_vertical_video_shows_its_youtube_thumbnail_then_plays_in_a_9_16_frame(): void
     {
         SiteSettings::save(['site.business' => [...(array) config('site.business'), 'video_url' => 'https://www.youtube.com/shorts/dQw4w9WgXcQ', 'video_format' => '']]);
 
         $this->get(route('business'))->assertOk()
             ->assertSee('data-format="vertical"', false)
-            ->assertSee('aspect-[9/16]', false)
-            ->assertSee('max-w-[400px]', false)
-            ->assertDontSee('aspect-video', false)
-            // Chargement au clic : miniature d'abord, lecteur seulement après le clic.
-            ->assertSee('https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', false)
+            ->assertSee('data-video-mode="grow"', false)
+            ->assertSee("playing ? '!aspect-[9/16]' : ''", false)
+            // Chargement au toucher : miniature haute définition d'abord, lecteur seulement après.
+            ->assertSee('https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg', false)
             ->assertSee('<template x-if="playing">', false)
             ->assertSee('youtube-nocookie.com/embed/dQw4w9WgXcQ', false);
     }

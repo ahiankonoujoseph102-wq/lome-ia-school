@@ -25,6 +25,7 @@ class SearchEngines
         'about',
         'founder',
         'business',
+        'talkami',
         'packs',
         'contact',
         'consultation',
@@ -113,6 +114,9 @@ class SearchEngines
             'lastmod' => $packs->max('updated_at')?->toAtomString(),
         ]];
 
-        return $pages->concat($packPage)->concat($formations)->values()->all();
+        // Page Talkami : seulement si elle est affichée (interrupteur de l'admin).
+        $talkami = Talkami::enabled() ? [['loc' => AppUrl::to(route('talkami')), 'lastmod' => null]] : [];
+
+        return $pages->concat($talkami)->concat($packPage)->concat($formations)->values()->all();
     }
 }

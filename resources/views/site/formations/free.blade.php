@@ -262,7 +262,7 @@
             @if ($testimonials = \App\Support\Testimonials::all())
                 <section data-test="free-testimonials">
                     <h2 class="text-2xl font-bold text-white sm:text-3xl" data-reveal>Ce qu'en disent les élèves</h2>
-                    <x-site.testimonials :items="$testimonials" class="mt-6 lg:!columns-2" />
+                    <x-site.testimonials :items="$testimonials" class="mt-6" narrow />
                 </section>
             @endif
 

@@ -47,9 +47,10 @@ class PackPageTest extends TestCase
 
     public function test_the_page_does_not_exist_while_no_pack_is_published(): void
     {
-        $this->get(route('packs'))->assertNotFound();
-        $this->actingAs(User::factory()->create())->get(route('packs'))->assertNotFound();
-        $this->get(route('formations.show', $this->packs[0]))->assertNotFound();
+        // Novembre 2026 : l'adresse circule encore, elle mène au catalogue.
+        $this->get(route('packs'))->assertRedirect(route('formations.index'));
+        $this->actingAs(User::factory()->create())->get(route('packs'))->assertRedirect(route('formations.index'));
+        $this->get(route('formations.show', $this->packs[0]))->assertRedirect(route('formations.index'));
         $this->get(route('checkout.show', $this->packs[0]))->assertNotFound();
 
         $this->assertNotContains(route('packs'), collect(SearchEngines::sitemapUrls())->pluck('loc')->all());

@@ -4,6 +4,7 @@ namespace Tests\Feature\FreeRegistrations;
 
 use App\Affiliates\AffiliateAlerts;
 use App\Affiliates\AffiliateManager;
+use App\Catalogue\CatalogueUpdate;
 use App\Enums\EnrollmentSource;
 use App\Enums\FreeOptionMode;
 use App\Mail\FreeRegistrationMail;
@@ -82,6 +83,8 @@ class FreeRegistrationTest extends TestCase
 
     public function test_the_page_offers_free_registration_without_any_sale_wording(): void
     {
+        // La formation complète créée par la migration de novembre 2026 n'entre pas dans ce test.
+        Formation::query()->where('slug', CatalogueUpdate::COMPLETE_SLUG)->delete();
         $formation = $this->freeFormation();
 
         $response = $this->actingAs(User::factory()->create())->get(route('formations.show', $formation))->assertOk();
@@ -371,8 +374,8 @@ class FreeRegistrationTest extends TestCase
         $formation = $this->freeFormation(attributes: ['is_active' => false]);
         $option = $this->option($formation, 'Présentiel journée');
 
-        $this->get(route('formations.show', $formation))->assertNotFound();
-        $this->actingAs(User::factory()->create())->get(route('formations.show', $formation))->assertNotFound();
+        $this->get(route('formations.show', $formation))->assertRedirect(route('formations.index'));
+        $this->actingAs(User::factory()->create())->get(route('formations.show', $formation))->assertRedirect(route('formations.index'));
 
         $this->actingAs(User::factory()->admin()->create())->get(route('formations.show', $formation))
             ->assertOk()
@@ -390,7 +393,8 @@ class FreeRegistrationTest extends TestCase
     {
         $formation = Formation::factory()->inactive()->create(['price' => 15000]);
 
-        $this->actingAs(User::factory()->admin()->create())->get(route('formations.show', $formation))->assertNotFound();
+        // Ses liens circulent encore : ils mènent au catalogue (novembre 2026), même pour l'admin.
+        $this->actingAs(User::factory()->admin()->create())->get(route('formations.show', $formation))->assertRedirect(route('formations.index'));
     }
 
     public function test_free_registrations_do_not_trigger_the_signups_without_purchase_alert(): void

@@ -391,6 +391,50 @@ return [
 
     /*
     |----------------------------------------------------------------------
+    | Après la formation (novembre 2026, fourni par Joseph)
+    |----------------------------------------------------------------------
+    | Affiché sur la page de chaque formation payante (Formation::afterTraining) : attestation de fin de
+    | formation et possibilité de stage de 3 mois pour tous ; possibilité d'être recruté par l'école pour les
+    | formations de « recruitment_slugs », si l'élève maîtrise bien les compétences. Jamais une promesse.
+    */
+
+    'after_training' => [
+        'items' => [
+            ['icon' => 'document-check', 'title' => 'Attestation de fin de formation', 'text' => 'Une attestation vous est remise à la fin de la formation.'],
+            ['icon' => 'briefcase', 'title' => 'Possibilité de stage de 3 mois', 'text' => 'Après la formation, vous pouvez faire un stage de 3 mois avec nous pour pratiquer sur de vrais projets.'],
+        ],
+        'recruitment' => ['icon' => 'user-plus', 'title' => 'Possibilité d\'être recruté par l\'école', 'text' => 'Si vous maîtrisez bien les compétences de la formation, vous pouvez être recruté par Lomé IA School. Nous vous accompagnons dans cette démarche.'],
+        'recruitment_slugs' => [
+            'formation-complete-intelligence-artificielle',
+            'creation-agents-ia',
+            'automatisation-ia',
+        ],
+        'faq' => [
+            ['question' => 'Puis-je suivre la formation en présentiel, à votre bureau ?', 'answer' => 'Oui. Pour suivre la formation en présentiel à notre bureau ({adresse}), réservez une consultation gratuite ou écrivez-nous sur WhatsApp : nous organisons votre formation avec vous.'],
+            ['question' => 'Puis-je payer en ligne si je suis la formation au bureau ?', 'answer' => 'Oui. Le paiement se fait en ligne par Mobile Money, que vous suiviez la formation à distance ou à notre bureau.'],
+            ['question' => 'Vais-je recevoir une attestation ?', 'answer' => 'Oui, une attestation de fin de formation vous est remise à la fin de la formation.'],
+            ['question' => 'Puis-je faire un stage chez vous ?', 'answer' => 'Oui. Après la formation, vous pouvez faire un stage de 3 mois avec nous. Écrivez-nous pour en parler.'],
+        ],
+        'recruitment_faq' => [
+            ['question' => 'Puis-je être recruté par l\'école ?', 'answer' => 'C\'est possible : si vous avez bien suivi la formation et que vous maîtrisez bien ses compétences, vous pouvez être recruté par Lomé IA School.'],
+        ],
+    ],
+
+    /*
+    |----------------------------------------------------------------------
+    | Suivre une formation en présentiel (novembre 2026, décision de Joseph)
+    |----------------------------------------------------------------------
+    | Les formations s'achètent et s'ouvrent tout de suite en ligne. Pour le présentiel au bureau : consultation
+    | gratuite ou message à Joseph. {adresse} = site.contact.address.
+    */
+
+    'in_person' => [
+        'title' => 'Vous préférez apprendre en présentiel ?',
+        'text' => 'Vous pouvez aussi suivre la formation à notre bureau, {adresse}. Réservez une consultation gratuite ou écrivez-nous : nous organisons votre formation avec vous. Le paiement se fait en ligne dans les deux cas.',
+    ],
+
+    /*
+    |----------------------------------------------------------------------
     | Inclus avec chaque formation
     |----------------------------------------------------------------------
     | Toujours affiché sur la page de chaque formation.
@@ -560,6 +604,58 @@ return [
     | Tout se modifie dans l'admin (Réglages du site > Page Entreprises). Vidéo YouTube vide = bloc
     | vidéo masqué. Le bouton « Réserver un appel gratuit » mène à la consultation gratuite.
     */
+
+    /*
+    |----------------------------------------------------------------------
+    | Talkami (novembre 2026, faits fournis par Joseph)
+    |----------------------------------------------------------------------
+    | Plateforme créée par Joseph pour apprendre à parler anglais. Section de l'accueil, page /talkami, lien
+    | dans le menu, mention dans À propos ; jamais dans le pied de page (demande de Joseph). Lecture :
+    | App\Support\Talkami. Modifiable dans l'admin (Réglages du site > Talkami) : interrupteur, lien, formules.
+    | Jamais de chiffre d'élèves, d'avis, de note ni de promesse de résultat ; jamais « garanti », « 100 % »
+    | ni « sans engagement ».
+    */
+
+    'talkami' => [
+        'enabled' => true,
+        'url' => 'https://talkami.net/?utm_source=lome-ia-school',
+        // Même numéro WhatsApp que l'école (voulu par Joseph).
+        'whatsapp' => '+228 72 24 02 31',
+        'plans' => [
+            ['name' => 'Semaine', 'price' => 2000, 'period' => 'la semaine', 'detail' => '15 minutes par jour'],
+            ['name' => 'Essentiel', 'price' => 7500, 'period' => 'par mois', 'detail' => '15 minutes par jour'],
+            ['name' => 'Intensif', 'price' => 14000, 'period' => 'par mois', 'detail' => '30 minutes par jour'],
+        ],
+    ],
+
+    /*
+    |----------------------------------------------------------------------
+    | Réalisations sur mesure (« Nous le faisons pour vous », novembre 2026)
+    |----------------------------------------------------------------------
+    | Page « Entreprises et réalisations sur mesure » (/entreprises) et bloc de l'accueil. Services cités par
+    | Joseph ; descriptions rédigées par Claude (à valider). Devis par le formulaire de la page (#devis).
+    | Modifiable dans l'admin (Réglages du site > Page Entreprises).
+    */
+
+    'custom_work' => [
+        'title' => 'Nous le faisons pour vous',
+        'intro' => 'Vous n\'avez pas le temps d\'apprendre ? Notre équipe réalise pour vous votre site, votre agent IA ou vos automatisations.',
+        'items' => [
+            ['title' => 'Site vitrine', 'text' => 'Un site clair qui présente votre activité, vos services et vos coordonnées, pensé d\'abord pour le téléphone.'],
+            ['title' => 'Site professionnel', 'text' => 'Un site plus complet : plusieurs pages, formulaires, espace client ou base de données selon vos besoins.'],
+            ['title' => 'Agent IA', 'text' => 'Un assistant qui répond à vos clients ou aide votre équipe, à partir de vos propres informations.'],
+            ['title' => 'Automatisation', 'text' => 'Vos tâches répétitives (relances, e-mails, tableaux, publications) confiées à des outils reliés entre eux et à l\'IA.'],
+        ],
+        // Choix proposés dans le formulaire de devis (clé => libellé).
+        'services' => [
+            'site-vitrine' => 'Site vitrine',
+            'site-professionnel' => 'Site professionnel',
+            'agent-ia' => 'Agent IA',
+            'automatisation' => 'Automatisation',
+            'formation-equipe' => 'Formation de votre équipe',
+            'autre' => 'Autre besoin',
+        ],
+    ],
 
     'business' => [
         'video_url' => '',

@@ -5,6 +5,7 @@ namespace Tests\Feature\Site;
 use App\Assistant\AmaKnowledge;
 use App\Assistant\AmaPrompt;
 use App\Assistant\UnansweredReply;
+use App\Catalogue\CatalogueUpdate;
 use App\Enums\UserRole;
 use App\Models\AssistantConversation;
 use App\Models\AssistantMessage;
@@ -63,7 +64,8 @@ class AmaKnowledgeTest extends TestCase
     public function test_ama_receives_the_school_the_pages_the_rules_and_the_guide_under_clear_headings(): void
     {
         $this->fakeGemini();
-        $this->ask();
+        // Novembre 2026 : le détail de la page Entreprises n'est envoyé que si le visiteur en parle.
+        $this->ask('Bonjour, je voudrais un devis pour mon entreprise');
         $prompt = $this->received();
 
         foreach ([
@@ -73,7 +75,7 @@ class AmaKnowledgeTest extends TestCase
             '## Formations proposées : prix, description et programme (à jour)',
             '## Informations des pages publiques du site',
             '### Page d\'accueil',
-            '### Page « Entreprises et centres de formation »',
+            '### Page « Entreprises et réalisations sur mesure »',
             '### Questions fréquentes du site',
             '### Règles importantes (conditions générales de vente)',
             '## Guide des parcours du site',
@@ -143,12 +145,14 @@ class AmaKnowledgeTest extends TestCase
         $this->ask();
         $prompt = $this->received();
 
-        $this->assertMatchesRegularExpression('/### Formation Exemple Sans Contenu\n.*\nDescription : .*\nProgramme : aucun module ni aucune leçon n\'est encore publié pour cette formation\. Ne décris aucun programme/s', $prompt);
+        $this->assertMatchesRegularExpression('/### Formation Exemple Sans Contenu\n.*\nDescription : .*\nProgramme : aucun module ni aucune leçon n\'est encore publié pour cette formation\. Ne décris aucun module ni aucune leçon/s', $prompt);
         $this->assertStringNotContainsString('Formation Exemple Masquée', $prompt);
     }
 
     public function test_a_lesson_added_later_is_known_at_the_next_message(): void
     {
+        // La formation complète créée par la migration de novembre 2026 n'entre pas dans ce test.
+        Formation::query()->where('slug', CatalogueUpdate::COMPLETE_SLUG)->delete();
         $this->fakeGemini();
         $formation = Formation::factory()->create(['title' => 'Formation Exemple Évolutive']);
 

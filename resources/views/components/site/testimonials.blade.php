@@ -1,12 +1,24 @@
-{{-- Témoignages gérés dans l'admin (voir App\Support\Testimonials). À n'afficher que si la liste n'est pas vide. --}}
-@props(['items'])
+{{--
+    Témoignages gérés dans l'admin (voir App\Support\Testimonials). À n'afficher que si la liste n'est pas vide.
+    Novembre 2026 : les témoignages vidéo (souvent filmés au téléphone) sont présentés à part, dans une rangée qui défile
+    sur le côté (x-site.video-testimonials), au format de la vidéo ; les autres restent en colonnes.
+    « narrow » : deux colonnes au plus sur grand écran (pages des formations).
+--}}
+@props(['items', 'narrow' => false])
 
 @php
-    use App\Support\YouTube;
+    $videoItems = array_values(array_filter($items, fn (array $item): bool => $item['type'] === 'video'));
+    $otherItems = array_values(array_filter($items, fn (array $item): bool => $item['type'] !== 'video'));
 @endphp
 
-<div {{ $attributes->class('columns-1 gap-5 sm:columns-2 lg:columns-3') }}>
-    @foreach ($items as $testimonial)
+<div {{ $attributes->class('space-y-8') }}>
+@if ($videoItems)
+    <x-site.video-testimonials :items="$videoItems" />
+@endif
+
+@if ($otherItems)
+<div @class(['columns-1 gap-5 sm:columns-2', 'lg:columns-3' => ! $narrow])>
+    @foreach ($otherItems as $testimonial)
         @php
             $author = collect([$testimonial['name'], $testimonial['formation']])->filter()->implode(', ');
         @endphp
@@ -74,4 +86,6 @@
             @endif
         </figure>
     @endforeach
+</div>
+@endif
 </div>

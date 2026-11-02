@@ -34,13 +34,20 @@ class FormationController extends Controller
 
         // Offre d'accompagnement : présentée avec les autres offres sur /accompagnement.
         if ($formation->isPack()) {
-            abort_unless($formation->is_active || $user?->isAdmin(), 404);
+            // Offre masquée (retirée du site en novembre 2026) : ses liens circulent encore, ils mènent au catalogue.
+            if (! $formation->is_active && ! $user?->isAdmin()) {
+                return redirect()->route('formations.index');
+            }
 
             return redirect(route('packs').'#'.$formation->slug);
         }
 
         // Une formation gratuite masquée (brouillon) reste visible par l'admin, pour la relire avant de la publier.
-        abort_unless($formation->is_active || ($formation->isFree() && $user?->isAdmin()), 404);
+        // Formation masquée : ses liens peuvent encore circuler (WhatsApp, affiliation), ils mènent au catalogue
+        // plutôt qu'à une page d'erreur. Une formation gratuite masquée reste visible par l'admin, pour la relire.
+        if (! $formation->is_active && ! ($formation->isFree() && $user?->isAdmin())) {
+            return redirect()->route('formations.index');
+        }
 
         $related = Formation::published()
             ->whereKeyNot($formation->getKey())

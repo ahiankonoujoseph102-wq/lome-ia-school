@@ -13,7 +13,7 @@ class FormationSeederTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_seeds_the_seventeen_formations_with_their_prices(): void
+    public function test_it_seeds_the_eighteen_formations_with_their_prices(): void
     {
         // La formation gratuite du 10 octobre 2026, les offres d'accompagnement et le Groupe VIP sont créés
         // par des migrations, pas par le seeder : hors du compte.
@@ -21,11 +21,17 @@ class FormationSeederTest extends TestCase
         Formation::query()->whereIn('kind', ['pack', 'group'])->delete();
         $this->seed(FormationSeeder::class);
 
-        $this->assertSame(17, Formation::count());
+        $this->assertSame(18, Formation::count());
         $this->assertSame(5500, Formation::where('slug', 'chatgpt-claude-initiation-ia')->value('price'));
         $this->assertSame(36000, Formation::where('slug', 'creation-affiches-pro-ia')->value('price'));
         $this->assertSame(300000, Formation::where('slug', 'ebooks-livres-professionnels-ia')->value('price'));
         $this->assertSame(5100, Formation::where('slug', 'chansons-personnalisees-ia')->value('price'));
+        // Prix de novembre 2026 et nouvelle formation complète.
+        $this->assertSame(150000, Formation::where('slug', 'creation-agents-ia')->value('price'));
+        $this->assertSame(55000, Formation::where('slug', 'automatisation-ia')->value('price'));
+        $this->assertSame(10000, Formation::where('slug', 'site-vitrine-web-ia')->value('price'));
+        $this->assertSame(25000, Formation::where('slug', 'sites-web-base-de-donnees-projets-avances')->value('price'));
+        $this->assertSame(250000, Formation::where('slug', 'formation-complete-intelligence-artificielle')->value('price'));
 
         $this->assertSame(
             collect(FormationCategory::cases())->map->value->sort()->values()->all(),
@@ -49,6 +55,6 @@ class FormationSeederTest extends TestCase
         $this->seed(FormationSeeder::class);
         $this->seed(FormationSeeder::class);
 
-        $this->assertSame(17, Formation::count());
+        $this->assertSame(18, Formation::count());
     }
 }

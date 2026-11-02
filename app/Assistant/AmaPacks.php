@@ -116,6 +116,11 @@ class AmaPacks
         $packs = self::packs();
         $open = $packs->reject(fn (Formation $pack): bool => $pack->registrationsClosed());
 
+        // Novembre 2026 : offres retirées du site (masquées) ; leurs acheteurs gardent leurs formations et le groupe VIP.
+        if ($packs->isEmpty()) {
+            return 'Les offres d\'accompagnement ne sont plus proposées sur le site : ne les propose jamais. Les élèves qui en ont acheté une gardent leurs formations et le groupe VIP. Oriente vers le catalogue des formations ('.route('formations.index').').';
+        }
+
         if ($open->isEmpty()) {
             return 'Les inscriptions aux offres d\'accompagnement ('.route('packs').') sont closes : ne les propose pas ; oriente vers le catalogue des formations ('.route('formations.index').').';
         }

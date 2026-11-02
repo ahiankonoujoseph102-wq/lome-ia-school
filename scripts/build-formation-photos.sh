@@ -29,6 +29,7 @@ missions-upwork-competences-ia 5198239 center
 contenu-tiktok-facebook-youtube-videos-ia 8370484 center
 e-commerce-produits-digitaux-ia 5711715 center
 formation-gratuite-ia 3769021 center
+formation-complete-intelligence-artificielle 30688592 center
 accompagnement-ia-niveau-1 30688591 center
 accompagnement-ia-niveau-2 30688593 center
 accompagnement-ia-niveau-3 30688592 center

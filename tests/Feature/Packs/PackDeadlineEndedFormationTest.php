@@ -133,10 +133,10 @@ class PackDeadlineEndedFormationTest extends TestCase
         // La mention est en haut de la carte, avant la description et la liste des formations incluses.
         $this->assertLessThan(strpos($html, 'data-test="pack-description"'), strpos($html, 'data-test="pack-closed-notice"'));
 
-        // Plus aucune offre publiée : ni lien, ni page.
+        // Plus aucune offre publiée : ni lien, ni page (l'adresse mène au catalogue).
         Formation::query()->where('kind', 'pack')->update(['is_active' => false]);
         $this->get(route('home'))->assertOk()->assertDontSee('data-test="menu-packs"', false);
-        $this->get(route('packs'))->assertNotFound();
+        $this->get(route('packs'))->assertRedirect(route('formations.index'));
     }
 
     public function test_a_single_offer_still_open_keeps_the_button(): void
