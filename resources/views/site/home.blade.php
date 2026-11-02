@@ -118,7 +118,7 @@
 
     {{-- Accès à vie et accompagnement de 3 mois après la formation --}}
     <section class="section !pb-0">
-        <div class="relative overflow-hidden rounded-[2rem] border border-gold-400/25 bg-linear-to-br from-gold-400/[0.12] via-night-900 to-night-950 p-6 sm:p-10" data-reveal>
+        <div class="relative overflow-hidden rounded-[2rem] border border-gold-400/25 bg-linear-to-br from-gold-400/[0.12] via-night-900 to-night-950 p-4 sm:p-10" data-reveal>
             <div class="pointer-events-none absolute -top-20 -left-16 size-64 rounded-full bg-gold-400/15 blur-3xl"></div>
             <div class="relative grid items-center gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
                 <div class="text-center lg:text-left">
@@ -129,14 +129,14 @@
                     <p class="mt-4 text-slate-300">{{ $lifetime['text'] }}</p>
                 </div>
                 <div>
-                    <ul class="grid gap-4 sm:grid-cols-2">
+                    <ul class="grid grid-cols-2 gap-3 sm:gap-4">
                         @foreach ($lifetime['items'] as $item)
-                            <li class="rounded-2xl bg-veil/[0.05] p-5 ring-1 ring-gold-400/25">
-                                <span class="grid size-12 place-items-center rounded-2xl bg-gold-400 text-night-950 shadow-lg shadow-gold-500/20">
-                                    <flux:icon :icon="$item['icon']" class="size-6" />
+                            <li class="rounded-2xl bg-veil/[0.05] p-3 ring-1 ring-gold-400/25 sm:p-5">
+                                <span class="grid size-10 place-items-center rounded-xl bg-gold-400 text-night-950 shadow-lg shadow-gold-500/20 sm:size-12 sm:rounded-2xl">
+                                    <flux:icon :icon="$item['icon']" class="size-5 sm:size-6" />
                                 </span>
-                                <h3 class="mt-4 text-xl font-bold text-gold-200">{{ $item['title'] }}</h3>
-                                <p class="mt-2 text-sm leading-relaxed text-slate-300">{{ $item['text'] }}</p>
+                                <h3 class="mt-3 text-sm leading-snug font-bold break-words hyphens-auto text-gold-200 sm:mt-4 sm:text-xl">{{ $item['title'] }}</h3>
+                                <p class="mt-1.5 text-xs leading-relaxed text-slate-300 sm:mt-2 sm:text-sm">{{ $item['text'] }}</p>
                             </li>
                         @endforeach
                     </ul>
@@ -154,14 +154,14 @@
             subtitle="Des formations concrètes, un paiement simple et un accompagnement réel, pour passer de la curiosité aux résultats."
         />
 
-        <div class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="mt-8 grid grid-cols-2 gap-3 sm:mt-12 sm:gap-4 lg:grid-cols-3" data-test="home-why-us">
             @foreach (config('site.why_us') as $item)
-                <div class="card card-hover p-6" data-reveal style="--reveal-delay: {{ $loop->index * 70 }}ms">
-                    <span class="grid size-12 place-items-center rounded-2xl bg-electric-500/15 text-electric-300 ring-1 ring-electric-400/25">
-                        <flux:icon :icon="$item['icon']" class="size-6" />
+                <div class="card card-hover p-4 sm:p-6" data-reveal style="--reveal-delay: {{ $loop->index * 70 }}ms">
+                    <span class="grid size-10 place-items-center rounded-xl bg-electric-500/15 text-electric-300 ring-1 ring-electric-400/25 sm:size-12 sm:rounded-2xl">
+                        <flux:icon :icon="$item['icon']" class="size-5 sm:size-6" />
                     </span>
-                    <h3 class="mt-5 text-lg font-semibold text-white">{{ $item['title'] }}</h3>
-                    <p class="mt-2 text-sm leading-relaxed text-slate-400">{{ $item['text'] }}</p>
+                    <h3 class="mt-3 text-sm leading-snug font-semibold break-words hyphens-auto text-white sm:mt-5 sm:text-lg">{{ $item['title'] }}</h3>
+                    <p class="mt-1.5 text-xs leading-relaxed text-slate-400 sm:mt-2 sm:text-sm">{{ $item['text'] }}</p>
                 </div>
             @endforeach
         </div>
@@ -184,11 +184,17 @@
                     </a>
                 </div>
 
-                <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {{-- Téléphone : rangée qui défile sur le côté (une carte et le bord de la suivante) ; dès sm : grille. --}}
+                <div class="-mx-4 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-3 [scrollbar-width:none] sm:mx-0 sm:mt-10 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3" data-test="home-featured">
                     @foreach ($featured as $formation)
-                        <x-site.formation-card :formation="$formation" :delay="$loop->index * 70" />
+                        <div class="flex w-[84%] shrink-0 snap-start sm:w-auto [&>*]:w-full">
+                            <x-site.formation-card :formation="$formation" :delay="$loop->index * 70" />
+                        </div>
                     @endforeach
                 </div>
+                <p class="mt-2 flex items-center justify-center gap-1.5 text-xs text-slate-400 sm:hidden" aria-hidden="true">
+                    <flux:icon.arrows-right-left class="size-4" /> Faites glisser pour voir les autres formations
+                </p>
 
                 <div class="mt-10" data-reveal>
                     <p class="text-center text-sm font-semibold text-slate-400">Explorer par thème</p>
@@ -354,12 +360,12 @@
                 <a href="{{ route('business') }}#devis" class="btn-gold w-full shrink-0 sm:w-auto" data-test="home-quote">Demander un devis <flux:icon.arrow-right class="size-5" /></a>
             </div>
             @if ($workItems)
-                <ul class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <ul class="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
                     @foreach ($workItems as $item)
-                        <li class="rounded-2xl bg-night-800 p-4 shadow-[inset_0_0_0_1px_var(--color-night-600)]">
+                        <li class="rounded-2xl bg-night-800 p-3.5 shadow-[inset_0_0_0_1px_var(--color-night-600)] sm:p-4">
                             <flux:icon :icon="$workIcons[$loop->index % count($workIcons)]" class="size-6 text-gold-300" />
-                            <p class="mt-3 font-semibold text-white">{{ $item['title'] }}</p>
-                            <p class="mt-1 text-sm leading-relaxed text-slate-400">{{ $item['text'] ?? '' }}</p>
+                            <p class="mt-3 text-sm font-semibold break-words hyphens-auto text-white sm:text-base">{{ $item['title'] }}</p>
+                            <p class="mt-1 text-xs leading-relaxed break-words hyphens-auto text-slate-400 sm:text-sm">{{ $item['text'] ?? '' }}</p>
                         </li>
                     @endforeach
                 </ul>
@@ -370,7 +376,7 @@
                     <p class="font-semibold text-white">{{ config('site.business.home_title') }}</p>
                     <p class="mt-1 text-sm text-slate-300">{{ config('site.business.home_text') }}</p>
                 </div>
-                <a href="{{ route('business') }}" class="btn-ghost w-full shrink-0 sm:w-auto">Découvrir l'accompagnement <flux:icon.arrow-right class="size-5" /></a>
+                <a href="{{ route('business') }}" class="btn-ghost w-full shrink-0 sm:w-auto">Voir la page Entreprises <flux:icon.arrow-right class="size-5" /></a>
             </div>
         </div>
     </section>
