@@ -101,7 +101,7 @@
     @endif
 
     {{-- En-tête de la formation --}}
-    <section class="relative isolate overflow-hidden" @if ($heroPhoto) data-test="formation-photo-hero" @endif>
+    <section @class(['relative isolate overflow-hidden', 'theme-island bg-night-950' => $heroPhoto]) @if ($heroPhoto) data-test="formation-photo-hero" @endif>
         @if ($heroPhoto)
             @include('site.formations.partials.photo-hero-background', ['photo' => $heroPhoto])
         @else

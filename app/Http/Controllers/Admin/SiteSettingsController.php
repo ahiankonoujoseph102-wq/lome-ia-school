@@ -21,6 +21,7 @@ use App\Support\HomeVideo;
 use App\Support\PastedLink;
 use App\Support\PhoneNumber;
 use App\Support\SearchConsole;
+use App\Support\SiteDesign;
 use App\Support\Talkami;
 use App\Support\VoiceAssistant;
 use App\Support\WhatsAppMessages;
@@ -53,7 +54,7 @@ class SiteSettingsController extends Controller
         'affiliation' => ['title' => 'Affiliation', 'text' => 'Taux de commission, durée des liens, délai de disponibilité, retrait minimum.', 'icon' => 'share', 'sensitive' => true],
         'textes' => ['title' => 'Textes du site', 'text' => 'Accroche de l\'accueil, présentation du formateur, questions fréquentes.', 'icon' => 'document-text'],
         'video-accueil' => ['title' => 'Vidéo d\'accueil', 'text' => 'Vidéo YouTube verticale de l\'accueil : lien, image d\'aperçu, titre, phrase, bouton TikTok et interrupteur.', 'icon' => 'play-circle'],
-        'fond-anime' => ['title' => 'Fond animé', 'text' => 'Halo lumineux, réseau de points et icônes qui bougent doucement derrière le haut de l\'accueil et du catalogue : interrupteur.', 'icon' => 'sparkles'],
+        'fond-anime' => ['title' => 'Fond animé et design', 'text' => 'Design clair (style Talkami) ou ancien design sombre, et fond animé de l\'accueil et du catalogue : interrupteurs.', 'icon' => 'sparkles'],
         'groupes' => ['title' => 'Fonctions des groupes', 'text' => 'Interrupteurs des nouvelles fonctions des groupes de discussion, éteintes au départ.', 'icon' => 'user-group'],
         'messages-whatsapp' => ['title' => 'Messages WhatsApp', 'text' => 'Message prérempli de chaque bouton WhatsApp selon la page : formation, paiement, formation gratuite, consultation, autres pages.', 'icon' => 'chat-bubble-left-right'],
         'page-joseph' => ['title' => 'Page Joseph Ahiankonou', 'text' => 'Votre page personnelle (/joseph-ahiankonou) : textes, photo, parcours, services, liens YouTube, TikTok, Facebook et chaînes WhatsApp, contact.', 'icon' => 'user-circle'],
@@ -600,6 +601,17 @@ class SiteSettingsController extends Controller
         SiteSettings::save(['site.animated_background' => ['enabled' => $enabled]]);
 
         ActivityLog::record(AdminAction::SettingsUpdated, $enabled ? 'Fond animé activé (accueil et catalogue).' : 'Fond animé désactivé : fond fixe d\'origine.');
+
+        // Design du site (novembre 2026) : un formulaire sans ce champ garde le design enregistré.
+        if ($request->has('theme')) {
+            $request->validate(['theme' => ['required', 'in:'.implode(',', SiteDesign::THEMES)]]);
+            $theme = (string) $request->input('theme');
+
+            if ($theme !== SiteDesign::theme()) {
+                SiteSettings::save(['site.design' => ['theme' => $theme]]);
+                ActivityLog::record(AdminAction::SettingsUpdated, $theme === 'light' ? 'Design clair (style Talkami) activé.' : 'Ancien design sombre remis.');
+            }
+        }
     }
 
     /**
