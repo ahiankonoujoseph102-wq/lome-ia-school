@@ -413,7 +413,7 @@ class AmaKnowledge
 
         // Talkami, création de Joseph (App\Support\Talkami).
         if (($talkami = Talkami::assistantText()) !== '' && $about(16, 'page Talkami')) {
-            $parts[] = '### Talkami (plateforme pour apprendre à parler anglais, page '.route('talkami').")\n".$talkami
+            $parts[] = '### Talkami (plateforme pour apprendre à parler anglais, section Talkami de l\'accueil : '.route('home').'#talkami'.")\n".$talkami
                 ."\nPour l'anglais, propose l'évaluation orale gratuite de 5 minutes sur Talkami ; ne parle jamais de « formation gratuite en anglais » (Talkami est payant après l'évaluation et la séance d'essai).";
         } elseif ($talkami !== '') {
             $parts[] = "### Talkami\nCréé par Joseph, pour parler anglais : évaluation gratuite de 5 minutes sur ".Talkami::url().'.';

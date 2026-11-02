@@ -49,7 +49,7 @@
                         <div>
                             <p class="font-semibold text-white">Une autre de ses créations : Talkami</p>
                             <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ \App\Support\Talkami::CREATOR }} On y parle anglais à l'oral avec un professeur virtuel, avec une évaluation gratuite de 5 minutes.</p>
-                            <a href="{{ route('talkami') }}" class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-electric-300 hover:text-white">Découvrir Talkami <flux:icon.arrow-right class="size-4" /></a>
+                            <a href="{{ route('home') }}#talkami" class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-electric-300 hover:text-white">Découvrir Talkami <flux:icon.arrow-right class="size-4" /></a>
                         </div>
                     </div>
                 @endif

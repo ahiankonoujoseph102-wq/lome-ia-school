@@ -52,7 +52,6 @@ class SearchEnginesTest extends TestCase
             route('about') => 'À propos de Lomé IA School',
             route('founder') => 'Joseph Ahiankonou (Coach Joseph) : formateur et consultant en IA à Lomé',
             route('business') => 'Entreprises et réalisations sur mesure | Lomé IA School',
-            route('talkami') => 'Talkami : apprendre à parler anglais | Lomé IA School',
             route('contact') => 'Contact | Lomé IA School',
             route('consultation') => 'Consultation gratuite | Lomé IA School',
             route('affiliate.program') => 'Devenez affilié | Lomé IA School',
@@ -191,7 +190,7 @@ class SearchEnginesTest extends TestCase
         preg_match_all('#<loc>(.*?)</loc>#', $xml, $matches);
         $locs = $matches[1];
 
-        $expected = ['', '/formations', '/a-propos', '/joseph-ahiankonou', '/entreprises', '/contact', '/consultation-gratuite', '/devenir-affilie', '/mentions-legales', '/conditions-generales-de-vente', '/politique-de-confidentialite', '/talkami', '/formations/creation-agents-ia', '/formations/formation-complete-intelligence-artificielle'];
+        $expected = ['', '/formations', '/a-propos', '/joseph-ahiankonou', '/entreprises', '/contact', '/consultation-gratuite', '/devenir-affilie', '/mentions-legales', '/conditions-generales-de-vente', '/politique-de-confidentialite', '/formations/creation-agents-ia', '/formations/formation-complete-intelligence-artificielle'];
         foreach ($expected as $path) {
             $this->assertContains(self::DOMAIN.$path, $locs, $path ?: '/');
         }

@@ -7,7 +7,8 @@
         ['route' => 'consultation', 'active' => 'consultation', 'label' => 'Consultation gratuite'],
         ['route' => 'business', 'active' => 'business', 'label' => 'Entreprises'],
         // Talkami, création de Joseph (novembre 2026) : lien tant que la page est affichée.
-        ...(\App\Support\Talkami::enabled() ? [['route' => 'talkami', 'active' => 'talkami', 'label' => 'Talkami', 'test' => 'menu-talkami']] : []),
+        // Pas de page à part (décision de Joseph) : le lien mène à la section Talkami de l'accueil.
+        ...(\App\Support\Talkami::enabled() ? [['route' => 'home', 'href' => route('home').'#talkami', 'active' => 'talkami-none', 'label' => 'Talkami', 'test' => 'menu-talkami']] : []),
         ['route' => 'about', 'active' => 'about', 'label' => 'À propos'],
         ['route' => 'contact', 'active' => 'contact', 'label' => 'Contact'],
     ];
@@ -33,7 +34,7 @@
             <div class="hidden items-center gap-0.5 lg:flex xl:gap-1">
                 @foreach ($links as $link)
                     <a
-                        href="{{ route($link['route']) }}"
+                        href="{{ $link['href'] ?? route($link['route']) }}"
                         @class([
                             'rounded-full px-2.5 py-2 text-sm font-medium whitespace-nowrap transition xl:px-4',
                             'bg-veil/10 text-white' => request()->routeIs($link['active']),
@@ -147,7 +148,8 @@
                 @foreach ($links as $link)
                     <li>
                         <a
-                            href="{{ route($link['route']) }}"
+                            href="{{ $link['href'] ?? route($link['route']) }}"
+                            @isset($link['href']) x-on:click="open = false" @endisset
                             @class([
                                 'flex items-center justify-between rounded-2xl px-4 py-4 text-lg font-semibold hover:bg-veil/5',
                                 'bg-veil/5 text-electric-300' => request()->routeIs($link['active']),

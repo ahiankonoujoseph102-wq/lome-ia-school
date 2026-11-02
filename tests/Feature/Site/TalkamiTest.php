@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Talkami (novembre 2026) : section de l'accueil, page /talkami, lien du menu, mention dans À propos, jamais dans le
+ * Talkami (novembre 2026) : grande section de l'accueil (#talkami, pas de page à part : /talkami y redirige), lien du menu, mention dans À propos, jamais dans le
  * pied de page ; liens vers talkami.net avec utm_source=lome-ia-school ; réglages de l'admin ; aucune promesse.
  */
 class TalkamiTest extends TestCase
@@ -33,24 +33,39 @@ class TalkamiTest extends TestCase
         $this->assertLessThan(20 * 1024, filesize(public_path(Talkami::LOGO)));
     }
 
-    public function test_the_talkami_page_shows_the_facts_and_the_plans(): void
+    public function test_the_home_section_shows_the_real_talkami_content(): void
     {
-        $html = (string) $this->get(route('talkami'))->assertOk()
+        $html = (string) $this->get(route('home'))->assertOk()
+            ->assertSee('id="talkami"', false)
             ->assertSee('Teacher Joe')
             ->assertSee('Teacher Rose')
             ->assertSee('de A1 à C2')
+            ->assertSee('data-test="home-talkami-steps"', false)
+            ->assertSee('Passez l\'évaluation gratuite')
             ->assertSee(Money::fcfa(2000))
             ->assertSee(Money::fcfa(7500))
             ->assertSee(Money::fcfa(14000))
-            ->assertSee('Rien n\'est prélevé automatiquement.')
-            ->assertSee('Talkami a été conçu et créé par Joseph Ahiankonou, fondateur de Lomé IA School.')
-            ->assertSee('https://wa.me/22872240231', false)
+            ->assertSee(Talkami::TEACHER_JOE, false)
+            ->assertSee(Talkami::TEACHER_ROSE, false)
             ->getContent();
 
-        $text = mb_strtolower(strip_tags($html));
-        foreach (['garanti', '100 %', '100%', 'sans engagement'] as $forbidden) {
-            $this->assertStringNotContainsString($forbidden, $text, $forbidden);
+        foreach ([Talkami::TEACHER_JOE, Talkami::TEACHER_ROSE] as $image) {
+            $this->assertFileExists(public_path($image));
+            $this->assertLessThan(80 * 1024, filesize(public_path($image)));
         }
+
+        $section = mb_strtolower(strip_tags((string) strstr($html, 'data-test="home-talkami"')));
+        foreach (['garanti', '100 %', '100%', 'sans engagement', 'formation gratuite en anglais'] as $forbidden) {
+            $this->assertStringNotContainsString($forbidden, $section, $forbidden);
+        }
+    }
+
+    public function test_there_is_no_talkami_page_anymore(): void
+    {
+        $this->get('/talkami')->assertStatus(301)->assertRedirect('/#talkami');
+        $this->assertNotContains('talkami', SearchEngines::INDEXABLE_ROUTES);
+        $this->assertFileDoesNotExist(resource_path('views/site/talkami.blade.php'));
+        $this->get(route('home'))->assertSee(route('home').'#talkami', false);
     }
 
     public function test_talkami_is_in_about_but_never_in_the_footer(): void
@@ -59,12 +74,6 @@ class TalkamiTest extends TestCase
 
         $footer = (string) file_get_contents(resource_path('views/site/partials/footer.blade.php'));
         $this->assertStringNotContainsStringIgnoringCase('talkami', $footer);
-    }
-
-    public function test_the_page_is_in_the_sitemap_and_indexable(): void
-    {
-        $this->assertContains('talkami', SearchEngines::INDEXABLE_ROUTES);
-        $this->get(route('sitemap'))->assertOk()->assertSee(route('talkami'), false);
     }
 
     public function test_the_admin_can_hide_talkami_and_change_the_plans(): void
@@ -95,7 +104,6 @@ class TalkamiTest extends TestCase
         $this->assertCount(1, $saved['plans']);
         $this->assertSame(8000, $saved['plans'][0]['price']);
 
-        $this->get(route('talkami'))->assertNotFound();
         $this->get(route('home'))->assertOk()->assertDontSee('data-test="home-talkami"', false)->assertDontSee('data-test="menu-talkami"', false);
         $this->assertFalse(Talkami::enabled());
     }

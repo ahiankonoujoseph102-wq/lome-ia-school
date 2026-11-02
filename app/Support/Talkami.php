@@ -13,10 +13,37 @@ final class Talkami
     public const string NAME = 'Talkami';
 
     /**
-     * Logo fourni par Joseph (original : resources/brand/talkami/logo-original.jpg), seulement recadré, réduit et
-     * compressé (WebP 480 px, environ 5 Ko), jamais redessiné ; fond blanc d'origine (jamais recoloré par Chrome).
+     * Visuels de Talkami, repris tels quels de talkami.net (demande de Joseph) : logo blanc (fond transparent, pour
+     * le fond sombre du site), Teacher Joe et Teacher Rose (les professeurs virtuels de Talkami).
      */
-    public const string LOGO = 'images/brand/talkami-logo.webp';
+    public const string LOGO = 'images/talkami/logo-blanc.webp';
+
+    public const string TEACHER_JOE = 'images/talkami/teacher-joe.webp';
+
+    public const string TEACHER_ROSE = 'images/talkami/teacher-rose.webp';
+
+    /**
+     * Textes repris de talkami.net (novembre 2026).
+     */
+    public const string PROMISE = 'Parlez anglais avec Teacher Joe, chaque jour';
+
+    public const string PROMISE_TEXT = 'Teacher Joe vous fait parler sans gêne ni jugement, depuis votre téléphone. Vous apprenez l\'anglais américain, compris partout dans le monde.';
+
+    public const string BUTTON = 'Passer mon évaluation gratuite';
+
+    public const string FOUNDER_QUOTE = 'J\'ai créé Talkami pour que chaque francophone puisse enfin oser parler anglais, depuis son téléphone, sans gêne.';
+
+    /**
+     * « Quatre étapes simples » de talkami.net.
+     *
+     * @var list<array{title: string, text: string}>
+     */
+    public const array STEPS = [
+        ['title' => 'Créez votre compte', 'text' => 'Avec votre nom et votre numéro de téléphone.'],
+        ['title' => 'Passez l\'évaluation gratuite', 'text' => '5 minutes à l\'oral pour trouver votre niveau, de A1 à C2.'],
+        ['title' => 'Choisissez votre formule', 'text' => 'Payez par Mobile Money. Rien n\'est prélevé automatiquement.'],
+        ['title' => 'Parlez chaque jour', 'text' => 'Teacher Joe vous accueille et votre programme est prêt.'],
+    ];
 
     public const string DEFAULT_URL = 'https://talkami.net/?utm_source=lome-ia-school';
 
