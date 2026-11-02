@@ -136,7 +136,7 @@ return [
         // Petits arguments affichés sous les boutons de l'accueil.
         'points' => [
             'Accès à vie',
-            'Accompagnement à vie',
+            'Accompagnement de 3 mois',
             'Paiement Mobile Money',
         ],
     ],
@@ -146,22 +146,22 @@ return [
         ['value' => '1 000+', 'label' => 'personnes formées'],
         // Année où Joseph a commencé à former (l'école, elle, est récente : aucune date de création n'est affichée).
         ['value' => '2023', 'label' => 'année où Joseph a commencé à former'],
-        ['value' => 'À vie', 'label' => 'accès et accompagnement'],
+        ['value' => 'À vie', 'label' => 'accès aux formations'],
     ],
 
     /*
     |----------------------------------------------------------------------
-    | Accès à vie et accompagnement à vie
+    | Accès à vie et accompagnement de 3 mois après la formation
     |----------------------------------------------------------------------
     | Mis en avant sur l'accueil et sur chaque page de formation.
     */
 
     'lifetime' => [
         'title' => 'Payez une fois, progressez toute votre vie',
-        'text' => 'Chaque formation achetée vous appartient : vous la revoyez autant que vous voulez et vous restez accompagné, même des années plus tard.',
+        'text' => 'Chaque formation achetée vous appartient : vous la revoyez autant que vous voulez, et vous êtes accompagné pendant 3 mois après la formation.',
         'items' => [
             ['icon' => 'lock-open', 'title' => 'Accès à vie', 'text' => 'Revoyez les vidéos et les ressources de votre formation quand vous voulez, sans abonnement ni date limite.'],
-            ['icon' => 'lifebuoy', 'title' => 'Accompagnement à vie', 'text' => 'Posez vos questions dans le groupe privé de la formation ou sur WhatsApp, aussi longtemps que vous en avez besoin.'],
+            ['icon' => 'lifebuoy', 'title' => 'Accompagnement de 3 mois', 'text' => 'Posez vos questions dans le groupe privé de la formation ou sur WhatsApp pendant 3 mois après la formation.'],
         ],
         'note' => 'Valable tant que la plateforme Lomé IA School est en activité.',
     ],
@@ -176,8 +176,8 @@ return [
     'why_us' => [
         ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Dès l\'envoi de votre preuve de paiement, votre formation s\'ouvre dans votre espace élève. À partir de {seuil}, elle s\'ouvre après vérification du paiement.'],
         ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Payez depuis le Togo, le Burkina Faso ou le Bénin avec votre compte Mobile Money, puis envoyez votre preuve de paiement sur le site.'],
-        ['icon' => 'academic-cap', 'title' => '100 % pratique, en français', 'text' => 'Des formations concrètes, orientées résultats, expliquées simplement et pensées pour notre réalité.'],
-        ['icon' => 'chat-bubble-left-right', 'title' => 'Accompagnement à vie', 'text' => 'Chaque formation a son groupe de discussion réservé aux élèves : posez vos questions et avancez ensemble, sans limite de durée.'],
+        ['icon' => 'academic-cap', 'title' => 'Pratique et en français', 'text' => 'Des formations concrètes, expliquées simplement et pensées pour notre réalité.'],
+        ['icon' => 'chat-bubble-left-right', 'title' => 'Accompagnement de 3 mois', 'text' => 'Chaque formation a son groupe de discussion réservé aux élèves : posez vos questions et avancez ensemble, avec un accompagnement de 3 mois après la formation.'],
         ['icon' => 'map-pin', 'title' => 'Une école basée à Lomé', 'text' => 'Un formateur joignable et une équipe proche de vous, à Adidogomé.'],
         ['icon' => 'briefcase', 'title' => 'Des compétences concrètes, directement applicables', 'text' => 'Nous vous apprenons aussi à proposer vos nouvelles compétences à des clients.'],
     ],
@@ -201,7 +201,7 @@ return [
             'points' => [
                 'Accès immédiat après paiement',
                 'À votre rythme, sur téléphone ou ordinateur',
-                'Accès à vie et accompagnement à vie',
+                'Accès à vie et accompagnement de 3 mois',
             ],
             // Phrase affichée en haut du catalogue.
             'catalogue' => 'Toutes les formations sont enregistrées : vous les suivez à votre rythme.',
@@ -262,7 +262,7 @@ return [
         'bio' => [
             'Passionné de technologie et de digital, Joseph s\'est spécialisé en intelligence artificielle dès l\'obtention de son bac, en se formant en ligne auprès d\'experts en France et aux États-Unis.',
             'Depuis 2023, l\'IA est son métier au quotidien. Il a formé plus de 1 000 personnes : étudiants, salariés, entrepreneurs, personnes en recherche d\'emploi, entreprises et centres de formation. Ses formations sont pratiques et directement applicables.',
-            'Il accompagne également des entreprises et des porteurs de projets : sites web, applications, automatisations et conseil en IA. Avec Lomé IA School, il rend ces compétences accessibles à tous, avec un accompagnement à vie.',
+            'Il accompagne également des entreprises et des porteurs de projets : sites web, applications, automatisations et conseil en IA. Avec Lomé IA School, il rend ces compétences accessibles à tous, avec un accompagnement de 3 mois après chaque formation.',
         ],
         'highlights' => [
             'Plus de 1 000 personnes formées depuis 2023',
@@ -381,7 +381,7 @@ return [
 
     'guarantees' => [
         ['icon' => 'lock-open', 'title' => 'Accès à vie', 'text' => 'Revoyez la formation quand vous voulez, sans date limite.'],
-        ['icon' => 'lifebuoy', 'title' => 'Accompagnement à vie', 'text' => 'Vos questions ont toujours une réponse, dans le groupe privé ou sur WhatsApp.'],
+        ['icon' => 'lifebuoy', 'title' => 'Accompagnement de 3 mois', 'text' => 'Vos questions ont une réponse pendant 3 mois après la formation, dans le groupe privé ou sur WhatsApp.'],
         // « instant » : remplacé par « verification_guarantee » pour les formations à partir du seuil de vérification.
         ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Votre formation s\'ouvre dès l\'envoi de votre preuve de paiement.', 'instant' => true],
         ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Togo, Burkina Faso et Bénin. Chaque paiement est vérifié par notre équipe.'],
@@ -443,7 +443,7 @@ return [
     'included' => [
         'Les vidéos de la formation, accessibles dès le paiement confirmé',
         'L\'accès au groupe privé de discussion de la formation',
-        'L\'accès à vie et l\'accompagnement à vie',
+        'L\'accès à vie et 3 mois d\'accompagnement après la formation',
     ],
 
     // Les bonus de chaque formation se modifient dans l'admin (Formations > Modifier), vides par défaut.
@@ -462,7 +462,7 @@ return [
             ['question' => 'Quand est-ce que j\'accède à ma formation ?', 'answer' => 'Pour les formations de moins de {seuil} : immédiatement après l\'envoi de votre preuve de paiement (accès provisoire, puis vérification par notre équipe). À partir de {seuil} : dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
             ['question' => 'Je suis débutant, puis-je suivre les formations ?', 'answer' => 'Oui. Les formations sont expliquées pas à pas, en français simple. Si vous partez de zéro, nous vous conseillons de commencer par la formation ChatGPT & Claude.'],
             ['question' => 'Puis-je suivre les formations sur mon téléphone ?', 'answer' => 'Oui, le site et les vidéos sont pensés pour le téléphone. Pour certaines formations pratiques (sites web, applications), un ordinateur rend l\'exercice plus confortable.'],
-            ['question' => 'Combien de temps ai-je accès à une formation ?', 'answer' => 'À vie. Une fois achetée, la formation reste dans votre espace élève : vous la revoyez autant que vous voulez. Vous bénéficiez aussi d\'un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],
+            ['question' => 'Combien de temps ai-je accès à une formation ?', 'answer' => 'À vie. Une fois achetée, la formation reste dans votre espace élève : vous la revoyez autant que vous voulez. Vous bénéficiez aussi d\'un accompagnement de 3 mois après la formation, dans le groupe privé de la formation ou sur WhatsApp.'],
             ['question' => 'Y a-t-il des formations en direct ou en présentiel ?', 'answer' => 'Toutes nos formations sont enregistrées : vous les suivez à votre rythme. De temps en temps, une formation est aussi proposée en direct sur Google Meet ou en présentiel à Lomé : ces sessions ponctuelles sont annoncées sur le site au moment où elles sont organisées.'],
             ['question' => 'Comment fonctionne le programme d\'affiliation ?', 'answer' => 'Tout inscrit peut activer son espace affilié, même sans avoir acheté. Vous partagez vos liens ; pour chaque achat validé passé par l\'un d\'eux dans les {affiliation_jours_lien} jours qui suivent le clic, vous recevez {affiliation_taux} % du prix payé. La commission devient disponible {affiliation_jours_dispo} jours après la validation du paiement, et vous la retirez par Mobile Money à partir de {affiliation_minimum} (frais d\'envoi déduits). Chaque retrait est vérifié puis payé par notre équipe.'],
             ['question' => 'Et si mon paiement n\'est pas reçu ?', 'answer' => 'Chaque paiement est vérifié par notre équipe. Si le paiement n\'est pas reçu sur notre compte, l\'accès provisoire est retiré et vous êtes prévenu par e-mail, avec le motif.'],
@@ -473,7 +473,7 @@ return [
             ['question' => 'Quand est-ce que j\'accède à la formation ?', 'answer' => 'Dès l\'envoi de votre preuve de paiement pour les formations de moins de {seuil}. À partir de {seuil}, dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
             ['question' => 'Comment payer ?', 'answer' => 'Par Mobile Money : envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso ou Bénin), puis déposez votre preuve de paiement sur la page de commande.'],
             ['question' => 'Et si j\'ai une question pendant la formation ?', 'answer' => 'Vous la posez dans le groupe privé de la formation, réservé aux élèves inscrits. Vous pouvez aussi nous écrire sur WhatsApp.'],
-            ['question' => 'Combien de temps ai-je accès ?', 'answer' => 'À vie, avec un accompagnement à vie dans le groupe privé de la formation (tant que la plateforme est en activité).'],
+            ['question' => 'Combien de temps ai-je accès ?', 'answer' => 'À vie pour la formation (tant que la plateforme est en activité), avec un accompagnement de 3 mois après la formation dans le groupe privé ou sur WhatsApp.'],
             ['question' => 'Puis-je être remboursé ?', 'answer' => 'Oui, dans les 48 heures qui suivent l\'achat, si vous n\'avez encore consulté aucune leçon de la formation.'],
             ['question' => 'La formation est-elle en direct ?', 'answer' => 'Non : elle est enregistrée et se suit à votre rythme. Si une session ponctuelle en direct ou en présentiel à Lomé est organisée, elle est annoncée sur le site.'],
             ['question' => 'Ai-je besoin de connaissances particulières ?', 'answer' => 'Non, sauf indication contraire sur la page. Il suffit de savoir utiliser un téléphone ou un ordinateur et d\'avoir une connexion Internet.'],
@@ -761,7 +761,7 @@ return [
         'host' => 'Laravel Cloud (https://cloud.laravel.com)',
         'data_location' => 'Europe (Londres, Royaume-Uni)',
         'updated_at' => '1er octobre 2026',
-        'access_duration' => 'L\'accès à la formation est accordé à vie, avec un accompagnement à vie dans le groupe privé de la formation, tant que la plateforme Lomé IA School est en activité.',
+        'access_duration' => 'L\'accès à la formation est accordé à vie, tant que la plateforme Lomé IA School est en activité. Un accompagnement de 3 mois après la formation est inclus, dans le groupe privé de la formation ou sur WhatsApp. Les élèves inscrits avant le 2 novembre 2026 gardent l\'accompagnement annoncé lors de leur achat.',
         'refund_policy' => 'Vous pouvez demander le remboursement d\'une formation dans les 48 heures qui suivent son achat, uniquement si elle n\'a pas été commencée, c\'est-à-dire si aucune leçon n\'a été consultée. La demande se fait par e-mail ou sur WhatsApp. Passé ce délai, ou dès qu\'une leçon a été consultée, aucun remboursement n\'est possible.',
         'data_retention' => 'Vos données personnelles, y compris les preuves de paiement (captures d\'écran, identifiants de transaction), sont conservées 3 ans après votre dernier achat, puis supprimées.',
     ],

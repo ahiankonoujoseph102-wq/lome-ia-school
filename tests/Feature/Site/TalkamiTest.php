@@ -24,7 +24,13 @@ class TalkamiTest extends TestCase
             ->assertSee('data-test="home-talkami"', false)
             ->assertSee('Évaluez gratuitement votre anglais en 5 minutes avec Talkami')
             ->assertSee('href="https://talkami.net/?utm_source=lome-ia-school"', false)
-            ->assertSee('data-test="menu-talkami"', false);
+            ->assertSee('data-test="menu-talkami"', false)
+            ->assertSee('data-test="home-talkami-logo"', false)
+            ->assertSee('Passer mon évaluation gratuite');
+
+        // Logo de Talkami fourni par Joseph : fichier léger, jamais redessiné.
+        $this->assertFileExists(public_path(Talkami::LOGO));
+        $this->assertLessThan(20 * 1024, filesize(public_path(Talkami::LOGO)));
     }
 
     public function test_the_talkami_page_shows_the_facts_and_the_plans(): void

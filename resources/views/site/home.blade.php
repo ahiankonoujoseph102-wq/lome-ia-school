@@ -89,7 +89,7 @@
                             </a>
                         @endforeach
                         <div class="flex items-center justify-between rounded-2xl bg-linear-to-r from-gold-400/15 to-transparent px-4 py-3 text-sm">
-                            <span class="inline-flex items-center gap-2 text-gold-200"><flux:icon.lock-open class="size-4" /> Accès à vie et accompagnement à vie</span>
+                            <span class="inline-flex items-center gap-2 text-gold-200"><flux:icon.lock-open class="size-4" /> Accès à vie et accompagnement de 3 mois</span>
                         </div>
                     </div>
                 </div>
@@ -116,7 +116,7 @@
         </dl>
     </section>
 
-    {{-- Accès à vie et accompagnement à vie --}}
+    {{-- Accès à vie et accompagnement de 3 mois après la formation --}}
     <section class="section !pb-0">
         <div class="relative overflow-hidden rounded-[2rem] border border-gold-400/25 bg-linear-to-br from-gold-400/[0.12] via-night-900 to-night-950 p-6 sm:p-10" data-reveal>
             <div class="pointer-events-none absolute -top-20 -left-16 size-64 rounded-full bg-gold-400/15 blur-3xl"></div>
@@ -211,6 +211,7 @@
                 <div class="pointer-events-none absolute -top-24 -left-24 size-72 rounded-full bg-electric-600/20 blur-3xl"></div>
                 <div class="relative grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]">
                     <div>
+                        <img src="{{ asset(\App\Support\Talkami::LOGO) }}" alt="Logo de Talkami" width="480" height="337" class="mb-5 h-16 w-auto rounded-xl sm:h-20" loading="lazy" decoding="async" data-test="home-talkami-logo">
                         <span class="eyebrow">Une création de notre fondateur</span>
                         <h2 class="mt-4 text-2xl font-bold tracking-tight text-balance text-white sm:text-4xl">{{ \App\Support\Talkami::HEADLINE }}</h2>
                         <p class="mt-4 text-pretty text-slate-300 sm:text-lg">Talkami vous fait parler anglais à l'oral avec un professeur virtuel, Teacher Joe ou Teacher Rose. L'évaluation donne votre niveau, de A1 à C2.</p>
@@ -220,7 +221,7 @@
                             <li class="flex items-start gap-3"><flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-400" /> Tout sur votre téléphone, paiement par Mobile Money</li>
                         </ul>
                         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-                            <a href="{{ \App\Support\Talkami::url() }}" target="_blank" rel="noopener" class="btn-gold" data-test="home-talkami-start">Faire mon évaluation gratuite <flux:icon.arrow-up-right class="size-5" /></a>
+                            <a href="{{ \App\Support\Talkami::url() }}" target="_blank" rel="noopener" class="btn-gold" data-test="home-talkami-start">Passer mon évaluation gratuite <flux:icon.arrow-up-right class="size-5" /></a>
                             <a href="{{ route('talkami') }}" class="btn-ghost">Découvrir Talkami</a>
                         </div>
                         <p class="mt-4 text-sm text-slate-400">{{ \App\Support\Talkami::CREATOR }}</p>

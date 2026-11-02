@@ -45,7 +45,7 @@
                 @if (\App\Support\Talkami::enabled())
                     {{-- Création du fondateur (novembre 2026) --}}
                     <div class="flex gap-4 rounded-2xl bg-night-900 p-5 shadow-[inset_0_0_0_1px_var(--color-night-600)]" data-test="about-talkami">
-                        <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-electric-200 ring-1 ring-electric-400/30"><flux:icon.microphone class="size-5" /></span>
+                        <img src="{{ asset(\App\Support\Talkami::LOGO) }}" alt="Logo de Talkami" width="480" height="337" class="h-11 w-auto shrink-0 rounded-lg" loading="lazy" decoding="async" data-test="about-talkami-logo">
                         <div>
                             <p class="font-semibold text-white">Une autre de ses créations : Talkami</p>
                             <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ \App\Support\Talkami::CREATOR }} On y parle anglais à l'oral avec un professeur virtuel, avec une évaluation gratuite de 5 minutes.</p>

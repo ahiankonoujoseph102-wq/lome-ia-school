@@ -26,11 +26,12 @@
         <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
         <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-10 pb-14 sm:px-6 sm:pt-16 lg:grid-cols-[1.1fr_1fr] lg:pb-20">
             <div>
+                <img src="{{ asset(\App\Support\Talkami::LOGO) }}" alt="Logo de Talkami" width="480" height="337" class="mb-6 h-20 w-auto rounded-2xl sm:h-24" fetchpriority="high" decoding="async" data-test="talkami-logo">
                 <span class="eyebrow" data-reveal>Une création de Joseph Ahiankonou</span>
-                <h1 class="mt-4 text-3xl font-bold tracking-tight text-balance text-white sm:text-5xl" data-reveal style="--reveal-delay: 60ms">Apprenez à parler anglais avec Talkami</h1>
+                <h1 class="mt-4 text-3xl font-bold tracking-tight text-balance text-white sm:text-5xl" data-reveal style="--reveal-delay: 60ms">Parlez anglais avec Teacher Joe, chaque jour</h1>
                 <p class="mt-4 max-w-xl text-base text-pretty text-slate-300 sm:text-lg" data-reveal style="--reveal-delay: 120ms">Vous parlez anglais à l'oral avec un professeur virtuel, Teacher Joe ou Teacher Rose, au choix. Tout se fait sur votre téléphone.</p>
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row" data-reveal style="--reveal-delay: 180ms">
-                    <a href="{{ $url }}" target="_blank" rel="noopener" class="btn-gold" data-test="talkami-start">Faire mon évaluation gratuite <flux:icon.arrow-up-right class="size-5" /></a>
+                    <a href="{{ $url }}" target="_blank" rel="noopener" class="btn-gold" data-test="talkami-start">Passer mon évaluation gratuite <flux:icon.arrow-up-right class="size-5" /></a>
                     <a href="#formules" class="btn-ghost">Voir les formules</a>
                 </div>
                 <p class="mt-4 flex items-center gap-2 text-sm text-slate-400" data-reveal style="--reveal-delay: 220ms">

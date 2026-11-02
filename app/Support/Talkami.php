@@ -12,6 +12,12 @@ final class Talkami
 {
     public const string NAME = 'Talkami';
 
+    /**
+     * Logo fourni par Joseph (original : resources/brand/talkami/logo-original.jpg), seulement recadré, réduit et
+     * compressé (WebP 480 px, environ 5 Ko), jamais redessiné ; fond blanc d'origine (jamais recoloré par Chrome).
+     */
+    public const string LOGO = 'images/brand/talkami-logo.webp';
+
     public const string DEFAULT_URL = 'https://talkami.net/?utm_source=lome-ia-school';
 
     public const string HEADLINE = 'Évaluez gratuitement votre anglais en 5 minutes avec Talkami';

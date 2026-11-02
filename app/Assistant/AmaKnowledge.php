@@ -35,7 +35,7 @@ class AmaKnowledge
         Accroche du site : « Maîtrisez l'IA et transformez vos compétences en opportunités ».
         Adresse : {adresse}.
         Horaires : {horaires}.
-        Les formations sont enregistrées : l'élève les suit à son rythme, avec un accès immédiat après le paiement. L'accès à vie et l'accompagnement à vie sont inclus (dans le groupe privé de chaque formation, réservé aux élèves inscrits).
+        Les formations sont enregistrées : l'élève les suit à son rythme, avec un accès immédiat après le paiement. L'accès à vie est inclus, avec un accompagnement de 3 mois après la formation (dans le groupe privé de chaque formation, réservé aux élèves inscrits, ou sur WhatsApp).
         De temps en temps, l'école organise des sessions ponctuelles en direct (Google Meet) ou en présentiel à Lomé pour une formation. Elles sont annoncées sur le site au moment où elles sont organisées.
         Une page « Entreprises et réalisations sur mesure » présente les réalisations faites pour les clients (sites, agents IA, automatisations), les services aux entreprises et aux centres de formation, un formulaire « Demander un devis » et un appel gratuit à réserver.
         Joseph a aussi créé Talkami, une plateforme pour apprendre à parler anglais avec un professeur virtuel.
