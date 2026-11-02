@@ -3,7 +3,6 @@
 
     $background = (array) SiteSettings::get('site.animated_background');
     $enabled = (bool) old('enabled', $background['enabled'] ?? true);
-    $theme = (string) old('theme', \App\Support\SiteDesign::theme());
 @endphp
 
 <x-admin.page :title="$section['title']" :back="route('admin.settings.index')" back-label="Réglages du site">
@@ -19,22 +18,6 @@
     <form method="POST" action="{{ route('admin.settings.update', $key) }}" class="space-y-6">
         @csrf
         @method('PUT')
-
-        <section class="card space-y-4 p-5 sm:p-6" data-test="site-design-choice">
-            <div>
-                <h2 class="font-semibold text-white">Design du site</h2>
-                <p class="text-sm text-slate-400">Le changement est immédiat, sans nouvelle mise en ligne. Les conversations des groupes restent sombres.</p>
-            </div>
-            @foreach (['light' => ['Design clair', 'Fond clair, cartes blanches et blocs bleu nuit, dans le style de Talkami.'], 'dark' => ['Ancien design sombre', 'Le site tout en bleu nuit, comme avant novembre 2026.']] as $value => [$label, $help])
-                <label class="flex cursor-pointer items-start gap-3 rounded-2xl p-3 ring-1 ring-veil/10 has-checked:ring-2 has-checked:ring-gold-500">
-                    <input type="radio" name="theme" value="{{ $value }}" @checked($theme === $value) class="mt-1 size-4 accent-[#d98a06]">
-                    <span>
-                        <span class="block font-semibold text-white">{{ $label }}</span>
-                        <span class="block text-sm text-slate-400">{{ $help }}</span>
-                    </span>
-                </label>
-            @endforeach
-        </section>
 
         <section class="card space-y-5 p-5 sm:p-6">
             <label class="flex cursor-pointer items-start justify-between gap-4" data-test="animated-background-toggle">

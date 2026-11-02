@@ -53,8 +53,6 @@ class InstallAppTest extends TestCase
         $this->assertContains('512x512', $sizes['maskable']);
 
         // Même couleur de thème dans la page ; aucune promesse de fonctionnement hors connexion.
-        $this->get(route('home'))->assertSee('<meta name="theme-color" content="#ffffff">', false);
-        config(['site.design.theme' => 'dark']);
         $this->get(route('home'))->assertSee('<meta name="theme-color" content="#0b1030">', false);
         $this->assertStringNotContainsStringIgnoringCase('hors connexion', json_encode($manifest, JSON_UNESCAPED_UNICODE));
     }

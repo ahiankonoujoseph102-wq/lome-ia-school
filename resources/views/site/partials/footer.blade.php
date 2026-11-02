@@ -3,7 +3,7 @@
     $footerCategories = \App\Enums\FormationCategory::cases();
 @endphp
 
-<footer class="theme-island relative border-t border-veil/10 bg-night-950">
+<footer class="relative border-t border-veil/10 bg-night-950">
     <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
         <div class="space-y-4">
             <x-site.logo height="h-12" />

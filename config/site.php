@@ -563,18 +563,6 @@ return [
 
     /*
     |----------------------------------------------------------------------
-    | Design du site (novembre 2026)
-    |----------------------------------------------------------------------
-    | « light » : design clair dans le style de Talkami (demandé par Joseph) ; « dark » : ancien design sombre.
-    | Interrupteur dans l'admin (Réglages du site > Fond animé et design) : sans nouvelle mise en ligne.
-    */
-
-    'design' => [
-        'theme' => 'light',
-    ],
-
-    /*
-    |----------------------------------------------------------------------
     | Page des offres d'accompagnement (/accompagnement)
     |----------------------------------------------------------------------
     | Affiche en haut de la page : téléversée dans l'admin (Formations et prix, partie des offres),

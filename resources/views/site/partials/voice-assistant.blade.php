@@ -31,7 +31,7 @@
 <div x-data="voiceAssistant(@js(VoiceAssistant::browserConfig(request())))" data-test="voice-assistant">
     <div
         x-show="! opened"
-        class="voice-assistant fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex max-w-[calc(100vw-2rem)] items-end gap-2 sm:right-6 lg:right-auto lg:bottom-6 lg:left-6 lg:flex-col lg:items-start theme-island"
+        class="voice-assistant fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-40 flex max-w-[calc(100vw-2rem)] items-end gap-2 sm:right-6 lg:right-auto lg:bottom-6 lg:left-6 lg:flex-col lg:items-start"
     >
         <p x-show="error" x-cloak x-text="error" role="alert" class="max-w-[calc(100vw-6.5rem)] rounded-2xl sm:max-w-xs bg-night-900/95 px-4 py-3 text-sm text-slate-100 shadow-xl ring-1 shadow-black/40 ring-rose-400/60"></p>
 
@@ -104,7 +104,7 @@
             x-show="opened"
             x-cloak
             @keydown.escape.window="opened && closeChat()"
-            class="ama-chat fixed inset-0 z-50 flex items-end lg:inset-auto lg:bottom-6 lg:left-6 theme-island"
+            class="ama-chat fixed inset-0 z-50 flex items-end lg:inset-auto lg:bottom-6 lg:left-6"
             role="dialog"
             aria-modal="true"
             aria-labelledby="ama-chat-title"
