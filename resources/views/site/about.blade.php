@@ -42,6 +42,17 @@
                         <p>{{ Placeholder::highlight($paragraph) }}</p>
                     @endforeach
                 </div>
+                @if (\App\Support\Talkami::enabled())
+                    {{-- Création du fondateur (novembre 2026) --}}
+                    <div class="flex gap-4 rounded-2xl bg-night-900 p-5 shadow-[inset_0_0_0_1px_var(--color-night-600)]" data-test="about-talkami">
+                        <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-electric-500/15 text-electric-200 ring-1 ring-electric-400/30"><flux:icon.microphone class="size-5" /></span>
+                        <div>
+                            <p class="font-semibold text-white">Une autre de ses créations : Talkami</p>
+                            <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ \App\Support\Talkami::CREATOR }} On y parle anglais à l'oral avec un professeur virtuel, avec une évaluation gratuite de 5 minutes.</p>
+                            <a href="{{ route('talkami') }}" class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-electric-300 hover:text-white">Découvrir Talkami <flux:icon.arrow-right class="size-4" /></a>
+                        </div>
+                    </div>
+                @endif
                 <a href="{{ route('founder') }}" class="inline-flex items-center gap-2 font-semibold text-gold-300 hover:text-gold-200" data-test="about-founder-link">
                     Son parcours, ses livres et ses services <flux:icon.arrow-right class="size-4" />
                 </a>

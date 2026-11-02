@@ -35,6 +35,8 @@ enum AdminAction: string
     case Export = 'export';
     case HandoffHandled = 'handoff_handled';
     case HandoffReopened = 'handoff_reopened';
+    case QuoteHandled = 'quote_handled';
+    case QuoteReopened = 'quote_reopened';
     case FreeRegistrationUpdated = 'free_registration_updated';
     case ChatEmailAnnouncement = 'chat_email_announcement';
     case NewsletterSent = 'newsletter_sent';
@@ -71,6 +73,8 @@ enum AdminAction: string
             self::Export => 'Export CSV',
             self::HandoffHandled => 'Demande transmise traitée',
             self::HandoffReopened => 'Demande transmise remise à traiter',
+            self::QuoteHandled => 'Demande de devis traitée',
+            self::QuoteReopened => 'Demande de devis remise à traiter',
             self::FreeRegistrationUpdated => 'Inscription gratuite modifiée',
             self::ChatEmailAnnouncement => 'Annonce envoyée par e-mail',
             self::NewsletterSent => 'E-mail groupé lancé',

@@ -358,7 +358,7 @@ class AmaKnowledge
 
         $services = collect((array) ($business['services'] ?? []))->implode(' ; ');
         $intro = collect((array) ($business['intro'] ?? []))->implode(' ');
-        $parts[] = '### Page « Entreprises et centres de formation » ('.route('business').")\n"
+        $parts[] = '### Page « Entreprises et réalisations sur mesure » ('.route('business').")\n"
             .($business['title'] ?? '')."\n".$intro
             ."\nServices proposés : ".$services.'.'
             ."\nLe bouton « Réserver un appel gratuit » mène à la consultation gratuite (profil « entreprise » présélectionné).";

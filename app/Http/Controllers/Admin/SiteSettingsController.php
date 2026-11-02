@@ -21,6 +21,7 @@ use App\Support\HomeVideo;
 use App\Support\PastedLink;
 use App\Support\PhoneNumber;
 use App\Support\SearchConsole;
+use App\Support\Talkami;
 use App\Support\VoiceAssistant;
 use App\Support\WhatsAppMessages;
 use App\Support\YouTube;
@@ -57,7 +58,8 @@ class SiteSettingsController extends Controller
         'messages-whatsapp' => ['title' => 'Messages WhatsApp', 'text' => 'Message prérempli de chaque bouton WhatsApp selon la page : formation, paiement, formation gratuite, consultation, autres pages.', 'icon' => 'chat-bubble-left-right'],
         'page-joseph' => ['title' => 'Page Joseph Ahiankonou', 'text' => 'Votre page personnelle (/joseph-ahiankonou) : textes, photo, parcours, services, liens YouTube, TikTok, Facebook et chaînes WhatsApp, contact.', 'icon' => 'user-circle'],
         'google' => ['title' => 'Référencement Google', 'text' => 'Code de vérification Google Search Console et adresse du plan du site à déclarer.', 'icon' => 'magnifying-glass'],
-        'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
+        'entreprises' => ['title' => 'Page Entreprises', 'text' => 'Vidéo YouTube, présentation, réalisations sur mesure (« Nous le faisons pour vous »), services et bloc de l\'accueil.', 'icon' => 'building-office-2'],
+        'talkami' => ['title' => 'Talkami', 'text' => 'Section de l\'accueil, page Talkami et lien du menu : interrupteur, lien vers talkami.net, WhatsApp et formules.', 'icon' => 'microphone'],
         'assistante' => ['title' => 'Assistante Ama', 'text' => 'Bouton « Parler avec notre assistante » : activation, Ama (Gemini) ou ElevenLabs, instructions, limites, lecteur de cours et aide proactive.', 'icon' => 'chat-bubble-oval-left-ellipsis'],
         'emails' => ['title' => 'E-mails envoyés', 'text' => 'Quota quotidien du fournisseur d\'e-mails (Brevo), réserve gardée pour les codes et les paiements, plafond des envois groupés, e-mails partis aujourd\'hui.', 'icon' => 'envelope'],
         'legal' => ['title' => 'Pages légales', 'text' => 'Hébergeur du site et lieu de stockage des données (mentions légales, confidentialité).', 'icon' => 'scale'],
@@ -103,6 +105,7 @@ class SiteSettingsController extends Controller
             'page-joseph' => $this->updateFounder($request, $images),
             'google' => $this->updateSearchConsole($request),
             'entreprises' => $this->updateBusiness($request),
+            'talkami' => $this->updateTalkami($request),
             'assistante' => $this->updateVoiceAssistant($request),
             'emails' => $this->updateMailQuota($request),
             'legal' => $this->updateLegal($request),
@@ -744,7 +747,78 @@ class SiteSettingsController extends Controller
             'home_text' => trim((string) $validated['home_text']),
         ]]);
 
-        ActivityLog::record(AdminAction::SettingsUpdated, 'Page « Entreprises et centres de formation » modifiée'.($video === '' ? ' (sans vidéo).' : ' (vidéo au format '.YouTube::format($video, $validated['video_format'] ?? null).').'));
+        // Réalisations sur mesure : seulement si le formulaire les envoie (un ancien formulaire ne les efface pas).
+        if ($request->boolean('custom_work_sent')) {
+            $work = $request->validate([
+                'custom_work_title' => ['required', 'string', 'max:120'],
+                'custom_work_intro' => ['nullable', 'string', 'max:400'],
+                'custom_work_items' => ['array', 'max:8'],
+                'custom_work_items.*.question' => ['nullable', 'string', 'max:80'],
+                'custom_work_items.*.answer' => ['nullable', 'string', 'max:300'],
+            ], ['custom_work_title.required' => 'Indiquez le titre des réalisations sur mesure.']);
+
+            SiteSettings::save(['site.custom_work' => [
+                ...(array) SiteSettings::get('site.custom_work'),
+                'title' => trim((string) $work['custom_work_title']),
+                'intro' => trim((string) ($work['custom_work_intro'] ?? '')),
+                'items' => array_map(fn (array $item): array => ['title' => $item['question'], 'text' => $item['answer']], self::questions($work['custom_work_items'] ?? [])),
+            ]]);
+        }
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Page « Entreprises et réalisations sur mesure » modifiée'.($video === '' ? ' (sans vidéo).' : ' (vidéo au format '.YouTube::format($video, $validated['video_format'] ?? null).').'));
+    }
+
+    /**
+     * Talkami (création de Joseph) : interrupteur (section de l'accueil, page, lien du menu), lien (https, talkami.net
+     * seulement), WhatsApp et formules (nom, prix en FCFA, période, détail).
+     */
+    private function updateTalkami(Request $request): void
+    {
+        PastedLink::cleanRequest($request, ['url']);
+
+        $validated = $request->validate([
+            'enabled' => ['nullable', 'boolean'],
+            'url' => ['required', 'string', 'max:500'],
+            'whatsapp' => ['nullable', 'string', 'max:30'],
+            'plans' => ['array', 'max:6'],
+            'plans.*.name' => ['nullable', 'string', 'max:40'],
+            'plans.*.price' => ['nullable', 'integer', 'min:0', 'max:10000000'],
+            'plans.*.period' => ['nullable', 'string', 'max:40'],
+            'plans.*.detail' => ['nullable', 'string', 'max:80'],
+        ], [
+            'url.required' => 'Indiquez le lien vers Talkami.',
+            'plans.*.price.integer' => 'Le prix s\'écrit en chiffres, sans espace ni « FCFA » (ex. 7500).',
+        ]);
+
+        $url = trim((string) $validated['url']);
+
+        if (! Talkami::isValidUrl($url)) {
+            throw ValidationException::withMessages(['url' => 'Le lien doit commencer par https:// et mener à talkami.net (ex. '.Talkami::DEFAULT_URL.').']);
+        }
+
+        $plans = [];
+
+        foreach ($validated['plans'] ?? [] as $plan) {
+            if (blank($plan['name'] ?? null) || ! is_numeric($plan['price'] ?? null)) {
+                continue;
+            }
+
+            $plans[] = [
+                'name' => trim((string) $plan['name']),
+                'price' => (int) $plan['price'],
+                'period' => trim((string) ($plan['period'] ?? '')),
+                'detail' => trim((string) ($plan['detail'] ?? '')),
+            ];
+        }
+
+        SiteSettings::save(['site.talkami' => [
+            'enabled' => $request->boolean('enabled'),
+            'url' => $url,
+            'whatsapp' => trim((string) ($validated['whatsapp'] ?? '')),
+            'plans' => $plans,
+        ]]);
+
+        ActivityLog::record(AdminAction::SettingsUpdated, 'Talkami modifié ('.($request->boolean('enabled') ? 'affiché' : 'masqué').', '.count($plans).' formules).');
     }
 
     /**

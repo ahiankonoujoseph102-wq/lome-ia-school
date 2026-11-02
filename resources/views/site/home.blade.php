@@ -204,6 +204,33 @@
         </section>
     @endif
 
+    {{-- Talkami (création de Joseph) : évaluation d'anglais gratuite, liens vers talkami.net (App\Support\Talkami) --}}
+    @if (\App\Support\Talkami::enabled())
+        <section class="section !pt-4" data-test="home-talkami">
+            <div class="relative overflow-hidden rounded-[2rem] bg-night-900 p-6 shadow-[inset_0_0_0_1px_var(--color-night-600)] sm:p-10 lg:p-12" data-reveal>
+                <div class="pointer-events-none absolute -top-24 -left-24 size-72 rounded-full bg-electric-600/20 blur-3xl"></div>
+                <div class="relative grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]">
+                    <div>
+                        <span class="eyebrow">Une création de notre fondateur</span>
+                        <h2 class="mt-4 text-2xl font-bold tracking-tight text-balance text-white sm:text-4xl">{{ \App\Support\Talkami::HEADLINE }}</h2>
+                        <p class="mt-4 text-pretty text-slate-300 sm:text-lg">Talkami vous fait parler anglais à l'oral avec un professeur virtuel, Teacher Joe ou Teacher Rose. L'évaluation donne votre niveau, de A1 à C2.</p>
+                        <ul class="mt-6 space-y-2.5 text-slate-200">
+                            <li class="flex items-start gap-3"><flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-400" /> Évaluation orale gratuite de 5 minutes, puis une séance d'essai gratuite de 15 minutes</li>
+                            <li class="flex items-start gap-3"><flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-400" /> Un programme selon votre objectif : travail, études, entretien, voyage…</li>
+                            <li class="flex items-start gap-3"><flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-gold-400" /> Tout sur votre téléphone, paiement par Mobile Money</li>
+                        </ul>
+                        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                            <a href="{{ \App\Support\Talkami::url() }}" target="_blank" rel="noopener" class="btn-gold" data-test="home-talkami-start">Faire mon évaluation gratuite <flux:icon.arrow-up-right class="size-5" /></a>
+                            <a href="{{ route('talkami') }}" class="btn-ghost">Découvrir Talkami</a>
+                        </div>
+                        <p class="mt-4 text-sm text-slate-400">{{ \App\Support\Talkami::CREATOR }}</p>
+                    </div>
+                    @include('site.partials.talkami-phone')
+                </div>
+            </div>
+        </section>
+    @endif
+
     {{-- Déroulement : l'enregistré est la règle, le direct et le présentiel sont ponctuels --}}
     <section class="section">
         <x-site.section-heading
@@ -330,15 +357,43 @@
         </section>
     @endif
 
-    {{-- Entreprises et centres de formation --}}
+    {{-- Nous le faisons pour vous (réalisations sur mesure) et entreprises : page /entreprises, devis en #devis --}}
+    @php
+        $customWork = (array) config('site.custom_work');
+        $workItems = array_values(array_filter((array) ($customWork['items'] ?? []), fn ($item): bool => is_array($item) && filled($item['title'] ?? null)));
+        $workIcons = ['window', 'computer-desktop', 'cpu-chip', 'arrow-path', 'sparkles', 'cog-6-tooth'];
+    @endphp
     <section class="section !pt-0" data-test="home-business">
-        <div class="card flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:p-8" data-reveal>
-            <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-electric-500/15 text-electric-200 ring-1 ring-electric-400/30"><flux:icon.building-office-2 class="size-6" /></span>
-            <div class="min-w-0 flex-1">
-                <h2 class="text-xl font-bold tracking-tight text-balance text-white sm:text-2xl">{{ config('site.business.home_title') }}</h2>
-                <p class="mt-2 text-slate-300">{{ config('site.business.home_text') }}</p>
+        <div class="rounded-[2rem] bg-night-900 p-6 shadow-[inset_0_0_0_1px_var(--color-night-600)] sm:p-10" data-reveal>
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div class="max-w-2xl">
+                    <span class="eyebrow">Réalisations sur mesure</span>
+                    <h2 class="mt-4 text-2xl font-bold tracking-tight text-balance text-white sm:text-4xl">{{ $customWork['title'] ?? 'Nous le faisons pour vous' }}</h2>
+                    @if (filled($customWork['intro'] ?? null))
+                        <p class="mt-3 text-pretty text-slate-300 sm:text-lg">{{ $customWork['intro'] }}</p>
+                    @endif
+                </div>
+                <a href="{{ route('business') }}#devis" class="btn-gold w-full shrink-0 sm:w-auto" data-test="home-quote">Demander un devis <flux:icon.arrow-right class="size-5" /></a>
             </div>
-            <a href="{{ route('business') }}" class="btn-ghost w-full shrink-0 sm:w-auto">Découvrir l'accompagnement <flux:icon.arrow-right class="size-5" /></a>
+            @if ($workItems)
+                <ul class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    @foreach ($workItems as $item)
+                        <li class="rounded-2xl bg-night-800 p-4 shadow-[inset_0_0_0_1px_var(--color-night-600)]">
+                            <flux:icon :icon="$workIcons[$loop->index % count($workIcons)]" class="size-6 text-gold-300" />
+                            <p class="mt-3 font-semibold text-white">{{ $item['title'] }}</p>
+                            <p class="mt-1 text-sm leading-relaxed text-slate-400">{{ $item['text'] ?? '' }}</p>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+            <div class="mt-8 flex flex-col gap-4 pt-6 shadow-[inset_0_1px_0_var(--color-night-700)] sm:flex-row sm:items-center">
+                <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-electric-500/15 text-electric-200 ring-1 ring-electric-400/30"><flux:icon.building-office-2 class="size-5" /></span>
+                <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-white">{{ config('site.business.home_title') }}</p>
+                    <p class="mt-1 text-sm text-slate-300">{{ config('site.business.home_text') }}</p>
+                </div>
+                <a href="{{ route('business') }}" class="btn-ghost w-full shrink-0 sm:w-auto">Découvrir l'accompagnement <flux:icon.arrow-right class="size-5" /></a>
+            </div>
         </div>
     </section>
 

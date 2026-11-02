@@ -605,6 +605,58 @@ return [
     | vidéo masqué. Le bouton « Réserver un appel gratuit » mène à la consultation gratuite.
     */
 
+    /*
+    |----------------------------------------------------------------------
+    | Talkami (novembre 2026, faits fournis par Joseph)
+    |----------------------------------------------------------------------
+    | Plateforme créée par Joseph pour apprendre à parler anglais. Section de l'accueil, page /talkami, lien
+    | dans le menu, mention dans À propos ; jamais dans le pied de page (demande de Joseph). Lecture :
+    | App\Support\Talkami. Modifiable dans l'admin (Réglages du site > Talkami) : interrupteur, lien, formules.
+    | Jamais de chiffre d'élèves, d'avis, de note ni de promesse de résultat ; jamais « garanti », « 100 % »
+    | ni « sans engagement ».
+    */
+
+    'talkami' => [
+        'enabled' => true,
+        'url' => 'https://talkami.net/?utm_source=lome-ia-school',
+        // Même numéro WhatsApp que l'école (voulu par Joseph).
+        'whatsapp' => '+228 72 24 02 31',
+        'plans' => [
+            ['name' => 'Semaine', 'price' => 2000, 'period' => 'la semaine', 'detail' => '15 minutes par jour'],
+            ['name' => 'Essentiel', 'price' => 7500, 'period' => 'par mois', 'detail' => '15 minutes par jour'],
+            ['name' => 'Intensif', 'price' => 14000, 'period' => 'par mois', 'detail' => '30 minutes par jour'],
+        ],
+    ],
+
+    /*
+    |----------------------------------------------------------------------
+    | Réalisations sur mesure (« Nous le faisons pour vous », novembre 2026)
+    |----------------------------------------------------------------------
+    | Page « Entreprises et réalisations sur mesure » (/entreprises) et bloc de l'accueil. Services cités par
+    | Joseph ; descriptions rédigées par Claude (à valider). Devis par le formulaire de la page (#devis).
+    | Modifiable dans l'admin (Réglages du site > Page Entreprises).
+    */
+
+    'custom_work' => [
+        'title' => 'Nous le faisons pour vous',
+        'intro' => 'Vous n\'avez pas le temps d\'apprendre ? Notre équipe réalise pour vous votre site, votre agent IA ou vos automatisations.',
+        'items' => [
+            ['title' => 'Site vitrine', 'text' => 'Un site clair qui présente votre activité, vos services et vos coordonnées, pensé d\'abord pour le téléphone.'],
+            ['title' => 'Site professionnel', 'text' => 'Un site plus complet : plusieurs pages, formulaires, espace client ou base de données selon vos besoins.'],
+            ['title' => 'Agent IA', 'text' => 'Un assistant qui répond à vos clients ou aide votre équipe, à partir de vos propres informations.'],
+            ['title' => 'Automatisation', 'text' => 'Vos tâches répétitives (relances, e-mails, tableaux, publications) confiées à des outils reliés entre eux et à l\'IA.'],
+        ],
+        // Choix proposés dans le formulaire de devis (clé => libellé).
+        'services' => [
+            'site-vitrine' => 'Site vitrine',
+            'site-professionnel' => 'Site professionnel',
+            'agent-ia' => 'Agent IA',
+            'automatisation' => 'Automatisation',
+            'formation-equipe' => 'Formation de votre équipe',
+            'autre' => 'Autre besoin',
+        ],
+    ],
+
     'business' => [
         'video_url' => '',
         // Format de la vidéo : 'horizontal' (16:9) ou 'vertical' (9:16, filmée au téléphone).

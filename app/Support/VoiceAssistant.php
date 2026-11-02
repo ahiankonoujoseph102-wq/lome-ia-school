@@ -56,7 +56,7 @@ class VoiceAssistant
         'packs' => [self::PACKS_PAGE, 'présente les trois niveaux d\'accompagnement (prix, formations incluses, fin des inscriptions) ; chaque bouton « Je m\'inscris maintenant » mène au récapitulatif de commande de l\'offre, puis à la création du compte et au paiement Mobile Money'],
         'checkout.show' => ['page de commande et de paiement', 'récapitulatif de la commande, code promo, puis paiement Mobile Money en 4 étapes'],
         'about' => ['page À propos', 'présente l\'école et le formateur'],
-        'business' => ['page Entreprises et centres de formation', 'présente les services aux entreprises et le bouton « Réserver un appel gratuit »'],
+        'business' => ['page Entreprises et réalisations sur mesure', 'présente les réalisations sur mesure (sites vitrines, sites professionnels, agents IA, automatisations), les services aux entreprises, le formulaire « Demander un devis » et le bouton « Réserver un appel gratuit »'],
         'contact' => ['page Contact', 'donne les coordonnées de l\'école et les horaires'],
         'affiliate.program' => ['page Devenez affilié', 'explique le programme d\'affiliation'],
         'consultation' => ['page de la consultation gratuite', 'permet de réserver un appel vidéo gratuit de 30 minutes, sans compte'],

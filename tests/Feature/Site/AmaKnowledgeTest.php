@@ -74,7 +74,7 @@ class AmaKnowledgeTest extends TestCase
             '## Formations proposées : prix, description et programme (à jour)',
             '## Informations des pages publiques du site',
             '### Page d\'accueil',
-            '### Page « Entreprises et centres de formation »',
+            '### Page « Entreprises et réalisations sur mesure »',
             '### Questions fréquentes du site',
             '### Règles importantes (conditions générales de vente)',
             '## Guide des parcours du site',

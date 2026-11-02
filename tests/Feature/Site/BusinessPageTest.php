@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Page « Entreprises et centres de formation » (/entreprises) et ses réglages dans l'admin.
+ * Page « Entreprises et réalisations sur mesure » (/entreprises) et ses réglages dans l'admin.
  */
 class BusinessPageTest extends TestCase
 {
@@ -52,7 +52,7 @@ class BusinessPageTest extends TestCase
     public function test_page_lists_the_services_and_the_booking_button_without_video_by_default(): void
     {
         $response = $this->get(route('business'))->assertOk()
-            ->assertSee('Entreprises et centres de formation')
+            ->assertSee('Entreprises et réalisations sur mesure')
             ->assertSee('Afrique de l&#039;Ouest', false)
             ->assertDontSee('data-test="business-video"', false)
             ->assertDontSee('youtube');
@@ -95,7 +95,7 @@ class BusinessPageTest extends TestCase
             ->assertSee('Vous êtes un centre de formation ou une entreprise ?')
             ->assertSee(route('business'));
 
-        $this->get(route('contact'))->assertOk()->assertSee('>Entreprises<', false)->assertSee('Entreprises et centres de formation');
+        $this->get(route('contact'))->assertOk()->assertSee('>Entreprises<', false)->assertSee('Entreprises et réalisations sur mesure');
         $this->get(route('sitemap'))->assertSee(route('business'));
     }
 

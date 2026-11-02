@@ -6,9 +6,13 @@
         ...(($packsOnSale = \App\Packs\PacksPage::published()) ? [['route' => 'packs', 'active' => 'packs', 'label' => 'Accompagnement', 'test' => 'menu-packs']] : []),
         ['route' => 'consultation', 'active' => 'consultation', 'label' => 'Consultation gratuite'],
         ['route' => 'business', 'active' => 'business', 'label' => 'Entreprises'],
+        // Talkami, création de Joseph (novembre 2026) : lien tant que la page est affichée.
+        ...(\App\Support\Talkami::enabled() ? [['route' => 'talkami', 'active' => 'talkami', 'label' => 'Talkami', 'test' => 'menu-talkami']] : []),
         ['route' => 'about', 'active' => 'about', 'label' => 'À propos'],
         ['route' => 'contact', 'active' => 'contact', 'label' => 'Contact'],
     ];
+    // Menu chargé (offres ou Talkami) : le bouton « Voir les formations » n'est plus affiché sur grand écran (xl).
+    $compactMenu = $packsOnSale || \App\Support\Talkami::enabled();
 @endphp
 
 <header
@@ -102,7 +106,7 @@
                     <a href="{{ route('login') }}" class="hidden rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap text-slate-200 transition hover:text-white sm:inline-flex xl:px-4">Connexion</a>
                 @endauth
                 {{-- Avec le lien « Accompagnement », le menu est plein sur grand écran : le bouton (doublon du lien « Formations ») n'y reste que sur tablette. --}}
-                <a href="{{ route('formations.index') }}" @class(['btn-gold hidden !px-5 !py-2.5 !text-sm whitespace-nowrap md:inline-flex lg:hidden', 'xl:inline-flex' => ! $packsOnSale])>Voir les formations</a>
+                <a href="{{ route('formations.index') }}" @class(['btn-gold hidden !px-5 !py-2.5 !text-sm whitespace-nowrap md:inline-flex lg:hidden', 'xl:inline-flex' => ! $compactMenu])>Voir les formations</a>
 
                 <button
                     type="button"

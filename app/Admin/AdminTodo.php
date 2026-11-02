@@ -10,6 +10,7 @@ use App\Models\AssistantHandoff;
 use App\Models\ChatMessageReport;
 use App\Models\Consultation;
 use App\Models\Purchase;
+use App\Models\QuoteRequest;
 
 /**
  * « À traiter » : nombres affichés sur l'accueil admin et dans le menu (calculés une fois par requête).
@@ -50,5 +51,13 @@ class AdminTodo
     public static function handoffsToAnswer(): int
     {
         return once(fn (): int => AssistantHandoff::query()->where('status', AssistantHandoff::PENDING)->count());
+    }
+
+    /**
+     * Demandes de devis (page Entreprises et réalisations sur mesure) pas encore traitées.
+     */
+    public static function quotesToAnswer(): int
+    {
+        return once(fn (): int => QuoteRequest::query()->where('status', QuoteRequest::PENDING)->count());
     }
 }
