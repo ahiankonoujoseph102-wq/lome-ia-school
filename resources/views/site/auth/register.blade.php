@@ -12,7 +12,7 @@
                 <a href="{{ route('login') }}" class="font-semibold text-electric-300 hover:text-white">Se connecter</a>
             </p>
             <ul class="mt-8 grid gap-2 text-sm text-slate-400">
-                <li class="flex items-center gap-2"><flux:icon.check-circle class="size-4 text-gold-400" /> Inscription gratuite</li>
+                <li class="flex items-center gap-2"><flux:icon.check-circle class="size-4 text-gold-400" /> Inscription gratuite, sans engagement</li>
                 <li class="flex items-center gap-2"><flux:icon.check-circle class="size-4 text-gold-400" /> Paiement par Mobile Money au moment de l'achat</li>
                 <li class="flex items-center gap-2"><flux:icon.check-circle class="size-4 text-gold-400" /> Votre lien d'affiliation : {{ config('affiliate.rate') }} % sur chaque achat validé</li>
             </ul>

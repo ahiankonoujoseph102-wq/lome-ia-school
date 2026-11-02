@@ -110,10 +110,10 @@ class SiteContentTest extends TestCase
     {
         $formation = Formation::factory()->create();
 
-        // Novembre 2026 : bloc des formats retiré de l'accueil (jugé générique par Joseph) ; le message reste
-        // sur le catalogue et la page de chaque formation.
         $this->get(route('home'))
             ->assertOk()
+            ->assertSee('Accès immédiat après paiement')
+            ->assertSee('Sessions ponctuelles en direct ou à Lomé')
             ->assertDontSee('En ligne, en direct ou en présentiel');
 
         $this->get(route('formations.index'))
