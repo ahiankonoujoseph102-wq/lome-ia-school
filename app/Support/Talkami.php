@@ -13,14 +13,22 @@ final class Talkami
     public const string NAME = 'Talkami';
 
     /**
-     * Visuels de Talkami, repris tels quels de talkami.net (demande de Joseph) : logo blanc (fond transparent, pour
-     * le fond sombre du site), Teacher Joe et Teacher Rose (les professeurs virtuels de Talkami).
+     * Logo blanc de talkami.net (fond transparent, pour le fond sombre du site).
      */
     public const string LOGO = 'images/talkami/logo-blanc.webp';
 
-    public const string TEACHER_JOE = 'images/talkami/teacher-joe.webp';
-
-    public const string TEACHER_ROSE = 'images/talkami/teacher-rose.webp';
+    /**
+     * Vraies captures d'écran de Talkami (vidéo « catalogue des écrans » envoyée par Joseph, novembre 2026),
+     * 540 × 960 en WebP. Aucune simulation ni maquette de l'application.
+     *
+     * @var array<string, array{image: string, caption: string}>
+     */
+    public const array SCREENS = [
+        'seance' => ['image' => 'images/talkami/ecrans/seance.webp', 'caption' => 'Votre séance du jour avec Teacher Joe'],
+        'niveau' => ['image' => 'images/talkami/ecrans/niveau.webp', 'caption' => 'Votre niveau après l\'évaluation gratuite'],
+        'programme' => ['image' => 'images/talkami/ecrans/programme.webp', 'caption' => 'Un programme selon votre objectif'],
+        'accueil' => ['image' => 'images/talkami/ecrans/accueil.webp', 'caption' => 'L\'accueil de Talkami'],
+    ];
 
     /**
      * Textes repris de talkami.net (novembre 2026).

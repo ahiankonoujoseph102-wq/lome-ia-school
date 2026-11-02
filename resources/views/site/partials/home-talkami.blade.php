@@ -1,6 +1,6 @@
 {{--
     Talkami sur l'accueil (#talkami), novembre 2026 : pas de page à part (décision de Joseph), une grande section avec
-    les vrais éléments de talkami.net : logo blanc, Teacher Joe et Teacher Rose, promesse, quatre étapes, formules
+    les vrais éléments de talkami.net : logo blanc, vraies captures d'écran de l'application, promesse, quatre étapes, formules
     (réglages de l'admin), phrase de Joseph. Couleurs de Talkami (bleu nuit, orange). Liens vers talkami.net
     (?utm_source=lome-ia-school), nouvel onglet. Aucun chiffre d'élèves, avis, note ni promesse de résultat.
     Style stable face au mode sombre forcé : fonds foncés, texte clair, contours en ombre, images jamais recolorées.
@@ -35,22 +35,16 @@
                 <p class="mt-4 flex items-start gap-2 text-sm text-slate-200">
                     <flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-[#fb923c]" /> Votre niveau de A1 à C2, puis une séance d'essai gratuite de 15 minutes (une fois par compte).
                 </p>
+                <p class="mt-2 flex items-start gap-2 text-sm text-slate-200">
+                    <flux:icon.check-circle class="mt-0.5 size-5 shrink-0 text-[#fb923c]" /> Avec Teacher Joe ou Teacher Rose, au choix.
+                </p>
             </div>
 
-            {{-- Teacher Joe et Teacher Rose, les professeurs virtuels de Talkami (images de talkami.net). --}}
-            <div class="relative mx-auto w-full max-w-sm" data-test="home-talkami-teachers">
-                <figure class="overflow-hidden rounded-3xl shadow-[0_0_0_1px_#24346e,0_24px_48px_-24px_rgb(0_0_0/0.8)]">
-                    <img src="{{ asset(Talkami::TEACHER_JOE) }}" alt="Teacher Joe, le professeur d'anglais virtuel de Talkami" width="560" height="560" class="aspect-square w-full object-cover" loading="lazy" decoding="async">
-                    <figcaption class="absolute bottom-3 left-3 rounded-2xl bg-[#101c45]/95 px-3 py-2 shadow-[0_0_0_1px_#24346e]">
-                        <span class="block text-sm font-bold text-white">Teacher Joe</span>
-                        <span class="block text-xs text-slate-200">Votre professeur d'anglais à l'oral</span>
-                    </figcaption>
-                </figure>
-                <figure class="absolute -top-4 -right-2 w-24 overflow-hidden rounded-full shadow-[0_0_0_3px_#f97316,0_12px_24px_-8px_rgb(0_0_0/0.8)] sm:w-28">
-                    <img src="{{ asset(Talkami::TEACHER_ROSE) }}" alt="Teacher Rose, l'autre professeure virtuelle de Talkami" width="560" height="560" class="aspect-square w-full object-cover object-top" loading="lazy" decoding="async">
-                </figure>
-                <p class="absolute top-20 -right-2 rounded-full bg-[#101c45] px-3 py-1 text-xs font-semibold text-white shadow-[0_0_0_1px_#24346e] sm:top-24">ou Teacher Rose, au choix</p>
-            </div>
+            {{-- Vraie capture d'écran de Talkami (aucune simulation de l'application). --}}
+            <figure class="mx-auto w-full max-w-[17rem]" data-test="home-talkami-screen">
+                <img src="{{ asset(Talkami::SCREENS['seance']['image']) }}" alt="Capture d'écran de Talkami : {{ Talkami::SCREENS['seance']['caption'] }}" width="540" height="960" class="aspect-[9/16] w-full rounded-[1.75rem] object-cover shadow-[0_0_0_6px_#0b1433,0_0_0_7px_#24346e,0_30px_60px_-24px_rgb(0_0_0/0.9)]" loading="lazy" decoding="async">
+                <figcaption class="mt-4 text-center text-sm text-slate-300">{{ Talkami::SCREENS['seance']['caption'] }}</figcaption>
+            </figure>
         </div>
 
         {{-- Quatre étapes simples (talkami.net) --}}
@@ -63,6 +57,19 @@
                 </li>
             @endforeach
         </ol>
+
+        {{-- Autres vraies captures d'écran : défilement sur le côté sur téléphone. --}}
+        <div class="relative mt-10" data-test="home-talkami-screens">
+            <p class="text-center text-lg font-bold text-white">Talkami en images</p>
+            <ul class="-mx-5 mt-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
+                @foreach (['niveau', 'programme', 'accueil'] as $screen)
+                    <li class="w-[62%] shrink-0 snap-center sm:w-auto">
+                        <img src="{{ asset(Talkami::SCREENS[$screen]['image']) }}" alt="Capture d'écran de Talkami : {{ Talkami::SCREENS[$screen]['caption'] }}" width="540" height="960" class="aspect-[9/16] w-full rounded-3xl object-cover shadow-[0_0_0_1px_#24346e]" loading="lazy" decoding="async">
+                        <p class="mt-3 text-center text-sm text-slate-300">{{ Talkami::SCREENS[$screen]['caption'] }}</p>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
 
         {{-- Formules (réglages de l'admin, Réglages du site > Talkami) --}}
         @if ($talkamiPlans)

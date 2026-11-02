@@ -45,14 +45,18 @@ class TalkamiTest extends TestCase
             ->assertSee(Money::fcfa(2000))
             ->assertSee(Money::fcfa(7500))
             ->assertSee(Money::fcfa(14000))
-            ->assertSee(Talkami::TEACHER_JOE, false)
-            ->assertSee(Talkami::TEACHER_ROSE, false)
+            ->assertSee('data-test="home-talkami-screen"', false)
+            ->assertSee('data-test="home-talkami-screens"', false)
+            ->assertDontSee('data-test="talkami-phone"', false)
             ->getContent();
 
-        foreach ([Talkami::TEACHER_JOE, Talkami::TEACHER_ROSE] as $image) {
-            $this->assertFileExists(public_path($image));
-            $this->assertLessThan(80 * 1024, filesize(public_path($image)));
+        // Vraies captures d'écran de Talkami, légères ; aucune simulation de l'application.
+        foreach (Talkami::SCREENS as $screen) {
+            $this->assertStringContainsString($screen['image'], $html);
+            $this->assertFileExists(public_path($screen['image']));
+            $this->assertLessThan(60 * 1024, filesize(public_path($screen['image'])));
         }
+        $this->assertFileDoesNotExist(resource_path('views/site/partials/talkami-phone.blade.php'));
 
         $section = mb_strtolower(strip_tags((string) strstr($html, 'data-test="home-talkami"')));
         foreach (['garanti', '100 %', '100%', 'sans engagement', 'formation gratuite en anglais'] as $forbidden) {
