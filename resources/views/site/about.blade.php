@@ -79,12 +79,12 @@
                 <dl class="grid grid-cols-2 gap-4" data-reveal>
                     <div class="card flex flex-col-reverse p-5">
                         <dt class="mt-1 text-sm text-slate-400">formations pratiques</dt>
-                        <dd class="text-3xl font-bold text-white">{{ $formationCount }}</dd>
+                        <dd class="text-3xl font-bold text-white tabular-nums" data-count-up>{{ $formationCount }}</dd>
                     </div>
                     @foreach (config('site.stats') as $stat)
                         <div class="card flex flex-col-reverse p-5">
                             <dt class="mt-1 text-sm text-slate-400">{{ $stat['label'] }}</dt>
-                            <dd class="text-3xl font-bold text-white">{{ Placeholder::highlight($stat['value']) }}</dd>
+                            <dd class="text-3xl font-bold text-white tabular-nums" data-count-up>{{ Placeholder::highlight($stat['value']) }}</dd>
                         </div>
                     @endforeach
                 </dl>

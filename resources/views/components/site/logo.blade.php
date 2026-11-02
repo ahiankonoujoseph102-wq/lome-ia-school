@@ -14,7 +14,12 @@
 
 <a href="{{ route('home') }}" {{ $attributes->class('group inline-flex shrink-0 items-center gap-2.5') }} aria-label="{{ config('app.name') }} : accueil">
     @if ($variant === 'image')
-        <img src="{{ $logoUrl }}" alt="{{ config('app.name') }}" class="{{ $height }} w-auto" height="40" width="188">
+        <picture>
+            @if ($logoWebp = \App\Support\Brand::logoWebpUrl())
+                <source srcset="{{ $logoWebp }}" type="image/webp">
+            @endif
+            <img src="{{ $logoUrl }}" alt="{{ config('app.name') }}" class="{{ $height }} w-auto" height="40" width="188">
+        </picture>
     @else
         <img src="{{ \App\Support\Brand::icon('icon-192.png') }}" alt="" class="size-10 rounded-xl ring-1 ring-veil/15 transition group-hover:scale-105" width="40" height="40">
         <span class="text-lg leading-none font-bold tracking-tight whitespace-nowrap text-white">

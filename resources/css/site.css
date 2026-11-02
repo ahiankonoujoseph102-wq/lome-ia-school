@@ -546,6 +546,42 @@ body {
     box-shadow: inset 0 -2px 0 var(--color-gold-500);
 }
 
+/*
+ * Reflet lumineux qui traverse les boutons d'achat principaux (accueil, page d'une formation) toutes les 5 s :
+ * attire l'œil sur l'action à faire, sans bouger le bouton. Transform seulement ; coupé si « moins d'animations »
+ * et en mode sombre forcé (le bouton y est inversé, le reflet deviendrait sombre).
+ */
+.btn-shine {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html:not(.force-dark) .btn-shine::after {
+        content: '';
+        position: absolute;
+        inset: -2px auto -2px 0;
+        z-index: -1;
+        width: 45%;
+        background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.75), transparent);
+        transform: translateX(-160%) skewX(-18deg);
+        animation: btn-shine 5s ease-in-out 1.5s infinite;
+        pointer-events: none;
+    }
+
+    @keyframes btn-shine {
+        0%,
+        70% {
+            transform: translateX(-160%) skewX(-18deg);
+        }
+
+        100% {
+            transform: translateX(330%) skewX(-18deg);
+        }
+    }
+}
+
 /* Barre de défilement horizontale discrète pour les filtres */
 .scrollbar-none {
     scrollbar-width: none;
