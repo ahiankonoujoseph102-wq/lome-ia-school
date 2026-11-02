@@ -48,12 +48,12 @@
         </div>
 
         {{-- Quatre étapes simples (talkami.net) --}}
-        <ol class="relative mt-10 grid grid-cols-2 gap-3 lg:grid-cols-4" data-test="home-talkami-steps">
+        <ol class="relative mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-test="home-talkami-steps">
             @foreach (Talkami::STEPS as $step)
-                <li class="rounded-2xl bg-[#0b1433] p-3.5 shadow-[inset_0_0_0_1px_#24346e] sm:p-4">
+                <li class="rounded-2xl bg-[#0b1433] p-4 shadow-[inset_0_0_0_1px_#24346e]">
                     <span class="grid size-8 place-items-center rounded-full bg-[#101c45] text-sm font-bold text-[#fb923c] shadow-[0_0_0_1.5px_#f97316]">{{ $loop->iteration }}</span>
-                    <p class="mt-3 text-sm leading-snug font-semibold text-white sm:text-base">{{ $step['title'] }}</p>
-                    <p class="mt-1 text-xs leading-relaxed break-words hyphens-auto text-slate-300 sm:text-sm">{{ $step['text'] }}</p>
+                    <p class="mt-3 font-semibold text-white">{{ $step['title'] }}</p>
+                    <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ $step['text'] }}</p>
                 </li>
             @endforeach
         </ol>
@@ -76,15 +76,12 @@
             <div class="relative mt-10" data-test="home-talkami-plans">
                 <p class="text-center text-lg font-bold text-white">Des formules à la semaine ou au mois</p>
                 <p class="mt-1 text-center text-sm text-slate-300">L'évaluation est offerte. Paiement par Mobile Money, rien n'est prélevé automatiquement.</p>
-                {{-- Téléphone : une ligne par formule (nom et détail à gauche, prix à droite) ; dès sm : trois cartes. --}}
-                <ul class="mt-5 grid gap-2 sm:grid-cols-3 sm:gap-3">
+                <ul class="mt-5 grid gap-3 sm:grid-cols-3">
                     @foreach ($talkamiPlans as $plan)
-                        <li class="flex items-center justify-between gap-3 rounded-2xl bg-[#0b1433] px-4 py-3 shadow-[inset_0_0_0_1px_#24346e] sm:block sm:p-4 sm:text-center">
-                            <span class="min-w-0">
-                                <span class="block text-xs font-semibold tracking-wide text-orange-200 uppercase sm:text-sm">{{ $plan['name'] }}</span>
-                                <span class="mt-0.5 block text-xs leading-snug text-slate-300 sm:order-last sm:mt-1 sm:text-sm">{{ trim($plan['period'].($plan['detail'] !== '' ? ' · '.$plan['detail'] : ''), ' ·') }}</span>
-                            </span>
-                            <span class="shrink-0 text-lg font-bold whitespace-nowrap text-white sm:mt-1 sm:block sm:text-2xl">{{ Money::fcfa($plan['price']) }}</span>
+                        <li class="rounded-2xl bg-[#0b1433] p-4 text-center shadow-[inset_0_0_0_1px_#24346e]">
+                            <span class="block text-sm font-semibold tracking-wide text-orange-200 uppercase">{{ $plan['name'] }}</span>
+                            <span class="mt-1 block text-2xl font-bold text-white">{{ Money::fcfa($plan['price']) }}</span>
+                            <span class="block text-sm text-slate-300">{{ trim($plan['period'].($plan['detail'] !== '' ? ' · '.$plan['detail'] : ''), ' ·') }}</span>
                         </li>
                     @endforeach
                 </ul>
