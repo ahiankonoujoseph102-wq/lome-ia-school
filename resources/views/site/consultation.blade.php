@@ -15,7 +15,7 @@
         <div class="glow pointer-events-none absolute inset-0 -z-10"></div>
         <div class="grid-pattern pointer-events-none absolute inset-0 -z-10"></div>
         <div class="mx-auto max-w-3xl px-4 pt-10 pb-14 text-center sm:px-6 sm:pt-16">
-            <span class="eyebrow" data-reveal>100 % gratuit, sans engagement</span>
+            <span class="eyebrow" data-reveal>Consultation gratuite, sans compte</span>
             <h1 class="mt-4 text-3xl font-bold tracking-tight text-balance text-white sm:text-5xl" data-reveal style="--reveal-delay: 60ms">
                 Réservez votre consultation gratuite
             </h1>
@@ -146,7 +146,7 @@
 
     <x-site.cta-banner
         title="Faites le premier pas aujourd'hui"
-        text="La consultation est gratuite et sans engagement. Réservez votre créneau en quelques secondes."
+        text="La consultation est gratuite, et la réservation se fait sans créer de compte. Réservez votre créneau en quelques secondes."
     >
         <a href="#reserver" class="btn-gold">Choisir mon créneau</a>
         <a href="{{ route('formations.index') }}" class="btn-ghost">Voir les formations</a>
