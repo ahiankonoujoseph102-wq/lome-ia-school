@@ -5,7 +5,6 @@
 
     $testimonials = Testimonials::all();
     $trainer = config('site.trainer');
-    $lifetime = config('site.lifetime');
     $formats = config('site.formats');
 
     $organization = [
@@ -114,57 +113,6 @@
                 </div>
             @endforeach
         </dl>
-    </section>
-
-    {{-- Accès à vie et accompagnement de 3 mois après la formation --}}
-    <section class="section !pb-0">
-        <div class="relative overflow-hidden rounded-[2rem] border border-gold-400/25 bg-linear-to-br from-gold-400/[0.12] via-night-900 to-night-950 p-6 sm:p-10" data-reveal>
-            <div class="pointer-events-none absolute -top-20 -left-16 size-64 rounded-full bg-gold-400/15 blur-3xl"></div>
-            <div class="relative grid items-center gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
-                <div class="text-center lg:text-left">
-                    <span class="eyebrow !border-gold-400/30 !bg-gold-400/10 !text-gold-200">
-                        <flux:icon.sparkles class="size-3.5" /> Inclus dans chaque formation
-                    </span>
-                    <h2 class="mt-4 text-3xl font-bold tracking-tight text-balance text-white sm:text-4xl">{{ $lifetime['title'] }}</h2>
-                    <p class="mt-4 text-slate-300">{{ $lifetime['text'] }}</p>
-                </div>
-                <div>
-                    <ul class="grid gap-4 sm:grid-cols-2">
-                        @foreach ($lifetime['items'] as $item)
-                            <li class="rounded-2xl bg-veil/[0.05] p-5 ring-1 ring-gold-400/25">
-                                <span class="grid size-12 place-items-center rounded-2xl bg-gold-400 text-night-950 shadow-lg shadow-gold-500/20">
-                                    <flux:icon :icon="$item['icon']" class="size-6" />
-                                </span>
-                                <h3 class="mt-4 text-xl font-bold text-gold-200">{{ $item['title'] }}</h3>
-                                <p class="mt-2 text-sm leading-relaxed text-slate-300">{{ $item['text'] }}</p>
-                            </li>
-                        @endforeach
-                    </ul>
-                    <p class="mt-4 text-center text-xs text-slate-500 lg:text-left">{{ $lifetime['note'] }}</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- Pourquoi nous choisir --}}
-    <section class="section">
-        <x-site.section-heading
-            eyebrow="Pourquoi nous choisir"
-            title="Une école pensée pour vous faire progresser vite"
-            subtitle="Des formations concrètes, un paiement simple et un accompagnement réel, pour passer de la curiosité aux résultats."
-        />
-
-        <div class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            @foreach (config('site.why_us') as $item)
-                <div class="card card-hover p-6" data-reveal style="--reveal-delay: {{ $loop->index * 70 }}ms">
-                    <span class="grid size-12 place-items-center rounded-2xl bg-electric-500/15 text-electric-300 ring-1 ring-electric-400/25">
-                        <flux:icon :icon="$item['icon']" class="size-6" />
-                    </span>
-                    <h3 class="mt-5 text-lg font-semibold text-white">{{ $item['title'] }}</h3>
-                    <p class="mt-2 text-sm leading-relaxed text-slate-400">{{ $item['text'] }}</p>
-                </div>
-            @endforeach
-        </div>
     </section>
 
     {{-- Formations mises en avant --}}
