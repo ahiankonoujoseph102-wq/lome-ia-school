@@ -41,6 +41,10 @@ enum AdminAction: string
     case ChatEmailAnnouncement = 'chat_email_announcement';
     case NewsletterSent = 'newsletter_sent';
     case NewsletterUpdated = 'newsletter_updated';
+    case ScholarshipSettingsUpdated = 'scholarship_settings_updated';
+    case ScholarshipValidated = 'scholarship_validated';
+    case ScholarshipRefused = 'scholarship_refused';
+    case ScholarshipRefunded = 'scholarship_refunded';
 
     public function label(): string
     {
@@ -79,6 +83,10 @@ enum AdminAction: string
             self::ChatEmailAnnouncement => 'Annonce envoyée par e-mail',
             self::NewsletterSent => 'E-mail groupé lancé',
             self::NewsletterUpdated => 'E-mail groupé : brouillon, pause, reprise ou annulation',
+            self::ScholarshipSettingsUpdated => 'Bourse : réglages modifiés',
+            self::ScholarshipValidated => 'Bourse : candidature validée',
+            self::ScholarshipRefused => 'Bourse : candidature refusée',
+            self::ScholarshipRefunded => 'Bourse : remboursement effectué',
         };
     }
 

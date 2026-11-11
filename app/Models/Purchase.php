@@ -284,7 +284,7 @@ class Purchase extends Model
     }
 
     /**
-     * Payé à un représentant (Burkina Faso, Bénin) : à confirmer avec lui.
+     * Payé à un représentant (Burkina Faso, Bénin, Côte d'Ivoire) : à confirmer avec lui.
      */
     public function viaRepresentative(): bool
     {

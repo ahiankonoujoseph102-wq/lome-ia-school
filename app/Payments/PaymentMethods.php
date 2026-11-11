@@ -84,4 +84,17 @@ class PaymentMethods
     {
         return (int) config('site.payments.verification_threshold', 50000);
     }
+
+    /**
+     * Nom d'un pays précédé de son article, pour « depuis le Togo » ou « depuis la Côte d'Ivoire ».
+     */
+    public static function countryWithArticle(string $code, string $name): string
+    {
+        return (in_array($code, self::FEMININE_COUNTRIES, true) ? 'la ' : 'le ').$name;
+    }
+
+    /**
+     * Pays dont le nom est féminin (« la Côte d'Ivoire »).
+     */
+    private const array FEMININE_COUNTRIES = ['ci'];
 }

@@ -6,7 +6,7 @@
     $ctaLabel = auth()->check() ? 'Activer mon espace affilié' : 'Créer mon compte et devenir affilié';
     $figures = [
         ['value' => $rate.' %', 'label' => 'du prix payé, sur chaque achat validé passé par votre lien'],
-        ['value' => 'Mobile Money', 'label' => 'pour retirer vos commissions (Togo, Bénin, Burkina Faso)'],
+        ['value' => 'Mobile Money', 'label' => 'pour retirer vos commissions (Togo, Bénin, Burkina Faso, Côte d\'Ivoire)'],
         ['value' => Money::fcfa((int) config('affiliate.min_withdrawal')), 'label' => 'de solde minimum pour demander un retrait'],
         ['value' => config('affiliate.availability_days').' jours', 'label' => 'après la validation du paiement, la commission devient disponible'],
     ];

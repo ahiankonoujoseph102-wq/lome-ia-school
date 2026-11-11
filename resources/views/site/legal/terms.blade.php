@@ -3,6 +3,13 @@
 
     $legal = config('site.legal');
     $contact = config('site.contact');
+    // Pays où l'on peut payer (lus dans les moyens de paiement actifs) et ceux où un représentant reçoit le paiement.
+    $countriesList = \App\Payments\PaymentMethods::countries();
+    $joinNames = fn (array $names, string $last): string => count($names) < 2 ? implode('', $names) : implode(', ', array_slice($names, 0, -1)).$last.end($names);
+    $paymentCountries = $joinNames(array_values(array_map(fn (array $country): string => $country['name'], $countriesList)), ' ou ');
+    $where = fn (string $code, string $name): string => ($code === 'ci' ? 'en ' : 'au ').$name;
+    $representatives = array_values(array_map(fn (string $code): string => $where($code, $countriesList[$code]['name']), array_keys(array_filter($countriesList, fn (array $country): bool => $country['note'] !== null))));
+    $representativeCountries = $representatives === [] ? '' : ucfirst($joinNames($representatives, ' et '));
 @endphp
 
 <x-layouts::site title="Conditions générales de vente" description="Conditions générales de vente des formations Lomé IA School.">
@@ -18,7 +25,7 @@
             <p id="codes-promo"><strong class="text-white">Codes promo.</strong> Un code promo peut réduire le prix d'une formation. La réduction et le nouveau montant sont affichés sur le récapitulatif de commande, avant le paiement. Chaque code a ses propres conditions (dates de validité, formations concernées, nombre d'utilisations) et ne peut être ni échangé ni remboursé en argent. Une réduction ne s'applique jamais à un achat déjà fait.</p>
 
             <h2>3. Commande et paiement</h2>
-            <p>La commande nécessite la création d'un compte élève. Le paiement s'effectue par Mobile Money, en envoyant le montant sur l'un des numéros indiqués sur la page de commande (Togo, Burkina Faso ou Bénin). Au Burkina Faso et au Bénin, le paiement est reçu par un représentant de {{ $legal['company_name'] }}.</p>
+            <p>La commande nécessite la création d'un compte élève. Le paiement s'effectue par Mobile Money, en envoyant le montant sur l'un des numéros indiqués sur la page de commande ({{ $paymentCountries }}).@if ($representativeCountries !== '') {{ $representativeCountries }}, le paiement est reçu par un représentant de {{ $legal['company_name'] }}.@endif</p>
             <p>{{ config('site.payments.fees_notice') }} Le montant reçu doit être exactement égal au montant affiché sur la page de commande (prix de la formation, remise éventuelle déduite).</p>
             <p>Après le paiement, l'élève envoie sur le site sa preuve de paiement : la capture d'écran du paiement, pour le moyen de paiement choisi. Une même capture ou un même paiement ne peut être utilisé qu'une seule fois, et un seul paiement peut être en cours de vérification à la fois. Une formation déjà possédée ne peut pas être achetée une seconde fois. {{ $legal['company_name'] }} n'a jamais besoin de vos codes Mobile Money : ne les communiquez à personne. Le bouton « Payer maintenant » de la page de paiement ouvre seulement le clavier de votre téléphone avec le code de transfert de votre opérateur ; vous saisissez vous-même votre code secret dans le menu de votre opérateur, jamais sur le site.</p>
 

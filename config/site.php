@@ -175,7 +175,7 @@ return [
 
     'why_us' => [
         ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Dès l\'envoi de votre preuve de paiement, votre formation s\'ouvre dans votre espace élève. À partir de {seuil}, elle s\'ouvre après vérification du paiement.'],
-        ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Payez depuis le Togo, le Burkina Faso ou le Bénin avec votre compte Mobile Money, puis envoyez votre preuve de paiement sur le site.'],
+        ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Payez depuis le Togo, le Burkina Faso, le Bénin ou la Côte d\'Ivoire avec votre compte Mobile Money, puis envoyez votre preuve de paiement sur le site.'],
         ['icon' => 'academic-cap', 'title' => 'Pratique et en français', 'text' => 'Des formations concrètes, expliquées simplement et pensées pour notre réalité.'],
         ['icon' => 'chat-bubble-left-right', 'title' => 'Accompagnement de 3 mois', 'text' => 'Chaque formation a son groupe de discussion réservé aux élèves : posez vos questions et avancez ensemble, avec un accompagnement de 3 mois après la formation.'],
         ['icon' => 'map-pin', 'title' => 'Une école basée à Lomé', 'text' => 'Un formateur joignable et une équipe proche de vous, à Adidogomé.'],
@@ -220,7 +220,7 @@ return [
 
     'steps' => [
         ['title' => 'Je choisis ma formation', 'text' => 'Parcourez le catalogue et choisissez la formation qui correspond à votre objectif.'],
-        ['title' => 'Je paie par Mobile Money', 'text' => 'J\'envoie le montant sur l\'un des numéros Mobile Money de l\'école (Togo, Burkina Faso ou Bénin), puis je dépose ma preuve de paiement.'],
+        ['title' => 'Je paie par Mobile Money', 'text' => 'J\'envoie le montant sur l\'un des numéros Mobile Money de l\'école (Togo, Burkina Faso, Bénin ou Côte d\'Ivoire), puis je dépose ma preuve de paiement.'],
         ['title' => 'J\'accède à ma formation', 'text' => 'Ma formation et son groupe privé s\'ouvrent dans mon espace élève : aussitôt, ou après vérification du paiement à partir de {seuil}.'],
     ],
 
@@ -384,7 +384,7 @@ return [
         ['icon' => 'lifebuoy', 'title' => 'Accompagnement de 3 mois', 'text' => 'Vos questions ont une réponse pendant 3 mois après la formation, dans le groupe privé ou sur WhatsApp.'],
         // « instant » : remplacé par « verification_guarantee » pour les formations à partir du seuil de vérification.
         ['icon' => 'bolt', 'title' => 'Accès immédiat', 'text' => 'Votre formation s\'ouvre dès l\'envoi de votre preuve de paiement.', 'instant' => true],
-        ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Togo, Burkina Faso et Bénin. Chaque paiement est vérifié par notre équipe.'],
+        ['icon' => 'device-phone-mobile', 'title' => 'Paiement Mobile Money', 'text' => 'Togo, Burkina Faso, Bénin et Côte d\'Ivoire. Chaque paiement est vérifié par notre équipe.'],
     ],
 
     'verification_guarantee' => ['icon' => 'shield-check', 'title' => 'Accès après vérification', 'text' => 'Votre formation s\'ouvre dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
@@ -458,7 +458,7 @@ return [
 
     'faq' => [
         'home' => [
-            ['question' => 'Comment se passe le paiement ?', 'answer' => 'Par Mobile Money : vous envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso ou Bénin) depuis votre téléphone, puis vous envoyez sur le site la capture d\'écran de votre paiement. Rien d\'autre à remplir. Les frais de transfert sont à la charge de l\'expéditeur.'],
+            ['question' => 'Comment se passe le paiement ?', 'answer' => 'Par Mobile Money : vous envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso, Bénin ou Côte d\'Ivoire) depuis votre téléphone, puis vous envoyez sur le site la capture d\'écran de votre paiement. Rien d\'autre à remplir. Les frais de transfert sont à la charge de l\'expéditeur.'],
             ['question' => 'Quand est-ce que j\'accède à ma formation ?', 'answer' => 'Pour les formations de moins de {seuil} : immédiatement après l\'envoi de votre preuve de paiement (accès provisoire, puis vérification par notre équipe). À partir de {seuil} : dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
             ['question' => 'Je suis débutant, puis-je suivre les formations ?', 'answer' => 'Oui. Les formations sont expliquées pas à pas, en français simple. Si vous partez de zéro, nous vous conseillons de commencer par la formation ChatGPT & Claude.'],
             ['question' => 'Puis-je suivre les formations sur mon téléphone ?', 'answer' => 'Oui, le site et les vidéos sont pensés pour le téléphone. Pour certaines formations pratiques (sites web, applications), un ordinateur rend l\'exercice plus confortable.'],
@@ -471,7 +471,7 @@ return [
         ],
         'formation' => [
             ['question' => 'Quand est-ce que j\'accède à la formation ?', 'answer' => 'Dès l\'envoi de votre preuve de paiement pour les formations de moins de {seuil}. À partir de {seuil}, dès que votre paiement a été vérifié, du lundi au samedi, de 8 h à 20 h.'],
-            ['question' => 'Comment payer ?', 'answer' => 'Par Mobile Money : envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso ou Bénin), puis déposez votre preuve de paiement sur la page de commande.'],
+            ['question' => 'Comment payer ?', 'answer' => 'Par Mobile Money : envoyez le montant exact sur l\'un de nos numéros (Togo, Burkina Faso, Bénin ou Côte d\'Ivoire), puis déposez votre preuve de paiement sur la page de commande.'],
             ['question' => 'Et si j\'ai une question pendant la formation ?', 'answer' => 'Vous la posez dans le groupe privé de la formation, réservé aux élèves inscrits. Vous pouvez aussi nous écrire sur WhatsApp.'],
             ['question' => 'Combien de temps ai-je accès ?', 'answer' => 'À vie pour la formation (tant que la plateforme est en activité), avec un accompagnement de 3 mois après la formation dans le groupe privé ou sur WhatsApp.'],
             ['question' => 'Puis-je être remboursé ?', 'answer' => 'Oui, dans les 48 heures qui suivent l\'achat, si vous n\'avez encore consulté aucune leçon de la formation.'],
@@ -507,6 +507,7 @@ return [
             'tg' => ['name' => 'Togo', 'flag' => '🇹🇬', 'dial_code' => '+228', 'note' => null],
             'bf' => ['name' => 'Burkina Faso', 'flag' => '🇧🇫', 'dial_code' => '+226', 'note' => 'Paiement reçu par notre représentant au Burkina Faso'],
             'bj' => ['name' => 'Bénin', 'flag' => '🇧🇯', 'dial_code' => '+229', 'note' => 'Paiement reçu par notre représentant au Bénin'],
+            'ci' => ['name' => 'Côte d\'Ivoire', 'flag' => '🇨🇮', 'dial_code' => '+225', 'note' => 'Paiement reçu par notre représentant en Côte d\'Ivoire'],
         ],
 
         // « ussd » : code USSD officiel qui ouvre le menu de transfert de l'opérateur (bouton « Payer
@@ -522,6 +523,11 @@ return [
             'bj-mtn' => ['country' => 'bj', 'name' => 'MTN', 'number' => '+229 01 51 53 39 35', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#eab308', 'ussd' => '*880#', 'enabled' => true],
             'bj-moov' => ['country' => 'bj', 'name' => 'Moov', 'number' => '+229 01 94 55 59 14', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#2563eb', 'ussd' => '*855*1#', 'enabled' => true],
             'bj-celtiis' => ['country' => 'bj', 'name' => 'Celtiis', 'number' => '+229 01 40 28 57 61', 'beneficiary' => 'KOUAGOU Noutcha Adam Fernando', 'color' => '#a855f7', 'ussd' => '*889#', 'enabled' => true],
+            // Côte d'Ivoire (novembre 2026, numéros fournis par Joseph, les mêmes que sur Talkami). Aucun code USSD
+            // fourni : pas de bouton « Ouvrir … » (à ajouter dans l'admin s'il le souhaite).
+            'ci-orange' => ['country' => 'ci', 'name' => 'Orange Money', 'number' => '+225 07 09 51 82 85', 'beneficiary' => 'OULOUSSEGUEA CHARLES DANHAN', 'color' => '#f97316', 'ussd' => '', 'enabled' => true],
+            'ci-mtn' => ['country' => 'ci', 'name' => 'MTN Mobile Money', 'number' => '+225 05 45 53 11 70', 'beneficiary' => 'OULOUSSEGUEA CHARLES DANHAN', 'color' => '#eab308', 'ussd' => '', 'enabled' => true],
+            'ci-wave' => ['country' => 'ci', 'name' => 'Wave', 'number' => '+225 07 09 51 82 85', 'beneficiary' => 'OULOUSSEGUEA CHARLES DANHAN', 'color' => '#38bdf8', 'ussd' => '', 'enabled' => true],
         ],
 
         'fees_notice' => 'Les frais de transfert sont à la charge de l\'expéditeur.',
@@ -745,6 +751,19 @@ return [
         'school' => AmaKnowledge::DEFAULT_SCHOOL,
         'faq' => [],
         'other' => '',
+    ],
+
+    // Bourse « Créer des agents IA » (novembre 2026, contenu fourni par Joseph) : page /bourse-agents-ia, réglée dans
+    // l'admin (« Bourse Agents IA »). Éteinte tant que Joseph ne l'allume pas ; dates à l'heure de Lomé.
+    'scholarship' => [
+        'enabled' => false,
+        'campaign' => 'agents-ia-2026-11',
+        'formation' => 'creation-agents-ia',
+        'opens_at' => null,
+        'closes_at' => null,
+        'fee' => 5500,
+        'value' => 150000,
+        'seats_per_gender' => 5,
     ],
 
     'legal' => [

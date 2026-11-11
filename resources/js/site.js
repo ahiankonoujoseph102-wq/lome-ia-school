@@ -152,6 +152,65 @@ window.addEventListener('whatsapp-page-url', (event) => {
     }
 });
 
+/**
+ * Bourse (page /bourse-agents-ia) : compte à rebours jusqu'à la clôture et places restantes par genre, remis à jour
+ * toutes les 20 secondes (sans donnée personnelle). Heure de clôture atteinte : « Candidatures closes ».
+ */
+Alpine.data('scholarshipCounter', ({ counter, opensAt = null, endpoint = null }) => ({
+    state: counter.state,
+    remaining: counter.remaining,
+    closesAt: counter.closes_at ? new Date(counter.closes_at).getTime() : null,
+    countdown: '',
+    opensLabel: opensAt ? new Intl.DateTimeFormat('fr-FR', { timeZone: 'Africa/Lome', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(opensAt)) + ' (heure de Lomé)' : '',
+    timer: null,
+    poller: null,
+
+    init() {
+        this.tick();
+        this.timer = setInterval(() => this.tick(), 1000);
+        if (endpoint) {
+            this.poller = setInterval(() => this.refresh(), 20000);
+        }
+    },
+
+    destroy() {
+        clearInterval(this.timer);
+        clearInterval(this.poller);
+    },
+
+    tick() {
+        if (!this.closesAt) {
+            return;
+        }
+        const left = Math.max(0, Math.floor((this.closesAt - Date.now()) / 1000));
+        if (left === 0 && this.state === 'open') {
+            this.state = 'closed';
+        }
+        const hours = Math.floor(left / 3600);
+        const minutes = Math.floor((left % 3600) / 60);
+        const seconds = left % 60;
+        this.countdown = [hours, minutes, seconds].map((part) => String(part).padStart(2, '0')).join(':');
+    },
+
+    async refresh() {
+        if (document.hidden) {
+            return;
+        }
+        try {
+            const response = await fetch(endpoint, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            this.state = data.state;
+            this.remaining = data.remaining;
+            this.closesAt = data.closes_at ? new Date(data.closes_at).getTime() : this.closesAt;
+        } catch {
+            // Réseau coupé : le compteur garde les derniers chiffres.
+        }
+    },
+}));
+
 Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxBytes, maxMb, labels, helpUrls = [] }) => ({
     methods,
     labels,

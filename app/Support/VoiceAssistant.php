@@ -57,6 +57,7 @@ class VoiceAssistant
         'checkout.show' => ['page de commande et de paiement', 'récapitulatif de la commande, code promo, puis paiement Mobile Money en 4 étapes'],
         'about' => ['page À propos', 'présente l\'école et le formateur'],
         'business' => ['page Entreprises et réalisations sur mesure', 'présente les réalisations sur mesure (sites vitrines, sites professionnels, agents IA, automatisations), les services aux entreprises, le formulaire « Demander un devis » et le bouton « Réserver un appel gratuit »'],
+        'scholarship' => ['page de la bourse « Créer des agents IA »', 'présente la bourse (10 places, 5 femmes et 5 hommes de 20 à 40 ans), le compte à rebours et les places restantes, puis le formulaire de candidature et le paiement des frais d\'inscription par Mobile Money avec capture, sans compte'],
         'contact' => ['page Contact', 'donne les coordonnées de l\'école et les horaires'],
         'affiliate.program' => ['page Devenez affilié', 'explique le programme d\'affiliation'],
         'consultation' => ['page de la consultation gratuite', 'permet de réserver un appel vidéo gratuit de 30 minutes, sans compte'],
@@ -209,7 +210,7 @@ class VoiceAssistant
      *
      * @var list<string>
      */
-    public const array NUDGE_OTHER_PAGES = ['formations.index', 'about', 'business', 'contact', 'affiliate.program', 'consultation'];
+    public const array NUDGE_OTHER_PAGES = ['formations.index', 'about', 'business', 'contact', 'affiliate.program', 'consultation', 'scholarship'];
 
     /**
      * Longueur maximale d'un message de présentation (bulle courte).

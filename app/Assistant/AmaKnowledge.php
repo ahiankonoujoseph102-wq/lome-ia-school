@@ -6,6 +6,7 @@ use App\Models\CourseModule;
 use App\Models\Formation;
 use App\Models\FreeRegistrationOption;
 use App\Models\Lesson;
+use App\Scholarships\ScholarshipCampaign;
 use App\Support\LiveOffer;
 use App\Support\Money;
 use App\Support\Talkami;
@@ -409,6 +410,11 @@ class AmaKnowledge
                 ."\nPrésente le stage et le recrutement comme des possibilités, jamais comme une promesse d'emploi.";
         } elseif ($afterLines !== []) {
             $parts[] = "### Après la formation\nAttestation, stage de 3 mois possible ; au bureau : consultation gratuite ou WhatsApp, paiement en ligne. Jamais une promesse d'emploi.";
+        }
+
+        // Bourse « Créer des agents IA » (App\Scholarships\ScholarshipCampaign) : état et places lus en direct.
+        if (($scholarship = ScholarshipCampaign::assistantText()) !== '') {
+            $parts[] = "### Bourse « Créer des agents IA »\n".$scholarship;
         }
 
         // Talkami, création de Joseph (App\Support\Talkami).

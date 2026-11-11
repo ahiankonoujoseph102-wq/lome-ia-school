@@ -26,9 +26,10 @@ class ProofImageProcessor
     }
 
     /**
-     * Enregistre la capture compressée et retourne son chemin sur le disque privé.
+     * Enregistre la capture compressée et retourne son chemin sur le disque privé, dans le dossier de l'élève
+     * (son identifiant) ou un dossier nommé (« bourses » : candidatures envoyées sans compte).
      */
-    public function store(UploadedFile $file, int $userId): string
+    public function store(UploadedFile $file, int|string $folder): string
     {
         $source = imagecreatefromstring((string) file_get_contents((string) $file->getRealPath()));
 
@@ -59,7 +60,7 @@ class ProofImageProcessor
         imagedestroy($source);
         imagedestroy($image);
 
-        $path = $userId.'/'.now()->format('Ymd-His').'-'.Str::lower(Str::random(16)).'.jpg';
+        $path = $folder.'/'.now()->format('Ymd-His').'-'.Str::lower(Str::random(16)).'.jpg';
         Storage::disk(self::DISK)->put($path, $jpeg);
 
         return $path;

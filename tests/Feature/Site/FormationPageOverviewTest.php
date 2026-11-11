@@ -31,7 +31,7 @@ class FormationPageOverviewTest extends TestCase
             ->assertSee('data-test="formation-journey"', false)
             ->assertSee('Comment se déroule la formation')
             ->assertSee('Vous payez par Mobile Money')
-            ->assertSee('Depuis le Togo, le Burkina Faso ou le Bénin', false)
+            ->assertSee('Depuis le Togo, le Burkina Faso, le Bénin ou la Côte d&#039;Ivoire', false)
             ->assertSee('Vous recevez votre attestation')
             ->assertSee('data-test="formation-section-nav"', false)
             ->assertSee('href="#apprendre"', false)
