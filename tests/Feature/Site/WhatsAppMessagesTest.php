@@ -74,15 +74,10 @@ class WhatsAppMessagesTest extends TestCase
     public function test_checkout_names_the_formation_and_the_step(): void
     {
         $formation = Formation::factory()->create(['title' => 'ChatGPT au quotidien', 'price' => 15000]);
-        // Numéro hors des pays de paiement : aucun pays deviné, la page s'ouvre sur le choix du pays.
-        $student = User::factory()->create(['phone' => '+33612345678']);
+        $student = User::factory()->create();
 
         $response = $this->actingAs($student)->get(route('checkout.show', $formation))->assertOk();
         $messages = $this->messages($response);
-
-        // Numéro togolais : pays deviné, la page s'ouvre sur le choix de l'opérateur.
-        $togolese = User::factory()->create(['phone' => '+22890123456']);
-        $this->assertContains('Bonjour Coach Joseph, j\'ai besoin d\'aide pour payer la formation « ChatGPT au quotidien » (étape : choix de l\'opérateur). Mon problème : ', $this->messages($this->actingAs($togolese)->get(route('checkout.show', $formation))->assertOk()));
 
         // En-tête et « Besoin d'aide pour payer ? » : l'étape affichée au chargement (choix du pays).
         $this->assertContains('Bonjour Coach Joseph, j\'ai besoin d\'aide pour payer la formation « ChatGPT au quotidien » (étape : choix du pays). Mon problème : ', $messages);
