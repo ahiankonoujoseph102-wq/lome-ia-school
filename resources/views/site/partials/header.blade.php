@@ -2,7 +2,7 @@
     $links = [
         ['route' => 'formations.index', 'active' => 'formations.*', 'label' => 'Formations'],
         // Bourse « Agents IA » : lien seulement pendant que les candidatures sont ouvertes.
-        ...(($scholarshipOpen = once(fn (): bool => \App\Scholarships\ScholarshipCampaign::isOpen())) ? [['route' => 'scholarship', 'active' => 'scholarship', 'label' => 'Bourse IA', 'test' => 'menu-scholarship']] : []),
+        ...(($scholarshipOpen = \App\Scholarships\ScholarshipCampaign::isOpen()) ? [['route' => 'scholarship', 'active' => 'scholarship', 'label' => 'Bourse IA', 'test' => 'menu-scholarship']] : []),
         // Offres d'accompagnement : lien dès qu'au moins une offre est publiée, même close (la page affiche alors
         // « Inscriptions closes ») ; sans offre publiée, la page n'existe pas.
         ...(($packsOnSale = \App\Packs\PacksPage::published()) ? [['route' => 'packs', 'active' => 'packs', 'label' => 'Accompagnement', 'test' => 'menu-packs']] : []),

@@ -391,13 +391,12 @@ class ScholarshipTest extends TestCase
     {
         $this->open();
 
-        $this->from(route('scholarship'))
+        $content = $this->from(route('scholarship'))->followingRedirects()
             ->post(route('scholarship.store'), $this->form(['age' => '45']))
-            ->assertSessionHasErrors('age');
-
-        $content = $this->get(route('scholarship'))->getContent();
-        $this->assertStringContainsString('&quot;autoOpen&quot;:true', $content);
-        $this->assertMatchesRegularExpression('/&quot;step&quot;:4,/', $content);
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('\u0022autoOpen\u0022:true', $content);
+        $this->assertStringContainsString('\u0022step\u0022:4,', $content);
     }
 
     public function test_the_scholarship_is_promoted_on_the_home_page_and_in_the_menu_only_while_open(): void
