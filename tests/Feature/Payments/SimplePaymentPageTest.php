@@ -19,7 +19,7 @@ use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
- * Page de paiement simplifiée : 4 étapes, capture seule, bouton « Payer maintenant » par code USSD.
+ * Page de paiement simplifiée : une seule page en 3 étapes, capture seule, bouton « Payer maintenant » par code USSD.
  */
 class SimplePaymentPageTest extends TestCase
 {
@@ -55,12 +55,13 @@ class SimplePaymentPageTest extends TestCase
         return ['payment_method' => $method, 'proof' => UploadedFile::fake()->image('capture.png', 600, 1200), ...$extra];
     }
 
-    public function test_page_shows_four_steps_and_no_reference_field(): void
+    public function test_page_shows_three_steps_and_no_reference_field(): void
     {
         $formation = Formation::factory()->create(['price' => 25000]);
 
         $this->page($formation)
             ->assertSee('Payer par Mobile Money')
+            ->assertSee('sur 3', false)
             ->assertSee('Dans quel pays payez-vous ?')
             ->assertSee('Choisissez votre opérateur')
             ->assertSee('data-test="country-tg"', false)
@@ -237,7 +238,8 @@ class SimplePaymentPageTest extends TestCase
 
         $message = fn (string $step): string => 'https://wa.me/'.config('site.whatsapp.number').'?text='.rawurlencode('Bonjour Coach Joseph, j\'ai besoin d\'aide pour payer la formation « ChatGPT au quotidien » (étape : '.$step.'). Mon problème : ');
 
-        $page = $this->page($formation)
+        // Numéro hors des pays de paiement : la page s'ouvre sur le choix du pays.
+        $page = $this->page($formation, student: User::factory()->create(['phone' => '+33612345678']))
             ->assertSee('Besoin d\'aide pour payer ?', false)
             ->assertSee('href="'.$message('choix du pays').'"', false);
 
@@ -305,5 +307,66 @@ class SimplePaymentPageTest extends TestCase
         $this->assertSame('', config('site.payments.methods.bf-wave.ussd'));
         $this->assertSame('*889#', config('site.payments.methods.bj-celtiis.ussd'));
         $this->assertSame(1, DB::table('site_settings')->where('key', 'site.payments.methods')->count());
+    }
+
+    public function test_the_country_is_guessed_from_the_whatsapp_number(): void
+    {
+        $formation = Formation::factory()->create(['price' => 15000]);
+        $student = User::factory()->create(['phone' => '+22997123456']);
+
+        $page = $this->page($formation, student: $student)
+            ->assertSee('initialCountry: \'bj\'', false)
+            ->assertSee('initialStep: 2', false)
+            ->assertSee('data-test="payment-country-guessed"', false)
+            ->assertSee('D\'après votre numéro WhatsApp')
+            ->assertSee('data-test="change-country"', false)
+            ->assertSee('Étape <span x-text="shown">1</span> sur 3', false);
+
+        // Le bouton d'aide part sur le choix de l'opérateur.
+        $page->assertSee('href="'.'https://wa.me/'.config('site.whatsapp.number').'?text='.rawurlencode('Bonjour Coach Joseph, j\'ai besoin d\'aide pour payer la formation « '.$formation->title.' » (étape : choix de l\'opérateur). Mon problème : ').'"', false);
+    }
+
+    public function test_no_guess_for_a_number_outside_the_payment_countries(): void
+    {
+        $formation = Formation::factory()->create(['price' => 15000]);
+
+        $this->page($formation, student: User::factory()->create(['phone' => '+33612345678']))
+            ->assertSee('initialCountry: null', false)
+            ->assertSee('initialStep: 1', false)
+            ->assertDontSee('data-test="payment-country-guessed"', false);
+    }
+
+    public function test_no_guess_for_a_country_without_an_active_method(): void
+    {
+        $methods = config('site.payments.methods');
+        foreach ($methods as $key => $method) {
+            if (($method['country'] ?? '') === 'bj') {
+                $methods[$key]['enabled'] = false;
+            }
+        }
+        config(['site.payments.methods' => $methods]);
+
+        $this->assertNull(PaymentMethods::countryForPhone('+22997123456'));
+        $this->assertSame('tg', PaymentMethods::countryForPhone('+22890123456'));
+        $this->assertSame('ci', PaymentMethods::countryForPhone('+2250709518285'));
+        $this->assertNull(PaymentMethods::countryForPhone(null));
+    }
+
+    public function test_the_capture_is_previewed_before_it_is_sent_and_first_payment_help_is_shown(): void
+    {
+        $formation = Formation::factory()->create(['price' => 15000]);
+
+        $this->page($formation)
+            ->assertSee('@change="pickProof($event)"', false)
+            ->assertSee('data-test="proof-preview"', false)
+            ->assertSee('Vérifiez votre capture')
+            ->assertSee('Envoyer cette capture')
+            ->assertSee('Choisir une autre image')
+            ->assertSee('data-test="confirm-proof-button"', false)
+            ->assertSee('data-test="screenshot-help"', false)
+            ->assertSee('Comment faire une capture d\'écran ?', false)
+            ->assertSee('data-test="first-payment-help"', false)
+            ->assertSee('Premier paiement Mobile Money ?')
+            ->assertSee('Ne donnez jamais ce code à personne, même pas à nous.');
     }
 }

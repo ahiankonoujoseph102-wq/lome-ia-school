@@ -485,7 +485,7 @@ return [
     | Paiement Mobile Money (manuel, avec preuve de paiement)
     |----------------------------------------------------------------------
     | L'élève envoie le montant sur l'un de nos numéros, puis envoie seulement la
-    | capture d'écran de son paiement sur le site (page de paiement en 4 étapes).
+    | capture d'écran de son paiement sur le site (page de paiement en 3 étapes).
     |
     | - « verification_threshold » : en dessous de ce prix, l'accès est ouvert
     |   aussitôt à titre provisoire ; à partir de ce prix, il n'est ouvert
