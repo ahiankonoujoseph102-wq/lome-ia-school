@@ -318,12 +318,26 @@ class SimplePaymentPageTest extends TestCase
             ->assertSee('initialCountry: \'bj\'', false)
             ->assertSee('initialStep: 2', false)
             ->assertSee('data-test="payment-country-guessed"', false)
-            ->assertSee('D\'après votre numéro WhatsApp')
+            ->assertSee('D\'après votre numéro WhatsApp', false)
             ->assertSee('data-test="change-country"', false)
             ->assertSee('Étape <span x-text="shown">1</span> sur 3', false);
 
         // Le bouton d'aide part sur le choix de l'opérateur.
         $page->assertSee('href="'.'https://wa.me/'.config('site.whatsapp.number').'?text='.rawurlencode('Bonjour Coach Joseph, j\'ai besoin d\'aide pour payer la formation « '.$formation->title.' » (étape : choix de l\'opérateur). Mon problème : ').'"', false);
+    }
+
+    public function test_first_payment_help_never_mentions_a_missing_ussd_button(): void
+    {
+        $formation = Formation::factory()->create(['price' => 5500]);
+        config(['site.payments.methods.tg-mixx.ussd' => '']);
+
+        $content = $this->page($formation)->getContent();
+        $mixx = substr($content, (int) strpos($content, 'data-method="tg-mixx"'));
+        $mixx = substr($mixx, 0, (int) strpos($mixx, '</section>'));
+
+        $this->assertStringContainsString('data-test="first-payment-help"', $mixx);
+        $this->assertStringContainsString('Ouvrez le menu Mixx by Yas de votre téléphone.', $mixx);
+        $this->assertStringNotContainsString('Ouvrir Mixx by Yas', $mixx);
     }
 
     public function test_no_guess_for_a_number_outside_the_payment_countries(): void

@@ -576,7 +576,7 @@ class VoiceAssistant
         if ($routeName === 'checkout.show' && $formation?->isPack()) {
             $role = 'récapitulatif de commande de l\'offre d\'accompagnement'.($formation->registrationsClosed()
                 ? ' : les inscriptions à cette offre sont CLOSES, aucun paiement n\'est possible'
-                : ' : sans compte, « Créer un compte » ou « J\'ai déjà un compte » sur cette page, puis confirmer son e-mail ; ensuite paiement Mobile Money en 3 étapes (opérateur, pays deviné d'après le numéro WhatsApp, transfert, capture)');
+                : ' : sans compte, « Créer un compte » ou « J\'ai déjà un compte » sur cette page, puis confirmer son e-mail ; ensuite paiement Mobile Money en 3 étapes (opérateur, pays deviné d\'après le numéro WhatsApp, transfert, capture)');
         }
 
         // Formation gratuite terminée : inscriptions et annulations fermées ; Ama oriente vers le bouton de la page.

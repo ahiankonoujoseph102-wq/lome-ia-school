@@ -1,6 +1,7 @@
 {{--
     Aide « Premier paiement Mobile Money ? » de l'étape 2 du paiement (fermée par défaut) : le transfert expliqué
-    pas à pas, avec le montant, le numéro et le bénéficiaire de l'opérateur choisi. Aucun code secret demandé.
+    pas à pas, avec le montant, le numéro et le bénéficiaire de l'opérateur choisi ;
+    le bouton « Ouvrir … » n'est cité que si l'opérateur a un code USSD. Aucun code secret demandé.
 --}}
 <details class="group rounded-2xl bg-veil/5 ring-1 ring-veil/10" data-test="first-payment-help">
     <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold text-slate-200">
@@ -13,8 +14,10 @@
             <span>
                 @if ($method->usesApp())
                     Ouvrez l'application {{ $method->name }} sur votre téléphone.
+                @elseif ($ussdCode !== null)
+                    Ouvrez le menu {{ $method->name }} : touchez « Ouvrir {{ $method->name }} » ci-dessus s'il s'affiche, sinon composez le code affiché.
                 @else
-                    Ouvrez le menu {{ $method->name }} : touchez « Ouvrir {{ $method->name }} » ci-dessus s'il s'affiche, ou composez le code de votre opérateur.
+                    Ouvrez le menu {{ $method->name }} de votre téléphone.
                 @endif
             </span>
         </li>

@@ -141,7 +141,7 @@ Alpine.data('catalogue', (items) => ({
 }));
 
 /**
- * Page de paiement en 4 étapes (pays, opérateur, paiement, capture), une étape à la fois.
+ * Page de paiement sur une seule page en 3 étapes affichées (opérateur avec pays deviné, envoi, capture vérifiée), 4 phases internes.
  * La capture est envoyée dès qu'elle est choisie (un seul bouton), après un contrôle du type et de la
  * taille dans le navigateur (le serveur revérifie tout).
  */

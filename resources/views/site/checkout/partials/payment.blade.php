@@ -245,7 +245,7 @@
                         </p>
                     @endif
 
-                    @include('site.checkout.partials.first-payment-help', ['method' => $method, 'amount' => $amount])
+                    @include('site.checkout.partials.first-payment-help', ['method' => $method, 'amount' => $amount, 'ussdCode' => $ussdCode])
 
                     <button type="button" @click="goTo(4)" class="btn w-full bg-gold-400/10 text-gold-100 ring-1 ring-gold-400/60 hover:bg-gold-400/20" data-test="paid-button" data-ama-clear>
                         J'ai payé : envoyer ma capture <flux:icon.arrow-right class="size-5" />
