@@ -80,31 +80,6 @@ class PaymentMethods
         return $countries;
     }
 
-    /**
-     * Pays deviné d'après un numéro au format international (numéro WhatsApp du compte) : seulement un pays qui a
-     * au moins un moyen actif, sinon null (l'élève choisit alors son pays lui-même).
-     */
-    public static function countryForPhone(?string $phone): ?string
-    {
-        $phone = (string) $phone;
-
-        if ($phone === '' || ! str_starts_with($phone, '+')) {
-            return null;
-        }
-
-        $available = self::countries();
-
-        foreach ((array) config('site.payments.countries', []) as $code => $country) {
-            $dialCode = is_array($country) ? (string) ($country['dial_code'] ?? '') : '';
-
-            if ($dialCode !== '' && isset($available[(string) $code]) && str_starts_with($phone, $dialCode)) {
-                return (string) $code;
-            }
-        }
-
-        return null;
-    }
-
     public static function verificationThreshold(): int
     {
         return (int) config('site.payments.verification_threshold', 50000);

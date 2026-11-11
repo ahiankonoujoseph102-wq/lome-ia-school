@@ -38,7 +38,7 @@ class WhatsAppMessages
     ];
 
     /**
-     * Nom des étapes du paiement (repère {etape}), dans l'ordre des 4 phases de la page de paiement (pays et opérateur forment l'étape 1 affichée).
+     * Nom des étapes du paiement (repère {etape}), dans l'ordre des 4 étapes de la page de paiement.
      *
      * @var list<string>
      */
@@ -115,7 +115,7 @@ class WhatsAppMessages
 
     /**
      * Étape affichée au chargement de la page de paiement (même règle que le partiel du paiement) :
-     * compte, e-mail à confirmer, paiement déjà envoyé, ou l'une des 4 phases (pays, opérateur, envoi, capture ; affichées en 3 étapes).
+     * compte, e-mail à confirmer, paiement déjà envoyé, ou l'une des 4 étapes.
      */
     public static function paymentStep(?User $user, ?Purchase $unverified, bool $alreadyEnrolled = false): string
     {
@@ -137,8 +137,7 @@ class WhatsAppMessages
             return self::PAYMENT_STEPS[session('errors')?->has('proof') ? 3 : 2];
         }
 
-        // Pays deviné d'après le numéro WhatsApp du compte : la page s'ouvre sur le choix de l'opérateur.
-        return self::PAYMENT_STEPS[PaymentMethods::countryForPhone($user->phone) !== null ? 1 : 0];
+        return self::PAYMENT_STEPS[0];
     }
 
     public static function free(Formation $formation): string

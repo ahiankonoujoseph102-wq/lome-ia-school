@@ -54,7 +54,7 @@ class VoiceAssistant
         'formations.index' => ['catalogue des formations', 'liste toutes les formations, avec un filtre par catégorie et une recherche'],
         'formations.show' => ['page d\'une formation', 'présente la formation, son prix et le bouton « Acheter maintenant »'],
         'packs' => [self::PACKS_PAGE, 'présente les trois niveaux d\'accompagnement (prix, formations incluses, fin des inscriptions) ; chaque bouton « Je m\'inscris maintenant » mène au récapitulatif de commande de l\'offre, puis à la création du compte et au paiement Mobile Money'],
-        'checkout.show' => ['page de commande et de paiement', 'récapitulatif de la commande, code promo, puis paiement Mobile Money en 3 étapes sur une seule page'],
+        'checkout.show' => ['page de commande et de paiement', 'récapitulatif de la commande, code promo, puis paiement Mobile Money en 4 étapes'],
         'about' => ['page À propos', 'présente l\'école et le formateur'],
         'business' => ['page Entreprises et réalisations sur mesure', 'présente les réalisations sur mesure (sites vitrines, sites professionnels, agents IA, automatisations), les services aux entreprises, le formulaire « Demander un devis » et le bouton « Réserver un appel gratuit »'],
         'scholarship' => ['page de la bourse « Créer des agents IA »', 'présente la bourse (10 places, 5 femmes et 5 hommes de 20 à 40 ans), le compte à rebours et les places restantes, puis le formulaire de candidature et le paiement des frais d\'inscription par Mobile Money avec capture, sans compte'],
@@ -83,7 +83,7 @@ class VoiceAssistant
         'student.consultation' => ['page de la consultation de l\'élève', 'accès à la gestion de son rendez-vous'],
         'student.sessions.index' => ['page Sessions', 'sessions en direct ou à Lomé annoncées pour ses formations'],
         'student.sessions.show' => ['page d\'une session', 'détails d\'une session, inscription et bouton « Rejoindre »'],
-        'student.sessions.payment' => ['page de paiement du supplément d\'une session', 'paiement Mobile Money en 3 étapes sur une seule page'],
+        'student.sessions.payment' => ['page de paiement du supplément d\'une session', 'paiement Mobile Money en 4 étapes'],
         'student.notifications' => ['page Notifications', 'réglages des notifications sur téléphone et par e-mail'],
         'student.profile' => ['page Profil', 'modification du nom, du numéro, de l\'e-mail et de la photo'],
         'security.edit' => ['page Sécurité du compte', 'mot de passe, double authentification et passkeys'],
@@ -576,7 +576,7 @@ class VoiceAssistant
         if ($routeName === 'checkout.show' && $formation?->isPack()) {
             $role = 'récapitulatif de commande de l\'offre d\'accompagnement'.($formation->registrationsClosed()
                 ? ' : les inscriptions à cette offre sont CLOSES, aucun paiement n\'est possible'
-                : ' : sans compte, « Créer un compte » ou « J\'ai déjà un compte » sur cette page, puis confirmer son e-mail ; ensuite paiement Mobile Money en 3 étapes (opérateur, pays deviné d\'après le numéro WhatsApp, transfert, capture)');
+                : ' : sans compte, « Créer un compte » ou « J\'ai déjà un compte » sur cette page, puis confirmer son e-mail ; ensuite paiement Mobile Money en 4 étapes (pays, opérateur, transfert, capture)');
         }
 
         // Formation gratuite terminée : inscriptions et annulations fermées ; Ama oriente vers le bouton de la page.

@@ -30,6 +30,9 @@
     {{-- Formation proposée en direct : bandeau qui disparaît après la dernière séance --}}
     @include('site.partials.live-offer-banner')
 
+    {{-- Bourse « Agents IA » : bandeau tant que les candidatures sont ouvertes --}}
+    @include('site.partials.scholarship-banner')
+
     {{-- Accroche --}}
     <section class="relative isolate overflow-hidden">
         {{-- Fond animé (interrupteur « Fond animé » de l'admin) ; éteint : fond fixe d'origine. --}}
