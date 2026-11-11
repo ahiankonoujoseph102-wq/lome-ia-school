@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\PromoCodeController;
 use App\Http\Controllers\Admin\QuoteRequestController as AdminQuoteRequestController;
 use App\Http\Controllers\Admin\SalesController;
+use App\Http\Controllers\Admin\ScholarshipController as AdminScholarshipController;
 use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TestimonialController;
@@ -43,6 +44,7 @@ use App\Http\Controllers\Site\PackController;
 use App\Http\Controllers\Site\PageController;
 use App\Http\Controllers\Site\PwaController;
 use App\Http\Controllers\Site\QuoteRequestController;
+use App\Http\Controllers\Site\ScholarshipController;
 use App\Http\Controllers\Site\ServerTimeController;
 use App\Http\Controllers\Site\SitemapController;
 use App\Http\Controllers\Student\AffiliateController;
@@ -90,6 +92,13 @@ Route::get('entreprises', [PageController::class, 'business'])->name('business')
 Route::permanentRedirect('talkami', '/#talkami')->name('talkami');
 // Formulaire « Demander un devis » de la page Entreprises (sans compte ; champ piège et limite par adresse IP).
 Route::post('entreprises/devis', [QuoteRequestController::class, 'store'])->middleware('throttle:5,10')->name('business.quote');
+
+// Bourse « Créer des agents IA » : candidature et paiement des frais SANS compte (compte créé à la validation).
+// 20 envois par 10 minutes et par adresse IP : au Togo, beaucoup de téléphones partagent l'adresse IP de l'opérateur.
+Route::get('bourse-agents-ia', [ScholarshipController::class, 'show'])->name('scholarship');
+Route::get('bourse-agents-ia/places', [ScholarshipController::class, 'places'])->middleware('throttle:60,1')->name('scholarship.places');
+Route::post('bourse-agents-ia', [ScholarshipController::class, 'store'])->middleware('throttle:20,10')->name('scholarship.store');
+Route::get('bourse-agents-ia/acces/{application}', [ScholarshipController::class, 'access'])->middleware(['signed', 'throttle:10,1'])->name('scholarship.access');
 Route::get('accompagnement', [PackController::class, 'index'])->name('packs');
 // Heure du serveur : corrige l'horloge du téléphone dans les comptes à rebours des offres.
 Route::get('heure-serveur', ServerTimeController::class)->middleware('throttle:60,1')->name('server-time');
@@ -351,6 +360,12 @@ Route::middleware(['auth', 'admin', 'staff-2fa'])->prefix('admin')->name('admin.
     Route::get('assistante/conversations/{conversation}', [AssistantConversationController::class, 'show'])->middleware('no-store')->name('assistant.show');
     Route::get('devis', [AdminQuoteRequestController::class, 'index'])->middleware('no-store')->name('quotes.index');
     Route::post('devis/{quote}/statut', [AdminQuoteRequestController::class, 'toggle'])->name('quotes.toggle');
+    Route::get('bourse', [AdminScholarshipController::class, 'index'])->middleware('no-store')->name('scholarship.index');
+    Route::put('bourse/reglages', [AdminScholarshipController::class, 'updateSettings'])->name('scholarship.settings');
+    Route::post('bourse/{application}/valider', [AdminScholarshipController::class, 'validateApplication'])->name('scholarship.validate');
+    Route::post('bourse/{application}/refuser', [AdminScholarshipController::class, 'refuse'])->name('scholarship.refuse');
+    Route::post('bourse/{application}/rembourse', [AdminScholarshipController::class, 'refunded'])->name('scholarship.refunded');
+    Route::get('bourse/{application}/capture', [AdminScholarshipController::class, 'proof'])->middleware('no-store')->name('scholarship.proof');
     Route::get('assistante/demandes', [AssistantHandoffController::class, 'index'])->middleware('no-store')->name('assistant.handoffs.index');
     Route::post('assistante/demandes/{handoff}/statut', [AssistantHandoffController::class, 'toggle'])->name('assistant.handoffs.toggle');
     Route::get('reglages', [SiteSettingsController::class, 'index'])->name('settings.index');

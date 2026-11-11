@@ -747,6 +747,19 @@ return [
         'other' => '',
     ],
 
+    // Bourse « Créer des agents IA » (novembre 2026, contenu fourni par Joseph) : page /bourse-agents-ia, réglée dans
+    // l'admin (« Bourse Agents IA »). Éteinte tant que Joseph ne l'allume pas ; dates à l'heure de Lomé.
+    'scholarship' => [
+        'enabled' => false,
+        'campaign' => 'agents-ia-2026-11',
+        'formation' => 'creation-agents-ia',
+        'opens_at' => null,
+        'closes_at' => null,
+        'fee' => 5500,
+        'value' => 150000,
+        'seats_per_gender' => 5,
+    ],
+
     'legal' => [
         'company_name' => 'Lomé IA School',
         // Responsable du site (mentions légales).

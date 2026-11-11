@@ -30,6 +30,7 @@ class AdminMenu
             ['label' => 'Ventes', 'icon' => 'banknotes', 'links' => [
                 ['label' => 'Paiements à vérifier', 'route' => 'admin.payments.index', 'icon' => 'banknotes', 'count' => AdminTodo::paymentsToVerify(), 'active' => ['admin.payments.*']],
                 ['label' => 'Toutes les ventes', 'route' => 'admin.sales.index', 'icon' => 'receipt-percent', 'active' => ['admin.sales.*']],
+                ['label' => 'Bourse Agents IA', 'route' => 'admin.scholarship.index', 'icon' => 'gift', 'count' => AdminTodo::scholarshipsToVerify(), 'active' => ['admin.scholarship.*']],
                 ['label' => 'Codes promo', 'route' => 'admin.promo-codes.index', 'icon' => 'ticket', 'active' => ['admin.promo-codes.*']],
                 ['label' => 'Exports CSV', 'route' => 'admin.exports.index', 'icon' => 'arrow-down-tray', 'active' => ['admin.exports.*']],
             ]],

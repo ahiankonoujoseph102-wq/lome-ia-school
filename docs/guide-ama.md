@@ -150,3 +150,14 @@ En bref : au bureau, par la consultation gratuite ou WhatsApp ; attestation et s
 
 - Sur la page de chaque formation : « Vous préférez apprendre en présentiel ? » avec « Réserver une consultation gratuite » et « Écrire sur WhatsApp ». L'adresse du bureau est sur la page Contact.
 - « Après la formation » : attestation de fin de formation ; possibilité de stage de 3 mois ; pour certaines formations (écrites sur leur page), possibilité d'être recruté par l'école si l'élève maîtrise bien les compétences.
+
+## 18. Bourse « Créer des agents IA » (candidature et paiement sans compte)
+
+En bref : page « Bourse » (bourse-agents-ia), formulaire puis paiement des frais d'inscription et capture, sans compte.
+
+- En haut de la page : le compte à rebours jusqu'à la clôture et les places restantes pour les femmes et pour les hommes.
+- Partie « 1. Ta candidature » : nom et prénom, numéro WhatsApp avec l'indicatif du pays, adresse e-mail, genre, âge (de 20 à 40 ans), ville et pays, niveau, outils déjà utilisés, matériel, le grand « pourquoi », le premier agent IA à créer, la disponibilité pendant un mois, puis les deux cases à cocher.
+- Partie « 2. Paie tes frais d'inscription » : choisir le pays puis l'opérateur ; le montant, le numéro et le nom du bénéficiaire s'affichent avec « Copier » (et « Ouvrir » l'opérateur sur Android) ; payer, faire une capture du message de confirmation, la choisir dans « Capture d'écran de ton paiement ».
+- Toucher « Envoyer ma candidature et ma capture ». Si un champ est signalé, le corriger et choisir de nouveau la capture.
+- Message « Candidature envoyée » et e-mail « Candidature reçue » : la place est réservée pendant la vérification du paiement. La réponse arrive par e-mail ; personne retenue : bouton « Choisir mon mot de passe », puis accès à la formation et au groupe.
+- Plus de place pour son genre, ou heure de clôture passée : « Candidatures closes ». Une place peut se libérer si une capture est refusée.

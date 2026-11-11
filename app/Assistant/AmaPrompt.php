@@ -3,6 +3,7 @@
 namespace App\Assistant;
 
 use App\Models\Formation;
+use App\Scholarships\ScholarshipCampaign;
 use App\Support\Money;
 use App\Support\PhoneNumber;
 use App\Support\VoiceAssistant;
@@ -400,6 +401,9 @@ class AmaPrompt
      *
      * @var array<int, list<string>>
      */
+    /** Partie du guide (docs/guide-ama.md) qui décrit la bourse : envoyée seulement quand la bourse est allumée. */
+    public const int SCHOLARSHIP_GUIDE_PART = 18;
+
     public const array GUIDE_TRIGGERS = [
         1 => ['compte', 'inscri', 'enregistr', 'numero deja', 'adresse deja'],
         2 => ['confirm', 'code', 'mail', 'spam', 'indesirable'],
@@ -418,6 +422,7 @@ class AmaPrompt
         15 => ['devis', 'realis', 'sur mesure', 'faire pour moi', 'faites pour', 'site vitrine', 'site professionnel', 'entreprise', 'client'],
         16 => ['anglais', 'english', 'talkami', 'teacher', 'langue'],
         17 => ['presentiel', 'bureau', 'sur place', 'en ligne', 'attestation', 'certificat', 'diplome', 'stage', 'recrut', 'emploi', 'travail', 'metier'],
+        18 => ['bourse', 'boursier', 'gratuit', 'candidat', 'places', '5 500', '5500', 'frais d\'inscription'],
     ];
 
     /**
@@ -438,6 +443,11 @@ class AmaPrompt
         }
 
         $topics = Str::lower(Str::ascii($topics));
+
+        // Bourse éteinte dans l'admin : sa partie du guide n'est pas envoyée (Ama n'en parle pas).
+        if (! ScholarshipCampaign::enabled()) {
+            $parts = array_values(array_filter($parts, fn (string $part): bool => ! str_starts_with(trim($part), '## '.self::SCHOLARSHIP_GUIDE_PART.'.')));
+        }
 
         return implode("\n\n", array_map(function (string $part) use ($topics, $all): string {
             $part = trim($part);
