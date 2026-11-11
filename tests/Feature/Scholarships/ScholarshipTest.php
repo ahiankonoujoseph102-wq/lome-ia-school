@@ -94,6 +94,7 @@ class ScholarshipTest extends TestCase
             'motivation' => 'Je veux automatiser le service client de ma petite boutique en ligne et aider mon quartier.',
             'first_agent' => 'Un agent qui répond aux clients de ma boutique sur WhatsApp.',
             'available' => 'yes',
+            'accepts_agents' => '1',
             'accepts_video' => '1',
             'accepts_terms' => '1',
             'payment_method' => PaymentMethods::enabled()->keys()->first(),
@@ -162,8 +163,8 @@ class ScholarshipTest extends TestCase
     {
         $this->post(route('scholarship.store'), $this->form(['age' => 19]))->assertSessionHasErrors(['age' => 'La bourse est réservée aux personnes de 20 à 40 ans.']);
         $this->post(route('scholarship.store'), $this->form(['age' => 41]))->assertSessionHasErrors('age');
-        $this->post(route('scholarship.store'), $this->form(['accepts_video' => null, 'accepts_terms' => null, 'motivation' => 'court', 'gender' => 'autre']))
-            ->assertSessionHasErrors(['accepts_video', 'accepts_terms', 'motivation', 'gender']);
+        $this->post(route('scholarship.store'), $this->form(['accepts_agents' => null, 'accepts_video' => null, 'accepts_terms' => null, 'motivation' => 'court', 'gender' => 'autre']))
+            ->assertSessionHasErrors(['accepts_agents', 'accepts_video', 'accepts_terms', 'motivation', 'gender']);
         $this->post(route('scholarship.store'), $this->form(['phone' => '12']))->assertSessionHasErrors('phone');
         $this->post(route('scholarship.store'), $this->form(['proof' => UploadedFile::fake()->create('preuve.pdf', 100, 'application/pdf')]))->assertSessionHasErrors('proof');
         $this->assertSame(0, ScholarshipApplication::query()->count());
@@ -358,5 +359,58 @@ class ScholarshipTest extends TestCase
 
         $this->open(['enabled' => false]);
         $this->assertStringNotContainsString('Bourse « Créer des agents IA »', AmaPrompt::build([]));
+    }
+
+    public function test_the_page_opens_on_a_call_to_action_and_a_step_by_step_form(): void
+    {
+        $this->open();
+
+        $page = $this->get(route('scholarship'))->assertOk();
+        $content = $page->getContent();
+
+        // Le bouton principal vient avant tout le reste de la page (premier écran).
+        $page->assertSee('data-test="scholarship-apply"', false)->assertSee('Je postule maintenant');
+        $this->assertLessThan(strpos($content, 'data-test="scholarship-offer"'), strpos($content, 'data-test="scholarship-apply"'));
+
+        // Une question par écran : 13 questions puis 4 étapes de paiement, dans un seul formulaire.
+        $this->assertSame(17, preg_match_all('/data-step="\d+"/', $content));
+        $page->assertSee('Question 1 sur 13')->assertSee('Paiement · étape 4 sur 4')
+            ->assertSee('data-test="scholarship-next"', false)
+            ->assertSee('data-test="scholarship-submit"', false)
+            ->assertSee('scholarshipApply(', false);
+        $this->assertSame(1, substr_count($content, 'data-test="scholarship-form"'));
+
+        // Condition principale mise en avant, avant ce que reçoit l'élève, et case obligatoire dans le formulaire.
+        $page->assertSee('data-test="scholarship-main-condition"', false)
+            ->assertSee('3 agents IA pour Coach Joseph')
+            ->assertSee('name="accepts_agents"', false);
+        $this->assertLessThan(strpos($content, 'data-test="scholarship-offer"'), strpos($content, 'data-test="scholarship-main-condition"'));
+    }
+
+    public function test_a_refused_answer_reopens_the_form_on_the_question_to_fix(): void
+    {
+        $this->open();
+
+        $this->from(route('scholarship'))
+            ->post(route('scholarship.store'), $this->form(['age' => '45']))
+            ->assertSessionHasErrors('age');
+
+        $content = $this->get(route('scholarship'))->getContent();
+        $this->assertStringContainsString('&quot;autoOpen&quot;:true', $content);
+        $this->assertMatchesRegularExpression('/&quot;step&quot;:4,/', $content);
+    }
+
+    public function test_the_scholarship_is_promoted_on_the_home_page_and_in_the_menu_only_while_open(): void
+    {
+        $this->open();
+        $this->get(route('home'))->assertOk()
+            ->assertSee('data-test="home-scholarship"', false)
+            ->assertSee('plus que 10 places')
+            ->assertSee('data-test="menu-scholarship"', false);
+
+        $this->open(['enabled' => false]);
+        $this->get(route('home'))->assertOk()
+            ->assertDontSee('data-test="home-scholarship"', false)
+            ->assertDontSee('data-test="menu-scholarship"', false);
     }
 }

@@ -154,9 +154,9 @@ En bref : au bureau, par la consultation gratuite ou WhatsApp ; attestation et s
 
 En bref : page « Bourse » (bourse-agents-ia), formulaire puis paiement des frais d'inscription et capture, sans compte.
 
-- En haut de la page : le compte à rebours jusqu'à la clôture et les places restantes pour les femmes et pour les hommes.
-- Partie « 1. Ta candidature » : nom et prénom, numéro WhatsApp avec l'indicatif du pays, adresse e-mail, genre, âge (de 20 à 40 ans), ville et pays, niveau, outils déjà utilisés, matériel, le grand « pourquoi », le premier agent IA à créer, la disponibilité pendant un mois, puis les deux cases à cocher.
-- Partie « 2. Paie tes frais d'inscription » : choisir le pays puis l'opérateur ; le montant, le numéro et le nom du bénéficiaire s'affichent avec « Copier » (et « Ouvrir » l'opérateur sur Android) ; payer, faire une capture du message de confirmation, la choisir dans « Capture d'écran de ton paiement ».
-- Toucher « Envoyer ma candidature et ma capture ». Si un champ est signalé, le corriger et choisir de nouveau la capture.
+- En haut de la page : le compte à rebours jusqu'à la clôture, les places restantes pour les femmes et pour les hommes, et le bouton « Je postule maintenant ».
+- Condition principale (contrepartie de la bourse) : à la fin de la formation, chaque personne retenue crée gratuitement 3 agents IA pour Coach Joseph, de A à Z ; c'est lui qui dit quels agents créer.
+- « Je postule maintenant » ouvre le formulaire, une question par écran : nom et prénom, numéro WhatsApp avec l'indicatif du pays, adresse e-mail, genre, âge (de 20 à 40 ans), ville et pays, niveau, outils déjà utilisés, matériel, le grand « pourquoi », le premier agent IA à créer, la disponibilité pendant un mois, puis trois cases à cocher (condition principale, vidéo de bilan, conditions lues). « Suivant » pour avancer, flèche en haut à gauche pour revenir ; la croix ferme sans perdre les réponses.
+- Paiement : choisir le pays puis l'opérateur ; le montant, le numéro et le nom du bénéficiaire s'affichent avec « Copier » (et « Ouvrir » l'opérateur sur Android) ; payer, toucher « J'ai payé : envoyer ma capture », choisir la capture du message de confirmation (elle s'affiche), puis « Envoyer ma candidature ». Si une réponse est refusée, le formulaire se rouvre sur la question à corriger ; choisir de nouveau la capture.
 - Message « Candidature envoyée » et e-mail « Candidature reçue » : la place est réservée pendant la vérification du paiement. La réponse arrive par e-mail ; personne retenue : bouton « Choisir mon mot de passe », puis accès à la formation et au groupe.
 - Plus de place pour son genre, ou heure de clôture passée : « Candidatures closes ». Une place peut se libérer si une capture est refusée.

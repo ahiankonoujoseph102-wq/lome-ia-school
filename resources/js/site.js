@@ -211,6 +211,204 @@ Alpine.data('scholarshipCounter', ({ counter, opensAt = null, endpoint = null })
     },
 }));
 
+/**
+ * Candidature à la bourse pas à pas (une question par écran, comme un formulaire Typeform) : chaque réponse est
+ * vérifiée avant « Suivant », les choix uniques passent seuls à la question suivante, et tout part dans UN seul
+ * formulaire à la fin. Le compte à rebours et les places viennent du composant parent scholarshipCounter.
+ */
+Alpine.data('scholarshipApply', ({ autoOpen = false }) => ({
+    open: false,
+    autoOpen,
+    step: 0,
+    total: 1,
+    questions: 1,
+    labels: [],
+    error: '',
+    country: '',
+    method: '',
+    methods: [],
+    preview: null,
+    sending: false,
+    copied: null,
+    maxBytes: 0,
+    maxMb: 0,
+    // Lien « tel: » avec * et # : inutilisable sur iPhone et iPad (y compris un iPad qui se présente comme un Mac).
+    canDial: !(/iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)),
+
+    initialize(config) {
+        Object.assign(this, {
+            total: config.total,
+            questions: config.questions,
+            step: config.step,
+            error: config.error,
+            labels: config.labels,
+            methods: config.methods,
+            maxBytes: config.maxBytes,
+            maxMb: config.maxMb,
+        });
+        const initial = this.methods.find((item) => item.key === config.initialMethod);
+        this.method = initial ? initial.key : '';
+        this.country = initial ? initial.country : '';
+
+        if (this.autoOpen || window.location.hash === '#postuler') {
+            this.start(this.autoOpen);
+        }
+    },
+
+    get progress() {
+        return Math.round(((this.step + 1) / this.total) * 100);
+    },
+
+    start(keepStep = false) {
+        if (!keepStep) {
+            this.error = '';
+        }
+        this.open = true;
+        document.documentElement.classList.add('overflow-hidden');
+        this.focus();
+    },
+
+    close() {
+        this.open = false;
+        document.documentElement.classList.remove('overflow-hidden');
+    },
+
+    stepElement() {
+        return this.$refs.form.querySelector(`[data-step="${this.step}"]`);
+    },
+
+    // Message à afficher si la question en cours n'a pas de réponse valable, sinon texte vide.
+    check() {
+        const element = this.stepElement();
+        const kind = element.dataset.kind;
+
+        if (kind === 'country' && !this.country) {
+            return 'Choisis le pays depuis lequel tu paies.';
+        }
+        if (kind === 'method' && !this.method) {
+            return 'Choisis ton opérateur.';
+        }
+        if (kind === 'proof' && !this.$refs.proof.files.length) {
+            return 'Ajoute la capture d\'écran de ton paiement.';
+        }
+
+        for (const field of element.querySelectorAll('input:not([type=hidden]):not([type=file]), textarea')) {
+            if (field.type !== 'radio') {
+                field.value = field.type === 'checkbox' ? field.value : field.value.trimStart();
+            }
+            if (!field.checkValidity() || (field.minLength > 0 && field.value.trim().length < field.minLength)) {
+                return field.dataset.message || element.querySelector('[data-message-holder]')?.textContent || 'Réponds à cette question pour continuer.';
+            }
+        }
+
+        return '';
+    },
+
+    next() {
+        const message = this.check();
+        this.error = message;
+
+        if (message || this.step >= this.total - 1) {
+            return;
+        }
+        this.step++;
+        this.focus();
+    },
+
+    back() {
+        this.error = '';
+        if (this.step === 0) {
+            this.close();
+            return;
+        }
+        // Pas d'opérateur sans pays : « Retour » depuis l'envoi revient sur l'opérateur, comme attendu.
+        this.step--;
+        this.focus();
+    },
+
+    // Entrée : question suivante (jamais l'envoi du formulaire) ; dans un texte long, Entrée passe à la ligne.
+    enter(event) {
+        if (event.target.tagName === 'TEXTAREA' || event.target.tagName === 'BUTTON' || event.target.tagName === 'A') {
+            return;
+        }
+        event.preventDefault();
+        if (this.step < this.total - 1) {
+            this.next();
+        }
+    },
+
+    // Choix unique (genre, niveau, matériel, disponibilité) : question suivante après un court instant.
+    chose(event) {
+        if (event.target.type === 'radio' && this.stepElement()?.hasAttribute('data-auto')) {
+            this.error = '';
+            setTimeout(() => this.next(), 250);
+        }
+    },
+
+    chooseCountry(code) {
+        if (code !== this.country) {
+            this.method = '';
+        }
+        this.country = code;
+        this.next();
+    },
+
+    chooseMethod(key) {
+        this.method = key;
+        this.next();
+    },
+
+    focus() {
+        this.$nextTick(() => {
+            this.$refs.body?.scrollTo({ top: 0 });
+            const field = this.stepElement()?.querySelector('input[type=text], input[type=tel], input[type=email], input[type=number], textarea');
+            field?.focus({ preventScroll: true });
+        });
+    },
+
+    pickProof(event) {
+        const file = event.target.files[0];
+        this.error = '';
+        if (this.preview) {
+            URL.revokeObjectURL(this.preview);
+            this.preview = null;
+        }
+        if (!file) {
+            return;
+        }
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            this.error = 'Choisis une image JPG, PNG ou WebP (une capture d\'écran, pas un PDF).';
+        } else if (file.size > this.maxBytes) {
+            this.error = `La capture ne doit pas dépasser ${this.maxMb} Mo.`;
+        }
+        if (this.error) {
+            event.target.value = '';
+            return;
+        }
+        this.preview = URL.createObjectURL(file);
+    },
+
+    submit(event) {
+        const message = this.check();
+        if (message || this.sending) {
+            event.preventDefault();
+            this.error = message;
+            return;
+        }
+        this.sending = true;
+    },
+
+    async copy(text, id) {
+        await copyToClipboard(text);
+        this.copied = id;
+        setTimeout(() => {
+            if (this.copied === id) {
+                this.copied = null;
+            }
+        }, 2000);
+    },
+}));
+
 Alpine.data('mobileMoneyPayment', ({ methods, countries = {}, initialMethod, initialCountry = null, initialStep, maxBytes, maxMb, labels, helpUrls = [] }) => ({
     methods,
     countries,
