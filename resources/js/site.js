@@ -141,7 +141,7 @@ Alpine.data('catalogue', (items) => ({
 }));
 
 /**
- * Page de paiement en 4 étapes (pays, opérateur, paiement, capture), une étape à la fois.
+ * Page de paiement sur une seule page en 3 étapes affichées (opérateur avec pays deviné, envoi, capture vérifiée), 4 phases internes.
  * La capture est envoyée dès qu'elle est choisie (un seul bouton), après un contrôle du type et de la
  * taille dans le navigateur (le serveur revérifie tout).
  */
@@ -211,13 +211,17 @@ Alpine.data('scholarshipCounter', ({ counter, opensAt = null, endpoint = null })
     },
 }));
 
-Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxBytes, maxMb, labels, helpUrls = [] }) => ({
+Alpine.data('mobileMoneyPayment', ({ methods, countries = {}, initialMethod, initialCountry = null, initialStep, maxBytes, maxMb, labels, helpUrls = [] }) => ({
     methods,
+    countries,
     labels,
     helpUrls,
+    // Phase interne (1 pays, 2 opérateur, 3 envoi, 4 capture) : gardée pour Ama, WhatsApp et les bulles d'aide.
+    // L'élève voit 3 étapes (`shown`) : opérateur (pays compris), envoi, capture.
     step: initialStep,
     country: '',
     method: '',
+    guessed: false,
     copied: null,
     preview: null,
     fileError: '',
@@ -225,10 +229,27 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxByt
     // Lien « tel: » avec * et # : inutilisable sur iPhone et iPad (y compris un iPad qui se présente comme un Mac).
     canDial: !(/iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)),
 
+    get shown() {
+        return this.step <= 2 ? 1 : this.step - 1;
+    },
+
+    get countryName() {
+        return this.countries[this.country]?.name ?? '';
+    },
+
+    get countryFlag() {
+        return this.countries[this.country]?.flag ?? '';
+    },
+
+    get methodName() {
+        return this.methods.find((item) => item.key === this.method)?.name ?? '';
+    },
+
     init() {
         const initial = this.methods.find((item) => item.key === initialMethod);
-        this.country = initial ? initial.country : '';
+        this.country = initial ? initial.country : (initialCountry ?? '');
         this.method = initial ? initial.key : '';
+        this.guessed = !initial && Boolean(initialCountry);
         this.tellAssistant();
     },
 
@@ -238,7 +259,7 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxByt
         const operator = this.methods.find((item) => item.key === this.method)?.name ?? null;
         const detail = {
             numero_etape: this.step,
-            etape: `étape ${this.step} sur 4 : ${['choisir le pays', 'choisir l\'opérateur Mobile Money', 'envoyer l\'argent par Mobile Money au numéro affiché', 'envoyer la capture d\'écran du paiement'][this.step - 1]}`,
+            etape: `étape ${this.shown} sur 3 : ${['choisir le pays', 'choisir l\'opérateur Mobile Money', 'envoyer l\'argent par Mobile Money au numéro affiché', 'envoyer la capture d\'écran du paiement'][this.step - 1]}`,
             pays: countryName,
             operateur: this.step >= 3 ? operator : null,
         };
@@ -251,7 +272,8 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxByt
     },
 
     goTo(step) {
-        this.step = step;
+        // Pas d'opérateur sans pays.
+        this.step = step === 2 && !this.country ? 1 : step;
         this.tellAssistant();
         this.$nextTick(() => {
             const top = this.$refs.payment?.getBoundingClientRect().top ?? 0;
@@ -262,6 +284,9 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxByt
     },
 
     chooseCountry(code) {
+        if (code !== this.country) {
+            this.guessed = false;
+        }
         this.country = code;
         if (this.methods.find((item) => item.key === this.method)?.country !== code) {
             this.method = '';
@@ -284,10 +309,10 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxByt
         }, 2000);
     },
 
-    sendProof(event) {
+    // Image choisie : contrôle du type et de la taille, puis aperçu. L'envoi se fait au toucher de « Envoyer cette capture ».
+    pickProof(event) {
         const file = event.target.files[0];
         this.fileError = '';
-        this.preview = null;
 
         if (!file) {
             return;
@@ -299,6 +324,11 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxByt
             this.fileError = `La capture ne doit pas dépasser ${maxMb} Mo.`;
         }
 
+        if (this.preview) {
+            URL.revokeObjectURL(this.preview);
+            this.preview = null;
+        }
+
         if (this.fileError) {
             event.target.value = '';
             window.dispatchEvent(new CustomEvent('ama-error', { detail: { cle: 'proof', texte: this.fileError, difficulte: 'capture_echec' } }));
@@ -307,8 +337,6 @@ Alpine.data('mobileMoneyPayment', ({ methods, initialMethod, initialStep, maxByt
         }
 
         this.preview = URL.createObjectURL(file);
-        this.sending = true;
-        this.$refs.proofForm.requestSubmit();
     },
 }));
 

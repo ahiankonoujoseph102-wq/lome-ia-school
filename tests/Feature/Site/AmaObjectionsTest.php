@@ -251,7 +251,7 @@ class AmaObjectionsTest extends TestCase
         $prompt = AmaPrompt::build([], call: $call);
         $this->assertStringContainsString('Formations à partir de '.Money::fcfa(5100).' (« Formation Exemple Petit Prix »).', $prompt);
         $this->assertStringContainsString('Formation ouverte tout de suite, à titre provisoire, sous '.Money::fcfa(50000).' payés', $prompt);
-        $this->assertStringContainsString('paiement Mobile Money en 4 étapes guidées', $prompt);
+        $this->assertStringContainsString('paiement Mobile Money en 3 étapes guidées', $prompt);
 
         SiteSettings::save(['site.payments.verification_threshold' => 40000]);
         $this->assertStringContainsString('sous '.Money::fcfa(40000).' payés', AmaPrompt::build([], call: $call));
@@ -312,7 +312,7 @@ class AmaObjectionsTest extends TestCase
             'gagner de l\'argent' => ['Est-ce que je vais gagner de l\'argent ?', 'Je comprends la question. La formation vous apprend à faire les choses vous-même ; je ne peux promettre aucun revenu, cela dépend de chacun.'],
             'YouTube' => ['Pourquoi payer alors que c\'est gratuit sur YouTube ?', 'Bonne question. YouTube a de bonnes vidéos ; ici, vous avez un parcours organisé, un accompagnement à vie et un groupe réservé aux élèves.'],
             'peur de ne pas recevoir l\'accès' => ['Et si je paie et que je ne reçois rien ?', 'C\'est normal d\'être prudent. Le suivi de votre achat est dans « Mes achats », et un remboursement est possible sous 48 heures si aucune leçon n\'a été consultée.'],
-            'Mobile Money difficile' => ['Le paiement Mobile Money c\'est compliqué pour moi.', 'Pas d\'inquiétude, le paiement se fait en 4 étapes guidées, avec « Copier le numéro ». Voulez-vous que je vous l\'explique étape par étape ?'],
+            'Mobile Money difficile' => ['Le paiement Mobile Money c\'est compliqué pour moi.', 'Pas d\'inquiétude, le paiement se fait en 3 étapes guidées, avec « Copier le numéro ». Voulez-vous que je vous l\'explique étape par étape ?'],
             'méfiance envers l\'IA' => ['Je me méfie de l\'IA.', 'C\'est une prudence saine. L\'IA est un outil : elle propose, et c\'est vous qui gardez le contrôle.'],
             'pas d\'argent maintenant' => ['Je n\'ai pas d\'argent maintenant.', 'Je comprends tout à fait. Vous pouvez réserver la consultation gratuite, et revenir quand vous voulez.'],
         ];
