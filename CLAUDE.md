@@ -535,7 +535,7 @@ php artisan migrate
 
 **En cours sur la branche `claude/determined-knuth-4thjao`** : paiement depuis la Côte d'Ivoire (voir « Paiements ») et bourse « Créer des agents IA » (voir « Bourse « Créer des agents IA » ») ; ouverture reportée à la demande de Joseph jusqu'à la validation de la page. Pull request seulement après son accord.
 
-**En cours sur la branche `claude/exciting-ride-gh2jrl`** (reprise de `ccr-75706c31-mjvgoi`) : nouvel écran de paiement sur une seule page en 3 étapes (pays deviné d'après le numéro WhatsApp, aide « Premier paiement Mobile Money ? », aperçu de la capture avant l'envoi ; voir « Paiements »). Aperçu à valider par Joseph ; pull request seulement après son accord.
+**En cours sur la branche `claude/exciting-ride-gh2jrl`** (reprise de `ccr-75706c31-mjvgoi`) : nouvel écran de paiement sur une seule page en 3 étapes (pays deviné d'après le numéro WhatsApp, aide « Premier paiement Mobile Money ? », aperçu de la capture avant l'envoi ; voir « Paiements »). Aperçu validé par Joseph. Pull request « Paiement sur une seule page en 3 étapes ».
 
 **Prochaine étape** : fusion de la branche en cours ; Joseph colle le lien de sa vidéo et choisit son format (Réglages du site > Page Entreprises), saisit le contenu de ses formations (écran « Contenu des formations ») et son lien Google Meet (« Disponibilités »). À configurer plus tard : compte Pusher (clés dans `.env`), clés Web Push (`php artisan app:webpush-keys` sur le serveur), cron Hostinger. FedaPay est **reporté** (entreprise pas encore certifiée) : à ajouter plus tard comme nouveau moyen de paiement (voir « Paiements »), en commençant par le mode test/sandbox.
 
