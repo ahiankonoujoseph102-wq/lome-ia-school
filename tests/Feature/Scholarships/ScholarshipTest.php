@@ -119,7 +119,7 @@ class ScholarshipTest extends TestCase
 
         $this->open();
         $this->get(route('scholarship'))->assertOk()
-            ->assertSee('10 bourses à 100 % — Formation « Créer des agents IA »', false)
+            ->assertSee("10 bourses à 100\u{00A0}% — Formation «\u{00A0}Créer des agents IA\u{00A0}»", false)
             ->assertSee(Money::fcfa(150000))
             ->assertSee(Money::fcfa(5500))
             ->assertSee('Avoir entre 20 et 40 ans.')

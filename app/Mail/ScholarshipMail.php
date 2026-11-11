@@ -46,7 +46,12 @@ class ScholarshipMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.scholarship.'.str_replace('_', '-', $this->kind),
+            view: match ($this->kind) {
+                self::VALIDATED => 'emails.scholarship.validated',
+                self::REFUSED_REFUND => 'emails.scholarship.refused-refund',
+                self::REFUSED_UNPAID => 'emails.scholarship.refused-unpaid',
+                default => 'emails.scholarship.received',
+            },
             with: [
                 'formationTitle' => ScholarshipCampaign::formation()->title ?? 'Créer des agents IA',
                 'accessUrl' => $this->kind === self::VALIDATED

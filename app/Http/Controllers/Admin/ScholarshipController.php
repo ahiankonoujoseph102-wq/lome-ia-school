@@ -44,6 +44,7 @@ class ScholarshipController extends Controller
         $status = array_key_exists((string) $request->query('statut'), self::STATUS_FILTERS) ? (string) $request->query('statut') : 'a-verifier';
         $gender = array_key_exists((string) $request->query('genre'), ScholarshipApplication::GENDERS) ? (string) $request->query('genre') : null;
         $age = array_key_exists((string) $request->query('age'), self::AGE_BANDS) ? (string) $request->query('age') : null;
+        $ageRange = $age !== null ? self::AGE_BANDS[$age] : null;
         $level = array_key_exists((string) $request->query('niveau'), ScholarshipApplication::LEVELS) ? (string) $request->query('niveau') : null;
 
         $base = fn (): Builder => ScholarshipApplication::query()->where('campaign', ScholarshipCampaign::campaign());
@@ -55,7 +56,7 @@ class ScholarshipController extends Controller
             ->when($status === 'refusees', fn ($query) => $query->where('status', ScholarshipApplication::REFUSED))
             ->when($status === 'a-rembourser', fn ($query) => $query->where('status', ScholarshipApplication::REFUSED)->where('refund_due', true)->whereNull('refunded_at'))
             ->when($gender !== null, fn ($query) => $query->where('gender', $gender))
-            ->when($age !== null, fn ($query) => $query->whereBetween('age', self::AGE_BANDS[$age]))
+            ->when($ageRange, fn ($query, array $range) => $query->whereBetween('age', $range))
             ->when($level !== null, fn ($query) => $query->where('level', $level))
             ->oldest('id')
             ->paginate(20)->withQueryString();

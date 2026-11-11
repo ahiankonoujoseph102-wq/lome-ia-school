@@ -18,6 +18,8 @@
     $closesAt = ScholarshipCampaign::closesAt();
     $closesLabel = $closesAt?->translatedFormat('l j F à H \h i');
     $formationTitle = $formation->title ?? 'Créer des agents IA';
+    // Espaces insécables : jamais « 100 » et « % », ni un guillemet seul, sur deux lignes (téléphone).
+    $quoted = "«\u{00A0}".$formationTitle."\u{00A0}»";
     $sent = session(\App\Http\Controllers\Site\ScholarshipController::SENT);
     $remaining = $counter['remaining'];
     $full = collect($remaining)->filter(fn (int $left): bool => $left === 0)->map(fn (): string => 'Plus de place')->all();
@@ -32,7 +34,7 @@
 >
     @include('site.partials.page-header', [
         'eyebrow' => 'Bourse · '.$totalSeats.' places',
-        'title' => $totalSeats.' bourses à 100 % — Formation « '.$formationTitle.' »',
+        'title' => $totalSeats.' bourses à 100'."\u{00A0}".'% — Formation '.$quoted,
         'subtitle' => $seats.' femmes et '.$seats.' hommes de 20 à 40 ans suivent la formation pendant un mois. Seuls frais : '.$feeLabel.' d\'inscription.',
     ])
 
@@ -86,7 +88,7 @@
                 <h2 class="text-xl font-bold text-white">Ce que comprend la bourse</h2>
                 <ul class="mt-4 space-y-3 text-[15px] text-slate-200">
                     @if ($value > 0)
-                        <li class="flex gap-3"><flux:icon.gift class="mt-0.5 size-5 shrink-0 text-gold-300" /> <span>La formation « {{ $formationTitle }} », d'une valeur de {{ Money::fcfa($value) }}, offerte à 100 %.</span></li>
+                        <li class="flex gap-3"><flux:icon.gift class="mt-0.5 size-5 shrink-0 text-gold-300" /> <span>La formation {{ $quoted }}, d'une valeur de {{ Money::fcfa($value) }}, offerte à 100&nbsp;%.</span></li>
                     @endif
                     <li class="flex gap-3"><flux:icon.calendar-days class="mt-0.5 size-5 shrink-0 text-gold-300" /> <span>Un mois de formation en ligne.</span></li>
                     <li class="flex gap-3"><flux:icon.play-circle class="mt-0.5 size-5 shrink-0 text-gold-300" /> <span>Des vidéos enregistrées, des documents de formation et des directs explicatifs et démonstratifs.</span></li>
@@ -309,7 +311,13 @@
 
                         <div class="space-y-2" x-show="method" x-cloak>
                             <label for="bourse-proof" class="field-label">Capture d'écran de ton paiement</label>
-                            <input id="bourse-proof" type="file" name="proof" accept="image/jpeg,image/png,image/webp" required class="block w-full rounded-2xl bg-veil/5 p-3 text-sm text-slate-200 ring-1 ring-veil/15 file:mr-3 file:rounded-full file:border-0 file:bg-gold-400/15 file:px-4 file:py-2 file:font-semibold file:text-gold-100" data-test="scholarship-proof">
+                            <div x-data="{ fileName: '' }">
+                                <input id="bourse-proof" type="file" name="proof" accept="image/jpeg,image/png,image/webp" required class="sr-only" @change="fileName = $event.target.files[0]?.name ?? ''" data-test="scholarship-proof">
+                                <label for="bourse-proof" class="flex min-h-14 w-full cursor-pointer items-center gap-3 rounded-2xl bg-gold-400/10 px-4 py-3 font-semibold text-gold-100 ring-1 ring-gold-400/60 transition hover:bg-gold-400/20">
+                                    <flux:icon.camera class="size-6 shrink-0" />
+                                    <span class="min-w-0 truncate" x-text="fileName ? 'Capture choisie : ' + fileName : 'Choisir ma capture (galerie ou appareil photo)'">Choisir ma capture (galerie ou appareil photo)</span>
+                                </label>
+                            </div>
                             <p class="text-xs text-slate-400">Le message de confirmation de ton paiement de {{ $feeLabel }}. Image JPG, PNG ou WebP, {{ $maxMb }} Mo maximum. Elle reste privée : seule notre équipe la voit pour vérifier le paiement.</p>
                             @error('proof') <p class="text-sm text-rose-300" role="alert">{{ $message }}</p> @enderror
                         </div>
