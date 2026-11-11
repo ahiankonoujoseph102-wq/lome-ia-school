@@ -80,7 +80,7 @@ final readonly class PaymentMethod
     }
 
     /**
-     * Mention du représentant local (Burkina Faso, Bénin), sinon null.
+     * Mention du représentant local (Burkina Faso, Bénin, Côte d'Ivoire), sinon null.
      */
     public function representativeNote(): ?string
     {

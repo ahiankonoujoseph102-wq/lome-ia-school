@@ -3,7 +3,7 @@
     $disabled ??= [];
     $columns ??= 'sm:grid-cols-2';
 @endphp
-<fieldset class="space-y-2" data-test="choice-{{ $name }}">
+<fieldset class="min-w-0 space-y-2" data-test="choice-{{ $name }}">
     <legend class="field-label">{{ $label }}</legend>
     <div class="grid gap-2 {{ $columns }}">
         @foreach ($options as $value => $text)

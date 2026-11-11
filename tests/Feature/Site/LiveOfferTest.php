@@ -106,7 +106,7 @@ class LiveOfferTest extends TestCase
                 'Comment je reçois le lien ?', 'vous êtes ajouté(e) automatiquement au groupe d\'accompagnement', 'rubrique « Sessions »', 'annonce épinglée du groupe',
                 'J\'ai raté une séance ?', 'Chaque séance est enregistrée.',
                 'Je n\'ai qu\'un téléphone ?', 'l\'un ou l\'autre suffit',
-                'Comment payer ?', 'Par Mobile Money depuis le Togo, le Burkina Faso ou le Bénin', 'confirmez votre adresse e-mail', "30\u{00A0}000\u{00A0}FCFA", 'capture d\'écran', 'Les frais de transfert sont à votre charge.', 'Besoin d\'aide pour payer ?',
+                'Comment payer ?', 'Par Mobile Money depuis le Togo, le Burkina Faso, le Bénin ou la Côte d\'Ivoire', 'confirmez votre adresse e-mail', "30\u{00A0}000\u{00A0}FCFA", 'capture d\'écran', 'Les frais de transfert sont à votre charge.', 'Besoin d\'aide pour payer ?',
                 'J\'ai payé, et après ?', 'Dès l\'envoi de votre capture, la formation s\'ouvre', 'accès provisoire',
                 'Vais-je recevoir une attestation ?', 'attestation de participation délivrée par Lomé IA School', 'mercredi 7 octobre',
             ])

@@ -62,13 +62,14 @@ final class FormationOverview
      */
     public static function journey(Formation $formation): array
     {
-        $countries = array_column(PaymentMethods::countries(), 'name');
+        // Noms des pays, indexés par leur code (pour l'article : « le Togo », « la Côte d'Ivoire »).
+        $countries = array_map(fn (array $country): string => $country['name'], PaymentMethods::countries());
 
         $steps = [
             [
                 'icon' => 'banknotes',
                 'title' => 'Vous payez par Mobile Money',
-                'text' => ($countries ? 'Depuis '.self::join(array_map(fn (string $name): string => 'le '.$name, $countries), ' ou ') : 'Depuis votre téléphone').', puis vous envoyez la capture de votre paiement sur le site.',
+                'text' => ($countries ? 'Depuis '.self::join(array_map(PaymentMethods::countryWithArticle(...), array_keys($countries), $countries), ' ou ') : 'Depuis votre téléphone').', puis vous envoyez la capture de votre paiement sur le site.',
             ],
             [
                 'icon' => 'lock-open',
@@ -102,7 +103,7 @@ final class FormationOverview
     }
 
     /**
-     * « Togo, Burkina Faso et Bénin ».
+     * « Togo, Burkina Faso, Bénin et Côte d'Ivoire ».
      *
      * @param  list<string>  $names
      */

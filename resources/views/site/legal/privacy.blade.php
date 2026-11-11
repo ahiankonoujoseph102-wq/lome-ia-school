@@ -27,7 +27,7 @@
                 <li>Si vous acceptez de publier un témoignage : votre nom, la formation suivie, votre texte et, selon le cas, votre photo, la capture d'écran de votre message (numéro masqué) ou votre vidéo. Un témoignage n'est publié qu'avec votre accord et est retiré sur simple demande.</li>
                 <li>Si vous arrivez sur le site par le lien d'un affilié : le code de ce lien et la date du clic, puis, si vous vous inscrivez ou achetez, le fait que votre inscription ou votre achat vient de ce lien.</li>
             </ul>
-            <p>Les captures d'écran de paiement sont stockées dans un espace privé : elles ne sont jamais publiques et ne sont visibles que par vous et par l'équipe qui vérifie les paiements. Nous ne vous demandons jamais vos codes Mobile Money. Au Burkina Faso et au Bénin, les informations de votre paiement peuvent être communiquées à notre représentant local, uniquement pour vérifier sa réception.</p>
+            <p>Les captures d'écran de paiement sont stockées dans un espace privé : elles ne sont jamais publiques et ne sont visibles que par vous et par l'équipe qui vérifie les paiements. Nous ne vous demandons jamais vos codes Mobile Money. Au Burkina Faso, au Bénin et en Côte d'Ivoire, les informations de votre paiement peuvent être communiquées à notre représentant local, uniquement pour vérifier sa réception.</p>
 
             <h2>Confirmation de l'adresse e-mail</h2>
             <ul>

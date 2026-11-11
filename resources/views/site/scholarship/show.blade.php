@@ -143,7 +143,7 @@
                         <x-site.alert type="error">{{ $errors->first('form') ?: 'Vérifie les champs signalés, puis choisis de nouveau ta capture.' }}</x-site.alert>
                     @endif
 
-                    <fieldset class="space-y-5">
+                    <fieldset class="min-w-0 space-y-5">
                         <legend class="text-lg font-semibold text-white">1. Ta candidature</legend>
 
                         <div class="grid gap-5 sm:grid-cols-2">
@@ -233,7 +233,7 @@
                             labels: ['Pays', 'Opérateur', 'Paiement', 'Capture'],
                         })"
                         x-ref="payment"
-                        class="scroll-mt-24 space-y-5"
+                        class="min-w-0 scroll-mt-24 space-y-5"
                         data-test="scholarship-payment"
                     >
                         <legend class="text-lg font-semibold text-white">2. Paie tes frais d'inscription : {{ $feeLabel }}</legend>
@@ -315,10 +315,10 @@
                                 <input id="bourse-proof" type="file" name="proof" accept="image/jpeg,image/png,image/webp" required class="sr-only" @change="fileName = $event.target.files[0]?.name ?? ''" data-test="scholarship-proof">
                                 <label for="bourse-proof" class="flex min-h-14 w-full cursor-pointer items-center gap-3 rounded-2xl bg-gold-400/10 px-4 py-3 font-semibold text-gold-100 ring-1 ring-gold-400/60 transition hover:bg-gold-400/20">
                                     <flux:icon.camera class="size-6 shrink-0" />
-                                    <span class="min-w-0 truncate" x-text="fileName ? 'Capture choisie : ' + fileName : 'Choisir ma capture (galerie ou appareil photo)'">Choisir ma capture (galerie ou appareil photo)</span>
+                                    <span class="min-w-0 truncate" x-text="fileName ? 'Capture choisie : ' + fileName : 'Choisir ma capture'">Choisir ma capture</span>
                                 </label>
                             </div>
-                            <p class="text-xs text-slate-400">Le message de confirmation de ton paiement de {{ $feeLabel }}. Image JPG, PNG ou WebP, {{ $maxMb }} Mo maximum. Elle reste privée : seule notre équipe la voit pour vérifier le paiement.</p>
+                            <p class="text-xs text-slate-400">Depuis ta galerie ou l'appareil photo : le message de confirmation de ton paiement de {{ $feeLabel }}. Image JPG, PNG ou WebP, {{ $maxMb }} Mo maximum. Elle reste privée : seule notre équipe la voit pour vérifier le paiement.</p>
                             @error('proof') <p class="text-sm text-rose-300" role="alert">{{ $message }}</p> @enderror
                         </div>
                     </fieldset>

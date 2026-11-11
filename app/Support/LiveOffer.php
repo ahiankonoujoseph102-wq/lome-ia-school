@@ -251,11 +251,11 @@ final class LiveOffer
     {
         $formation = $this->formation;
         $verified = $formation->needsPaymentVerification();
-        $countries = collect(PaymentMethods::countries())->pluck('name')->values()->all();
+        $countries = collect(PaymentMethods::countries())->map(fn (array $country, string $code): string => PaymentMethods::countryWithArticle($code, $country['name']))->values()->all();
         $countryList = match (count($countries)) {
             0 => '',
-            1 => ' depuis le '.$countries[0],
-            default => ' depuis le '.implode(', le ', array_slice($countries, 0, -1)).' ou le '.$countries[count($countries) - 1],
+            1 => ' depuis '.$countries[0],
+            default => ' depuis '.implode(', ', array_slice($countries, 0, -1)).' ou '.$countries[count($countries) - 1],
         };
         $joinMinutes = (int) config('live_sessions.join_window_minutes', 15);
 
